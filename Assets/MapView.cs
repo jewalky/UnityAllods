@@ -37,11 +37,60 @@ public class MapView : MonoBehaviour {
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;
 
-        MeshRenderer mr = GetComponent<MeshRenderer>();
-        mr.material.mainTexture = MapTiles;
         this.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
 
+        InitMeshes();
+
         SetScroll(8, 8);
+    }
+
+    GameObject[] MeshChunks = new GameObject[0];
+    Rect[] MeshChunkRects = new Rect[0];
+    Mesh[] MeshChunkMeshes = new Mesh[0];
+
+    void InitMeshes()
+    {
+        for (int i = 0; i < MeshChunks.Length; i++)
+            Destroy(MeshChunks[i]);
+        int cntX = Mathf.CeilToInt((float)MapLogic.Instance.Width / 64);
+        int cntY = Mathf.CeilToInt((float)MapLogic.Instance.Height / 64);
+        MeshChunks = new GameObject[cntX * cntY];
+        MeshChunkRects = new Rect[cntX * cntY];
+        MeshChunkMeshes = new Mesh[cntX * cntY];
+        int mc = 0;
+        for (int y = 0; y < cntY; y++)
+        {
+            for (int x = 0; x < cntX; x++)
+            {
+                GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                go.name = "MapViewChunk";
+                go.transform.parent = gameObject.transform;
+                go.transform.localScale = new Vector3(1, 1, 1);
+                MeshRenderer mr = go.GetComponent<MeshRenderer>();
+                MeshFilter mf = go.GetComponent<MeshFilter>();
+                mr.material = new Material(Shader.Find("Custom/MainShader"));
+                mr.material.mainTexture = MapTiles;
+                int m_x = x * 64;
+                int m_y = y * 64;
+                int m_w = 64;
+                int m_h = 64;
+                if (m_x + m_w > MapLogic.Instance.Width)
+                    m_w = MapLogic.Instance.Width - m_x;
+                if (m_y + m_h > MapLogic.Instance.Height)
+                    m_h = MapLogic.Instance.Height - m_y;
+                mf.mesh = CreatePartialMesh(new Rect(m_x, m_y, m_w, m_h));
+                MeshChunkRects[mc] = new Rect(m_x, m_y, m_w, m_h);
+                MeshChunkMeshes[mc] = mf.mesh;
+                MeshChunks[mc] = go;
+                mc++;
+            }
+        }
+    }
+
+    void UpdateTiles(int WaterAnimFrame)
+    {
+        for (int i = 0; i < MeshChunks.Length; i++)
+            UpdatePartialTiles(MeshChunkMeshes[i], MeshChunkRects[i], WaterAnimFrame);
     }
 
     Mesh CreatePartialMesh(Rect rec)
@@ -161,7 +210,6 @@ public class MapView : MonoBehaviour {
 
     private int _ScrollX = 8;
     private int _ScrollY = 8;
-    private Rect ViewRect = new Rect(0, 0, 0, 0);
 
     public int ScrollX
     {
@@ -186,8 +234,8 @@ public class MapView : MonoBehaviour {
 
     void SetScroll(Vector3 baseOffset, int x, int y)
     {
-        int minX = 8;
-        int minY = 8;
+        int minX = 10;
+        int minY = 10;
         int screenWB = (int)((float)Screen.width / 32);
         int screenHB = (int)((float)Screen.height / 32);
         int maxX = MapLogic.Instance.Width - screenWB - 8;
@@ -202,32 +250,6 @@ public class MapView : MonoBehaviour {
         _ScrollY = y;
 
         this.transform.position = new Vector3((-x * 32) / 100, (-y * 32) / 100, 0);
-
-        // now update mesh, based on minX/maxX
-        int m_x = x-4;
-        int m_y = y-4;
-        int m_w = screenWB+8;
-        int m_h = screenHB+10;
-
-        //Debug.Log(string.Format("{0} {1} {2} {3}", m_x, m_y, m_w, m_h));
-
-        /*MeshFilter mf = GetComponent<MeshFilter>();
-        ViewRect = new Rect(m_x, m_y, m_w, m_h);
-        mf.mesh = CreatePartialMesh(ViewRect);*/
-        // now depending on current quad, render either mesh.
-        Rect mapRect = new Rect(0, 0, MapLogic.Instance.Width-1, MapLogic.Instance.Height-1);
-        ViewRect = new Rect(m_x, m_y, m_w, m_h);
-        if (ViewRect.xMin < mapRect.xMin)
-            ViewRect.xMin = mapRect.xMin;
-        if (ViewRect.yMin < mapRect.yMin)
-            ViewRect.yMin = mapRect.yMin;
-        if (ViewRect.xMax > mapRect.xMax)
-            ViewRect.xMax = mapRect.xMax;
-        if (ViewRect.yMax > mapRect.yMax)
-            ViewRect.yMax = mapRect.yMax;
-        MeshFilter mf = GetComponent<MeshFilter>();
-        ViewRect = new Rect(m_x, m_y, m_w, m_h);
-        mf.mesh = CreatePartialMesh(ViewRect);
     }
 
     // Update is called once per frame
@@ -241,8 +263,6 @@ public class MapView : MonoBehaviour {
         {
             waterAnimFrame = waterAnimFrameNew;
             //UpdateTiles(waterAnimFrame);
-            MeshFilter mf = GetComponent<MeshFilter>();
-            UpdatePartialTiles(mf.mesh, ViewRect, waterAnimFrame);
         }
     }
 

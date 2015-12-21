@@ -72,7 +72,7 @@
 			{
 				half4 texcol = tex2D(_MainTex, IN.texcoord);
 				half4 texcol2 = tex2D(_LightTex, IN.texcoord2);
-				return texcol * half4(texcol2.a*2, texcol2.a*2, texcol2.a*2, 1);
+				return texcol * half4(texcol2.a*2, texcol2.a*2, texcol2.a*2, 1) * IN.color;
 			}
 			ENDCG
 		}

@@ -170,20 +170,20 @@ public class MapView : MonoBehaviour {
         mesh.triangles = qt;
 
         // also UV, but only uv2
-        Vector2[] qtex2 = new Vector2[4 * w * h];
+        Vector2[] quv2 = new Vector2[4 * w * h];
         pp = 0;
         for (int ly = y; ly < y + h; ly++)
         {
             for (int lx = x; lx < x + w; lx++)
             {
-                qtex2[pp++] = new Vector2((float)lx / 256, (float)ly / 256);
-                qtex2[pp++] = new Vector2((float)(lx + 1) / 256, (float)ly / 256);
-                qtex2[pp++] = new Vector2((float)(lx + 1) / 256, (float)(ly + 1) / 256);
-                qtex2[pp++] = new Vector2((float)lx / 256, (float)(ly + 1) / 256);
+                quv2[pp++] = new Vector2((float)lx / 256, (float)ly / 256);
+                quv2[pp++] = new Vector2((float)(lx + 1) / 256, (float)ly / 256);
+                quv2[pp++] = new Vector2((float)(lx + 1) / 256, (float)(ly + 1) / 256);
+                quv2[pp++] = new Vector2((float)lx / 256, (float)(ly + 1) / 256);
             }
         }
 
-        mesh.uv2 = qtex2;
+        mesh.uv2 = quv2;
     }
 
     void UpdatePartialTiles(Mesh mesh, Rect rec, int WaterAnimFrame = 0)
@@ -198,7 +198,7 @@ public class MapView : MonoBehaviour {
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;
 
-        Vector2[] qtex = new Vector2[4 * w * h];
+        Vector2[] quv = new Vector2[4 * w * h];
         int ppt = 0;
         float unit32x = 1f / MapTiles.width * 32;
         float unit32y = 1f / MapTiles.height * 32;
@@ -222,14 +222,14 @@ public class MapView : MonoBehaviour {
                 }
 
                 Rect tileBaseRect = MapRects[tilenum];
-                qtex[ppt++] = new Vector2(tileBaseRect.xMin, tileBaseRect.yMin + unit32y * tilein);
-                qtex[ppt++] = new Vector2(tileBaseRect.xMax, tileBaseRect.yMin + unit32y * tilein);
-                qtex[ppt++] = new Vector2(tileBaseRect.xMax, tileBaseRect.yMin + unit32y * tilein + unit32y);
-                qtex[ppt++] = new Vector2(tileBaseRect.xMin, tileBaseRect.yMin + unit32y * tilein + unit32y);
+                quv[ppt++] = new Vector2(tileBaseRect.xMin, tileBaseRect.yMin + unit32y * tilein);
+                quv[ppt++] = new Vector2(tileBaseRect.xMax, tileBaseRect.yMin + unit32y * tilein);
+                quv[ppt++] = new Vector2(tileBaseRect.xMax, tileBaseRect.yMin + unit32y * tilein + unit32y);
+                quv[ppt++] = new Vector2(tileBaseRect.xMin, tileBaseRect.yMin + unit32y * tilein + unit32y);
             }
         }
 
-        mesh.uv = qtex;
+        mesh.uv = quv;
     }
 
     private int _ScrollX = 8;

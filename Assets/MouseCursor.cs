@@ -22,7 +22,7 @@ public class MouseCursor : MonoBehaviour {
         MapCursorSettings mcs = new MapCursorSettings();
         mcs.Xoffs = x;
         mcs.Yoffs = y;
-        Images.AllodsSprite sprite = Images.Load16A(filename);
+        Images.AllodsSprite sprite = Images.LoadSprite(filename);
         mcs.Sprite = sprite;
         mcs.Sprites = mcs.Sprite.Sprites;
         mcs.Delay = delay;
@@ -49,15 +49,10 @@ public class MouseCursor : MonoBehaviour {
     // Use this for initialization
     public static MapCursorSettings CurDefault = null;
     public static MapCursorSettings CurWait = null;
-    public Images.AllodsSprite troll = null;
-    public Texture2D trollTex = null;
     void Start ()
     {
         if (!Application.isEditor) // if we remove cursor in editor, it'll affect WHOLE DESKTOP
             Cursor.visible = false;
-
-        troll = Images.Load256("graphics/units/monsters/troll/sprites.256");
-        trollTex = troll.Atlas;
 
         CurDefault = CreateCursor("graphics/cursors/default/sprites.16a", 4, 4, 0);
         CurWait = CreateCursor("graphics/cursors/wait/sprites.16a", 16, 16, 0.05f);
@@ -67,8 +62,6 @@ public class MouseCursor : MonoBehaviour {
     }
 	
 	// Update is called once per frame
-    int spidx = 0;
-    int palidx = 0;
 	void Update ()
     {
         if (CurrentCursor == null)
@@ -98,7 +91,6 @@ public class MouseCursor : MonoBehaviour {
         sr.sprite = CurrentCursor.Sprites[CurrentCursorFrame];
         sr.material.shader = Shader.Find("Custom/MainShaderPaletted");
         sr.material.SetTexture("_Palette", CurrentCursor.Sprite.OwnPalette);
-        
     }
 
     void OnGUI()

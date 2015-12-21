@@ -56,11 +56,11 @@ public class MainCamera : MonoBehaviour {
                 //m_fpso.transform.parent = transform;
                 m_fpso.transform.position = new Vector3(0, 0, -0.999f);
                 m_fpso.transform.localScale = new Vector3(1, 1, 1);
-                /*
+
                 GameObject shadow = GameObject.Instantiate(m_fpso);
                 shadow.transform.parent = m_fpso.transform;
                 shadow.transform.localPosition = new Vector3(0.01f, 0.01f, 0.01f);
-                shadow.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0, 0, 0, 1));*/
+                shadow.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0, 0, 0, 1));
                 fps_timer = Time.unscaledTime;
             }
         }

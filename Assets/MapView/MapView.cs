@@ -1,7 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class MapView : MonoBehaviour {
+public class MapView : MonoBehaviour
+{
+    public static MapView Instance
+    {
+        get
+        {
+            return GameObject.FindObjectOfType<MapView>();
+        }
+    }
 
     // Use this for initialization
 	void Start ()
@@ -347,5 +355,15 @@ public class MapView : MonoBehaviour {
 
             lastLogicUpdateTime = Time.time - delta;
         }
+    }
+
+    // create gameobject based off this instance for logic
+    public GameObject CreateObject<T>(MapLogicObject obj)
+    {
+        GameObject o = new GameObject();
+        MapViewObject viewscript = (MapViewObject)o.AddComponent(typeof(T));
+        viewscript.SetLogicObject(obj);
+        o.transform.parent = transform;
+        return o;
     }
 }

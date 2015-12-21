@@ -32,7 +32,6 @@ class Utils
             GameObject.DestroyImmediate(mr.sharedMaterial, true);
         }
         GameObject.DestroyImmediate(o, true);
-        Resources.UnloadUnusedAssets();
     }
 }
 

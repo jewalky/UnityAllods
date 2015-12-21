@@ -10,10 +10,11 @@ public enum MapLogicObjectType
     Obstacle,
     Structure,
     Monster,
-    Human
+    Human,
+    Effect
 }
 
-public class MapLogicObject
+public class MapLogicObject : IDisposable
 {
     public int X = 0;
     public int Y = 0;
@@ -27,6 +28,11 @@ public class MapLogicObject
     {
         MapLogic.Instance.Objects.Add(this);
         GameObject = MapView.Instance.CreateObject<MapViewObject>(this);
+    }
+
+    public void Dispose()
+    {
+        GameObject.Destroy(GameObject);
     }
 
     public void Update()

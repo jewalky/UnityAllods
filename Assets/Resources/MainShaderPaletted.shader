@@ -68,7 +68,7 @@
 			fixed4 frag(v2f IN) : COLOR
 			{
 				float4 texcol = tex2D(_MainTex, IN.texcoord);
-				return float4(tex2D(_Palette, float2(texcol.r, 0)).rgb, texcol.g);
+				return float4(tex2D(_Palette, float2(texcol.r, 0)).rgb, texcol.g) * IN.color;
 			}
 			ENDCG
 		}

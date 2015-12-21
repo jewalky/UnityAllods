@@ -65,7 +65,7 @@
 
 			fixed4 frag(v2f IN) : COLOR
 			{
-				half4 texcol = tex2D(_MainTex, IN.texcoord);
+				half4 texcol = tex2D(_MainTex, IN.texcoord) * IN.color;
 				return texcol;
 			}
 			ENDCG

@@ -113,6 +113,7 @@
   <ItemGroup>
     <None Include="Assets\Resources\MainShader.shader" />
     <None Include="Assets\Resources\MainShaderPaletted.shader" />
+    <None Include="Assets\Resources\TerrainShader.shader" />
     <None Include="Assets\Standard Assets\Cameras\CameraGuidelines.txt" />
     <None Include="Assets\Standard Assets\CrossPlatformInput\CrossPlatformInputGuidelines.txt" />
     <None Include="Assets\Standard Assets\Fonts\OpenSans\License!.txt" />

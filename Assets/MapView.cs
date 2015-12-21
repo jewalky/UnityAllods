@@ -34,13 +34,9 @@ public class MapView : MonoBehaviour {
 
         MapNode[] nodes = MapLogic.Instance.Nodes;
 
-        int mw = MapLogic.Instance.Width;
-        int mh = MapLogic.Instance.Height;
-
         this.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
 
         InitMeshes();
-
         SetScroll(8, 8);
     }
 
@@ -68,7 +64,7 @@ public class MapView : MonoBehaviour {
                 go.transform.localScale = new Vector3(1, 1, 1);
                 MeshRenderer mr = go.GetComponent<MeshRenderer>();
                 MeshFilter mf = go.GetComponent<MeshFilter>();
-                mr.material = new Material(Shader.Find("Custom/MainShader"));
+                mr.material = new Material(Shader.Find("Custom/TerrainShader"));
                 mr.material.mainTexture = MapTiles;
                 int m_x = x * 64;
                 int m_y = y * 64;
@@ -84,6 +80,16 @@ public class MapView : MonoBehaviour {
                 MeshChunks[mc] = go;
                 mc++;
             }
+        }
+    }
+
+    void UpdateLighting(Texture2D lightTex)
+    {
+        //                mr.material.SetTexture("_LightTex", MapLogic.Instance.GetLightingTexture(1, 1, 1));
+        for (int i = 0; i < MeshChunks.Length; i++)
+        {
+            MeshRenderer mr = MeshChunks[i].GetComponent<MeshRenderer>();
+            mr.material.SetTexture("_LightTex", lightTex);
         }
     }
 
@@ -160,6 +166,22 @@ public class MapView : MonoBehaviour {
         }
 
         mesh.triangles = qt;
+
+        // also UV, but only uv2
+        Vector2[] qtex2 = new Vector2[4 * w * h];
+        pp = 0;
+        for (int ly = y; ly < y + h; ly++)
+        {
+            for (int lx = x; lx < x + w; lx++)
+            {
+                qtex2[pp++] = new Vector2((float)lx / 256, (float)ly / 256);
+                qtex2[pp++] = new Vector2((float)(lx + 1) / 256, (float)ly / 256);
+                qtex2[pp++] = new Vector2((float)(lx + 1) / 256, (float)(ly + 1) / 256);
+                qtex2[pp++] = new Vector2((float)lx / 256, (float)(ly + 1) / 256);
+            }
+        }
+
+        mesh.uv2 = qtex2;
     }
 
     void UpdatePartialTiles(Mesh mesh, Rect rec, int WaterAnimFrame = 0)
@@ -254,7 +276,13 @@ public class MapView : MonoBehaviour {
 
     // Update is called once per frame
     int waterAnimFrame = 0;
-    void Update () {
+    void Update ()
+    {
+        // update lighting.
+        Texture2D lightTex = MapLogic.Instance.CheckLightingTexture();
+        if (lightTex != null)
+            UpdateLighting(lightTex);
+
         UpdateInput();
         UpdateLogic();
 
@@ -262,7 +290,7 @@ public class MapView : MonoBehaviour {
         if (waterAnimFrame != waterAnimFrameNew)
         {
             waterAnimFrame = waterAnimFrameNew;
-            //UpdateTiles(waterAnimFrame);
+            UpdateTiles(waterAnimFrame);
         }
     }
 

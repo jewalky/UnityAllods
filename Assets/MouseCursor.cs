@@ -86,7 +86,7 @@ public class MouseCursor : MonoBehaviour {
 
         enabled = true;
         Vector3 mPos = Utils.Vec3InvertY(Input.mousePosition);
-        transform.position = new Vector3(mPos.x - (float)CurrentCursor.Xoffs / 100, mPos.y - (float)CurrentCursor.Yoffs / 100);
+        transform.position = new Vector3(mPos.x - (float)CurrentCursor.Xoffs / 100, mPos.y - (float)CurrentCursor.Yoffs / 100, -1);
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         sr.sprite = CurrentCursor.Sprites[CurrentCursorFrame];
         sr.material.shader = Shader.Find("Custom/MainShaderPaletted");

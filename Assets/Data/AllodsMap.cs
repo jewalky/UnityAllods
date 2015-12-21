@@ -73,7 +73,7 @@ class TerrainLighting
 
                 //
                 //double dot = Math.Abs(nx * sunx + ny * suny + nz * sunz) * 64.0 + 128.0;
-                double dot = Math.Abs(nx * sunx + ny * suny + nz * sunz) * 128.0 + 64.0;
+                double dot = Math.Abs(nx * sunx + ny * suny + nz * sunz) * 64.0 + 96.0;
                 /*double dot = Math.Abs(nx * sunx + ny * suny + nz * sunz) * 62.0;
                 int dot_i = (int)dot;
                 uint dot_ab = (uint)Math.Abs(dot_i-31);

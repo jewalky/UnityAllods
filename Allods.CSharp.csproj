@@ -13,11 +13,13 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Full v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile></CompilerResponseFile>
+    <CompilerResponseFile>
+    </CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.3.1f1</UnityVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -73,15 +75,16 @@
     <Compile Include="Assets\Data\Images.cs" />
     <Compile Include="Assets\Data\Registry.cs" />
     <Compile Include="Assets\Data\Resource.cs" />
+    <Compile Include="Assets\Utils.cs" />
     <Compile Include="Assets\MainCamera.cs" />
     <Compile Include="Assets\MapLogic.cs" />
     <Compile Include="Assets\MapView.cs" />
     <Compile Include="Assets\MouseCursor.cs" />
-    <Compile Include="Assets\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Resources\MainShader.shader" />
     <None Include="Assets\Resources\MainShaderPaletted.shader" />
+    <None Include="Assets\Resources\TerrainShader.shader" />
     <None Include="Assets\Standard Assets\Cameras\CameraGuidelines.txt" />
     <None Include="Assets\Standard Assets\CrossPlatformInput\CrossPlatformInputGuidelines.txt" />
     <None Include="Assets\Standard Assets\Fonts\OpenSans\License!.txt" />

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-class ResourceManager
+public class ResourceManager
 {
     static readonly int ResourceSignature = 0x31415926;
 

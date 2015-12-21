@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-class Registry
+public class Registry
 {
     private enum RegistryNodeType
     {

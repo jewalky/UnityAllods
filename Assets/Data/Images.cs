@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 using System.IO;
 
-class Images
+public class Images
 {
     public enum ImageType
     {
@@ -244,7 +244,9 @@ class Images
     public class AllodsSprite
     {
         public Texture2D OwnPalette;
-        public Texture2D[] Frames;
+        //public Texture2D[] Frames;
+        public Texture2D Atlas;
+        public Rect[] AtlasRects;
         public Sprite[] Sprites;
     }
 
@@ -267,7 +269,7 @@ class Images
         AllodsSprite sprite = new AllodsSprite();
         // read palette
         sprite.OwnPalette = LoadPaletteFromStream(br);
-        sprite.Frames = new Texture2D[count];
+        Texture2D[] frames = new Texture2D[count];
 
         for (int i = 0; i < count; i++)
         {
@@ -329,14 +331,32 @@ class Images
             texture.filterMode = FilterMode.Point;
             texture.SetPixels(colors);
             texture.Apply(false);
-            sprite.Frames[i] = texture;
+            frames[i] = texture;
             ms.Position = cpos + ds;
         }
 
         br.Close();
-        sprite.Sprites = new Sprite[sprite.Frames.Length];
-        for (int i = 0; i < sprite.Frames.Length; i++)
-            sprite.Sprites[i] = Sprite.Create(sprite.Frames[i], new Rect(0, 0, sprite.Frames[i].width, sprite.Frames[i].height), new Vector2(0, 0));
+
+        sprite.Atlas = new Texture2D(0, 0, TextureFormat.RGHalf, false);
+        sprite.AtlasRects = sprite.Atlas.PackTextures(frames, 0);
+        if (sprite.AtlasRects == null)
+        {
+            Core.Abort("Couldn't pack sprite \"{0}\"", filename);
+            return null;
+        }
+
+        for (int i = 0; i < frames.Length; i++)
+            GameObject.DestroyImmediate(frames[i]);
+
+        sprite.Sprites = new Sprite[sprite.AtlasRects.Length];
+        for (int i = 0; i < sprite.AtlasRects.Length; i++)
+        {
+            sprite.Sprites[i] = Sprite.Create(sprite.Atlas, new Rect(sprite.AtlasRects[i].x * sprite.Atlas.width,
+                                                                     sprite.AtlasRects[i].y * sprite.Atlas.height,
+                                                                     sprite.AtlasRects[i].width * sprite.Atlas.width,
+                                                                     sprite.AtlasRects[i].height * sprite.Atlas.height), new Vector2(0, 0));
+        }
+
         return sprite;
     }
 
@@ -359,7 +379,7 @@ class Images
         AllodsSprite sprite = new AllodsSprite();
         // read palette
         sprite.OwnPalette = LoadPaletteFromStream(br);
-        sprite.Frames = new Texture2D[count];
+        Texture2D[] frames = new Texture2D[count];
 
         for (int i = 0; i < count; i++)
         {
@@ -423,14 +443,32 @@ class Images
             texture.filterMode = FilterMode.Point;
             texture.SetPixels(colors);
             texture.Apply(false);
-            sprite.Frames[i] = texture;
+            frames[i] = texture;
             ms.Position = cpos + ds;
         }
 
         br.Close();
-        sprite.Sprites = new Sprite[sprite.Frames.Length];
-        for (int i = 0; i < sprite.Frames.Length; i++)
-            sprite.Sprites[i] = Sprite.Create(sprite.Frames[i], new Rect(0, 0, sprite.Frames[i].width, sprite.Frames[i].height), new Vector2(0, 0));
+
+        sprite.Atlas = new Texture2D(0, 0, TextureFormat.RGHalf, false);
+        sprite.AtlasRects = sprite.Atlas.PackTextures(frames, 0);
+        if (sprite.AtlasRects == null)
+        {
+            Core.Abort("Couldn't pack sprite \"{0}\"", filename);
+            return null;
+        }
+
+        for (int i = 0; i < frames.Length; i++)
+            GameObject.DestroyImmediate(frames[i]);
+
+        sprite.Sprites = new Sprite[sprite.AtlasRects.Length];
+        for (int i = 0; i < sprite.AtlasRects.Length; i++)
+        {
+            sprite.Sprites[i] = Sprite.Create(sprite.Atlas, new Rect(sprite.AtlasRects[i].x * sprite.Atlas.width,
+                                                                     sprite.AtlasRects[i].y * sprite.Atlas.height,
+                                                                     sprite.AtlasRects[i].width * sprite.Atlas.width,
+                                                                     sprite.AtlasRects[i].height * sprite.Atlas.height), new Vector2(0, 0));
+        }
+
         return sprite;
     }
 }

@@ -2,12 +2,12 @@ using System;
 using System.Text;
 using System.Runtime.InteropServices;
 
-class AllodsException : SystemException
+public class AllodsException : SystemException
 {
     internal AllodsException(string text) : base(text) { /* stub */ }
 }
 
-class Core
+public class Core
 {
     public static void Abort(string format, params object[] args)
     {

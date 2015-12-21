@@ -5,7 +5,7 @@ using System.Text;
 
 using System.IO;
 
-class TerrainLighting
+public class TerrainLighting
 {
     public readonly int Width;
     public readonly int Height;
@@ -92,23 +92,7 @@ class TerrainLighting
     }
 }
 
-class TileLighting
-{
-    public byte[] Lights = new byte[4];
-
-    public void Rebase(TerrainLighting tl, int x, int y)
-    {
-        // l1, l3, l2, l4
-        // original order of arguments: top-left, top-right, bottom-left, bottom-right
-        // reversed order of arguments: top-left, bottom-left, top-right, bottom-right
-        Lights[0] = tl.Result[y * tl.Width + x]; // top-left
-        Lights[1] = tl.Result[(y + 1) * tl.Width + x]; // bottom-left
-        Lights[2] = tl.Result[y * tl.Width + x + 1]; // top-right
-        Lights[3] = tl.Result[(y + 1) * tl.Width + x + 1]; // bottom-right
-    }
-}
-
-class AllodsMap
+public class AllodsMap
 {
     // ====================================
     //  properties

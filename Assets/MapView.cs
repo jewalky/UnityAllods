@@ -27,6 +27,8 @@ public class MapView : MonoBehaviour {
             }
             MapTiles.filterMode = FilterMode.Point;
             MapRects = MapTiles.PackTextures(tiles_tmp, 1);
+            for (int i = 0; i < tiles_tmp.Length; i++)
+                GameObject.DestroyImmediate(tiles_tmp[i]);
         }
 
         MapLogic.Instance.InitFromFile(filename);

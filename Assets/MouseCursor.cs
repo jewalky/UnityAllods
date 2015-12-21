@@ -12,9 +12,10 @@ public class MouseCursor : MonoBehaviour {
         internal float Delay;
     }
 
-    private static MapCursorSettings CurrentCursor = null;
-    private static float LastCursorTime = 0;
-    private static int CurrentCursorFrame = 0;
+    public MapCursorSettings CurrentCursor = null;
+    public Texture2D tex = null;
+    private float LastCursorTime = 0;
+    private int CurrentCursorFrame = 0;
     
     public static MapCursorSettings CreateCursor(string filename, int x, int y, float delay)
     {
@@ -23,22 +24,22 @@ public class MouseCursor : MonoBehaviour {
         mcs.Yoffs = y;
         Images.AllodsSprite sprite = Images.Load16A(filename);
         mcs.Sprite = sprite;
-        mcs.Sprites = new Sprite[sprite.Frames.Length];
-        for (int i = 0; i < mcs.Sprites.Length; i++)
-            mcs.Sprites[i] = Sprite.Create(sprite.Frames[i], new Rect(0, 0, sprite.Frames[i].width, sprite.Frames[i].height), new Vector2(0, 0));
+        mcs.Sprites = mcs.Sprite.Sprites;
         mcs.Delay = delay;
         return mcs;
     }
 
     public static void SetCursor(MapCursorSettings mcs)
     {
-        if (CurrentCursor == mcs)
+        MouseCursor instance = GameObject.FindObjectOfType<MouseCursor>();
+        if (instance.CurrentCursor == mcs)
             return;
-        CurrentCursor = mcs;
-        if (CurrentCursor == null)
+        instance.CurrentCursor = mcs;
+        if (instance.CurrentCursor == null)
             return;
-        LastCursorTime = Time.unscaledTime;
-        CurrentCursorFrame = 0;
+        instance.LastCursorTime = Time.unscaledTime;
+        instance.CurrentCursorFrame = 0;
+        instance.tex = instance.CurrentCursor.Sprite.Atlas;
     }
 
     //public MapCus
@@ -48,10 +49,15 @@ public class MouseCursor : MonoBehaviour {
     // Use this for initialization
     public static MapCursorSettings CurDefault = null;
     public static MapCursorSettings CurWait = null;
-
-    void Start () {
+    public Images.AllodsSprite troll = null;
+    public Texture2D trollTex = null;
+    void Start ()
+    {
         if (!Application.isEditor) // if we remove cursor in editor, it'll affect WHOLE DESKTOP
             Cursor.visible = false;
+
+        troll = Images.Load256("graphics/units/monsters/troll/sprites.256");
+        trollTex = troll.Atlas;
 
         CurDefault = CreateCursor("graphics/cursors/default/sprites.16a", 4, 4, 0);
         CurWait = CreateCursor("graphics/cursors/wait/sprites.16a", 16, 16, 0.05f);
@@ -63,7 +69,8 @@ public class MouseCursor : MonoBehaviour {
 	// Update is called once per frame
     int spidx = 0;
     int palidx = 0;
-	void Update () {
+	void Update ()
+    {
         if (CurrentCursor == null)
         {
             enabled = false;
@@ -77,7 +84,7 @@ public class MouseCursor : MonoBehaviour {
         {
             while (delta >= CurrentCursor.Delay)
             {
-                CurrentCursorFrame = ++CurrentCursorFrame % CurrentCursor.Sprite.Frames.Length;
+                CurrentCursorFrame = ++CurrentCursorFrame % CurrentCursor.Sprites.Length;
                 delta -= CurrentCursor.Delay;
             }
 

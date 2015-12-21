@@ -53,11 +53,13 @@ public class MainCamera : MonoBehaviour {
                 if (m_fpso != null)
                     GameObject.DestroyObject(m_fpso);
                 m_fpso = Fonts.Font1.Render(string.Format("Именем святого Мяу, да будут пирожки с котятами!\nFPS: {0}", (int)fps_lastFramerate), Font.Align.Left, 0, 0, false);
+                m_fpso.name = "FPSString";
                 //m_fpso.transform.parent = transform;
                 m_fpso.transform.position = new Vector3(0, 0, -0.999f);
                 m_fpso.transform.localScale = new Vector3(1, 1, 1);
 
                 GameObject shadow = GameObject.Instantiate(m_fpso);
+                shadow.name = "FPSString_Shadow";
                 shadow.transform.parent = m_fpso.transform;
                 shadow.transform.localPosition = new Vector3(0.01f, 0.01f, 0.01f);
                 shadow.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0, 0, 0, 1));

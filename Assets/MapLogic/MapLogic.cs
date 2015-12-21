@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 class MapNode
 {
@@ -6,6 +7,7 @@ class MapNode
     public byte Light = 255; //?
     public ushort Tile = 0;
     public ushort Flags = 0;
+    public List<MapLogicObject> Objects = new List<MapLogicObject>();
 }
 
 class MapLogic
@@ -25,12 +27,30 @@ class MapLogic
 
     private AllodsMap MapStructure = null;
     private MapNode[] _Nodes = null;
+    private List<MapLogicObject> _Objects = new List<MapLogicObject>();
+    private int _TopObjectID = 0;
     
     public MapNode[] Nodes
     {
         get
         {
             return _Nodes;
+        }
+    }
+
+    public List<MapLogicObject> Objects
+    {
+        get
+        {
+            return _Objects;
+        }
+    }
+
+    public int TopObjectID
+    {
+        get
+        {
+            return _TopObjectID++;
         }
     }
 
@@ -69,31 +89,6 @@ class MapLogic
     private Texture2D MapLightingTex = null;
     private Color MapLightingColor = new Color(1, 1, 1, 1);
     private bool MapLightingUpdated = false;
-
-    public void InitFromFile(string filename)
-    {
-        MapStructure = AllodsMap.LoadFrom(filename);
-        if (MapStructure == null)
-        {
-            Core.Abort("Couldn't load \"{0}\"", filename);
-            return;
-        }
-
-        _Nodes = new MapNode[Width * Height];
-        for (int i = 0; i < Width * Height; i++)
-        {
-            Nodes[i] = new MapNode();
-            Nodes[i].Tile = (ushort)(MapStructure.Tiles[i] & 0x3FF);
-            Nodes[i].Height = MapStructure.Heights[i];
-            Nodes[i].Flags = (ushort)(MapStructure.Tiles[i] & 0xFC00);
-            Nodes[i].Light = 255;
-        }
-
-        MapLighting = new TerrainLighting(Width, Height);
-        CalculateLighting(180);
-
-        Speed = 5;
-    }
 
     public void CalculateLighting(float SolarAngle)
     {
@@ -180,5 +175,32 @@ class MapLogic
         }
 
         _LevelTime++;
+    }
+
+    public void InitFromFile(string filename)
+    {
+        MapStructure = AllodsMap.LoadFrom(filename);
+        if (MapStructure == null)
+        {
+            Core.Abort("Couldn't load \"{0}\"", filename);
+            return;
+        }
+
+        _Nodes = new MapNode[Width * Height];
+        for (int i = 0; i < Width * Height; i++)
+        {
+            Nodes[i] = new MapNode();
+            Nodes[i].Tile = (ushort)(MapStructure.Tiles[i] & 0x3FF);
+            Nodes[i].Height = MapStructure.Heights[i];
+            Nodes[i].Flags = (ushort)(MapStructure.Tiles[i] & 0xFC00);
+            Nodes[i].Light = 255;
+        }
+
+        MapLighting = new TerrainLighting(Width, Height);
+        CalculateLighting(180);
+
+        Speed = 5;
+        _TopObjectID = 0;
+        
     }
 }

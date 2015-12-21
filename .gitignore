@@ -1,4 +1,3 @@
 *.res
 Temp
-Library/ShaderCache
-Library/Metadata
+Library

@@ -90,18 +90,18 @@ class MapLogic
         }
 
         MapLighting = new TerrainLighting(Width, Height);
-        CalculateLighting(180, 1, 1, 1);
+        CalculateLighting(180);
 
         Speed = 5;
     }
 
-    public void CalculateLighting(float SolarAngle, float r, float g, float b)
+    public void CalculateLighting(float SolarAngle)
     {
         MapLighting.Calculate(MapStructure.Heights, (float)SolarAngle);
         for (int i = 0; i < Width * Height; i++)
             Nodes[i].Light = MapLighting.Result[i];
         MapLightingNeedsUpdate = true;
-        GetLightingTexture(r, g, b);
+        GetLightingTexture();
     }
 
     public Texture2D CheckLightingTexture()
@@ -111,17 +111,11 @@ class MapLogic
         return null;
     }
 
-    public Texture2D GetLightingTexture(float r, float g, float b)
+    public Texture2D GetLightingTexture()
     {
-        if (MapLightingColor.r != r || MapLightingColor.g != g || MapLightingColor.b != b)
-        {
-            MapLightingColor = new Color(r, g, b, 1);
-            MapLightingNeedsUpdate = true;
-        }
-
         if (MapLightingTex == null)
         {
-            MapLightingTex = new Texture2D(256, 256, TextureFormat.RGBA32, false);
+            MapLightingTex = new Texture2D(256, 256, TextureFormat.Alpha8, false);
             MapLightingTex.filterMode = FilterMode.Bilinear;
             MapLightingNeedsUpdate = true;
         }
@@ -134,7 +128,7 @@ class MapLogic
                 for (int x = 0; x < Width; x++)
                 {
                     float lvw = (float)Nodes[y * Width + x].Light / 255;
-                    colors[y * 256 + x] = new Color(r * lvw, g * lvw, b * lvw, 1);
+                    colors[y * 256 + x] = new Color(1, 1, 1, lvw);
                 }
             }
             MapLightingTex.SetPixels(colors);
@@ -178,10 +172,10 @@ class MapLogic
     public void Update()
     {
         _slast++;
-        if (_slast > 20)
+        if (_slast > 1)
         {
             _testangle = (_testangle + 15) % 360;
-            CalculateLighting(_testangle, 1, 1, 1);
+            CalculateLighting(_testangle);
             _slast = 0;
         }
 

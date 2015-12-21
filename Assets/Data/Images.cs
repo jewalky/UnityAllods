@@ -338,6 +338,7 @@ public class Images
 
         sprite.Atlas = new Texture2D(0, 0, TextureFormat.RGHalf, false);
         sprite.AtlasRects = sprite.Atlas.PackTextures(frames, 0);
+        sprite.Atlas.filterMode = FilterMode.Point;
         if (sprite.AtlasRects == null)
         {
             Core.Abort("Couldn't pack sprite \"{0}\"", filename);
@@ -450,6 +451,7 @@ public class Images
 
         sprite.Atlas = new Texture2D(0, 0, TextureFormat.RGHalf, false);
         sprite.AtlasRects = sprite.Atlas.PackTextures(frames, 0);
+        sprite.Atlas.filterMode = FilterMode.Point;
         if (sprite.AtlasRects == null)
         {
             Core.Abort("Couldn't pack sprite \"{0}\"", filename);
@@ -571,6 +573,7 @@ public class Images
 
         sprite.Atlas = new Texture2D(0, 0, TextureFormat.RGHalf, false);
         sprite.AtlasRects = sprite.Atlas.PackTextures(frames, 0);
+        sprite.Atlas.filterMode = FilterMode.Point;
         if (sprite.AtlasRects == null)
         {
             Core.Abort("Couldn't pack sprite \"{0}\"", filename);

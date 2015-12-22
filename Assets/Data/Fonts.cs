@@ -275,7 +275,7 @@ public class Font
         MeshFilter mf = go.AddComponent<MeshFilter>();
         MeshRenderer mr = go.AddComponent<MeshRenderer>();
         mf.mesh = mesh;
-        mr.material = new Material(Shader.Find("Custom/MainShaderPaletted"));
+        mr.material = new Material(MainCamera.MainShaderPaletted);
         mr.material.mainTexture = CombinedTexture.Atlas;
         go.transform.localPosition = new Vector3(0, 0, 0);
         go.transform.localScale = new Vector3(1, 1, 1);

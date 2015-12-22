@@ -199,7 +199,30 @@ public class ObstacleClassLoader
             if (cls.CenterY == -2)
                 cls.CenterY = 0;
         }
+    }
 
-        Debug.Log(string.Format("objects loaded in {0}s", Time.realtimeSinceStartup - timestart));
+    private static int LastLoaded = 0;
+    public static float LoadSprites(float time)
+    {
+        InitClasses();
+
+        float timestart = Time.realtimeSinceStartup;
+        for (; LastLoaded < Classes.Count; LastLoaded++)
+        {
+            try
+            {
+                if (Classes[LastLoaded].File != null)
+                    Classes[LastLoaded].File.UpdateSprite();
+            }
+            catch(AllodsException)
+            {
+                Classes[LastLoaded].File = null;
+            }
+
+            if (Time.realtimeSinceStartup - timestart > time)
+                break;
+        }
+
+        return (float)LastLoaded / Classes.Count;
     }
 }

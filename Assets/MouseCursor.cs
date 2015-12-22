@@ -49,6 +49,8 @@ public class MouseCursor : MonoBehaviour {
     // Use this for initialization
     public static MapCursorSettings CurDefault = null;
     public static MapCursorSettings CurWait = null;
+
+    private SpriteRenderer Renderer = null;
     void Start ()
     {
         if (!Application.isEditor) // if we remove cursor in editor, it'll affect WHOLE DESKTOP
@@ -59,6 +61,7 @@ public class MouseCursor : MonoBehaviour {
         SetCursor(CurWait);
 
         transform.localScale = new Vector3(1, 1);
+        Renderer = GetComponent<SpriteRenderer>();
     }
 	
 	// Update is called once per frame
@@ -66,35 +69,33 @@ public class MouseCursor : MonoBehaviour {
     {
         if (CurrentCursor == null)
         {
-            enabled = false;
+            Renderer.enabled = false;
             return;
         }
 
-        if (LastCursorTime == 0)
-            LastCursorTime = Time.unscaledTime;
-        float delta = Time.unscaledTime - LastCursorTime;
-        if (delta > CurrentCursor.Delay)
+        if (CurrentCursor.Delay > 0)
         {
-            while (delta >= CurrentCursor.Delay)
+            if (LastCursorTime == 0)
+                LastCursorTime = Time.unscaledTime;
+            float delta = Time.unscaledTime - LastCursorTime;
+            if (delta > CurrentCursor.Delay)
             {
-                CurrentCursorFrame = ++CurrentCursorFrame % CurrentCursor.Sprites.Length;
-                delta -= CurrentCursor.Delay;
+                while (delta >= CurrentCursor.Delay)
+                {
+                    CurrentCursorFrame = ++CurrentCursorFrame % CurrentCursor.Sprites.Length;
+                    delta -= CurrentCursor.Delay;
+                }
+
+                LastCursorTime = Time.unscaledTime - delta;
             }
-
-            LastCursorTime = Time.unscaledTime - delta;
         }
+        else CurrentCursorFrame = 0;
 
-        enabled = true;
+        Renderer.enabled = true;
         Vector3 mPos = Utils.Vec3InvertY(Input.mousePosition);
         transform.position = new Vector3(mPos.x - (float)CurrentCursor.Xoffs / 100, mPos.y - (float)CurrentCursor.Yoffs / 100, -1);
-        SpriteRenderer sr = GetComponent<SpriteRenderer>();
-        sr.sprite = CurrentCursor.Sprites[CurrentCursorFrame];
-        sr.material.shader = Shader.Find("Custom/MainShaderPaletted");
-        sr.material.SetTexture("_Palette", CurrentCursor.Sprite.OwnPalette);
-    }
-
-    void OnGUI()
-    {
-        //GUI.DrawTexture(new Rect(0, 0, 640, 480), image);
+        Renderer.sprite = CurrentCursor.Sprites[CurrentCursorFrame];
+        Renderer.material.shader = MainCamera.MainShaderPaletted;
+        Renderer.material.SetTexture("_Palette", CurrentCursor.Sprite.OwnPalette);
     }
 }

@@ -329,7 +329,7 @@ public class Images
             Texture2D texture = new Texture2D((int)w, (int)h, TextureFormat.RGHalf, false); // too large, but meh.
             texture.filterMode = FilterMode.Point;
             texture.SetPixels(colors);
-            texture.Apply(false);
+            //texture.Apply(false);
             frames[i] = texture;
             ms.Position = cpos + ds;
         }
@@ -442,7 +442,7 @@ public class Images
             Texture2D texture = new Texture2D((int)w, (int)h, TextureFormat.RGHalf, false); // too large, but meh.
             texture.filterMode = FilterMode.Point;
             texture.SetPixels(colors);
-            texture.Apply(false);
+            //texture.Apply(false);
             frames[i] = texture;
             ms.Position = cpos + ds;
         }
@@ -564,7 +564,7 @@ public class Images
             Texture2D texture = new Texture2D((int)w, (int)h, TextureFormat.RGHalf, false); // too large, but meh.
             texture.filterMode = FilterMode.Point;
             texture.SetPixels(colors);
-            texture.Apply(false);
+            //texture.Apply(false);
             frames[i] = texture;
             ms.Position = cpos + ds;
         }

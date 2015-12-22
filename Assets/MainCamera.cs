@@ -2,6 +2,24 @@
 using System.Collections;
 
 public class MainCamera : MonoBehaviour {
+    private static MainCamera _Instance;
+    public static MainCamera Instance
+    {
+        get
+        {
+            if (_Instance == null)
+                _Instance = GameObject.FindObjectOfType<MainCamera>();
+            return _Instance;
+        }
+    }
+
+    public Shader _MainShader;
+    public Shader _MainShaderPaletted;
+    public Shader _TerrainShader;
+
+    public static Shader MainShader { get { return Instance._MainShader; } }
+    public static Shader MainShaderPaletted { get { return Instance._MainShaderPaletted; } }
+    public static Shader TerrainShader { get { return Instance._TerrainShader; } }
 
     // Use this for initialization
     public GameObject m_fpso = null;
@@ -52,7 +70,7 @@ public class MainCamera : MonoBehaviour {
             {
                 if (m_fpso != null)
                     GameObject.DestroyObject(m_fpso);
-                m_fpso = Fonts.Font1.Render(string.Format("Именем святого Мяу, да будут пирожки с котятами!\nFPS: {0}", (int)fps_lastFramerate), Font.Align.Left, 0, 0, false);
+                m_fpso = Fonts.Font1.Render(string.Format("FPS: {0}", (int)fps_lastFramerate), Font.Align.Left, 0, 0, false);
                 m_fpso.name = "FPSString";
                 //m_fpso.transform.parent = transform;
                 m_fpso.transform.position = new Vector3(0, 0, -0.999f);

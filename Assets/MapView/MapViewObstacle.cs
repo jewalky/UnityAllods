@@ -14,22 +14,23 @@ public class MapViewObstacle : MapViewObject
         }
     }
 
+    private SpriteRenderer Renderer = null;
     public override void Start()
     {
         name = string.Format("Obstacle (ID={0}, Class={1})", LogicObstacle.ID, LogicObstacle.Class.DescText);
         // let's give ourselves a sprite renderer first.
-        SpriteRenderer sr = gameObject.AddComponent<SpriteRenderer>();
-        sr.material = new Material(Shader.Find("Custom/MainShaderPaletted"));
+        Renderer = gameObject.AddComponent<SpriteRenderer>();
+        Renderer.enabled = false;
+        Renderer.material = new Material(MainCamera.MainShaderPaletted);
         transform.localScale = new Vector3(100, 100, 1);
     }
 
     private bool spriteSet = false;
-
     public override void Update()
     {
         if (LogicObstacle.DoUpdateView)
         {
-            SpriteRenderer sr = gameObject.GetComponent<SpriteRenderer>();
+            Renderer.enabled = true;
 
             LogicObstacle.Class.File.UpdateSprite();
             Images.AllodsSprite sprites = LogicObstacle.Class.File.File;
@@ -40,11 +41,11 @@ public class MapViewObstacle : MapViewObject
                                                     xP.y - sprites.Sprites[actualFrame].rect.height * LogicObstacle.Class.CenterY,
                                                     MakeZFromY(xP.y)); // order sprites by y coordinate basically
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicObstacle.Class.CenterX));
-            sr.sprite = sprites.Sprites[actualFrame];
+            Renderer.sprite = sprites.Sprites[actualFrame];
 
             if (!spriteSet)
             {
-                sr.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
+                Renderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
                 spriteSet = true;
             }
 

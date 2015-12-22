@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
+using System.Threading;
 
 public class MapView : MonoBehaviour
 {
@@ -15,7 +16,7 @@ public class MapView : MonoBehaviour
     }
 
     // Use this for initialization
-	void Start ()
+    void Start ()
     {
         //InitFromFile("scenario/10.alm");
         InitFromFile("./an_heaven_5_8.alm");
@@ -86,7 +87,7 @@ public class MapView : MonoBehaviour
                 go.transform.localScale = new Vector3(1, 1, 1);
                 MeshRenderer mr = go.GetComponent<MeshRenderer>();
                 MeshFilter mf = go.GetComponent<MeshFilter>();
-                mr.material = new Material(Shader.Find("Custom/TerrainShader"));
+                mr.material = new Material(MainCamera.TerrainShader);
                 mr.material.mainTexture = MapTiles;
                 int m_x = x * 64;
                 int m_y = y * 64;

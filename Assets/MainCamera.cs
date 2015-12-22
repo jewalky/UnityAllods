@@ -46,9 +46,17 @@ public class MainCamera : MonoBehaviour {
     float fps_lastFramerate = 0.0f;
     float fps_refreshTime = 0.5f;
     bool fps_enabled = true;
+    float gc_timer = 0;
 
     void Update ()
     {
+        gc_timer += Time.unscaledDeltaTime;
+        if (gc_timer >= 1)
+        {
+            Resources.UnloadUnusedAssets();
+            gc_timer = 0;
+        }
+
         if (fps_timeCounter < fps_refreshTime)
         {
             fps_timeCounter += Time.unscaledDeltaTime;
@@ -62,19 +70,18 @@ public class MainCamera : MonoBehaviour {
             fps_timeCounter = 0.0f;
         }
 
-        if (fps_timer == 0)
-            fps_timer = Time.unscaledTime;
-
-        if (Time.unscaledTime - fps_timer >= 1) // display FPS string
+        fps_timer += Time.unscaledDeltaTime;
+        //if (fps_timer >= 1) // display FPS string
         {
-            // collect garbage.
-            Resources.UnloadUnusedAssets();
-
             if (fps_enabled)
             {
                 if (m_fpso != null)
                     GameObject.DestroyObject(m_fpso);
-                m_fpso = Fonts.Font1.Render(string.Format("FPS: {0}", (int)fps_lastFramerate), Font.Align.Left, 0, 0, false);
+                string fpstr = string.Format("FPS: {0}", (int)fps_lastFramerate);
+                if (MapLogic.Instance.IsLoaded)
+                    fpstr += string.Format("\nMouseCell: {0},{1}\nScroll: {2},{3}", MapView.Instance.MouseCellX, MapView.Instance.MouseCellY,
+                                                                                    MapView.Instance.ScrollX, MapView.Instance.ScrollY);
+                m_fpso = Fonts.Font1.Render(fpstr, Font.Align.Left, 0, 0, false);
                 m_fpso.name = "FPSString";
                 //m_fpso.transform.parent = transform;
                 m_fpso.transform.position = new Vector3(0, 0, OverlayZ);
@@ -85,7 +92,7 @@ public class MainCamera : MonoBehaviour {
                 shadow.transform.parent = m_fpso.transform;
                 shadow.transform.localPosition = new Vector3(0.01f, 0.01f, 0.01f);
                 shadow.GetComponent<MeshRenderer>().material.SetColor("_Color", new Color(0, 0, 0, 1));
-                fps_timer = Time.unscaledTime;
+                //fps_timer = 0;
             }
         }
     }

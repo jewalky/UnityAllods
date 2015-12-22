@@ -19,8 +19,8 @@ public class MapView : MonoBehaviour
     void Start ()
     {
         //InitFromFile("scenario/20.alm");
-        //InitFromFile("an_heaven_5_8.alm");
-        InitFromFile("kids3.alm");
+        InitFromFile("an_heaven_5_8.alm");
+        //InitFromFile("kids3.alm");
     }
 
     private Rect _VisibleRect = new Rect(0, 0, 0, 0);
@@ -68,9 +68,22 @@ public class MapView : MonoBehaviour
     Rect[] MeshChunkRects = new Rect[0];
     Mesh[] MeshChunkMeshes = new Mesh[0];
     GameObject[] FOWMeshChunks = new GameObject[0];
+    Material MeshMaterial = null;
+    Material FOWMeshMaterial = null;
 
     void InitMeshes()
     {
+        if (MeshMaterial == null)
+        {
+            MeshMaterial = new Material(MainCamera.TerrainShader);
+            MeshMaterial.mainTexture = MapTiles;
+        }
+
+        if (FOWMeshMaterial == null)
+        {
+            FOWMeshMaterial = new Material(MainCamera.MainShader);
+        }
+
         for (int i = 0; i < MeshChunks.Length; i++)
             Destroy(MeshChunks[i]);
         int cntX = Mathf.CeilToInt((float)MapLogic.Instance.Width / 64);
@@ -89,9 +102,8 @@ public class MapView : MonoBehaviour
                 go.transform.parent = gameObject.transform;
                 go.transform.localScale = new Vector3(1, 1, 1);
                 MeshRenderer mr = go.AddComponent<MeshRenderer>();
+                mr.material = MeshMaterial;
                 MeshFilter mf = go.AddComponent<MeshFilter>();
-                mr.material = new Material(MainCamera.TerrainShader);
-                mr.material.mainTexture = MapTiles;
                 int m_x = x * 64;
                 int m_y = y * 64;
                 int m_w = 64;
@@ -107,7 +119,7 @@ public class MapView : MonoBehaviour
 
                 // also duplicate this object for fog of war drawing
                 FOWMeshChunks[mc] = GameObject.Instantiate(go);
-                FOWMeshChunks[mc].GetComponent<MeshRenderer>().material = new Material(MainCamera.MainShader);
+                FOWMeshChunks[mc].GetComponent<MeshRenderer>().material = FOWMeshMaterial;
                 Mesh m2 = FOWMeshChunks[mc].GetComponent<MeshFilter>().mesh;
                 // update m2 to have uv == uv2
                 m2.uv = m2.uv2;
@@ -132,22 +144,13 @@ public class MapView : MonoBehaviour
 
     void UpdateLighting(Texture2D lightTex)
     {
-        //                mr.material.SetTexture("_LightTex", MapLogic.Instance.GetLightingTexture(1, 1, 1));
-        for (int i = 0; i < MeshChunks.Length; i++)
-        {
-            MeshRenderer mr = MeshChunks[i].GetComponent<MeshRenderer>();
-            mr.material.SetTexture("_LightTex", lightTex);
-        }
+        MeshMaterial.SetTexture("_LightTex", lightTex);
     }
 
     void UpdateFOW(Texture2D fowTex)
     {
-        for (int i = 0; i < FOWMeshChunks.Length; i++)
-        {
-            MeshRenderer mr = FOWMeshChunks[i].GetComponent<MeshRenderer>();
-            mr.material.mainTexture = fowTex;
-            mr.material.SetColor("_Color", new Color(0, 0, 0, 1));
-        }
+        FOWMeshMaterial.mainTexture = fowTex;
+        FOWMeshMaterial.SetColor("_Color", new Color(0, 0, 0, 1));
     }
 
     void UpdateTiles(int WaterAnimFrame)
@@ -324,24 +327,29 @@ public class MapView : MonoBehaviour
         if (x > maxX) x = maxX;
         if (y > maxY) y = maxY;
 
-        _ScrollX = x;
-        _ScrollY = y;
+        if (_ScrollX != x || _ScrollY != y)
+        {
+            _ScrollX = x;
+            _ScrollY = y;
 
-        _VisibleRect = new Rect(x, y, screenWB, screenHB);
-        _VisibleRect.xMin -= 4;
-        _VisibleRect.yMin -= 4;
-        _VisibleRect.xMax += 4;
-        _VisibleRect.yMax += 4;
-        if (_VisibleRect.xMin < 0)
-            _VisibleRect.xMin = 0;
-        if (_VisibleRect.yMin < 0)
-            _VisibleRect.yMin = 0;
-        if (_VisibleRect.xMax > MapLogic.Instance.Width)
-            _VisibleRect.xMax = MapLogic.Instance.Width;
-        if (_VisibleRect.yMax > MapLogic.Instance.Height)
-            _VisibleRect.yMax = MapLogic.Instance.Height;
+            _VisibleRect = new Rect(_ScrollX, _ScrollY, screenWB, screenHB);
+            _VisibleRect.xMin -= 4;
+            _VisibleRect.yMin -= 4;
+            _VisibleRect.xMax += 4;
+            _VisibleRect.yMax += 4;
+            if (_VisibleRect.xMin < 0)
+                _VisibleRect.xMin = 0;
+            if (_VisibleRect.yMin < 0)
+                _VisibleRect.yMin = 0;
+            if (_VisibleRect.xMax > MapLogic.Instance.Width)
+                _VisibleRect.xMax = MapLogic.Instance.Width;
+            if (_VisibleRect.yMax > MapLogic.Instance.Height)
+                _VisibleRect.yMax = MapLogic.Instance.Height;
 
-        this.transform.position = new Vector3((-x * 32) / 100, (-y * 32) / 100, 0);
+            float sx = _ScrollX;
+            float sy = _ScrollY;
+            this.transform.position = new Vector3((-sx * 32) / 100, (-sy * 32) / 100, 0);
+        }
     }
 
     // Update is called once per frame
@@ -390,7 +398,7 @@ public class MapView : MonoBehaviour
             {
                 //Debug.Log(string.Format("{0} {1}", dX, dY));
                 lastScrollTime = 0;
-                SetScroll(ScrollX + deltaX, ScrollY + deltaY);
+                SetScroll(_ScrollX + deltaX, _ScrollY + deltaY);
             }
         }
 

@@ -48,7 +48,12 @@ public class MapLogicObject : IDisposable
         // this is the global logic update
     }
 
-    public void UnlinkFromWorld(int x = -1, int y = -1)
+    public virtual MapNodeFlags GetNodeLinkFlags(int x, int y)
+    {
+        return 0;
+    }
+
+    public virtual void UnlinkFromWorld(int x = -1, int y = -1)
     {
         if (x < 0 || y < 0)
         {
@@ -66,11 +71,12 @@ public class MapLogicObject : IDisposable
                 if (lx < 0 || lx >= mw || ly < 0 || ly >= mh)
                     continue;
                 nodes[ly * mw + lx].Objects.Remove(this); // if any, obviously.
+                nodes[ly * mw + lx].Flags &= ~GetNodeLinkFlags(lx-X, ly-Y);
             }
         }
     }
 
-    public void LinkToWorld(int x = -1, int y = -1)
+    public virtual void LinkToWorld(int x = -1, int y = -1)
     {
         if (x < 0 || y < 0)
         {
@@ -88,7 +94,30 @@ public class MapLogicObject : IDisposable
                 if (lx < 0 || lx >= mw || ly < 0 || ly >= mh)
                     continue;
                 nodes[ly * mw + lx].Objects.Add(this); // if any, obviously.
+                nodes[ly * mw + lx].Flags |= GetNodeLinkFlags(lx-X, ly-Y);
             }
         }
+    }
+
+    public int GetVisibility()
+    {
+        int mw = MapLogic.Instance.Width;
+        int mh = MapLogic.Instance.Height;
+        int TopFlag = 0;
+        for (int ly = Y - 2; ly <= Y + Height + 2; ly++)
+        {
+            for (int lx = X - 2; lx <= X + Width + 2; lx++)
+            {
+                if (lx < 0 || lx >= mw || ly < 0 || ly >= mh)
+                    continue;
+                MapNodeFlags flags = MapLogic.Instance.Nodes[ly * mw + lx].Flags;
+                if ((flags & MapNodeFlags.Visible) != 0)
+                    return 2;
+                else if ((flags & MapNodeFlags.Discovered) != 0)
+                    TopFlag = 1;
+            }
+        }
+
+        return TopFlag;
     }
 }

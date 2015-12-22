@@ -32,7 +32,8 @@ public class MapLogicObstacle : MapLogicObject
 
     public override void Update()
     {
-        if (Class.Frames.Length > 1)
+        // do not animate if visibility != 2, also do not render at all if visibility == 0
+        if (Class.Frames.Length > 1 && GetVisibility() == 2)
         {
             CurrentTime++;
             if (CurrentTime > Class.Frames[CurrentFrame].Time)
@@ -42,5 +43,10 @@ public class MapLogicObstacle : MapLogicObject
                 DoUpdateView = true;
             }
         }
+    }
+
+    public override MapNodeFlags GetNodeLinkFlags(int x, int y)
+    {
+        return MapNodeFlags.BlockedGround;
     }
 }

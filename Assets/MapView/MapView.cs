@@ -18,7 +18,9 @@ public class MapView : MonoBehaviour
     // Use this for initialization
     void Start ()
     {
-        //InitFromFile("scenario/10.alm");
+        //InitFromFile("scenario/20.alm");
+        //InitFromFile("an_heaven_5_8.alm");
+        InitFromFile("kids3.alm");
     }
 
     private Rect _VisibleRect = new Rect(0, 0, 0, 0);
@@ -65,6 +67,7 @@ public class MapView : MonoBehaviour
     GameObject[] MeshChunks = new GameObject[0];
     Rect[] MeshChunkRects = new Rect[0];
     Mesh[] MeshChunkMeshes = new Mesh[0];
+    GameObject[] FOWMeshChunks = new GameObject[0];
 
     void InitMeshes()
     {
@@ -75,17 +78,18 @@ public class MapView : MonoBehaviour
         MeshChunks = new GameObject[cntX * cntY];
         MeshChunkRects = new Rect[cntX * cntY];
         MeshChunkMeshes = new Mesh[cntX * cntY];
+        FOWMeshChunks = new GameObject[cntX * cntY];
         int mc = 0;
         for (int y = 0; y < cntY; y++)
         {
             for (int x = 0; x < cntX; x++)
             {
-                GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                GameObject go = new GameObject();
                 go.name = "MapViewChunk";
                 go.transform.parent = gameObject.transform;
                 go.transform.localScale = new Vector3(1, 1, 1);
-                MeshRenderer mr = go.GetComponent<MeshRenderer>();
-                MeshFilter mf = go.GetComponent<MeshFilter>();
+                MeshRenderer mr = go.AddComponent<MeshRenderer>();
+                MeshFilter mf = go.AddComponent<MeshFilter>();
                 mr.material = new Material(MainCamera.TerrainShader);
                 mr.material.mainTexture = MapTiles;
                 int m_x = x * 64;
@@ -100,6 +104,27 @@ public class MapView : MonoBehaviour
                 MeshChunkRects[mc] = new Rect(m_x, m_y, m_w, m_h);
                 MeshChunkMeshes[mc] = mf.mesh;
                 MeshChunks[mc] = go;
+
+                // also duplicate this object for fog of war drawing
+                FOWMeshChunks[mc] = GameObject.Instantiate(go);
+                FOWMeshChunks[mc].GetComponent<MeshRenderer>().material = new Material(MainCamera.MainShader);
+                Mesh m2 = FOWMeshChunks[mc].GetComponent<MeshFilter>().mesh;
+                // update m2 to have uv == uv2
+                m2.uv = m2.uv2;
+                Vector3[] qv = m2.vertices;
+                for (int i = 0; i < qv.Length; i += 4)
+                {
+                    // in normal terrain mesh, the quads are a bit overlapping, this shouldnt happen in alpha fog of war texture!
+                    qv[i + 1].x -= 1;
+                    qv[i + 2].x -= 1;
+                    qv[i + 2].y -= 1;
+                    qv[i + 3].y -= 1;
+                }
+                m2.vertices = qv;
+                FOWMeshChunks[mc].GetComponent<MeshFilter>().mesh = m2;
+                FOWMeshChunks[mc].transform.parent = transform;
+                FOWMeshChunks[mc].transform.localPosition = new Vector3(0, 0, -8192);
+                FOWMeshChunks[mc].transform.localScale = new Vector3(1, 1, 1);
                 mc++;
             }
         }
@@ -112,6 +137,16 @@ public class MapView : MonoBehaviour
         {
             MeshRenderer mr = MeshChunks[i].GetComponent<MeshRenderer>();
             mr.material.SetTexture("_LightTex", lightTex);
+        }
+    }
+
+    void UpdateFOW(Texture2D fowTex)
+    {
+        for (int i = 0; i < FOWMeshChunks.Length; i++)
+        {
+            MeshRenderer mr = FOWMeshChunks[i].GetComponent<MeshRenderer>();
+            mr.material.mainTexture = fowTex;
+            mr.material.SetColor("_Color", new Color(0, 0, 0, 1));
         }
     }
 
@@ -236,17 +271,20 @@ public class MapView : MonoBehaviour
         {
             for (int lx = x; lx < x + w; lx++)
             {
-                ushort tile = nodes[ly * mw + lx].Tile;
+                MapNode node = nodes[ly * mw + lx];
+
+                ushort tile = node.Tile;
                 int tilenum = (tile & 0xFF0) >> 4; // base rect
                 int tilein = tile & 0x00F; // number of picture inside rect
 
-                if (tilenum >= 0x20 && tilenum <= 0x2F)
+                if (((node.Flags & MapNodeFlags.Visible) != 0) && tilenum >= 0x20 && tilenum <= 0x2F)
                 {
                     tilenum -= 0x20;
                     int tilewi = tilenum / 4;
                     int tilew = tilenum % 4;
                     int waflocal = (tilewi + WaterAnimFrame) % 4;
                     tilenum = 0x20 + (4 * waflocal) + tilew;
+                    node.Tile = (ushort)((tilenum << 4) | tilein);
                 }
 
                 Rect tileBaseRect = MapRects[tilenum];
@@ -260,31 +298,19 @@ public class MapView : MonoBehaviour
         mesh.uv = quv;
     }
 
+    private int _MouseCellX = -1;
+    private int _MouseCellY = -1;
+
+    public int MouseCellX { get { return _MouseCellX; } }
+    public int MouseCellY { get { return _MouseCellY; } }
+
     private int _ScrollX = 8;
     private int _ScrollY = 8;
 
-    public int ScrollX
-    {
-        get
-        {
-            return _ScrollX;
-        }
-    }
-
-    public int ScrollY
-    {
-        get
-        {
-            return _ScrollY;
-        }
-    }
+    public int ScrollX { get { return _ScrollX; } }
+    public int ScrollY { get { return _ScrollY; } }
 
     void SetScroll(int x, int y)
-    {
-        SetScroll(new Vector3(0, 0, 0), x, y);
-    }
-
-    void SetScroll(Vector3 baseOffset, int x, int y)
     {
         int minX = 10;
         int minY = 10;
@@ -320,12 +346,18 @@ public class MapView : MonoBehaviour
 
     // Update is called once per frame
     int waterAnimFrame = 0;
-    void Update ()
+    void Update()
     {
+        if (!MapLogic.Instance.IsLoaded)
+            return;
+
         // update lighting.
         Texture2D lightTex = MapLogic.Instance.CheckLightingTexture();
         if (lightTex != null)
             UpdateLighting(lightTex);
+        Texture2D fowTex = MapLogic.Instance.CheckFOWTexture();
+        if (fowTex != null)
+            UpdateFOW(fowTex);
 
         UpdateInput();
         UpdateLogic();
@@ -342,7 +374,9 @@ public class MapView : MonoBehaviour
     float lastSpeedTime = 0;
     void UpdateInput()
     {
-        if (Time.unscaledTime - lastScrollTime > 0.01)
+        lastScrollTime += Time.unscaledDeltaTime;
+        lastSpeedTime += Time.unscaledDeltaTime;
+        if (lastScrollTime > 0.01)
         {
             int deltaX = 0;
             int deltaY = 0;
@@ -355,39 +389,64 @@ public class MapView : MonoBehaviour
             if (deltaX != 0 || deltaY != 0)
             {
                 //Debug.Log(string.Format("{0} {1}", dX, dY));
-                lastScrollTime = Time.unscaledTime;
+                lastScrollTime = 0;
                 SetScroll(ScrollX + deltaX, ScrollY + deltaY);
             }
         }
 
-        if (Time.unscaledTime - lastSpeedTime > 0.250)
+        if (lastSpeedTime > 0.250)
         {
             float dSpeed = Input.GetAxisRaw("Speed");
             if (dSpeed != 0)
             {
                 if (dSpeed > 0) MapLogic.Instance.Speed++;
                 if (dSpeed < 0) MapLogic.Instance.Speed--;
-                lastSpeedTime = Time.unscaledTime;
+                lastSpeedTime = 0;
                 Debug.Log(string.Format("Speed = {0}", MapLogic.Instance.Speed));
             }
+        }
+
+        // update mouse x/y
+        int oldMouseCellX = MouseCellX;
+        int oldMouseCellY = MouseCellY;
+        Vector3 mPos = Utils.Vec3InvertY(Input.mousePosition);
+        mPos.x *= 100;
+        mPos.y *= 100;
+        mPos.x += ScrollX * 32;
+        mPos.y += ScrollY * 32;
+        float cXFrac = (mPos.x / 32) - Mathf.Floor(mPos.x / 32);
+        _MouseCellX = (int)(mPos.x / 32);
+        _MouseCellY = 0;
+        for (float y = _VisibleRect.yMin; y < _VisibleRect.yMax; y += 1f)
+        {
+            float h1 = GetHeightAt(_MouseCellX, (int)y);
+            float h2 = GetHeightAt(_MouseCellX + 1, (int)y);
+            float h = y * 32 - (h1 * (1f - cXFrac) + h2 * 1f);
+            if (mPos.y > h)
+                _MouseCellY = (int)y;
+            else break;
+        }
+        //Debug.Log(string.Format("mouse = {0} {1} (from {2} {3})", _MouseCellX, _MouseCellY, mPos.x, mPos.y));
+
+        // temporary!
+        if (oldMouseCellX != MouseCellX ||
+            oldMouseCellY != MouseCellY)
+        {
+            MapLogic.Instance.SetTestingVisibility(MouseCellX, MouseCellY, 5);
         }
     }
 
     float lastLogicUpdateTime = 0;
     void UpdateLogic()
     {
-        if (lastLogicUpdateTime == 0)
-            lastLogicUpdateTime = Time.time;
-        float delta = Time.time - lastLogicUpdateTime;
-        if (delta > 1)
+        lastLogicUpdateTime += Time.deltaTime;
+        if (lastLogicUpdateTime >= 1)
         {
-            while (delta >= 1)
+            while (lastLogicUpdateTime >= 1)
             {
                 MapLogic.Instance.Update();
-                delta -= 1;
+                lastLogicUpdateTime -= 1;
             }
-
-            lastLogicUpdateTime = Time.time - delta;
         }
     }
 

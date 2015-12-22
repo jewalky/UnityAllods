@@ -1,12 +1,21 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-class MapNode
+public enum MapNodeFlags
+{
+    BlockedGround = 0x0001,
+    BlockedAir = 0x0002,
+    Discovered = 0x0004, // the cell was visible
+    Visible = 0x0008, // the cell is now visible (always Visible+Discovered means open cell, only Discovered means fog of war, neither means cell is black)
+    Unblocked = 0x0010 // walkable water / rocks
+}
+
+public class MapNode
 {
     public short Height = 0;
     public byte Light = 255; //?
     public ushort Tile = 0;
-    public ushort Flags = 0;
+    public MapNodeFlags Flags = 0;
     public List<MapLogicObject> Objects = new List<MapLogicObject>();
 }
 
@@ -30,6 +39,14 @@ class MapLogic
     private List<MapLogicObject> _Objects = new List<MapLogicObject>();
     private int _TopObjectID = 0;
     
+    public bool IsLoaded
+    {
+        get
+        {
+            return (MapStructure != null);
+        }
+    }
+
     public MapNode[] Nodes
     {
         get
@@ -101,8 +118,12 @@ class MapLogic
 
     public Texture2D CheckLightingTexture()
     {
+        Texture2D tex = GetLightingTexture();
         if (MapLightingUpdated)
-            return MapLightingTex;
+        {
+            MapLightingUpdated = false;
+            return tex;
+        }
         return null;
     }
 
@@ -133,6 +154,53 @@ class MapLogic
         }
 
         return MapLightingTex;
+    }
+
+    private bool MapFOWNeedsUpdate = false;
+    private Texture2D MapFOWTex = null;
+    private bool MapFOWUpdated = false;
+
+    public Texture2D CheckFOWTexture()
+    {
+        Texture2D tex = GetFOWTexture();
+        if (MapFOWUpdated)
+        {
+            MapFOWUpdated = false;
+            return tex;
+        }
+        return null;
+    }
+
+    public Texture2D GetFOWTexture()
+    {
+        if (MapFOWTex == null)
+        {
+            MapFOWTex = new Texture2D(256, 256, TextureFormat.Alpha8, false);
+            MapFOWTex.filterMode = FilterMode.Bilinear;
+            MapFOWNeedsUpdate = true;
+        }
+
+        if (MapFOWNeedsUpdate)
+        {
+            Color[] colors = new Color[256 * 256];
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    MapNodeFlags flags = Nodes[y * Width + x].Flags;
+                    float alpha = 1;
+                    if ((flags & MapNodeFlags.Discovered) != 0) alpha -= 0.5f;
+                    if ((flags & MapNodeFlags.Visible) != 0) alpha -= 0.5f;
+                    colors[y * 256 + x] = new Color(1, 1, 1, alpha);
+                }
+            }
+            MapFOWTex.SetPixels(colors);
+            MapFOWTex.Apply(false);
+            MapFOWNeedsUpdate = false;
+            MapFOWUpdated = true;
+        }
+
+        return MapFOWTex;
     }
 
     private int _LevelTime = 0;
@@ -174,6 +242,8 @@ class MapLogic
     private void InitGeneric()
     {
         ObstacleClassLoader.InitClasses();
+        MapLightingNeedsUpdate = true;
+        MapFOWNeedsUpdate = true;
     }
 
     public void InitFromFile(string filename)
@@ -193,7 +263,9 @@ class MapLogic
             Nodes[i] = new MapNode();
             Nodes[i].Tile = (ushort)(MapStructure.Tiles[i] & 0x3FF);
             Nodes[i].Height = MapStructure.Heights[i];
-            Nodes[i].Flags = (ushort)(MapStructure.Tiles[i] & 0xFC00);
+            //Nodes[i].Flags = (ushort)(MapStructure.Tiles[i] & 0xFC00);
+            //Nodes[i].Flags = MapNodeFlags.Discovered;
+            Nodes[i].Flags = 0;
             Nodes[i].Light = 255;
         }
 
@@ -225,7 +297,31 @@ class MapLogic
                 mob.LinkToWorld();
             }
         }
+    }
 
-        
+    public void SetTestingVisibility(int x, int y, float range)
+    {
+        int ri = (int)range;
+        // first, delete existing visibility
+        for (int ly = 0; ly < Height; ly++)
+        {
+            for (int lx = 0; lx < Width; lx++)
+            {
+                Nodes[ly * Width + lx].Flags &= ~MapNodeFlags.Visible;
+            }
+        }
+
+        for (int ly = y - ri - 1; ly < y + ri; ly++)
+        {
+            for (int lx = x - ri - 1; lx < x + ri; lx++)
+            {
+                if (lx < 0 || lx >= Width ||
+                    ly < 0 || ly >= Height) continue;
+
+                Nodes[ly * Width + lx].Flags |= MapNodeFlags.Visible|MapNodeFlags.Discovered;
+            }
+        }
+
+        MapFOWNeedsUpdate = true;
     }
 }

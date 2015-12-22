@@ -2,6 +2,10 @@
 using System.Collections;
 
 public class MainCamera : MonoBehaviour {
+    public static readonly float OverlayZ = -83;
+    public static readonly float InterfaceZ = -84;
+    public static readonly float MouseZ = -85;
+
     private static MainCamera _Instance;
     public static MainCamera Instance
     {
@@ -73,7 +77,7 @@ public class MainCamera : MonoBehaviour {
                 m_fpso = Fonts.Font1.Render(string.Format("FPS: {0}", (int)fps_lastFramerate), Font.Align.Left, 0, 0, false);
                 m_fpso.name = "FPSString";
                 //m_fpso.transform.parent = transform;
-                m_fpso.transform.position = new Vector3(0, 0, -0.999f);
+                m_fpso.transform.position = new Vector3(0, 0, OverlayZ);
                 m_fpso.transform.localScale = new Vector3(1, 1, 1);
 
                 GameObject shadow = GameObject.Instantiate(m_fpso);

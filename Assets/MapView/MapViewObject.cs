@@ -13,17 +13,9 @@ public class MapViewObject : MonoBehaviour
             LogicObject = lo;
     }
 
-    public bool IsVisible
-    {
-        get
-        {
-            return (MapView.Instance.VisibleRect.Contains(new Vector2(LogicObject.X, LogicObject.Y)));
-        }
-    }
-
     protected float MakeZFromY(float y)
     {
-        return -((float)y / 16384 + 0.1f);
+        return -y;
     }
 
     public virtual void Start()

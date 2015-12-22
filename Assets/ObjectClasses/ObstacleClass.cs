@@ -27,6 +27,7 @@ public class ObstacleFile
 {
     public Images.AllodsSprite File = null;
     public Images.AllodsSprite FileB = null;
+    public Material FileMaterial = null;
     public string FileName = "";
     private bool Loaded = false;
 
@@ -37,6 +38,9 @@ public class ObstacleFile
             try
             {
                 File = Images.Load256("graphics/objects/" + FileName + ".256");
+                FileMaterial = new Material(MainCamera.MainShaderPaletted);
+                FileMaterial.mainTexture = File.Atlas;
+                FileMaterial.SetTexture("_Palette", File.OwnPalette);
             }
             catch(AllodsException)
             {
@@ -57,6 +61,8 @@ public class ObstacleFile
 
 public class ObstacleClassLoader
 {
+    private readonly static int MagicIntNull = unchecked((int)0xDEADFACE);
+
     internal static bool ClassesLoaded = false;
     internal static List<ObstacleFile> Files = new List<ObstacleFile>();
     internal static List<ObstacleClass> Classes = new List<ObstacleClass>();
@@ -107,22 +113,22 @@ public class ObstacleClassLoader
 
             //cls.DescText = RegistryUtil.GetWithParent<string>(reg, on, "DescText", "");
             cls.DescText = reg.GetString(on, "DescText", "");
-            cls.ID = reg.GetInt(on, "ID", -1);
+            cls.ID = reg.GetInt(on, "ID", MagicIntNull);
             //int file = RegistryUtil.GetWithParent<int>(reg, on, "File", -1);
-            int file = reg.GetInt(on, "File", -1);
+            int file = reg.GetInt(on, "File", MagicIntNull);
             if (file >= 0 && file < Files.Count)
                 cls.File = Files[file];
             //cls.Index = RegistryUtil.GetWithParent<int>(reg, on, "Index", 0);
-            cls.Index = reg.GetInt(on, "Index", -1);
+            cls.Index = reg.GetInt(on, "Index", MagicIntNull);
             int centerx = reg.GetInt(on, "CenterX", -1);
             int centery = reg.GetInt(on, "CenterY", -1);
             int width = reg.GetInt(on, "Width", 128);
             int height = reg.GetInt(on, "Height", 128);
             cls.CenterX = (centerx < 0) ? -2 : (float)centerx / width;
             cls.CenterY = (centerx < 0) ? -2 : (float)centery / height;
-            cls.DeadObject = reg.GetInt(on, "DeadObject", -3);
-            cls.Parent = reg.GetInt(on, "Parent", -1);
-            int phases = reg.GetInt(on, "Phases", -1);
+            cls.DeadObject = reg.GetInt(on, "DeadObject", MagicIntNull);
+            cls.Parent = reg.GetInt(on, "Parent", MagicIntNull);
+            int phases = reg.GetInt(on, "Phases", MagicIntNull);
             if (phases == 1)
             {
                 cls.Frames = new ObstacleClass.AnimationFrame[1];
@@ -180,9 +186,9 @@ public class ObstacleClassLoader
 
                 if (cls.Frames == null)
                     cls.Frames = clsp.Frames;
-                if (cls.DeadObject == -3)
+                if (cls.DeadObject == MagicIntNull)
                     cls.DeadObject = clsp.DeadObject;
-                if (cls.Index == -1)
+                if (cls.Index == MagicIntNull)
                     cls.Index = clsp.Index;
                 if (cls.CenterX == -2)
                     cls.CenterX = clsp.CenterX;
@@ -195,8 +201,10 @@ public class ObstacleClassLoader
 
         foreach (ObstacleClass cls in Classes)
         {
-            if (cls.Index == -1)
+            if (cls.Index == MagicIntNull)
                 cls.Index = 1;
+            if (cls.DeadObject == MagicIntNull)
+                cls.DeadObject = -1;
             if (cls.Frames == null)
             {
                 cls.Frames = new ObstacleClass.AnimationFrame[1];

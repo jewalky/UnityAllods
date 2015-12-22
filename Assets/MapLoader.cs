@@ -29,11 +29,11 @@ public class MapLoader : MonoBehaviour
         m_Loading.name = "m_Loading";
     }
 
-    private void SetNamePercent(string text, float percent)
+    private void SetNamePercent(string text, float percent, float totalPercent)
     {
         string textf = text;
         if (percent >= 0)
-            textf += string.Format(" ({0}% done)", (int)(percent * 100));
+            textf += string.Format(" ({0}% done, {1}% total)", (int)(percent * 100), (int)(totalPercent * 100));
         if (m_Loading2 != null)
             GameObject.Destroy(m_Loading2);
         m_Loading2 = Fonts.Font1.Render(textf, Font.Align.Center, Screen.width, 16, false);
@@ -50,7 +50,7 @@ public class MapLoader : MonoBehaviour
     {
         if (timeStart == 0) timeStart = Time.realtimeSinceStartup;
         float f = ObstacleClassLoader.LoadSprites(0.05f);
-        SetNamePercent("Obstacle sprites...", f);
+        SetNamePercent("Obstacle sprites...", f, f);
         if (f == 1 && !loaded)
         {
             Debug.Log(string.Format("loaded in {0}s", Time.realtimeSinceStartup - timeStart));

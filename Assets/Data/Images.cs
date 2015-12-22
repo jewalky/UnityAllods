@@ -317,7 +317,7 @@ public class Images
                     {
                         byte ss = br.ReadByte();
                         //uint px = (ss << 16) | (ss << 8) | (ss) | 0xFF000000;
-                        colors[iy * w + ix] = new Color((float)ss/256, 1, 0, 0);
+                        colors[iy * w + ix] = new Color((float)ss/255.5f, 1, 0, 0);
                         SpriteAddIXIY(ref ix, ref iy, w, 1);
                     }
 
@@ -430,7 +430,7 @@ public class Images
                         uint idx = ((ss & 0xFF00) >> 1) + ((ss & 0x00FF) >> 1);
                         idx &= 0xFF;
                         alpha &= 0xFF;
-                        colors[iy * w + ix] = new Color((float)idx/256, (float)alpha/255, 0, 0);
+                        colors[iy * w + ix] = new Color((float)idx/255.5f, (float)alpha/255, 0, 0);
                         SpriteAddIXIY(ref ix, ref iy, w, 1);
                     }
 

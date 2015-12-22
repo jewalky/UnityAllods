@@ -1,21 +1,33 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class MapView : MonoBehaviour
 {
+    private static MapView _Instance = null;
     public static MapView Instance
     {
         get
         {
-            return GameObject.FindObjectOfType<MapView>();
+            if (_Instance == null) _Instance = GameObject.FindObjectOfType<MapView>();
+            return _Instance;
         }
     }
 
     // Use this for initialization
 	void Start ()
     {
-        //InitFromFile("scenario/20.alm");
+        //InitFromFile("scenario/10.alm");
         InitFromFile("./an_heaven_5_8.alm");
+    }
+
+    private Rect _VisibleRect = new Rect(0, 0, 0, 0);
+    public Rect VisibleRect
+    {
+        get
+        {
+            return _VisibleRect;
+        }
     }
 
     public Texture2D MapTiles = null;
@@ -123,6 +135,14 @@ public class MapView : MonoBehaviour
         UpdatePartialMesh(mesh, rec);
         UpdatePartialTiles(mesh, rec, waterAnimFrame);
         return mesh;
+    }
+
+    short GetHeightAt(int x, int y)
+    {
+        if (x >= 0 && x < MapLogic.Instance.Width &&
+            y >= 0 && y < MapLogic.Instance.Height)
+            return MapLogic.Instance.Nodes[y * MapLogic.Instance.Width + x].Height;
+        return 0;
     }
 
     void UpdatePartialMesh(Mesh mesh, Rect rec)
@@ -281,6 +301,20 @@ public class MapView : MonoBehaviour
         _ScrollX = x;
         _ScrollY = y;
 
+        _VisibleRect = new Rect(x, y, screenWB, screenHB);
+        _VisibleRect.xMin -= 4;
+        _VisibleRect.yMin -= 4;
+        _VisibleRect.xMax += 4;
+        _VisibleRect.yMax += 4;
+        if (_VisibleRect.xMin < 0)
+            _VisibleRect.xMin = 0;
+        if (_VisibleRect.yMin < 0)
+            _VisibleRect.yMin = 0;
+        if (_VisibleRect.xMax > MapLogic.Instance.Width)
+            _VisibleRect.xMax = MapLogic.Instance.Width;
+        if (_VisibleRect.yMax > MapLogic.Instance.Height)
+            _VisibleRect.yMax = MapLogic.Instance.Height;
+
         this.transform.position = new Vector3((-x * 32) / 100, (-y * 32) / 100, 0);
     }
 
@@ -358,12 +392,33 @@ public class MapView : MonoBehaviour
     }
 
     // create gameobject based off this instance for logic
-    public GameObject CreateObject<T>(MapLogicObject obj)
+    public GameObject CreateObject(Type t, MapLogicObject obj)
     {
         GameObject o = new GameObject();
-        MapViewObject viewscript = (MapViewObject)o.AddComponent(typeof(T));
+        MapViewObject viewscript = (MapViewObject)o.AddComponent(t);
         viewscript.SetLogicObject(obj);
         o.transform.parent = transform;
         return o;
+    }
+
+    public Vector2 LerpCoords(float x, float y)
+    {
+        int baseX = (int)x;
+        int baseY = (int)y;
+        float lX = x - baseX; // fractional part
+        float lY = y - baseY; // fractional part
+        Vector2 ov = new Vector2();
+
+        float h1 = GetHeightAt(baseX, baseY);
+        float h2 = GetHeightAt(baseX+1, baseY);
+        float h3 = GetHeightAt(baseX, baseY+1);
+        float h4 = GetHeightAt(baseX+1, baseY+1);
+
+        ov.x = 32 * x;
+        float l1 = h1 * (1.0f - lX) + h2 * lX;
+        float l2 = h3 * (1.0f - lX) + h4 * lX;
+        ov.y = 32 * y - (l1 * (1.0f - lY) + l2 * lY);
+
+        return ov;
     }
 }

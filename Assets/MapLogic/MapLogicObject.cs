@@ -21,21 +21,29 @@ public class MapLogicObject : IDisposable
     public int Width = 0;
     public int Height = 0;
     public GameObject GameObject = null;
-    public const MapLogicObjectType TypePrivate = MapLogicObjectType.Object;
+    public const MapLogicObjectType Type = MapLogicObjectType.Object;
     public readonly int ID = MapLogic.Instance.TopObjectID;
+    public bool DoUpdateView = false;
+
+    protected virtual Type GetGameObjectType() { return typeof(MapViewObject); }
 
     public MapLogicObject()
     {
         MapLogic.Instance.Objects.Add(this);
-        GameObject = MapView.Instance.CreateObject<MapViewObject>(this);
+        GameObject = MapView.Instance.CreateObject(GetGameObjectType(), this);
     }
 
     public void Dispose()
     {
-        GameObject.Destroy(GameObject);
+        UnlinkFromWorld();
+        if (GameObject != null)
+        {
+            GameObject.Destroy(GameObject);
+            GameObject = null;
+        }
     }
 
-    public void Update()
+    public virtual void Update()
     {
         // this is the global logic update
     }

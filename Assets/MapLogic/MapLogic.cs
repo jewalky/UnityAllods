@@ -162,23 +162,24 @@ class MapLogic
         }
     }
 
-    int _testangle = 0;
-    int _slast = 0;
     public void Update()
     {
-        _slast++;
-        if (_slast > 1)
-        {
-            _testangle = (_testangle + 15) % 360;
-            CalculateLighting(_testangle);
-            _slast = 0;
-        }
-
         _LevelTime++;
+        //float time1 = Time.realtimeSinceStartup;
+        foreach (MapLogicObject mo in _Objects)
+            mo.Update();
+        //Debug.Log(string.Format("update = {0}s", Time.realtimeSinceStartup - time1));
+    }
+
+    private void InitGeneric()
+    {
+        ObstacleClassLoader.InitClasses();
     }
 
     public void InitFromFile(string filename)
     {
+        InitGeneric();
+
         MapStructure = AllodsMap.LoadFrom(filename);
         if (MapStructure == null)
         {
@@ -201,6 +202,30 @@ class MapLogic
 
         Speed = 5;
         _TopObjectID = 0;
+
+        /*
+        MapLogicObject mo = new MapLogicObstacle(0);
+        mo.X = 16;
+        mo.Y = 16;
+        mo.Width = 1;
+        mo.Height = 1;
+        mo.LinkToWorld();*/
+        for (int y = 0; y < Height; y++)
+        {
+            for (int x = 0; x < Width; x++)
+            {
+                int typeId = MapStructure.Objects[y * Width + x];
+                if (typeId <= 0) continue;
+                typeId -= 1;
+                MapLogicObstacle mob = new MapLogicObstacle(typeId);
+                mob.X = x;
+                mob.Y = y;
+                mob.Width = 1;
+                mob.Height = 1;
+                mob.LinkToWorld();
+            }
+        }
+
         
     }
 }

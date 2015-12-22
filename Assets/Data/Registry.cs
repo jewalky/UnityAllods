@@ -5,7 +5,7 @@ using System.IO;
 
 public class Registry
 {
-    private enum RegistryNodeType
+    internal enum RegistryNodeType
     {
         Directory,
         String,
@@ -16,7 +16,7 @@ public class Registry
         Null
     }
 
-    private class RegistryNode
+    internal class RegistryNode
     {
         public string Name = "";
 
@@ -30,8 +30,8 @@ public class Registry
         public RegistryNode[] Children = null;
     }
 
-    static readonly int RegistrySignature = 0x31415926;
-    private RegistryNode Root;
+    static private readonly int RegistrySignature = 0x31415926;
+    internal RegistryNode Root;
 
     private static bool TreeTraverse(MemoryStream ms, BinaryReader msb, RegistryNode node, uint first, uint last, uint data_origin)
     {
@@ -53,7 +53,7 @@ public class Registry
             {
                 subnode.Type = RegistryNodeType.String;
                 ms.Seek(data_origin + e_offset, SeekOrigin.Begin);
-                subnode.ValueS = Encoding.GetEncoding(866).GetString(msb.ReadBytes((int)e_count));
+                subnode.ValueS = Core.UnpackByteString(866, msb.ReadBytes((int)e_count));
             }
             else if (e_type == 2) // dword value
             {
@@ -195,5 +195,61 @@ public class Registry
         if ((node == null) ||
             (node.Type != RegistryNodeType.Array)) return def;
         return (int[])node.ValueA.Clone();
+    }
+
+    public object GetGeneric(Type t, string name1, string name2, object def)
+    {
+        if (t == typeof(int))
+            return GetInt(name1, name2, (int)def);
+        else if (t == typeof(float) || t == typeof(double))
+            return GetFloat(name1, name2, (double)def);
+        else if (t == typeof(string))
+            return GetString(name1, name2, (string)def);
+        else if (t == typeof(int[]))
+            return GetArray(name1, name2, (int[])def);
+        return null;
+    }
+}
+
+public class RegistryUtil
+{
+    public static T GetWithParent<T>(Registry reg, string name1, string name2, T def)
+    {
+        int id = reg.GetInt(name1, "ID", -1);
+        while (id != -1)
+        {
+            foreach (Registry.RegistryNode node in reg.Root.Children)
+            {
+                int cid = reg.GetInt(node.Name, "ID", -1);
+                if (cid == id)
+                {
+                    int parent_id = -1;
+                    foreach (Registry.RegistryNode node2 in node.Children)
+                    {
+                        if (node2.Name.ToLower().Equals(name2.ToLower()))
+                        {
+                            if (typeof(T) == typeof(int) && node2.Type == Registry.RegistryNodeType.Int)
+                                return (T)(object)node2.ValueI;
+                            else if (typeof(T) == typeof(float) && node2.Type == Registry.RegistryNodeType.Float)
+                                return (T)(object)node2.ValueF;
+                            else if (typeof(T) == typeof(string) && node2.Type == Registry.RegistryNodeType.String)
+                                return (T)(object)node2.ValueS;
+                            else if (typeof(T) == typeof(int[]) && node2.Type == Registry.RegistryNodeType.Array)
+                                return (T)(object)node2.ValueA;
+                        }
+                        else if (node2.Name == "Parent" && node2.Type == Registry.RegistryNodeType.Int)
+                        {
+                            parent_id = node2.ValueI;
+                        }
+                    }
+
+                    // handle if not found
+                    id = parent_id;
+                    break;
+                }
+            }
+        }
+
+        return def;
     }
 }

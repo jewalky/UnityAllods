@@ -6,19 +6,32 @@ using UnityEngine;
 
 public class MapViewObject : MonoBehaviour
 {
-    private MapLogicObject LogicObject = null;
+    protected MapLogicObject LogicObject = null;
     public void SetLogicObject(MapLogicObject lo)
     {
         if (LogicObject == null)
             LogicObject = lo;
     }
 
-    void Start()
+    public bool IsVisible
     {
-        Debug.Log(string.Format("started with ID={0}", LogicObject.ID));
+        get
+        {
+            return (MapView.Instance.VisibleRect.Contains(new Vector2(LogicObject.X, LogicObject.Y)));
+        }
     }
 
-    void Update()
+    protected float MakeZFromY(float y)
+    {
+        return -((float)y / 16384 + 0.1f);
+    }
+
+    public virtual void Start()
+    {
+        
+    }
+
+    public virtual void Update()
     {
 
     }

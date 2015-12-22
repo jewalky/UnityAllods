@@ -95,12 +95,21 @@ public class MapViewObstacle : MapViewObject
     }
 
     private bool spriteSet = false;
+    private bool oldVisibility = false;
     public override void Update()
     {
         if (LogicObstacle.GetVisibility() == 0)
         {
+            oldVisibility = false;
             Renderer.enabled = false;
             ShadowRenderer.enabled = false;
+            return;
+        }
+        else if (!oldVisibility && !LogicObstacle.DoUpdateView)
+        {
+            Renderer.enabled = true;
+            ShadowRenderer.enabled = true;
+            oldVisibility = true;
             return;
         }
 

@@ -66,8 +66,10 @@ public class MapView : MonoBehaviour
     Rect[] MeshChunkRects = new Rect[0];
     Mesh[] MeshChunkMeshes = new Mesh[0];
     GameObject[] FOWMeshChunks = new GameObject[0];
+    GameObject[] GridMeshChunks = null;
     Material MeshMaterial = null;
     Material FOWMeshMaterial = null;
+    Material GridMeshMaterial = null;
 
     void InitMeshes()
     {
@@ -78,18 +80,27 @@ public class MapView : MonoBehaviour
         }
 
         if (FOWMeshMaterial == null)
-        {
             FOWMeshMaterial = new Material(MainCamera.MainShader);
-        }
+
+        if (GridMeshMaterial == null)
+            GridMeshMaterial = new Material(MainCamera.MainShader);
 
         for (int i = 0; i < MeshChunks.Length; i++)
+        {
             Destroy(MeshChunks[i]);
-        int cntX = Mathf.CeilToInt((float)MapLogic.Instance.Width / 64);
-        int cntY = Mathf.CeilToInt((float)MapLogic.Instance.Height / 64);
+            Destroy(FOWMeshChunks[i]);
+            Destroy(GridMeshChunks[i]);
+        }
+
+        int mw = MapLogic.Instance.Width;
+        int mh = MapLogic.Instance.Height;
+        int cntX = Mathf.CeilToInt((float)mw / 64);
+        int cntY = Mathf.CeilToInt((float)mh / 64);
         MeshChunks = new GameObject[cntX * cntY];
         MeshChunkRects = new Rect[cntX * cntY];
         MeshChunkMeshes = new Mesh[cntX * cntY];
         FOWMeshChunks = new GameObject[cntX * cntY];
+        GridMeshChunks = new GameObject[cntX * cntY];
         int mc = 0;
         for (int y = 0; y < cntY; y++)
         {
@@ -135,9 +146,64 @@ public class MapView : MonoBehaviour
                 FOWMeshChunks[mc].transform.parent = transform;
                 FOWMeshChunks[mc].transform.localPosition = new Vector3(0, 0, -8192);
                 FOWMeshChunks[mc].transform.localScale = new Vector3(1, 1, 1);
+                
+                GameObject ggo = new GameObject();
+                ggo.name = "MapViewGridChunk";
+                ggo.transform.parent = gameObject.transform;
+                ggo.transform.localScale = new Vector3(1, 1, 1);
+                ggo.transform.localPosition = new Vector3(0, 0, -1);
+                MeshRenderer gmr = ggo.AddComponent<MeshRenderer>();
+                gmr.material = GridMeshMaterial;
+                MeshFilter gmf = ggo.AddComponent<MeshFilter>();
+                gmf.mesh = CreatePartialGridMesh(new Rect(m_x, m_y, m_w, m_h));
+                GridMeshChunks[mc] = ggo;
+
                 mc++;
             }
         }
+
+        GridMeshMaterial.color = new Color(1, 0, 0, 0.5f);
+    }
+
+    Mesh CreatePartialGridMesh(Rect rec)
+    {
+        int x = (int)rec.x;
+        int y = (int)rec.y;
+        int w = (int)rec.width;
+        int h = (int)rec.height;
+        int mw = MapLogic.Instance.Width;
+        int mh = MapLogic.Instance.Height;
+        Mesh gmesh = new Mesh();
+        Vector3[] gqv = new Vector3[w * h * 3];
+        int[] gt = new int[w * h * 4];
+        int gpp = 0;
+        MapNode[,] nodes = MapLogic.Instance.Nodes;
+        for (int ly = y; ly < y + h; ly++)
+        {
+            for (int lx = x; lx < x + w; lx++)
+            {
+                short h1 = nodes[lx, ly].Height;
+                short h2 = (lx + 1 < mw) ? nodes[lx + 1, ly].Height : (short)0;
+                short h3 = (ly + 1 < mh) ? nodes[lx, ly + 1].Height : (short)0;
+                short h4 = (lx + 1 < mw && ly + 1 < mh) ? nodes[lx + 1, ly + 1].Height : (short)0;
+                gqv[gpp++] = new Vector3(lx * 32, ly * 32 - h1, 0);
+                gqv[gpp++] = new Vector3(lx * 32 + 33, ly * 32 - h2, 0);
+                gqv[gpp++] = new Vector3(lx * 32, ly * 32 + 32 - h3 + 1f, 0);
+            }
+        }
+
+        gpp = 0;
+        for (int i = 0; i < gqv.Length; i += 3)
+        {
+            gt[gpp++] = i;
+            gt[gpp++] = i + 1;
+            gt[gpp++] = i;
+            gt[gpp++] = i + 2;
+        }
+
+        gmesh.vertices = gqv;
+        gmesh.SetIndices(gt, MeshTopology.Lines, 0);
+        return gmesh;
     }
 
     void UpdateLighting(Texture2D lightTex)
@@ -423,14 +489,16 @@ public class MapView : MonoBehaviour
         float cXFrac = (mPos.x / 32) - Mathf.Floor(mPos.x / 32);
         _MouseCellX = (int)(mPos.x / 32);
         _MouseCellY = 0;
-        for (float y = _VisibleRect.yMin; y < _VisibleRect.yMax; y += 1f)
+        for (int y = (int)_VisibleRect.yMin; y <= _VisibleRect.yMax; y++)
         {
-            float h1 = GetHeightAt(_MouseCellX, (int)y);
-            float h2 = GetHeightAt(_MouseCellX + 1, (int)y);
-            float h = y * 32 - (h1 * (1f - cXFrac) + h2 * 1f);
-            if (mPos.y > h)
-                _MouseCellY = (int)y;
-            else break;
+            float h1 = y * 32 - GetHeightAt(_MouseCellX, y);
+            float h2 = y * 32 - GetHeightAt(_MouseCellX + 1, y);
+            float h = h1 * (1f - cXFrac) + h2 * cXFrac;
+            if (mPos.y < h)
+            {
+                _MouseCellY = y;
+                break;
+            }
         }
         //Debug.Log(string.Format("mouse = {0} {1} (from {2} {3})", _MouseCellX, _MouseCellY, mPos.x, mPos.y));
 

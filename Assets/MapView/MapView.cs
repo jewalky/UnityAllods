@@ -56,8 +56,6 @@ public class MapView : MonoBehaviour
         MapLogic.Instance.InitFromFile(filename);
         Debug.Log(string.Format("map = {0} ({1}x{2})", MapLogic.Instance.Title, MapLogic.Instance.Width - 16, MapLogic.Instance.Height - 16));
 
-        MapNode[] nodes = MapLogic.Instance.Nodes;
-
         this.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
 
         InitMeshes();
@@ -179,7 +177,7 @@ public class MapView : MonoBehaviour
     {
         if (x >= 0 && x < MapLogic.Instance.Width &&
             y >= 0 && y < MapLogic.Instance.Height)
-            return MapLogic.Instance.Nodes[y * MapLogic.Instance.Width + x].Height;
+            return MapLogic.Instance.Nodes[x, y].Height;
         return 0;
     }
 
@@ -191,7 +189,7 @@ public class MapView : MonoBehaviour
         int h = (int)rec.height;
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;
-        MapNode[] nodes = MapLogic.Instance.Nodes;
+        MapNode[,] nodes = MapLogic.Instance.Nodes;
 
         Vector3[] qv = new Vector3[4 * w * h];
         Color[] qc = new Color[4 * w * h];
@@ -202,10 +200,10 @@ public class MapView : MonoBehaviour
         {
             for (int lx = x; lx < x + w; lx++)
             {
-                short h1 = nodes[ly * mw + lx].Height;
-                short h2 = (lx + 1 < mw) ? nodes[ly * mw + lx + 1].Height : (short)0;
-                short h3 = (ly + 1 < mh) ? nodes[(ly + 1) * mw + lx].Height : (short)0;
-                short h4 = (lx + 1 < mw && ly + 1 < mh) ? nodes[(ly + 1) * mw + lx + 1].Height : (short)0;
+                short h1 = nodes[lx, ly].Height;
+                short h2 = (lx + 1 < mw) ? nodes[lx+1, ly].Height : (short)0;
+                short h3 = (ly + 1 < mh) ? nodes[lx, ly+1].Height : (short)0;
+                short h4 = (lx + 1 < mw && ly + 1 < mh) ? nodes[lx+1, ly+1].Height : (short)0;
                 qv[pp++] = new Vector3(lx * 32, ly * 32 - h1, 0);
                 qv[pp++] = new Vector3(lx * 32 + 33, ly * 32 - h2, 0);
                 qv[pp++] = new Vector3(lx * 32 + 33, ly * 32 + 32 - h4 + 1f, 0);
@@ -255,7 +253,7 @@ public class MapView : MonoBehaviour
     void UpdatePartialTiles(Mesh mesh, Rect rec, int WaterAnimFrame = 0)
     {
         WaterAnimFrame %= 4;
-        MapNode[] nodes = MapLogic.Instance.Nodes;
+        MapNode[,] nodes = MapLogic.Instance.Nodes;
 
         int x = (int)rec.x;
         int y = (int)rec.y;
@@ -274,7 +272,7 @@ public class MapView : MonoBehaviour
         {
             for (int lx = x; lx < x + w; lx++)
             {
-                MapNode node = nodes[ly * mw + lx];
+                MapNode node = nodes[lx, ly];
 
                 ushort tile = node.Tile;
                 int tilenum = (tile & 0xFF0) >> 4; // base rect
@@ -445,14 +443,25 @@ public class MapView : MonoBehaviour
     }
 
     float lastLogicUpdateTime = 0;
+    float lastLogTime = 0;
+    float lastUpTime = 0;
     void UpdateLogic()
     {
+        lastLogTime += Time.deltaTime;
         lastLogicUpdateTime += Time.deltaTime;
         if (lastLogicUpdateTime >= 1)
         {
             while (lastLogicUpdateTime >= 1)
             {
+                float time1 = Time.realtimeSinceStartup;
                 MapLogic.Instance.Update();
+                lastUpTime += Time.realtimeSinceStartup - time1;
+                if (lastLogTime >= 1)
+                {
+                    //Debug.Log(string.Format("update = {0}s/1s", lastUpTime));
+                    lastUpTime = 0;
+                    lastLogTime = 0;
+                }
                 lastLogicUpdateTime -= 1;
             }
         }

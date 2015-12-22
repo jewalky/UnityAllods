@@ -35,7 +35,7 @@ class MapLogic
     private MapLogic() { } // disallow instantiation
 
     private AllodsMap MapStructure = null;
-    private MapNode[] _Nodes = null;
+    private MapNode[,] _Nodes = null;
     private List<MapLogicObject> _Objects = new List<MapLogicObject>();
     private int _TopObjectID = 0;
     
@@ -47,7 +47,7 @@ class MapLogic
         }
     }
 
-    public MapNode[] Nodes
+    public MapNode[,] Nodes
     {
         get
         {
@@ -110,8 +110,9 @@ class MapLogic
     public void CalculateLighting(float SolarAngle)
     {
         MapLighting.Calculate(MapStructure.Heights, (float)SolarAngle);
-        for (int i = 0; i < Width * Height; i++)
-            Nodes[i].Light = MapLighting.Result[i];
+        for (int y = 0; y < Height; y++)
+            for (int x = 0; x < Width; x++)
+                Nodes[x, y].Light = MapLighting.Result[y * Width + x];
         MapLightingNeedsUpdate = true;
         GetLightingTexture();
     }
@@ -143,7 +144,7 @@ class MapLogic
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    float lvw = (float)Nodes[y * Width + x].Light / 255;
+                    float lvw = (float)Nodes[x, y].Light / 255;
                     colors[y * 256 + x] = new Color(1, 1, 1, lvw);
                 }
             }
@@ -187,7 +188,7 @@ class MapLogic
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    MapNodeFlags flags = Nodes[y * Width + x].Flags;
+                    MapNodeFlags flags = Nodes[x, y].Flags;
                     float alpha = 1;
                     if ((flags & MapNodeFlags.Discovered) != 0) alpha -= 0.5f;
                     if ((flags & MapNodeFlags.Visible) != 0) alpha -= 0.5f;
@@ -233,10 +234,8 @@ class MapLogic
     public void Update()
     {
         _LevelTime++;
-        //float time1 = Time.realtimeSinceStartup;
         foreach (MapLogicObject mo in _Objects)
             mo.Update();
-        //Debug.Log(string.Format("update = {0}s", Time.realtimeSinceStartup - time1));
     }
 
     private void InitGeneric()
@@ -257,16 +256,19 @@ class MapLogic
             return;
         }
 
-        _Nodes = new MapNode[Width * Height];
-        for (int i = 0; i < Width * Height; i++)
+        _Nodes = new MapNode[Width, Height];
+        for (int y = 0; y < Height; y++)
         {
-            Nodes[i] = new MapNode();
-            Nodes[i].Tile = (ushort)(MapStructure.Tiles[i] & 0x3FF);
-            Nodes[i].Height = MapStructure.Heights[i];
-            //Nodes[i].Flags = (ushort)(MapStructure.Tiles[i] & 0xFC00);
-            //Nodes[i].Flags = MapNodeFlags.Discovered;
-            Nodes[i].Flags = 0;
-            Nodes[i].Light = 255;
+            for (int x = 0; x < Width; x++)
+            {
+                _Nodes[x, y] = new MapNode();
+                _Nodes[x, y].Tile = (ushort)(MapStructure.Tiles[y * Width + x] & 0x3FF);
+                _Nodes[x, y].Height = MapStructure.Heights[y * Width + x];
+                //Nodes[i].Flags = (ushort)(MapStructure.Tiles[y * Width + x] & 0xFC00);
+                //Nodes[i].Flags = MapNodeFlags.Discovered;
+                _Nodes[x, y].Flags = 0;
+                _Nodes[x, y].Light = 255;
+            }
         }
 
         MapLighting = new TerrainLighting(Width, Height);
@@ -307,7 +309,7 @@ class MapLogic
         {
             for (int lx = 0; lx < Width; lx++)
             {
-                Nodes[ly * Width + lx].Flags &= ~MapNodeFlags.Visible;
+                Nodes[lx, ly].Flags &= ~MapNodeFlags.Visible;
             }
         }
 
@@ -318,7 +320,7 @@ class MapLogic
                 if (lx < 0 || lx >= Width ||
                     ly < 0 || ly >= Height) continue;
 
-                Nodes[ly * Width + lx].Flags |= MapNodeFlags.Visible|MapNodeFlags.Discovered;
+                Nodes[lx, ly].Flags |= MapNodeFlags.Visible|MapNodeFlags.Discovered;
             }
         }
 

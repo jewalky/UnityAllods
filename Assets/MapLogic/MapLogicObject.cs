@@ -61,7 +61,7 @@ public class MapLogicObject : IDisposable
             y = Y;
         }
 
-        MapNode[] nodes = MapLogic.Instance.Nodes;
+        MapNode[,] nodes = MapLogic.Instance.Nodes;
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;
         for (int ly = Y; ly < Y + Height; ly++)
@@ -70,8 +70,8 @@ public class MapLogicObject : IDisposable
             {
                 if (lx < 0 || lx >= mw || ly < 0 || ly >= mh)
                     continue;
-                nodes[ly * mw + lx].Objects.Remove(this); // if any, obviously.
-                nodes[ly * mw + lx].Flags &= ~GetNodeLinkFlags(lx-X, ly-Y);
+                nodes[lx, ly].Objects.Remove(this); // if any, obviously.
+                nodes[lx, ly].Flags &= ~GetNodeLinkFlags(lx-X, ly-Y);
             }
         }
     }
@@ -84,7 +84,7 @@ public class MapLogicObject : IDisposable
             y = Y;
         }
 
-        MapNode[] nodes = MapLogic.Instance.Nodes;
+        MapNode[,] nodes = MapLogic.Instance.Nodes;
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;
         for (int ly = Y; ly < Y + Height; ly++)
@@ -93,14 +93,18 @@ public class MapLogicObject : IDisposable
             {
                 if (lx < 0 || lx >= mw || ly < 0 || ly >= mh)
                     continue;
-                nodes[ly * mw + lx].Objects.Add(this); // if any, obviously.
-                nodes[ly * mw + lx].Flags |= GetNodeLinkFlags(lx-X, ly-Y);
+                nodes[lx, ly].Objects.Add(this); // if any, obviously.
+                nodes[lx, ly].Flags |= GetNodeLinkFlags(lx-X, ly-Y);
             }
         }
     }
 
     public int GetVisibility()
     {
+        Rect vrec = MapView.Instance.VisibleRect;
+        if (X > vrec.xMax || X + Width < vrec.xMin ||
+            Y > vrec.yMax || Y + Height < vrec.yMin) return 0;
+
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;
         int TopFlag = 0;
@@ -110,7 +114,7 @@ public class MapLogicObject : IDisposable
             {
                 if (lx < 0 || lx >= mw || ly < 0 || ly >= mh)
                     continue;
-                MapNodeFlags flags = MapLogic.Instance.Nodes[ly * mw + lx].Flags;
+                MapNodeFlags flags = MapLogic.Instance.Nodes[lx, ly].Flags;
                 if ((flags & MapNodeFlags.Visible) != 0)
                     return 2;
                 else if ((flags & MapNodeFlags.Discovered) != 0)

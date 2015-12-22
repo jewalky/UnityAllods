@@ -10,7 +10,7 @@ public class MapView : MonoBehaviour
     {
         get
         {
-            if (_Instance == null) _Instance = GameObject.FindObjectOfType<MapView>();
+            if (_Instance == null) _Instance = GameManager.Instance.MapView;
             return _Instance;
         }
     }
@@ -19,7 +19,6 @@ public class MapView : MonoBehaviour
     void Start ()
     {
         //InitFromFile("scenario/10.alm");
-        InitFromFile("./an_heaven_5_8.alm");
     }
 
     private Rect _VisibleRect = new Rect(0, 0, 0, 0);
@@ -33,7 +32,7 @@ public class MapView : MonoBehaviour
 
     public Texture2D MapTiles = null;
     public Rect[] MapRects = null;
-    void InitFromFile(string filename)
+    public void InitFromFile(string filename)
     {
         if (MapTiles == null)
         {

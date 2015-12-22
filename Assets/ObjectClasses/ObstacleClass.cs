@@ -28,20 +28,29 @@ public class ObstacleFile
     public Images.AllodsSprite File = null;
     public Images.AllodsSprite FileB = null;
     public string FileName = "";
+    private bool Loaded = false;
 
     public void UpdateSprite()
     {
-        if (File == null)
+        if (!Loaded)
         {
-            File = Images.Load256("graphics/objects/" + FileName + ".256");
+            try
+            {
+                File = Images.Load256("graphics/objects/" + FileName + ".256");
+            }
+            catch(AllodsException)
+            {
+                File = null;
+            }
             try
             {
                 FileB = Images.Load256("graphics/objects/" + FileName + "b.256");
             }
-            catch(Exception)
+            catch(AllodsException)
             {
                 FileB = null;
             }
+            Loaded = true;
         }
     }
 }
@@ -207,22 +216,13 @@ public class ObstacleClassLoader
         InitClasses();
 
         float timestart = Time.realtimeSinceStartup;
-        for (; LastLoaded < Classes.Count; LastLoaded++)
+        for (; LastLoaded < Files.Count; LastLoaded++)
         {
-            try
-            {
-                if (Classes[LastLoaded].File != null)
-                    Classes[LastLoaded].File.UpdateSprite();
-            }
-            catch(AllodsException)
-            {
-                Classes[LastLoaded].File = null;
-            }
-
+            Files[LastLoaded].UpdateSprite();
             if (Time.realtimeSinceStartup - timestart > time)
                 break;
         }
 
-        return (float)LastLoaded / Classes.Count;
+        return (float)LastLoaded / Files.Count;
     }
 }

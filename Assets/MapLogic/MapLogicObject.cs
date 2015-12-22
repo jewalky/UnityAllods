@@ -21,10 +21,10 @@ public class MapLogicObject : IDisposable
     public int Width = 0;
     public int Height = 0;
     public GameObject GameObject = null;
-    public const MapLogicObjectType Type = MapLogicObjectType.Object;
     public readonly int ID = MapLogic.Instance.TopObjectID;
     public bool DoUpdateView = false;
 
+    public virtual MapLogicObjectType GetObjectType() { return MapLogicObjectType.Object; }
     protected virtual Type GetGameObjectType() { return typeof(MapViewObject); }
 
     public MapLogicObject()

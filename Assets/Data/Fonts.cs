@@ -6,9 +6,10 @@ using System.Collections.Generic;
 
 public class Font
 {
-    private int[] Widths = new int[224];
-    private Images.AllodsSprite CombinedTexture;
-    private int Spacing = 2;
+    internal int[] Widths = new int[224];
+    internal Images.AllodsSprite CombinedTexture;
+    internal Material CombinedMaterial;
+    internal int Spacing = 2;
     public readonly int LineHeight = 16;
 
     public Font(string filename, int spacing, int line_height, int space_width)
@@ -40,6 +41,8 @@ public class Font
         Widths[0] = space_width;
 
         CombinedTexture = Images.LoadSprite(filename);
+        CombinedMaterial = new Material(MainCamera.MainShaderPaletted);
+        CombinedMaterial.mainTexture = CombinedTexture.Atlas;
     }
 
     public enum Align
@@ -150,10 +153,8 @@ public class Font
         return line_wd;
     }
 
-    public GameObject Render(string text, Align align, int width, int height, bool wrapping)
+    internal void RenderToExistingMesh(Mesh mesh, string text, Align align, int width, int height, bool wrapping)
     {
-        GameObject go = new GameObject();
-
         // todo: wrap text / output
         string text2 = "";
         for (int i = 0; i < text.Length; i++)
@@ -175,11 +176,10 @@ public class Font
             }
         }
 
-        Mesh mesh = new Mesh();
         Vector3[] qv = new Vector3[mesh_quadcnt * 4];
         Color[] qc = new Color[mesh_quadcnt * 4];
         Vector2[] quv = new Vector2[mesh_quadcnt * 4];
-        int[] qt = new int[mesh_quadcnt * 6];
+        int[] qt = new int[mesh_quadcnt * 4];
         int pp = 0;
         int ppc = 0;
         int ppt = 0;
@@ -255,31 +255,99 @@ public class Font
             y += (float)LineHeight;
         }
 
-        pp = 0;
-        for (int i = 0; i < 4 * mesh_quadcnt; i += 4)
-        {
-            qt[pp] = i;
-            qt[pp + 1] = i + 1;
-            qt[pp + 2] = i + 3;
-            qt[pp + 3] = i + 3;
-            qt[pp + 4] = i + 1;
-            qt[pp + 5] = i + 2;
-            pp += 6;
-        }
+        for (int i = 0; i < qt.Length; i++)
+            qt[i] = i;
 
+        mesh.Clear();
         mesh.vertices = qv;
         mesh.colors = qc;
         mesh.uv = quv;
-        mesh.triangles = qt;
+        mesh.SetIndices(qt, MeshTopology.Quads, 0);
+    }
+
+    public GameObject Render(string text, Align align, int width, int height, bool wrapping)
+    {
+        GameObject go = new GameObject();
+
+        Mesh mesh = new Mesh();
+        RenderToExistingMesh(mesh, text, align, width, height, wrapping);
 
         MeshFilter mf = go.AddComponent<MeshFilter>();
         MeshRenderer mr = go.AddComponent<MeshRenderer>();
         mf.mesh = mesh;
-        mr.material = new Material(MainCamera.MainShaderPaletted);
-        mr.material.mainTexture = CombinedTexture.Atlas;
+        mr.material = CombinedMaterial;
         go.transform.localPosition = new Vector3(0, 0, 0);
         go.transform.localScale = new Vector3(1, 1, 1);
         return go;
+    }
+}
+
+public class AllodsTextRenderer
+{
+    private Font _Font;
+    public AllodsTextRenderer(Font font)
+    {
+        _Font = font;
+        _Mesh = new Mesh();
+        _Material = GameObject.Instantiate<Material>(_Font.CombinedMaterial);
+    }
+
+    private string _Text = "";
+    private int _Width = 0;
+    private int _Height = 0;
+    private Font.Align _Align = 0;
+    private bool _Wrapping = false;
+    private Mesh _Mesh = null;
+    private Material _Material = null;
+
+    private void UpdateMesh()
+    {
+        _Font.RenderToExistingMesh(_Mesh, _Text, _Align, _Width, _Height, _Wrapping);
+    }
+
+    public string Text
+    {
+        get { return _Text; }
+        set { if (_Text != value) { _Text = value; UpdateMesh(); } }
+    }
+
+    public int Width
+    {
+        get { return _Width; }
+        set { if (_Width != value) { _Width = value; if (_Wrapping) UpdateMesh(); } }
+    }
+
+    public int Height
+    {
+        get { return _Height; }
+        set { if (_Height != value) { _Height = value; } } // tbh this doesn't affect anything, useless value
+    }
+
+    public Font.Align Align
+    {
+        get { return _Align; }
+        set { if (_Align != value) { _Align = value; UpdateMesh(); } } // tbh this doesn't affect anything, useless value
+    }
+
+    public bool Wrapping
+    {
+        get { return _Wrapping; }
+        set { if (_Wrapping != value) { _Wrapping = value; UpdateMesh(); } }
+    }
+
+    public Mesh Mesh
+    {
+        get { return _Mesh; }
+    }
+
+    public Font Font
+    {
+        get { return _Font; }
+    }
+
+    public Material Material
+    {
+        get { return _Material; }
     }
 }
 

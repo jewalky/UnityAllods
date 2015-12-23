@@ -417,7 +417,10 @@ public class MapView : MonoBehaviour
     }
 
     // Update is called once per frame
+    int ScrollDeltaX = 0;
+    int ScrollDeltaY = 0;
     int waterAnimFrame = 0;
+    float scrollTimer = 0;
     void Update()
     {
         if (!MapLogic.Instance.IsLoaded)
@@ -440,44 +443,78 @@ public class MapView : MonoBehaviour
             waterAnimFrame = waterAnimFrameNew;
             UpdateTiles(waterAnimFrame);
         }
+
+        scrollTimer += Time.unscaledDeltaTime;
+        if (scrollTimer >= 0.01)
+        {
+            SetScroll(ScrollX + ScrollDeltaX, ScrollY + ScrollDeltaY);
+            scrollTimer = 0;
+        }
     }
 
-    float lastScrollTime = 0;
-    float lastSpeedTime = 0;
+    void OnGUI()
+    {
+        Event e = Event.current;
+        if (e.type == EventType.KeyDown)
+        {
+            if (e.keyCode == KeyCode.LeftArrow)
+            {
+                if (ScrollDeltaX == 0)
+                    ScrollDeltaX = -1;
+            }
+            else if (e.keyCode == KeyCode.RightArrow)
+            {
+                if (ScrollDeltaX == 0)
+                    ScrollDeltaX = 1;
+            }
+            else if (e.keyCode == KeyCode.UpArrow)
+            {
+                if (ScrollDeltaY == 0)
+                    ScrollDeltaY = -1;
+            }
+            else if (e.keyCode == KeyCode.DownArrow)
+            {
+                if (ScrollDeltaY == 0)
+                    ScrollDeltaY = 1;
+            }
+            else if (e.keyCode == KeyCode.Plus ||
+                e.keyCode == KeyCode.KeypadPlus)
+            {
+                MapLogic.Instance.Speed++;
+            }
+            else if (e.keyCode == KeyCode.Minus ||
+                e.keyCode == KeyCode.KeypadMinus)
+            {
+                MapLogic.Instance.Speed--;
+            }
+        }
+        else if (e.type == EventType.KeyUp)
+        {
+            if (e.keyCode == KeyCode.LeftArrow)
+            {
+                if (ScrollDeltaX == -1)
+                    ScrollDeltaX = 0;
+            }
+            else if (e.keyCode == KeyCode.RightArrow)
+            {
+                if (ScrollDeltaX == 1)
+                    ScrollDeltaX = 0;
+            }
+            else if (e.keyCode == KeyCode.UpArrow)
+            {
+                if (ScrollDeltaY == -1)
+                    ScrollDeltaY = 0;
+            }
+            else if (e.keyCode == KeyCode.DownArrow)
+            {
+                if (ScrollDeltaY == 1)
+                    ScrollDeltaY = 0;
+            }
+        }
+    }
+
     void UpdateInput()
     {
-        lastScrollTime += Time.unscaledDeltaTime;
-        lastSpeedTime += Time.unscaledDeltaTime;
-        if (lastScrollTime > 0.01)
-        {
-            int deltaX = 0;
-            int deltaY = 0;
-            float dX = Input.GetAxisRaw("Horizontal");
-            float dY = Input.GetAxisRaw("Vertical");
-            if (dX < 0) deltaX = -1;
-            else if (dX > 0) deltaX = 1;
-            if (dY < 0) deltaY = 1;
-            else if (dY > 0) deltaY = -1;
-            if (deltaX != 0 || deltaY != 0)
-            {
-                //Debug.Log(string.Format("{0} {1}", dX, dY));
-                lastScrollTime = 0;
-                SetScroll(_ScrollX + deltaX, _ScrollY + deltaY);
-            }
-        }
-
-        if (lastSpeedTime > 0.250)
-        {
-            float dSpeed = Input.GetAxisRaw("Speed");
-            if (dSpeed != 0)
-            {
-                if (dSpeed > 0) MapLogic.Instance.Speed++;
-                if (dSpeed < 0) MapLogic.Instance.Speed--;
-                lastSpeedTime = 0;
-                Debug.Log(string.Format("Speed = {0}", MapLogic.Instance.Speed));
-            }
-        }
-
         // update mouse x/y
         int oldMouseCellX = MouseCellX;
         int oldMouseCellY = MouseCellY;

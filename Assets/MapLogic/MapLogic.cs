@@ -313,9 +313,9 @@ class MapLogic
             }
         }
 
-        for (int ly = y - ri - 1; ly < y + ri; ly++)
+        for (int ly = y - ri; ly <= y + ri; ly++)
         {
-            for (int lx = x - ri - 1; lx < x + ri; lx++)
+            for (int lx = x - ri; lx <= x + ri; lx++)
             {
                 if (lx < 0 || lx >= Width ||
                     ly < 0 || ly >= Height) continue;

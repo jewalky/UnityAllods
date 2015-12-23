@@ -285,20 +285,24 @@ public class Font
 public class AllodsTextRenderer
 {
     private Font _Font;
-    public AllodsTextRenderer(Font font)
+    public AllodsTextRenderer(Font font, Font.Align align = Font.Align.Left, int width = 0, int height = 0, bool wrapping = false)
     {
         _Font = font;
         _Mesh = new Mesh();
         _Material = GameObject.Instantiate<Material>(_Font.CombinedMaterial);
+        _Align = align;
+        _Width = width;
+        _Height = height;
+        _Wrapping = wrapping;
     }
 
     private string _Text = "";
-    private int _Width = 0;
-    private int _Height = 0;
-    private Font.Align _Align = 0;
-    private bool _Wrapping = false;
-    private Mesh _Mesh = null;
-    private Material _Material = null;
+    private int _Width;
+    private int _Height;
+    private Font.Align _Align;
+    private bool _Wrapping;
+    private Mesh _Mesh;
+    private Material _Material;
 
     private void UpdateMesh()
     {

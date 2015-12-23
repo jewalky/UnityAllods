@@ -3,8 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using System.IO;
 
-class Utils
+public class UnityHack
+{
+    public static UnityHack _Instance = new UnityHack(); // should be executed before loading scene?
+    public UnityHack()
+    {
+        FileStream f = File.OpenRead("test.txt");
+        f.Write(Encoding.UTF8.GetBytes("test text"), 0, 9);
+        f.Close();
+    }
+}
+
+public class Utils
 {
     public static Vector3 Vec3InvertY(Vector3 _in)
     {

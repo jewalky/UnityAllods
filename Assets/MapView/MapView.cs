@@ -3,7 +3,7 @@ using System.Collections;
 using System;
 using System.Threading;
 
-public class MapView : MonoBehaviour
+public class MapView : MonoBehaviour, IUiEventProcessor
 {
     private static MapView _Instance = null;
     public static MapView Instance
@@ -452,40 +452,45 @@ public class MapView : MonoBehaviour
         }
     }
 
-    void OnGUI()
+    public bool ProcessEvent(Event e)
     {
-        Event e = Event.current;
         if (e.type == EventType.KeyDown)
         {
             if (e.keyCode == KeyCode.LeftArrow)
             {
                 if (ScrollDeltaX == 0)
                     ScrollDeltaX = -1;
+                return true;
             }
             else if (e.keyCode == KeyCode.RightArrow)
             {
                 if (ScrollDeltaX == 0)
                     ScrollDeltaX = 1;
+                return true;
             }
             else if (e.keyCode == KeyCode.UpArrow)
             {
                 if (ScrollDeltaY == 0)
                     ScrollDeltaY = -1;
+                return true;
             }
             else if (e.keyCode == KeyCode.DownArrow)
             {
                 if (ScrollDeltaY == 0)
                     ScrollDeltaY = 1;
+                return true;
             }
             else if (e.keyCode == KeyCode.Plus ||
                 e.keyCode == KeyCode.KeypadPlus)
             {
                 MapLogic.Instance.Speed++;
+                return true;
             }
             else if (e.keyCode == KeyCode.Minus ||
                 e.keyCode == KeyCode.KeypadMinus)
             {
                 MapLogic.Instance.Speed--;
+                return true;
             }
         }
         else if (e.type == EventType.KeyUp)
@@ -494,23 +499,29 @@ public class MapView : MonoBehaviour
             {
                 if (ScrollDeltaX == -1)
                     ScrollDeltaX = 0;
+                return true;
             }
             else if (e.keyCode == KeyCode.RightArrow)
             {
                 if (ScrollDeltaX == 1)
                     ScrollDeltaX = 0;
+                return true;
             }
             else if (e.keyCode == KeyCode.UpArrow)
             {
                 if (ScrollDeltaY == -1)
                     ScrollDeltaY = 0;
+                return true;
             }
             else if (e.keyCode == KeyCode.DownArrow)
             {
                 if (ScrollDeltaY == 1)
                     ScrollDeltaY = 0;
+                return true;
             }
         }
+
+        return false;
     }
 
     void UpdateInput()

@@ -144,4 +144,10 @@ public class MapViewObstacle : MapViewObject
             LogicObstacle.DoUpdateView = false;
         }
     }
+
+    void OnDestroy()
+    {
+        GameObject.DestroyImmediate(Filter.mesh, true);
+        GameObject.DestroyImmediate(ShadowFilter.mesh, true);
+    }
 }

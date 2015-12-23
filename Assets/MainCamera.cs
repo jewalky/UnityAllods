@@ -68,7 +68,7 @@ public class MainCamera : MonoBehaviour {
         gc_timer += Time.unscaledDeltaTime;
         if (gc_timer >= 1)
         {
-            Resources.UnloadUnusedAssets();
+            //Resources.UnloadUnusedAssets();
             gc_timer = 0;
         }
 

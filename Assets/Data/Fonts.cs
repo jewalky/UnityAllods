@@ -353,6 +353,16 @@ public class AllodsTextRenderer
     {
         get { return _Material; }
     }
+
+    public void Destroy()
+    {
+        GameObject.Destroy(_Mesh);
+    }
+
+    public void DestroyImmediate()
+    {
+        GameObject.DestroyImmediate(_Mesh);
+    }
 }
 
 public class Fonts

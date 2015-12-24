@@ -41,10 +41,11 @@ public class UiManager : MonoBehaviour
         for (int i = 0; i < tr.childCount; i++)
         {
             GameObject co = tr.GetChild(i).gameObject;
+            if (!co.activeInHierarchy) continue;
             MonoBehaviour[] mb_list = co.GetComponents<MonoBehaviour>();
             foreach (MonoBehaviour mb in mb_list)
             {
-                if (mb is IUiEventProcessor)
+                if (mb.enabled && mb is IUiEventProcessor)
                     Processors.Add(mb);
             }
         }

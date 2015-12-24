@@ -7,10 +7,18 @@ using System.IO;
 
 public class UnityHack
 {
-    public static UnityHack _Instance = new UnityHack(); // should be executed before loading scene?
+    public static UnityHack Instance
+    {
+        get
+        {
+            return _Instance;
+        }
+    }
+
+    private static UnityHack _Instance = new UnityHack(); // should be executed before loading scene?
     public UnityHack()
     {
-        FileStream f = File.OpenRead("test.txt");
+        FileStream f = File.OpenWrite("test.txt");
         f.Write(Encoding.UTF8.GetBytes("test text"), 0, 9);
         f.Close();
     }

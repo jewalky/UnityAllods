@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using System;
 
+[Flags]
 public enum MapNodeFlags
 {
     BlockedGround = 0x0001,
@@ -32,12 +34,43 @@ class MapLogic
         }
     }
 
-    private MapLogic() { } // disallow instantiation
+    private MapLogic()
+    {
+        Objects = new List<MapLogicObject>();
+        Players = new List<MapLogicPlayer>();
+    }
 
     private AllodsMap MapStructure = null;
-    private MapNode[,] _Nodes = null;
-    private List<MapLogicObject> _Objects = new List<MapLogicObject>();
+    public int Width { get; private set; }
+    public int Height { get; private set; }
+    public MapNode[,] Nodes { get; private set; }
+    public List<MapLogicObject> Objects { get; private set; }
     private int _TopObjectID = 0;
+    public List<MapLogicPlayer> Players { get; private set; }
+    public static readonly int MaxPlayers = 1024;
+
+    public int GetFreePlayerID(bool ai)
+    {
+        int startingFrom = 0;
+        if (!ai) startingFrom = 16;
+        // tos 
+        for (; startingFrom < MaxPlayers; startingFrom++)
+        {
+            bool used = false;
+            foreach (MapLogicPlayer player in Players)
+            {
+                if (player.ID == startingFrom)
+                {
+                    used = true;
+                    break;
+                }
+            }
+
+            if (!used) return startingFrom;
+        }
+
+        return -1;
+    }
     
     public bool IsLoaded
     {
@@ -47,47 +80,11 @@ class MapLogic
         }
     }
 
-    public MapNode[,] Nodes
-    {
-        get
-        {
-            return _Nodes;
-        }
-    }
-
-    public List<MapLogicObject> Objects
-    {
-        get
-        {
-            return _Objects;
-        }
-    }
-
     public int TopObjectID
     {
         get
         {
             return _TopObjectID++;
-        }
-    }
-
-    public int Width
-    {
-        get
-        {
-            if (MapStructure != null)
-                return (int)MapStructure.Data.Width;
-            return 0;
-        }
-    }
-
-    public int Height
-    {
-        get
-        {
-            if (MapStructure != null)
-                return (int)MapStructure.Data.Height;
-            return 0;
         }
     }
 
@@ -234,15 +231,16 @@ class MapLogic
     public void Update()
     {
         _LevelTime++;
-        foreach (MapLogicObject mo in _Objects)
+        foreach (MapLogicObject mo in Objects)
             mo.Update();
     }
 
     public void Unload()
     {
-        foreach (MapLogicObject mo in _Objects)
+        foreach (MapLogicObject mo in Objects)
             mo.Dispose();
-        _Objects.Clear();
+        Objects.Clear();
+        Players.Clear();
     }
 
     private void InitGeneric()
@@ -260,27 +258,40 @@ class MapLogic
         MapStructure = AllodsMap.LoadFrom(filename);
         if (MapStructure == null)
         {
-            Core.Abort("Couldn't load \"{0}\"", filename);
+            //Core.Abort("Couldn't load \"{0}\"", filename);
+            GameConsole.Instance.WriteLine("Couldn't load \"{0}\"", filename);
+            Unload();
             return;
         }
 
-        _Nodes = new MapNode[Width, Height];
+        Width = (int)MapStructure.Data.Width;
+        Height = (int)MapStructure.Data.Height;
+
+        Nodes = new MapNode[Width, Height];
         for (int y = 0; y < Height; y++)
         {
             for (int x = 0; x < Width; x++)
             {
-                _Nodes[x, y] = new MapNode();
-                _Nodes[x, y].Tile = (ushort)(MapStructure.Tiles[y * Width + x] & 0x3FF);
-                _Nodes[x, y].Height = MapStructure.Heights[y * Width + x];
+                Nodes[x, y] = new MapNode();
+                Nodes[x, y].Tile = (ushort)(MapStructure.Tiles[y * Width + x] & 0x3FF);
+                Nodes[x, y].Height = MapStructure.Heights[y * Width + x];
                 //Nodes[i].Flags = (ushort)(MapStructure.Tiles[y * Width + x] & 0xFC00);
                 //Nodes[i].Flags = MapNodeFlags.Discovered;
-                _Nodes[x, y].Flags = 0;
-                _Nodes[x, y].Light = 255;
+                Nodes[x, y].Flags = 0;
+                Nodes[x, y].Light = 255;
             }
         }
 
         MapLighting = new TerrainLighting(Width, Height);
         CalculateLighting(180);
+
+        // load players
+        for (int i = 0; i < MapStructure.Players.Length; i++)
+        {
+            MapLogicPlayer player = new MapLogicPlayer(MapStructure.Players[i]);
+            Players.Add(player);
+            Debug.Log(string.Format("player ID={2} {0} (flags {1})", player.Name, player.Flags, player.ID));
+        }
 
         Speed = 5;
         _TopObjectID = 0;

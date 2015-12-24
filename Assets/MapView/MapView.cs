@@ -95,10 +95,19 @@ public class MapView : MonoBehaviour, IUiEventProcessor
 
         for (int i = 0; i < MeshChunks.Length; i++)
         {
-            Destroy(MeshChunks[i]);
-            Destroy(FOWMeshChunks[i]);
-            Destroy(GridMeshChunks[i]);
+            Utils.DestroyObjectAndMesh(MeshChunks[i]);
+            Utils.DestroyObjectAndMesh(FOWMeshChunks[i]);
+            Utils.DestroyObjectAndMesh(GridMeshChunks[i]);
         }
+
+        MeshChunks = new GameObject[0];
+        FOWMeshChunks = new GameObject[0];
+        GridMeshChunks = new GameObject[0];
+        MeshChunkRects = new Rect[0];
+        MeshChunkMeshes = new Mesh[0];
+
+        if (!MapLogic.Instance.IsLoaded)
+            return;
 
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;

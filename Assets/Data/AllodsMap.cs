@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 using System.IO;
 
@@ -98,7 +99,7 @@ public class AllodsMap
     //  properties
     // ====================================
     //
-    public struct AlmData
+    public class AlmData
     {
         public uint Width;
         public uint Height;
@@ -152,39 +153,33 @@ public class AllodsMap
             //Console.WriteLine("data junk1 = {0}, junk2 = {1}, light = {2}", Junk1, Junk2, Darkness);
             Author = Core.UnpackByteString(1251, reader.ReadBytes(0x200));
         }
+    }
 
-        public void SaveToStream(BinaryWriter writer)
+    public class AlmPlayer
+    {
+        public int Color;
+        public uint Flags;//1=AI,2=quest kill
+        public int Money;
+        public string Name;
+        public ushort[] Diplomacy;
+
+        public void LoadFromStream(BinaryReader reader)
         {
-            writer.Write(Width);
-            writer.Write(Height);
-            writer.Write(SolarAngle);
-            writer.Write(TimeOfDay);
-            writer.Write(Darkness);
-            writer.Write(Contrast);
-            writer.Write(UseTiles);
-            writer.Write(CountPlayers);
-            writer.Write(CountBuildings);
-            writer.Write(CountUnits);
-            writer.Write(CountTriggers);
-            writer.Write(CountSacks);
-            writer.Write(CountGroups);
-            writer.Write(CountInns);
-            writer.Write(CountShops);
-            writer.Write(CountPointers);
-            writer.Write(CountMusic);
-            writer.Write(Core.PackByteString(1251, Name, 0x40));
-            writer.Write(RecPlayers);
-            writer.Write(Level);
-            writer.Write(Junk1);
-            writer.Write(Junk2);
-            writer.Write(Core.PackByteString(1251, Author, 0x200));
+            Color = reader.ReadInt32();
+            Flags = reader.ReadUInt32();
+            Money = reader.ReadInt32();
+            Name = Core.UnpackByteString(1251, reader.ReadBytes(0x20));
+            Diplomacy = new ushort[16];
+            for (int i = 0; i < 16; i++)
+                Diplomacy[i] = reader.ReadUInt16();
         }
     }
 
-    public AlmData Data;
+    public AlmData Data = new AlmData();
     public ushort[] Tiles;
     public sbyte[] Heights;
     public byte[] Objects;
+    public AlmPlayer[] Players;
 
     // ====================================
     //  constructors
@@ -193,53 +188,6 @@ public class AllodsMap
     private AllodsMap()
     {
         /* stub */
-    }
-
-    public static AllodsMap New(int width, int height)
-    {
-        width += 16;
-        height += 16;
-
-        AllodsMap alm = new AllodsMap();
-
-        alm.Data.Width = (uint)width;
-        alm.Data.Height = (uint)height;
-        alm.Data.SolarAngle = -45.0f;
-        alm.Data.TimeOfDay = 0;
-        alm.Data.Darkness = 21;
-        alm.Data.Contrast = 128;
-        alm.Data.UseTiles = 0x1FFF;
-
-        alm.Data.CountPlayers = 0;
-        alm.Data.CountBuildings = 0;
-        alm.Data.CountUnits = 0;
-        alm.Data.CountTriggers = 0;
-        alm.Data.CountSacks = 0;
-        alm.Data.CountGroups = 0;
-        alm.Data.CountInns = 0;
-        alm.Data.CountShops = 0;
-        alm.Data.CountPointers = 0;
-        alm.Data.CountMusic = 0;
-
-        alm.Data.Name = "";
-        alm.Data.RecPlayers = 16;
-        alm.Data.Level = 0;
-        alm.Data.Junk1 = 0;
-        alm.Data.Junk2 = 0;
-        alm.Data.Author = "";
-
-        alm.Tiles = new ushort[width * height];
-        alm.Heights = new sbyte[width * height];
-        alm.Objects = new byte[width * height];
-
-        for (int i = 0; i < width * height; i++)
-        {
-            alm.Tiles[i] = 0x011; // grass
-            alm.Heights[i] = 0;
-            alm.Objects[i] = 0;
-        }
-
-        return alm;
     }
 
     public static AllodsMap LoadFrom(string filename)
@@ -279,14 +227,14 @@ public class AllodsMap
                 uint sec_id = msb.ReadUInt32();
                 uint sec_junk2 = msb.ReadUInt32();
 
-                //Console.WriteLine("id = {0}, junk1 = {1}, junk2 = {2}", sec_id, sec_junk1, sec_junk2);
+                //Debug.Log(string.Format("id = {0}, junk1 = {1}, junk2 = {2}", sec_id, sec_junk1, sec_junk2));
 
-                if (sec_id == 0)
+                if (sec_id == 0) // data
                 {
                     alm.Data.LoadFromStream(msb);
                     DataLoaded = true;
                 }
-                else if (sec_id == 1)
+                else if (sec_id == 1) // tiles
                 {
                     if (!DataLoaded)
                     {
@@ -299,7 +247,7 @@ public class AllodsMap
                         alm.Tiles[j] = msb.ReadUInt16();
                     TilesLoaded = true;
                 }
-                else if (sec_id == 2)
+                else if (sec_id == 2) // heights
                 {
                     if (!TilesLoaded)
                     {
@@ -312,7 +260,7 @@ public class AllodsMap
                         alm.Heights[j] = msb.ReadSByte();
                     HeightsLoaded = true;
                 }
-                else if (sec_id == 3)
+                else if (sec_id == 3) // objects (obstacles)
                 {
                     if (!HeightsLoaded)
                     {
@@ -325,75 +273,32 @@ public class AllodsMap
                         alm.Objects[j] = msb.ReadByte();
                     ObjectsLoaded = true;
                 }
-                else break;
+                else if (sec_id == 5) // players
+                {
+                    if (!ObjectsLoaded)
+                    {
+                        ms.Close();
+                        return null;
+                    }
+
+                    alm.Players = new AlmPlayer[alm.Data.CountPlayers];
+                    for (uint j = 0; j < alm.Data.CountPlayers; j++)
+                    {
+                        alm.Players[j] = new AlmPlayer();
+                        alm.Players[j].LoadFromStream(msb);
+                    }
+                }
+                else
+                {
+                    ms.Position += sec_size;
+                }
             }
 
             return alm;
         }
-        catch (Exception)
+        catch (Exception e)
         {
             return null;
-        }
-    }
-
-    // ====================================
-    //  methods
-    // ====================================
-    //
-    private void WriteSection(BinaryWriter fsb, int id, MemoryStream section)
-    {
-        fsb.Write((uint)7);
-        fsb.Write((uint)0x14);
-        fsb.Write((uint)section.Length);
-        fsb.Write((uint)id);
-        fsb.Write((uint)336592946);
-        fsb.Write(section.ToArray());
-    }
-
-    public bool SaveTo(string filename)
-    {
-        try
-        {
-            FileStream fs = File.OpenWrite(filename);
-            BinaryWriter fsb = new BinaryWriter(fs);
-
-            // first, write ALM header
-            // section count is 4 now (0, 1, 2, 3)
-            fsb.Write((uint)0x0052374D);
-            fsb.Write((uint)0x14);
-            fsb.Write((uint)0);
-            fsb.Write((uint)4);
-            fsb.Write((uint)0x640);
-
-            MemoryStream ms = new MemoryStream();
-            BinaryWriter msb = new BinaryWriter(ms);
-
-            // first, write section 0 (data)
-            Data.SaveToStream(msb);
-            WriteSection(fsb, 0, ms);
-
-            ms.SetLength(0);
-            for (uint i = 0; i < Data.Width * Data.Height; i++)
-                msb.Write(Tiles[i]);
-            WriteSection(fsb, 1, ms);
-
-            ms.SetLength(0);
-            for (uint i = 0; i < Data.Width * Data.Height; i++)
-                msb.Write(Heights[i]);
-            WriteSection(fsb, 2, ms);
-
-            ms.SetLength(0);
-            for (uint i = 0; i < Data.Width * Data.Height; i++)
-                msb.Write(Objects[i]);
-            WriteSection(fsb, 3, ms);
-
-            fs.Close();
-            return true;
-        }
-        catch (IOException e)
-        {
-            Console.WriteLine(e.ToString());
-            return false;
         }
     }
 }

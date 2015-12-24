@@ -107,7 +107,6 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
         if (e.type == EventType.KeyDown &&
             e.keyCode == KeyCode.BackQuote)
         {
-            Debug.Log("toggle console");
             ConsoleActive = !ConsoleActive;
             return true;
         }

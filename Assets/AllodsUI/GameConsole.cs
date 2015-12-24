@@ -72,8 +72,8 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
         BgRenderer.enabled = false;
         transform.position = new Vector3(0, 0, MainCamera.InterfaceZ - 0.99f);
 
-        // prepare text.
-        TextRendererA = new AllodsTextRenderer(Fonts.Font2);
+        // prepare text. this renderer will wrap lines based on screen width.
+        TextRendererA = new AllodsTextRenderer(Fonts.Font2, Font.Align.Left, Screen.width - 4, 0, true);
         TextObject = TextRendererA.GetNewGameObject(0.01f, transform, 100);
         TextObject.transform.localPosition = new Vector3(2, 2, -1);
         TextRenderer = TextObject.GetComponent<MeshRenderer>();

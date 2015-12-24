@@ -61,6 +61,7 @@ public class UiManager : MonoBehaviour
                               Event.current.type == EventType.MouseUp);
         for (int i = Processors.Count - 1; i >= 0; i--)
         {
+            if (!Processors[i].isActiveAndEnabled) continue;
             if (((IUiEventProcessor)Processors[i]).ProcessEvent(Event.current) && !EventIsGlobal)
                 break;
         }

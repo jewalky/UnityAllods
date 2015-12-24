@@ -6,8 +6,6 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public MapView MapView;
-
     private static GameManager _Instance = null;
     public static GameManager Instance
     {
@@ -18,9 +16,14 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // since this is a part of global state
+    public MapView MapView;
+    public AllodsUI.GameConsole GameConsole;
+
     void Start()
     {
-
+        GameConsole = Utils.CreateObjectWithScript<AllodsUI.GameConsole>();
+        GameConsole.transform.parent = UiManager.Instance.transform;
     }
 
     void Update()

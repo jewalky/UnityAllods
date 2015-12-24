@@ -17,14 +17,4 @@ public class MapViewObject : MonoBehaviour
     {
         return -y;
     }
-
-    public virtual void Start()
-    {
-        
-    }
-
-    public virtual void Update()
-    {
-
-    }
 }

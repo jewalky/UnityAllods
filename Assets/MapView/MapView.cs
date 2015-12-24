@@ -2,6 +2,7 @@
 using System.Collections;
 using System;
 using System.Threading;
+using System.Collections.Generic;
 
 public class MapView : MonoBehaviour, IUiEventProcessor
 {
@@ -14,12 +15,19 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             return _Instance;
         }
     }
+    
+    void OnDestroy()
+    {
+        UiManager.Instance.Unsubscribe(this);
+    }
 
     // Use this for initialization
     void Start ()
     {
+        UiManager.Instance.Subscribe(this);
+
         //InitFromFile("scenario/20.alm");
-        InitFromFile("an_heaven_5_8.alm");
+        //InitFromFile("an_heaven_5_8.alm");
         //InitFromFile("kids3.alm");
     }
 
@@ -106,9 +114,10 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         {
             for (int x = 0; x < cntX; x++)
             {
-                GameObject go = new GameObject();
+                GameObject go = Utils.CreateObject();
                 go.name = "MapViewChunk";
                 go.transform.parent = gameObject.transform;
+                go.transform.localPosition = new Vector3(0, 0, 0);
                 go.transform.localScale = new Vector3(1, 1, 1);
                 MeshRenderer mr = go.AddComponent<MeshRenderer>();
                 mr.material = MeshMaterial;
@@ -147,7 +156,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                 FOWMeshChunks[mc].transform.localPosition = new Vector3(0, 0, -8192);
                 FOWMeshChunks[mc].transform.localScale = new Vector3(1, 1, 1);
                 
-                GameObject ggo = new GameObject();
+                GameObject ggo = Utils.CreateObject();
                 ggo.name = "MapViewGridChunk";
                 ggo.transform.parent = gameObject.transform;
                 ggo.transform.localScale = new Vector3(1, 1, 1);
@@ -377,7 +386,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     public int ScrollX { get { return _ScrollX; } }
     public int ScrollY { get { return _ScrollY; } }
 
-    void SetScroll(int x, int y)
+    public void SetScroll(int x, int y)
     {
         int minX = 10;
         int minY = 10;
@@ -456,68 +465,54 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     {
         if (e.type == EventType.KeyDown)
         {
-            if (e.keyCode == KeyCode.LeftArrow)
+            switch (e.keyCode)
             {
-                if (ScrollDeltaX == 0)
-                    ScrollDeltaX = -1;
-                return true;
-            }
-            else if (e.keyCode == KeyCode.RightArrow)
-            {
-                if (ScrollDeltaX == 0)
-                    ScrollDeltaX = 1;
-                return true;
-            }
-            else if (e.keyCode == KeyCode.UpArrow)
-            {
-                if (ScrollDeltaY == 0)
-                    ScrollDeltaY = -1;
-                return true;
-            }
-            else if (e.keyCode == KeyCode.DownArrow)
-            {
-                if (ScrollDeltaY == 0)
-                    ScrollDeltaY = 1;
-                return true;
-            }
-            else if (e.keyCode == KeyCode.Plus ||
-                e.keyCode == KeyCode.KeypadPlus)
-            {
-                MapLogic.Instance.Speed++;
-                return true;
-            }
-            else if (e.keyCode == KeyCode.Minus ||
-                e.keyCode == KeyCode.KeypadMinus)
-            {
-                MapLogic.Instance.Speed--;
-                return true;
+                case KeyCode.LeftArrow:
+                    if (ScrollDeltaX == 0)
+                        ScrollDeltaX = -1;
+                    return true;
+                case KeyCode.RightArrow:
+                    if (ScrollDeltaX == 0)
+                        ScrollDeltaX = 1;
+                    return true;
+                case KeyCode.UpArrow:
+                    if (ScrollDeltaY == 0)
+                        ScrollDeltaY = -1;
+                    return true;
+                case KeyCode.DownArrow:
+                    if (ScrollDeltaY == 0)
+                        ScrollDeltaY = 1;
+                    return true;
+                case KeyCode.Plus:
+                case KeyCode.KeypadPlus:
+                    MapLogic.Instance.Speed++;
+                    return true;
+                case KeyCode.Minus:
+                case KeyCode.KeypadMinus:
+                    MapLogic.Instance.Speed--;
+                    return true;
             }
         }
         else if (e.type == EventType.KeyUp)
         {
-            if (e.keyCode == KeyCode.LeftArrow)
+            switch (e.keyCode)
             {
-                if (ScrollDeltaX == -1)
-                    ScrollDeltaX = 0;
-                return true;
-            }
-            else if (e.keyCode == KeyCode.RightArrow)
-            {
-                if (ScrollDeltaX == 1)
-                    ScrollDeltaX = 0;
-                return true;
-            }
-            else if (e.keyCode == KeyCode.UpArrow)
-            {
-                if (ScrollDeltaY == -1)
-                    ScrollDeltaY = 0;
-                return true;
-            }
-            else if (e.keyCode == KeyCode.DownArrow)
-            {
-                if (ScrollDeltaY == 1)
-                    ScrollDeltaY = 0;
-                return true;
+                case KeyCode.LeftArrow:
+                    if (ScrollDeltaX == -1)
+                        ScrollDeltaX = 0;
+                    return true;
+                case KeyCode.RightArrow:
+                    if (ScrollDeltaX == 1)
+                        ScrollDeltaX = 0;
+                    return true;
+                case KeyCode.UpArrow:
+                    if (ScrollDeltaY == -1)
+                        ScrollDeltaY = 0;
+                    return true;
+                case KeyCode.DownArrow:
+                    if (ScrollDeltaY == 1)
+                        ScrollDeltaY = 0;
+                    return true;
             }
         }
 
@@ -586,7 +581,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     // create gameobject based off this instance for logic
     public GameObject CreateObject(Type t, MapLogicObject obj)
     {
-        GameObject o = new GameObject();
+        GameObject o = Utils.CreateObject();
         MapViewObject viewscript = (MapViewObject)o.AddComponent(t);
         viewscript.SetLogicObject(obj);
         o.transform.parent = transform;

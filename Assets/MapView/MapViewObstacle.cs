@@ -73,7 +73,7 @@ public class MapViewObstacle : MapViewObject
         ObstacleMesh = mesh;
     }
 
-    public override void Start()
+    public void Start()
     {
         name = string.Format("Obstacle (ID={0}, Class={1})", LogicObstacle.ID, LogicObstacle.Class.DescText);
         // let's give ourselves a sprite renderer first.
@@ -83,7 +83,7 @@ public class MapViewObstacle : MapViewObject
         Filter.mesh = new Mesh();
         transform.localScale = new Vector3(1, 1, 1);
         
-        ShadowObject = new GameObject();
+        ShadowObject = Utils.CreateObject();
         ShadowObject.name = "Shadow";
         ShadowObject.transform.parent = transform;
         ShadowRenderer = ShadowObject.AddComponent<MeshRenderer>();
@@ -96,7 +96,7 @@ public class MapViewObstacle : MapViewObject
 
     private bool spriteSet = false;
     private bool oldVisibility = false;
-    public override void Update()
+    public void Update()
     {
         if (LogicObstacle.GetVisibility() == 0)
         {

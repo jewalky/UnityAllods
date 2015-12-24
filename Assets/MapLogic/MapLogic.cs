@@ -238,6 +238,13 @@ class MapLogic
             mo.Update();
     }
 
+    public void Unload()
+    {
+        foreach (MapLogicObject mo in _Objects)
+            mo.Dispose();
+        _Objects.Clear();
+    }
+
     private void InitGeneric()
     {
         ObstacleClassLoader.InitClasses();
@@ -247,6 +254,7 @@ class MapLogic
 
     public void InitFromFile(string filename)
     {
+        Unload();
         InitGeneric();
 
         MapStructure = AllodsMap.LoadFrom(filename);

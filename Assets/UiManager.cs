@@ -31,38 +31,25 @@ public class UiManager : MonoBehaviour
 
     void Update()
     {
-        Processors.Clear();
         GotProcessors = false;
     }
 
-    void EnumerateChildObjects(Transform tr)
+    public void Subscribe(IUiEventProcessor mb)
     {
-        int start = Processors.Count;
-        for (int i = 0; i < tr.childCount; i++)
-        {
-            GameObject co = tr.GetChild(i).gameObject;
-            if (!co.activeInHierarchy) continue;
-            MonoBehaviour[] mb_list = co.GetComponents<MonoBehaviour>();
-            foreach (MonoBehaviour mb in mb_list)
-            {
-                if (mb.enabled && mb is IUiEventProcessor)
-                    Processors.Add(mb);
-            }
-        }
+        if (!Processors.Contains((MonoBehaviour)mb))
+            Processors.Add((MonoBehaviour)mb);
+    }
 
-        int added_count = Processors.Count - start;
-        for (int i = start; i < start + added_count; i++)
-            EnumerateChildObjects(Processors[i].gameObject.transform);
+    public void Unsubscribe(IUiEventProcessor mb)
+    {
+        Processors.Remove((MonoBehaviour)mb);
     }
 
     void EnumerateObjects()
     {
         if (GotProcessors) return;
-        // traverse the tree
+        Processors.Sort((a, b) => b.transform.position.z.CompareTo(a.transform.position.z));
         GotProcessors = true;
-        //float time1 = Time.realtimeSinceStartup;
-        EnumerateChildObjects(SceneRoot.Instance.transform);
-        //Debug.Log(string.Format("objects = {0}, run in {1}s, {2} in transform root", Processors.Count, Time.realtimeSinceStartup - time1, transform.root.childCount));
     }
 
     void OnGUI()
@@ -70,9 +57,11 @@ public class UiManager : MonoBehaviour
         // send event.current to every object that has subscribed. if some object processes an event, don't send it further.
         EnumerateObjects();
         // reverse iteration
+        bool EventIsGlobal = (Event.current.type == EventType.KeyUp ||
+                              Event.current.type == EventType.MouseUp);
         for (int i = Processors.Count - 1; i >= 0; i--)
         {
-            if (((IUiEventProcessor)Processors[i]).ProcessEvent(Event.current))
+            if (((IUiEventProcessor)Processors[i]).ProcessEvent(Event.current) && !EventIsGlobal)
                 break;
         }
     }

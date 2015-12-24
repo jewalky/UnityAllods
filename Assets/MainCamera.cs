@@ -40,18 +40,8 @@ public class MainCamera : MonoBehaviour {
         Debug.Log(string.Format("{0}x{1}", Screen.width, Screen.height));
 
         m_fpsr = new AllodsTextRenderer(Fonts.Font1);
-        m_fpso = new GameObject();
-        m_fpso.AddComponent<MeshFilter>().mesh = m_fpsr.Mesh;
-        MeshRenderer mr = m_fpso.AddComponent<MeshRenderer>();
-        mr.material = m_fpsr.Material;
-        m_fpso.name = "FPSString";
-        m_fpso.transform.position = new Vector3(0, 0, OverlayZ);
-        m_fpso.transform.localScale = new Vector3(1, 1, 1);
-        GameObject shadow = GameObject.Instantiate(m_fpso);
-        shadow.name = "FPSString_Shadow";
-        shadow.transform.parent = m_fpso.transform;
-        shadow.transform.localPosition = new Vector3(0.01f, 0.01f, 0.01f);
-        shadow.GetComponent<MeshRenderer>().material.color = new Color(0, 0, 0, 1);
+        m_fpso = m_fpsr.GetNewGameObject(0.01f, SceneRoot.Instance.transform);
+        m_fpso.transform.position = new Vector3(0, 0, OverlayZ+0.99f);
     }
 
     // Update is called once per frame
@@ -66,9 +56,9 @@ public class MainCamera : MonoBehaviour {
     void Update ()
     {
         gc_timer += Time.unscaledDeltaTime;
-        if (gc_timer >= 1)
+        if (gc_timer >= 5)
         {
-            //Resources.UnloadUnusedAssets();
+            Resources.UnloadUnusedAssets();
             gc_timer = 0;
         }
 
@@ -90,7 +80,7 @@ public class MainCamera : MonoBehaviour {
         {
             if (fps_enabled)
             {
-                string fpstr = string.Format("FPS: {0}", (int)fps_lastFramerate);
+                string fpstr = string.Format("FPS: {0}\nMeshDebug: {1}", (int)fps_lastFramerate, m_fpsr.Height);
                 if (MapLogic.Instance.IsLoaded)
                     fpstr += string.Format("\nMouseCell: {0},{1}\nScroll: {2},{3}", MapView.Instance.MouseCellX, MapView.Instance.MouseCellY,
                                                                                     MapView.Instance.ScrollX, MapView.Instance.ScrollY);

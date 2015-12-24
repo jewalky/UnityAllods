@@ -224,4 +224,19 @@ public class ResourceManager
             return null;
         }
     }
+
+    public static bool FileExists(string filename)
+    {
+        UpdateFiles();
+
+        if (!filename.ToLower().StartsWith("patch") &&
+            !Path.IsPathRooted(filename) && FileExists("patch\\" + filename))
+                return true;
+
+        if (File.Exists(filename))
+            return true;
+
+        ResourceNode node = GetResourceNode(filename);
+        return (node != null && !node.IsDirectory);
+    }
 }

@@ -153,7 +153,7 @@ public class Font
         return line_wd;
     }
 
-    internal void RenderToExistingMesh(Mesh mesh, string text, Align align, int width, int height, bool wrapping)
+    internal void RenderToExistingMesh(Mesh mesh, string text, Align align, int width, int height, bool wrapping, out int realheight)
     {
         // todo: wrap text / output
         string text2 = "";
@@ -163,7 +163,7 @@ public class Font
         string[] wrapped = Wrap(text2, width, wrapping);
 
         int vx = 0;
-
+        realheight = 0;
         // count of quads in mesh == count of characters
         int mesh_quadcnt = 0;
         for (int i = 0; i < wrapped.Length; i++)
@@ -255,6 +255,8 @@ public class Font
             y += (float)LineHeight;
         }
 
+        realheight = (int)y;
+
         for (int i = 0; i < qt.Length; i++)
             qt[i] = i;
 
@@ -267,10 +269,16 @@ public class Font
 
     public GameObject Render(string text, Align align, int width, int height, bool wrapping)
     {
-        GameObject go = new GameObject();
+        int tmp;
+        return Render(text, align, width, height, wrapping, out tmp);
+    }
+
+    public GameObject Render(string text, Align align, int width, int height, bool wrapping, out int realheight)
+    {
+        GameObject go = Utils.CreateObject();
 
         Mesh mesh = new Mesh();
-        RenderToExistingMesh(mesh, text, align, width, height, wrapping);
+        RenderToExistingMesh(mesh, text, align, width, height, wrapping, out realheight);
 
         MeshFilter mf = go.AddComponent<MeshFilter>();
         MeshRenderer mr = go.AddComponent<MeshRenderer>();
@@ -306,7 +314,7 @@ public class AllodsTextRenderer
 
     private void UpdateMesh()
     {
-        _Font.RenderToExistingMesh(_Mesh, _Text, _Align, _Width, _Height, _Wrapping);
+        _Font.RenderToExistingMesh(_Mesh, _Text, _Align, _Width, _Height, _Wrapping, out _Height);
     }
 
     public string Text
@@ -352,6 +360,28 @@ public class AllodsTextRenderer
     public Material Material
     {
         get { return _Material; }
+    }
+
+    public GameObject GetNewGameObject(float shadowPos = 0, Transform parent_transform = null, float scale = 1f)
+    {
+        GameObject go = Utils.CreateObject();
+        go.AddComponent<MeshFilter>().mesh = _Mesh;
+        MeshRenderer mr = go.AddComponent<MeshRenderer>();
+        mr.material = _Material;
+        go.name = "AllodsTextRenderer$GetNewGameObject";
+        go.transform.parent = parent_transform;
+        go.transform.position = new Vector3(0, 0, 0);
+        go.transform.localScale = new Vector3(scale, scale, 1);
+        if (shadowPos != 0)
+        {
+            GameObject shadow = GameObject.Instantiate(go);
+            shadow.name = "AllodsTextRenderer$GetNewGameObject$Shadow";
+            shadow.transform.parent = go.transform;
+            shadow.transform.localPosition = new Vector3(shadowPos, shadowPos, 0.01f);
+            shadow.transform.localScale = new Vector3(1, 1, 1);
+            shadow.GetComponent<MeshRenderer>().material.color = new Color(0, 0, 0, 1);
+        }
+        return go;
     }
 
     public void Destroy()

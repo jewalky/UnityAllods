@@ -5,25 +5,6 @@ using System.Text;
 using UnityEngine;
 using System.IO;
 
-public class UnityHack
-{
-    public static UnityHack Instance
-    {
-        get
-        {
-            return _Instance;
-        }
-    }
-
-    private static UnityHack _Instance = new UnityHack(); // should be executed before loading scene?
-    public UnityHack()
-    {
-        FileStream f = File.OpenWrite("test.txt");
-        f.Write(Encoding.UTF8.GetBytes("test text"), 0, 9);
-        f.Close();
-    }
-}
-
 public class Utils
 {
     public static Vector3 Vec3InvertY(Vector3 _in)
@@ -52,6 +33,37 @@ public class Utils
             GameObject.DestroyImmediate(mr.sharedMaterial, true);
         }
         GameObject.DestroyImmediate(o, true);
+    }
+
+    public static T CreateObjectWithScript<T>() where T : UnityEngine.Component
+    {
+        GameObject go = CreateObject();
+        go.name = typeof(T).Name+"$Object";
+        return go.AddComponent<T>();
+    }
+
+    public static GameObject CreateObject()
+    {
+        GameObject go = new GameObject();
+        go.transform.parent = SceneRoot.Instance.transform;
+        return go;
+    }
+
+    public static GameObject CreatePrimitive(PrimitiveType pt)
+    {
+        GameObject go = GameObject.CreatePrimitive(pt);
+        go.transform.parent = SceneRoot.Instance.transform;
+        return go;
+    }
+
+    public static void SetRendererEnabledWithChildren(GameObject parent, bool enabled)
+    {
+        Renderer prenderer = parent.GetComponent<Renderer>();
+        if (prenderer != null) prenderer.enabled = enabled;
+        Renderer[] renderers;
+        renderers = parent.GetComponentsInChildren<Renderer>();
+        foreach (Renderer renderer in renderers)
+            renderer.enabled = enabled;
     }
 }
 

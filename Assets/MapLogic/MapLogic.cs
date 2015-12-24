@@ -290,19 +290,12 @@ class MapLogic
         {
             MapLogicPlayer player = new MapLogicPlayer(MapStructure.Players[i]);
             Players.Add(player);
-            Debug.Log(string.Format("player ID={2} {0} (flags {1})", player.Name, player.Flags, player.ID));
+            //Debug.Log(string.Format("player ID={2} {0} (flags {1})", player.Name, player.Flags, player.ID));
         }
 
         Speed = 5;
         _TopObjectID = 0;
 
-        /*
-        MapLogicObject mo = new MapLogicObstacle(0);
-        mo.X = 16;
-        mo.Y = 16;
-        mo.Width = 1;
-        mo.Height = 1;
-        mo.LinkToWorld();*/
         for (int y = 0; y < Height; y++)
         {
             for (int x = 0; x < Width; x++)
@@ -318,6 +311,8 @@ class MapLogic
                 mob.LinkToWorld();
             }
         }
+
+        TemplateLoader.LoadTemplates();
     }
 
     public void SetTestingVisibility(int x, int y, float range)

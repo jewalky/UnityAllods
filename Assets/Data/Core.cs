@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Runtime.InteropServices;
+using System.IO;
 
 public class AllodsException : SystemException
 {
@@ -34,5 +35,41 @@ public class Core
             else b_out[i] = 0;
         }
         return b_out;
+    }
+
+    public static string ReadSmallString(BinaryReader br)
+    {
+        byte size = br.ReadByte();
+        return UnpackByteString(866, br.ReadBytes(size));
+    }
+
+    public static string ReadMediumString(BinaryReader br)
+    {
+        ushort size = br.ReadUInt16();
+        return UnpackByteString(866, br.ReadBytes(size));
+    }
+
+    public static string ReadBigString(BinaryReader br)
+    {
+        uint size = br.ReadUInt32();
+        return UnpackByteString(866, br.ReadBytes((int)size));
+    }
+
+    public static void WriteSmallString(BinaryWriter bw, string str)
+    {
+        bw.Write((byte)str.Length);
+        bw.Write(PackByteString(866, str, (byte)str.Length));
+    }
+
+    public static void WriteMediumString(BinaryWriter bw, string str)
+    {
+        bw.Write((ushort)str.Length);
+        bw.Write(PackByteString(866, str, (ushort)str.Length));
+    }
+
+    public static void WriteBigString(BinaryWriter bw, string str)
+    {
+        bw.Write((uint)str.Length);
+        bw.Write(PackByteString(866, str, (uint)str.Length));
     }
 }

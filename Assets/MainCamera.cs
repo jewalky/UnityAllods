@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.IO;
+using System;
 
 public class MainCamera : MonoBehaviour {
     public static readonly float OverlayZ = -83;
@@ -87,6 +89,55 @@ public class MainCamera : MonoBehaviour {
                 m_fpsr.Text = fpstr;
                 //fps_timer = 0;
             }
+        }
+    }
+
+    public string TakeScreenshot()
+    {
+        if (!Directory.Exists("screenshots"))
+        {
+            try
+            {
+                DirectoryInfo info = Directory.CreateDirectory("screenshots");
+            }
+            catch (IOException)
+            {
+                return null;
+            }
+        }
+
+        string filenameBase = string.Format("screenshots/Screenshot_{0:dd-MM-yyyy_HH-mm-ss}", DateTime.Now);
+        int filenameAdd = 0;
+        while (File.Exists(string.Format("{0}_{1}.png", filenameBase, filenameAdd)))
+            filenameAdd++;
+        if (filenameAdd > 0) filenameBase += "_" + filenameAdd.ToString();
+        filenameBase += ".png";
+        StartCoroutine(TakeScreenshotImpl(filenameBase));
+        return filenameBase;
+    }
+
+    // since we can't screenshot midframe,
+    // process scheduled screenshot here.
+    IEnumerator TakeScreenshotImpl(string screenshotFileName)
+    {
+        Texture2D outtex = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
+
+        yield return new WaitForEndOfFrame();
+
+        outtex.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
+        outtex.Apply();
+        byte[] outpng = outtex.EncodeToPNG();
+
+        try
+        {
+            FileStream fs = File.OpenWrite(screenshotFileName);
+            fs.Write(outpng, 0, outpng.Length);
+            fs.Close();
+            GameConsole.Instance.WriteLine("Saved screenshot as \"{0}\".", screenshotFileName);
+        }
+        catch (IOException)
+        {
+            GameConsole.Instance.WriteLine("Failed to save screenshot as \"{0}\"!", screenshotFileName);
         }
     }
 }

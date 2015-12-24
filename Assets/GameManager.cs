@@ -18,11 +18,11 @@ public class GameManager : MonoBehaviour
 
     // since this is a part of global state
     public MapView MapView;
-    public AllodsUI.GameConsole GameConsole;
+    public GameConsole GameConsole;
 
     void Start()
     {
-        GameConsole = Utils.CreateObjectWithScript<AllodsUI.GameConsole>();
+        GameConsole = Utils.CreateObjectWithScript<GameConsole>();
         GameConsole.transform.parent = UiManager.Instance.transform;
     }
 

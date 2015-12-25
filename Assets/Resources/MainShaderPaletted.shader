@@ -6,7 +6,7 @@
 		_Palette("Sprite Palette", 2D) = "white" {}
 		_Color("Tint", Color) = (1,1,1,1)
 		_Lightness("Lightness", Float) = 0.5
-		[MaterialToggle] PixelSnap("Pixel snap", Float) = 1
+		[MaterialToggle] PixelSnap("Pixel snap", Float) = 0
 	}
 
 	SubShader
@@ -73,7 +73,7 @@
 				fixed4 paletteMapColor = tex2D(_MainTex, IN.texcoord);
 
 				// The alpha channel of the palette map points to UVs in the palette key.
-				float paletteX = paletteMapColor.r;
+				float paletteX = paletteMapColor.r / 256 * 255;
 				float2 paletteUV = float2(paletteX, 0.0f);
 				// Get the palette's UV accounting for texture tiling and offset
 				float2 paletteUVTransformed = paletteUV;// TRANSFORM_TEX(paletteUV, _Palette);

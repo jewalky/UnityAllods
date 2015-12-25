@@ -95,6 +95,12 @@ public class StructureClassLoader
             cls.SelectionX2 = reg.GetInt(on, "SelectionX2", cls.TileWidth * 32);
             cls.SelectionY2 = reg.GetInt(on, "SelectionY2", cls.FullHeight * 32);
             cls.ShadowY = reg.GetInt(on, "ShadowY", 0);
+            if (cls.ShadowY < 0) // this is very bad. this means that Nival artists were trying to make this structure Flat, but didn't know about the feature.
+            {                    // as such, they were setting ShadowY -20000 and the shadow was still appearing sometimes despite LOOKING AS IF it was flat.
+                cls.Flat = true;
+                cls.ShadowY = 0;
+            }
+
             cls.AnimMask = reg.GetString(on, "AnimMask", null);
             int phases = reg.GetInt(on, "Phases", 1);
             if (phases == 1)

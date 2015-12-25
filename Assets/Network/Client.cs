@@ -107,15 +107,15 @@ public class Client
         {
             BinaryFormatter bf = new BinaryFormatter();
             object o = bf.Deserialize(ms);
-            // search for handler of this command, in ClientCommands class
-            string requiredName = o.GetType().Name;
-            MethodInfo mi = typeof(ClientCommands).GetMethod("On" + requiredName, new Type[] { o.GetType() });
-            if (!mi.IsStatic)
+            if (!(o is IClientCommand))
             {
-                GameConsole.Instance.WriteLine("Error: command handlers should be static.");
+                GameConsole.Instance.WriteLine("Client commands should implement IClientCommand.");
+                NetworkManager.Instance.Disconnect();
                 return;
             }
-            mi.Invoke(null, new object[] { o });
+
+            if (!((IClientCommand)o).Process())
+                NetworkManager.Instance.Disconnect();
         }
         catch(Exception)
         {

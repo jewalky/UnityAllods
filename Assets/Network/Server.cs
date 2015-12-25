@@ -36,9 +36,6 @@ public class ServerClient
     public void OnConnected()
     {
         GameConsole.Instance.WriteLine("Client [{0}]:{1} has connected.", IPAddress, IPPort);
-        ClientCommands.TestCommand tc = new ClientCommands.TestCommand();
-        tc.TestString = "hi this is a string! :D";
-        SendCommand(tc);
     }
 
     public void OnDisconnected()
@@ -54,20 +51,20 @@ public class ServerClient
         {
             BinaryFormatter bf = new BinaryFormatter();
             object o = bf.Deserialize(ms);
-            // search for handler of this command, in ClientCommands class
-            string requiredName = o.GetType().Name;
-            MethodInfo mi = typeof(ServerCommands).GetMethod("On" + requiredName, new Type[] { o.GetType() });
-            if (!mi.IsStatic)
+            if (!(o is IServerCommand))
             {
-                GameConsole.Instance.WriteLine("Error: command handlers should be static.");
+                GameConsole.Instance.WriteLine("Server commands should implement IServerCommand.");
+                Server.DisconnectClient(this);
                 return;
             }
-            mi.Invoke(null, new object[] { o });
+
+            if (!((IServerCommand)o).Process(this))
+                Server.DisconnectClient(this);
         }
         catch (Exception)
         {
             GameConsole.Instance.WriteLine("Error encountered during command processing.");
-            NetworkManager.Instance.Disconnect();
+            Server.DisconnectClient(this);
         }
         finally
         {
@@ -166,5 +163,13 @@ public class Server
                 }
                 break;
         }
+    }
+
+    public static void DisconnectClient(ServerClient client)
+    {
+        byte error;
+        NetworkTransport.Disconnect(NetworkManager.Instance.HostID, client.ConnectionID, out error);
+        client.OnDisconnected();
+        Clients.Remove(client);
     }
 }

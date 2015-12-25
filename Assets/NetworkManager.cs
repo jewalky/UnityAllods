@@ -50,7 +50,7 @@ public class NetworkManager : MonoBehaviour {
 
         InitGeneric(port);
 
-        if (Server.Init(port))
+        if (ServerManager.Init(port))
         {
             State = NetworkState.Server;
             return true;
@@ -66,7 +66,7 @@ public class NetworkManager : MonoBehaviour {
 
         InitGeneric(0); // init with default port
 
-        if (Client.Init(addr, port))
+        if (ClientManager.Init(addr, port))
         {
             State = NetworkState.Client;
             return true;
@@ -77,8 +77,8 @@ public class NetworkManager : MonoBehaviour {
 
     public void Disconnect()
     {
-        Server.Shutdown();
-        Client.Shutdown();
+        ServerManager.Shutdown();
+        ClientManager.Shutdown();
         byte error;
         NetworkTransport.Disconnect(HostID, ConnectionID, out error); // ignore error here
         State = NetworkState.Disconnected;
@@ -89,10 +89,10 @@ public class NetworkManager : MonoBehaviour {
         switch(State)
         {
             case NetworkState.Server:
-                Server.Update();
+                ServerManager.Update();
                 break;
             case NetworkState.Client:
-                Client.Update();
+                ClientManager.Update();
                 break;
         }
     }

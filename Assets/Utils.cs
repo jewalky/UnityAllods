@@ -82,6 +82,26 @@ public class ScriptBatch
         string[] levels = new string[] { "Assets/Allods.unity" };
         // Build player.
         BuildPipeline.BuildPlayer(levels, path + "/AllodsServer.x64", BuildTarget.StandaloneLinux64, BuildOptions.EnableHeadlessMode);
+        // copy libs
+        const string sourceDir = @"DLLs";
+        const string targetDir = @"ServerBuild\AllodsServer_Data\Managed";
+        foreach (var file in Directory.GetFiles(sourceDir))
+            File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
+    }
+
+    [MenuItem("MyTools/Windows build")]
+    public static void BuildGameWindows()
+    {
+        // Get filename.
+        string path = "ClientBuild";
+        string[] levels = new string[] { "Assets/Allods.unity" };
+        // Build player.
+        BuildPipeline.BuildPlayer(levels, path + "/Allods.exe", BuildTarget.StandaloneWindows, BuildOptions.None);
+        // Then put some DLLs in it
+        const string sourceDir = @"DLLs";
+        const string targetDir = @"ClientBuild\Allods_Data\Managed";
+        foreach (var file in Directory.GetFiles(sourceDir))
+            File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
     }
 }
 #endif

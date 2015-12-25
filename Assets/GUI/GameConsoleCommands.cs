@@ -24,6 +24,10 @@ public class GameConsoleCommands
 
     public void map(string filename)
     {
+        if (NetworkManager.Instance.State == NetworkState.Client)
+            NetworkManager.Instance.Disconnect();
+        MapLogic.Instance.Unload();
+
         string actualFilename = null;
 
         // check 4 locations

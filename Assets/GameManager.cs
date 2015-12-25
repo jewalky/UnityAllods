@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using System.Collections;
+using System.IO;
 
 public class GameManager : MonoBehaviour
 {
@@ -19,6 +20,23 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private static bool CheckServerConfig()
+    {
+        if (ResourceManager.FileExists("server.cfg"))
+        {
+            StringFile sf = new StringFile("server.cfg");
+            // execute all commands from there
+            foreach (string cmd in sf.Strings)
+            {
+                Debug.Log(cmd);
+                GameConsole.Instance.ExecuteCommand(cmd);
+            }
+            return true;
+        }
+
+        return false;
+    }
+
     // since this is a part of global state
     private bool _IsHeadlessChecked = false;
     private bool _IsHeadless = false;
@@ -29,7 +47,7 @@ public class GameManager : MonoBehaviour
             if (!_IsHeadlessChecked)
             {
                 string[] args = Environment.GetCommandLineArgs();
-                if (args.Contains("-nographics") || args.Contains("-batchmode"))
+                if (args.Contains("-nographics") || args.Contains("-batchmode") || CheckServerConfig())
                     _IsHeadless = true;
                 _IsHeadlessChecked = true;
             }
@@ -43,16 +61,8 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        if (!IsHeadless)
-        {
-            GameConsole = Utils.CreateObjectWithScript<GameConsole>();
-            GameConsole.transform.parent = UiManager.Instance.transform;
-        }
-        else
-        {
-            MapLogic.Instance.InitFromFile("kids3.alm");
-            NetworkManager.Instance.InitServer(8000);
-        }
+        GameConsole = Utils.CreateObjectWithScript<GameConsole>();
+        GameConsole.transform.parent = UiManager.Instance.transform;
     }
 
     private IEnumerator DelegateCoroutine(LoadCoroutine del)

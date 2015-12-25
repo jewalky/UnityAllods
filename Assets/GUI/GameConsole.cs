@@ -309,6 +309,9 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
 
     public void ExecuteCommand(string cmd)
     {
+        if (cmd.Trim().Length <= 0)
+            return;
+
         string[] args = SplitArguments(cmd);
         args[0] = args[0].ToLower();
 

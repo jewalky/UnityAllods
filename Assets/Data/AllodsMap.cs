@@ -110,7 +110,7 @@ public class AllodsMap
         public uint UseTiles;
 
         public uint CountPlayers;
-        public uint CountBuildings;
+        public uint CountStructures;
         public uint CountUnits;
         public uint CountTriggers;
         public uint CountSacks;
@@ -136,7 +136,7 @@ public class AllodsMap
             Contrast = reader.ReadUInt32();
             UseTiles = reader.ReadUInt32();
             CountPlayers = reader.ReadUInt32();
-            CountBuildings = reader.ReadUInt32();
+            CountStructures = reader.ReadUInt32();
             CountUnits = reader.ReadUInt32();
             CountTriggers = reader.ReadUInt32();
             CountSacks = reader.ReadUInt32();
@@ -175,11 +175,44 @@ public class AllodsMap
         }
     }
 
+    public class AlmStructure
+    {
+        public float X;
+        public float Y;
+        public int TypeID;
+        public short Health;
+        public int Player;
+        public int ID;
+        public bool IsBridge;
+        public int Width;
+        public int Height;
+
+        public void LoadFromStream(BinaryReader reader)
+        {
+            int xRaw = reader.ReadInt32();
+            int yRaw = reader.ReadInt32();
+            X = ((xRaw & 0x0000FF00) >> 8) + (float)(xRaw & 0x00FF) / 256; // 00 10 00 80 = 16.5
+            Y = ((yRaw & 0x0000FF00) >> 8) + (float)(yRaw & 0x00FF) / 256;
+            TypeID = reader.ReadInt32();
+            Health = reader.ReadInt16();
+            Player = reader.ReadInt32();
+            ID = reader.ReadInt16();
+            if ((TypeID & 0x01000000) != 0)
+            {
+                Width = reader.ReadInt32();
+                Height = reader.ReadInt32();
+                IsBridge = true;
+            }
+            TypeID &= 0xFFFF;
+        }
+    }
+
     public AlmData Data = new AlmData();
     public ushort[] Tiles;
     public sbyte[] Heights;
     public byte[] Objects;
     public AlmPlayer[] Players;
+    public AlmStructure[] Structures;
 
     // ====================================
     //  constructors
@@ -275,7 +308,7 @@ public class AllodsMap
                 }
                 else if (sec_id == 5) // players
                 {
-                    if (!ObjectsLoaded)
+                    if (!DataLoaded)
                     {
                         ms.Close();
                         return null;
@@ -286,6 +319,21 @@ public class AllodsMap
                     {
                         alm.Players[j] = new AlmPlayer();
                         alm.Players[j].LoadFromStream(msb);
+                    }
+                }
+                else if (sec_id == 4) // structures
+                {
+                    if (!DataLoaded)
+                    {
+                        ms.Close();
+                        return null;
+                    }
+
+                    alm.Structures = new AlmStructure[alm.Data.CountStructures];
+                    for (uint j = 0; j < alm.Data.CountStructures; j++)
+                    {
+                        alm.Structures[j] = new AlmStructure();
+                        alm.Structures[j].LoadFromStream(msb);
                     }
                 }
                 else

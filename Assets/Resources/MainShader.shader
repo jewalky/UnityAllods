@@ -4,7 +4,8 @@
 	{
 		[PerRendererData] _MainTex("Sprite Texture", 2D) = "white" {}
 		_Color("Tint", Color) = (1,1,1,1)
-		[MaterialToggle] PixelSnap("Pixel snap", Float) = 0
+		_Lightness("Lightness", Float) = 0.5
+		[MaterialToggle] PixelSnap("Pixel snap", Float) = 1
 	}
 
 	SubShader
@@ -63,10 +64,11 @@
 			}
 
 			sampler2D _MainTex;
+			float _Lightness;
 
 			fixed4 frag(v2f IN) : COLOR
 			{
-				half4 texcol = tex2D(_MainTex, IN.texcoord) * IN.color;
+				half4 texcol = tex2D(_MainTex, IN.texcoord) * IN.color * _Lightness * 2;
 				return texcol;
 			}
 			ENDCG

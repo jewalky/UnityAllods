@@ -235,12 +235,6 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         FOWMeshMaterial.SetColor("_Color", new Color(0, 0, 0, 1));
     }
 
-    void UpdateTiles(int WaterAnimFrame)
-    {
-        for (int i = 0; i < MeshChunks.Length; i++)
-            UpdatePartialTiles(MeshChunkMeshes[i], MeshChunkRects[i], WaterAnimFrame);
-    }
-
     Mesh CreatePartialMesh(Rect rec)
     {
         int x = (int)rec.x;
@@ -389,20 +383,20 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     public int MouseCellX { get { return _MouseCellX; } }
     public int MouseCellY { get { return _MouseCellY; } }
 
-    private int _ScrollX = 8;
-    private int _ScrollY = 8;
+    private int _ScrollX = -1;
+    private int _ScrollY = -1;
 
     public int ScrollX { get { return _ScrollX; } }
     public int ScrollY { get { return _ScrollY; } }
 
     public void SetScroll(int x, int y)
     {
-        int minX = 10;
-        int minY = 10;
+        int minX = 8;
+        int minY = 8;
         int screenWB = (int)((float)Screen.width / 32);
         int screenHB = (int)((float)Screen.height / 32);
         int maxX = MapLogic.Instance.Width - screenWB - 8;
-        int maxY = MapLogic.Instance.Height - screenHB - 8;
+        int maxY = MapLogic.Instance.Height - screenHB - 10;
 
         if (x < minX) x = minX;
         if (y < minY) y = minY;
@@ -460,13 +454,6 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         {
             waterAnimFrame = waterAnimFrameNew;
             UpdateTiles(waterAnimFrame);
-        }
-
-        scrollTimer += Time.unscaledDeltaTime;
-        if (scrollTimer >= 0.01)
-        {
-            SetScroll(ScrollX + ScrollDeltaX, ScrollY + ScrollDeltaY);
-            scrollTimer = 0;
         }
     }
 
@@ -560,6 +547,14 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         {
             MapLogic.Instance.SetTestingVisibility(MouseCellX, MouseCellY, 5);
         }
+
+        // PERMANENT
+        scrollTimer += Time.unscaledDeltaTime;
+        if (scrollTimer > 0.01)
+        {
+            SetScroll(ScrollX + ScrollDeltaX, ScrollY + ScrollDeltaY);
+            scrollTimer = 0;
+        }
     }
 
     float lastLogicUpdateTime = 0;
@@ -587,6 +582,12 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         }
     }
 
+    void UpdateTiles(int WaterAnimFrame)
+    {
+        for (int i = 0; i < MeshChunks.Length; i++)
+            UpdatePartialTiles(MeshChunkMeshes[i], MeshChunkRects[i], WaterAnimFrame);
+    }
+
     // create gameobject based off this instance for logic
     public GameObject CreateObject(Type t, MapLogicObject obj)
     {
@@ -597,24 +598,33 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         return o;
     }
 
-    public Vector2 LerpCoords(float x, float y)
+    public Vector2 MapToScreenCoords(float x, float y, int w, int h)
     {
-        int baseX = (int)x;
-        int baseY = (int)y;
-        float lX = x - baseX; // fractional part
-        float lY = y - baseY; // fractional part
-        Vector2 ov = new Vector2();
+        float height = 0;
+        int count = 0;
+        for (int ly = (int)y; ly < y + h; ly++)
+        {
+            for (int lx = (int)x; lx < x + w; lx++)
+            {
+                int baseX = lx;
+                int baseY = ly;
+                float fracX = x - baseX; // fractional part
+                float fracY = y - baseY; // fractional part
 
-        float h1 = GetHeightAt(baseX, baseY);
-        float h2 = GetHeightAt(baseX+1, baseY);
-        float h3 = GetHeightAt(baseX, baseY+1);
-        float h4 = GetHeightAt(baseX+1, baseY+1);
+                float h1 = GetHeightAt(baseX, baseY);
+                float h2 = GetHeightAt(baseX + 1, baseY);
+                float h3 = GetHeightAt(baseX, baseY + 1);
+                float h4 = GetHeightAt(baseX + 1, baseY + 1);
 
-        ov.x = 32 * x;
-        float l1 = h1 * (1.0f - lX) + h2 * lX;
-        float l2 = h3 * (1.0f - lX) + h4 * lX;
-        ov.y = 32 * y - (l1 * (1.0f - lY) + l2 * lY);
+                float l1 = h1 * (1.0f - fracX) + h2 * fracX;
+                float l2 = h3 * (1.0f - fracX) + h4 * fracX;
+                height += (l1 * (1.0f - fracY) + l2 * fracY);
+                count++;
+            }
+        }
 
+        height /= count; // get average height
+        Vector2 ov = new Vector2(x * 32, y * 32 - height);
         return ov;
     }
 }

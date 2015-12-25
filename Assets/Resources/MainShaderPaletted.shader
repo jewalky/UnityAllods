@@ -5,7 +5,8 @@
 		[PerRendererData] _MainTex("Sprite Texture", 2D) = "white" {}
 		_Palette("Sprite Palette", 2D) = "white" {}
 		_Color("Tint", Color) = (1,1,1,1)
-		[MaterialToggle] PixelSnap("Pixel snap", Float) = 0
+		_Lightness("Lightness", Float) = 0.5
+		[MaterialToggle] PixelSnap("Pixel snap", Float) = 1
 	}
 
 	SubShader
@@ -65,11 +66,25 @@
 
 			sampler2D _MainTex;
 			sampler2D _Palette;
+			float _Lightness;
 
 			fixed4 frag(v2f IN) : COLOR
 			{
-				float4 texcol = tex2D(_MainTex, IN.texcoord);
-				return float4(tex2D(_Palette, float2(texcol.r, 0)).rgb, texcol.g) * IN.color;
+				fixed4 paletteMapColor = tex2D(_MainTex, IN.texcoord);
+
+				// The alpha channel of the palette map points to UVs in the palette key.
+				float paletteX = paletteMapColor.r;
+				float2 paletteUV = float2(paletteX, 0.0f);
+				// Get the palette's UV accounting for texture tiling and offset
+				float2 paletteUVTransformed = paletteUV;// TRANSFORM_TEX(paletteUV, _Palette);
+
+				// Get the color from the palette key
+				fixed4 outColor = fixed4(tex2D(_Palette, paletteUVTransformed).rgb, paletteMapColor.g);
+
+				// Apply the tint to the final color
+				outColor *= IN.color;
+				outColor *= float4(_Lightness * 2, _Lightness * 2, _Lightness * 2, 1);
+				return outColor;
 			}
 			ENDCG
 		}

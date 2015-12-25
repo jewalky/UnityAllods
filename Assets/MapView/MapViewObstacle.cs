@@ -14,17 +14,17 @@ public class MapViewObstacle : MapViewObject
         }
     }
 
-    private MeshRenderer Renderer = null;
-    private MeshFilter Filter = null;
-    private Mesh ObstacleMesh = null;
-    private GameObject ShadowObject = null;
-    private MeshRenderer ShadowRenderer = null;
-    private MeshFilter ShadowFilter = null;
-    private Mesh ShadowMesh = null;
+    private MeshRenderer Renderer;
+    private MeshFilter Filter;
+    private Mesh ObstacleMesh;
 
-    private void UpdateMesh(Images.AllodsSprite sprite, int frame, Mesh mesh, float shadowOffs, bool shadow)
+    private GameObject ShadowObject;
+    private MeshRenderer ShadowRenderer;
+    private MeshFilter ShadowFilter;
+    private Mesh ShadowMesh;
+
+    private Mesh UpdateMesh(Images.AllodsSprite sprite, int frame, Mesh mesh, float shadowOffs, bool first)
     {
-        if (!shadow) shadowOffs = 0;
         Rect texRect = sprite.AtlasRects[frame];
 
         float sW = sprite.Sprites[frame].rect.width;
@@ -49,28 +49,19 @@ public class MapViewObstacle : MapViewObject
         mesh.vertices = qv;
         mesh.uv = quv;
 
-        if ((!shadow && ObstacleMesh == null) || (shadow && ShadowMesh == null))
+        if (first)
         {
             Color[] qc = new Color[4];
-            qc[0] = qc[1] = qc[2] = qc[3] = (shadow ? new Color(0, 0, 0, 0.5f) : new Color(1, 1, 1, 1));
+            qc[0] = qc[1] = qc[2] = qc[3] = new Color(1, 1, 1, 1);
             mesh.colors = qc;
 
-            int[] qt = new int[6];
-            pp = 0;
-            for (int i = 0; i < qv.Length; i += 4)
-            {
-                qt[pp] = i;
-                qt[pp + 1] = i + 1;
-                qt[pp + 2] = i + 3;
-                qt[pp + 3] = i + 3;
-                qt[pp + 4] = i + 1;
-                qt[pp + 5] = i + 2;
-                pp += 6;
-            }
-            mesh.triangles = qt;
+            int[] qt = new int[4];
+            for (int i = 0; i < qt.Length; i++)
+                qt[i] = i;
+            mesh.SetIndices(qt, MeshTopology.Quads, 0);
         }
 
-        ObstacleMesh = mesh;
+        return mesh;
     }
 
     public void Start()
@@ -105,7 +96,7 @@ public class MapViewObstacle : MapViewObject
             ShadowRenderer.enabled = false;
             return;
         }
-        else if (!oldVisibility && !LogicObstacle.DoUpdateView)
+        else if (!oldVisibility)
         {
             Renderer.enabled = true;
             ShadowRenderer.enabled = true;
@@ -118,28 +109,29 @@ public class MapViewObstacle : MapViewObject
             Renderer.enabled = true;
             ShadowRenderer.enabled = true;
 
-            LogicObstacle.Class.File.UpdateSprite();
-            Renderer.material = LogicObstacle.Class.File.FileMaterial;
-            ShadowRenderer.material = LogicObstacle.Class.File.FileMaterial;
-
             Images.AllodsSprite sprites = LogicObstacle.Class.File.File;
 
+            if (!spriteSet)
+            {
+                LogicObstacle.Class.File.UpdateSprite();
+                sprites = LogicObstacle.Class.File.File;
+                Renderer.material = LogicObstacle.Class.File.FileMaterial;
+                Renderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
+                ShadowRenderer.material = LogicObstacle.Class.File.FileMaterial;
+                ShadowRenderer.material.color = new Color(0, 0, 0, 0.5f);
+                ShadowRenderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
+                spriteSet = true;
+            }
+
             int actualFrame = LogicObstacle.Class.Frames[LogicObstacle.CurrentFrame].Frame + LogicObstacle.Class.Index;
-            Vector2 xP = MapView.Instance.LerpCoords(LogicObject.X + 0.5f, LogicObject.Y + 0.5f);
+            Vector2 xP = MapView.Instance.MapToScreenCoords(LogicObject.X + 0.5f, LogicObject.Y + 0.5f, 1, 1);
             transform.localPosition = new Vector3(xP.x - sprites.Sprites[actualFrame].rect.width * LogicObstacle.Class.CenterX,
                                                     xP.y - sprites.Sprites[actualFrame].rect.height * LogicObstacle.Class.CenterY,
                                                     MakeZFromY(xP.y)); // order sprites by y coordinate basically
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicObstacle.Class.CenterX));
             //Renderer.sprite = sprites.Sprites[actualFrame];
-            UpdateMesh(sprites, actualFrame, Filter.mesh, 0, false);
-            UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, true); // 0.3 of sprite height
-
-            if (!spriteSet)
-            {
-                Renderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
-                ShadowRenderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
-                spriteSet = true;
-            }
+            ObstacleMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (ObstacleMesh == null));
+            ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null)); // 0.3 of sprite height
 
             LogicObstacle.DoUpdateView = false;
         }

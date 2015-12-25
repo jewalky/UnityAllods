@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 public class MapLogicObstacle : MapLogicObject
 {
@@ -12,16 +13,20 @@ public class MapLogicObstacle : MapLogicObject
     public int CurrentFrame = 0;
     public int CurrentTime = 0;
 
-    public MapLogicObstacle(int typeId) : base()
+    public MapLogicObstacle(int typeId)
     {
         Class = ObstacleClassLoader.GetObstacleClassById(typeId);
-        InitObstacle();
+        if (Class == null)
+            Debug.Log(string.Format("Invalid obstacle created (typeId={0})", typeId));
+        else InitObstacle();
     }
 
-    public MapLogicObstacle(string name) : base()
+    public MapLogicObstacle(string name)
     {
         Class = ObstacleClassLoader.GetObstacleClassByName(name);
-        InitObstacle();
+        if (Class == null)
+            Debug.Log(string.Format("Invalid obstacle created (name={0})", name));
+        else InitObstacle();
     }
 
     private void InitObstacle()
@@ -32,6 +37,8 @@ public class MapLogicObstacle : MapLogicObject
 
     public override void Update()
     {
+        if (Class == null)
+            return;
         // do not animate if visibility != 2, also do not render at all if visibility == 0
         if (Class.Frames.Length > 1 && GetVisibility() == 2)
         {

@@ -16,6 +16,7 @@ public class MapNode
 {
     public short Height = 0;
     public byte Light = 255; //?
+    public byte DynLight = 0;
     public ushort Tile = 0;
     public MapNodeFlags Flags = 0;
     public List<MapLogicObject> Objects = new List<MapLogicObject>();
@@ -49,29 +50,6 @@ class MapLogic
     public List<MapLogicPlayer> Players { get; private set; }
     public static readonly int MaxPlayers = 1024;
 
-    public int GetFreePlayerID(bool ai)
-    {
-        int startingFrom = 0;
-        if (!ai) startingFrom = 16;
-        // tos 
-        for (; startingFrom < MaxPlayers; startingFrom++)
-        {
-            bool used = false;
-            foreach (MapLogicPlayer player in Players)
-            {
-                if (player.ID == startingFrom)
-                {
-                    used = true;
-                    break;
-                }
-            }
-
-            if (!used) return startingFrom;
-        }
-
-        return -1;
-    }
-    
     public bool IsLoaded
     {
         get
@@ -141,7 +119,7 @@ class MapLogic
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    float lvw = (float)Nodes[x, y].Light / 255;
+                    float lvw = (float)(Math.Min(255, Nodes[x, y].Light + Nodes[x, y].DynLight)) / 255; // combine dynlights here. Light is base terrain light.
                     colors[y * 256 + x] = new Color(1, 1, 1, lvw);
                 }
             }
@@ -246,6 +224,8 @@ class MapLogic
     private void InitGeneric()
     {
         ObstacleClassLoader.InitClasses();
+        StructureClassLoader.InitClasses();
+        TemplateLoader.LoadTemplates();
         MapLightingNeedsUpdate = true;
         MapFOWNeedsUpdate = true;
     }
@@ -286,9 +266,9 @@ class MapLogic
         CalculateLighting(180);
 
         // load players
-        for (int i = 0; i < MapStructure.Players.Length; i++)
+        foreach (AllodsMap.AlmPlayer almplayer in MapStructure.Players)
         {
-            MapLogicPlayer player = new MapLogicPlayer(MapStructure.Players[i]);
+            MapLogicPlayer player = new MapLogicPlayer(almplayer);
             Players.Add(player);
             //Debug.Log(string.Format("player ID={2} {0} (flags {1})", player.Name, player.Flags, player.ID));
         }
@@ -296,6 +276,7 @@ class MapLogic
         Speed = 5;
         _TopObjectID = 0;
 
+        // load obstacles
         for (int y = 0; y < Height; y++)
         {
             for (int x = 0; x < Width; x++)
@@ -306,13 +287,83 @@ class MapLogic
                 MapLogicObstacle mob = new MapLogicObstacle(typeId);
                 mob.X = x;
                 mob.Y = y;
-                mob.Width = 1;
-                mob.Height = 1;
                 mob.LinkToWorld();
             }
         }
 
-        TemplateLoader.LoadTemplates();
+        // load structures
+        foreach (AllodsMap.AlmStructure almstruc in MapStructure.Structures)
+        {
+            MapLogicStructure struc;
+            if (almstruc.IsBridge)
+            {
+                struc = new MapLogicStructure(37); // typeId 37 is "horisontal wooden bridge"
+                struc.X = (int)almstruc.X;
+                struc.Y = (int)almstruc.Y;
+                struc.Health = 0;
+                struc.Tag = almstruc.ID;
+                struc.Player = GetPlayerByID(almstruc.Player);
+                struc.IsBridge = true;
+                struc.Width = almstruc.Width;
+                struc.Health = almstruc.Height;
+            }
+            else
+            {
+                struc = new MapLogicStructure(almstruc.TypeID);
+                struc.X = (int)almstruc.X;
+                struc.Y = (int)almstruc.Y;
+                struc.Health = almstruc.Health;
+                struc.Tag = almstruc.ID;
+                struc.Player = GetPlayerByID(almstruc.Player);
+            }
+
+            struc.LinkToWorld();
+        }
+    }
+
+    public int GetFreePlayerID(bool ai)
+    {
+        int startingFrom = 0;
+        if (!ai) startingFrom = 16;
+        // tos 
+        for (; startingFrom < MaxPlayers; startingFrom++)
+        {
+            bool used = false;
+            foreach (MapLogicPlayer player in Players)
+            {
+                if (player.ID == startingFrom)
+                {
+                    used = true;
+                    break;
+                }
+            }
+
+            if (!used) return startingFrom;
+        }
+
+        return -1;
+    }
+
+    public MapLogicPlayer GetPlayerByID(int id)
+    {
+        foreach (MapLogicPlayer player in Players)
+        {
+            if (player.ID == id)
+                return player;
+        }
+
+        return null;
+    }
+
+    public MapLogicPlayer GetPlayerByName(string name)
+    {
+        foreach (MapLogicPlayer player in Players)
+        {
+            if (player.Name == name)
+                return player;
+        }
+
+        return null;
     }
 
     public void SetTestingVisibility(int x, int y, float range)
@@ -334,7 +385,7 @@ class MapLogic
                 if (lx < 0 || lx >= Width ||
                     ly < 0 || ly >= Height) continue;
 
-                Nodes[lx, ly].Flags |= MapNodeFlags.Visible|MapNodeFlags.Discovered;
+                Nodes[lx, ly].Flags |= MapNodeFlags.Visible | MapNodeFlags.Discovered;
             }
         }
 

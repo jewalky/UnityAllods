@@ -389,7 +389,7 @@ public class Templates
 
     public void LoadFromStream(BinaryReader br)
     {
-        Templates.TplHeader headers = new Templates.TplHeader();
+        TplHeader headers = new TplHeader();
 
         headers.LoadFromStream(br);
         int numShapes = br.ReadInt32();
@@ -462,5 +462,26 @@ public static class TemplateLoader
     {
         _Templates = new Templates();
         _Templates.LoadFromFile("world/data/data.bin");
+    }
+
+    public static Templates.TplStructure GetStructureById(int typeId)
+    {
+        typeId--;
+        // typeid now equals to index in this array.
+        if (typeId >= 0 && typeId < Templates.Structures.Count)
+            return Templates.Structures[typeId];
+        return null;
+    }
+
+    public static Templates.TplStructure GetStructureByName(string name)
+    {
+        name = name.ToLower();
+        foreach (Templates.TplStructure struc in Templates.Structures)
+        {
+            if (struc.Name.ToLower() == name)
+                return struc;
+        }
+
+        return null;
     }
 }

@@ -15,8 +15,8 @@ public enum MapNodeFlags
 public class MapNode
 {
     public short Height = 0;
-    public byte Light = 255; //?
-    public byte DynLight = 0;
+    public byte Light = 255;
+    public int DynLight = 0;
     public ushort Tile = 0;
     public MapNodeFlags Flags = 0;
     public List<MapLogicObject> Objects = new List<MapLogicObject>();
@@ -88,6 +88,24 @@ class MapLogic
         for (int y = 0; y < Height; y++)
             for (int x = 0; x < Width; x++)
                 Nodes[x, y].Light = MapLighting.Result[y * Width + x];
+        MapLightingNeedsUpdate = true;
+        GetLightingTexture();
+    }
+
+    public void CalculateDynLighting()
+    {
+        for (int y = 0; y < Height; y++)
+        {
+            for (int x = 0; x < Width; x++)
+            {
+                Nodes[x, y].DynLight = 0;
+                foreach(MapLogicObject mobj in Nodes[x, y].Objects)
+                {
+                    if (mobj is IMapLogicDynlight)
+                        Nodes[x, y].DynLight += ((IMapLogicDynlight)mobj).GetLightValue();
+                }
+            }
+        }
         MapLightingNeedsUpdate = true;
         GetLightingTexture();
     }

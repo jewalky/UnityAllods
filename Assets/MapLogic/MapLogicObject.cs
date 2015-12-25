@@ -14,6 +14,11 @@ public enum MapLogicObjectType
     Effect
 }
 
+public interface IMapLogicDynlight
+{
+    int GetLightValue();
+}
+
 public class MapLogicObject : IDisposable
 {
     public int X = 0;

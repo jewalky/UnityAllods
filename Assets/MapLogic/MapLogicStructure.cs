@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class MapLogicStructure : MapLogicObject
+public class MapLogicStructure : MapLogicObject, IMapLogicDynlight
 {
     public override MapLogicObjectType GetObjectType() { return MapLogicObjectType.Structure; }
     protected override Type GetGameObjectType() { return typeof(MapViewStructure); }
@@ -19,6 +19,12 @@ public class MapLogicStructure : MapLogicObject
     public bool IsBridge = false;
     public int Tag = 0;
     public float ScanRange = 0;
+
+    // this is used for dynlight
+    private int LightTime = 0;
+    private int LightFrame = 0;
+    private int LightValue = 0; // basically, this gets set if structure is a dynlight
+    public int GetLightValue() { return LightValue; }
 
     public MapLogicStructure(int typeId)
     {
@@ -66,6 +72,17 @@ public class MapLogicStructure : MapLogicObject
                 CurrentFrame = ++CurrentFrame % Class.Frames.Length;
                 CurrentTime = 0;
                 DoUpdateView = true;
+            }
+
+            if (Class.LightRadius > 0)
+            {
+                LightTime++;
+                if (LightTime > Class.LightPulse)
+                {
+                    LightFrame++;
+                    LightValue = (int)(Mathf.Sin((float)LightFrame / 3) * 64 + 128);
+                    MapLogic.Instance.CalculateDynLighting();
+                }
             }
         }
     }

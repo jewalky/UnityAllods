@@ -108,6 +108,11 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
             e.keyCode == KeyCode.BackQuote)
         {
             ConsoleActive = !ConsoleActive;
+            if (ConsoleActive)
+            {
+                EditRendererA.Text = "> ";
+                Selection1 = Selection2 = 0;
+            }
             return true;
         }
 
@@ -141,8 +146,8 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
                     break;
                 case KeyCode.Backspace:
                 case KeyCode.Delete:
-                    int s1 = Math.Min(Selection1, Selection2);
-                    int s2 = Math.Max(Selection1, Selection2);
+                    int s1 = Mathf.Min(Selection1, Selection2);
+                    int s2 = Mathf.Max(Selection1, Selection2);
                     if (s1 != s2)
                     {
                         EditRendererA.Text = EditRendererA.Text.Remove(s1 + 2, s2 - s1);
@@ -221,8 +226,8 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
 
     private void UpdateMesh()
     {
-        int s1 = Math.Min(Selection1, Selection2);
-        int s2 = Math.Max(Selection1, Selection2);
+        int s1 = Mathf.Min(Selection1, Selection2);
+        int s2 = Mathf.Max(Selection1, Selection2);
         float s1pos = EditRendererA.Font.Width(EditRendererA.Text.Substring(0, s1 + 2));
         float s2pos = EditRendererA.Font.Width(EditRendererA.Text.Substring(0, s2 + 2));
         float cursorPos = EditRendererA.Font.Width(EditRendererA.Text.Substring(0, Selection2 + 2));

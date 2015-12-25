@@ -32,66 +32,86 @@ public class MapViewStructure : MapViewObject
     private MeshFilter ShadowFilter = null;
     private Mesh ShadowMesh = null;
 
-    private Mesh UpdateMesh(Images.AllodsSprite sprite, int frame, Mesh mesh, int x, int y, int w, int h, float shadowOffs, bool first)
+    private Mesh UpdateMesh(Images.AllodsSprite sprite, int frame, Mesh mesh, int x, int y, int w, int h, float shadowOffs, bool first, bool onlyColors)
     {
-        Vector3[] qv = new Vector3[w * h * 4];
-        Vector2[] quv = new Vector2[w * h * 4];
-
-        int fw = LogicStructure.Class.TileWidth;
-        int fh = LogicStructure.Class.FullHeight;
-
-        // populate vertices
         int totalAnimCount = 0;
         foreach (char ch in LogicStructure.Class.AnimMask)
             if (ch == '+') totalAnimCount++;
-        int pp = 0;
-        int ppt = 0;
         float shadowOffsPerY = shadowOffs * 32;
         float shadowOffsFromReg = -((float)LogicStructure.Class.ShadowY / LogicStructure.Class.FullHeight * shadowOffs);
+        int fw = LogicStructure.Class.TileWidth;
+        int fh = LogicStructure.Class.FullHeight;
+
+        if (!onlyColors || first)
+        {
+            Vector3[] qv = new Vector3[w * h * 4];
+            Vector2[] quv = new Vector2[w * h * 4];
+
+            // populate vertices
+            int pp = 0;
+            int ppt = 0;
+            for (int ly = y; ly < y + h; ly++)
+            {
+                float actualOffsetX = shadowOffsFromReg + shadowOffsPerY * (fh - ly - 1);
+                for (int lx = x; lx < x + w; lx++)
+                {
+                    qv[pp++] = new Vector3(lx * 32 + shadowOffsPerY + actualOffsetX, ly * 32, 0);
+                    qv[pp++] = new Vector3(lx * 32 + 32 + shadowOffsPerY + actualOffsetX, ly * 32, 0);
+                    qv[pp++] = new Vector3(lx * 32 + 32 + actualOffsetX, ly * 32 + 32, 0);
+                    qv[pp++] = new Vector3(lx * 32 + actualOffsetX, ly * 32 + 32, 0);
+
+                    // handle odd structure animation method
+                    int realFrame = ly * fw + lx;
+                    if (frame > 0 && LogicStructure.Class.AnimMask[realFrame] == '+')
+                    {
+                        if (fw == 1 && fh == 1)
+                            realFrame = frame;
+                        else
+                        {
+                            int preAnimCount = 0;
+                            for (int i = realFrame - 1; i >= 0; i--)
+                                if (LogicStructure.Class.AnimMask[i] == '+') preAnimCount++;
+                            realFrame = fw * fh + totalAnimCount * (frame - 1) + preAnimCount;
+                        }
+                    }
+
+                    Rect texRect = sprite.AtlasRects[realFrame];
+                    quv[ppt++] = new Vector2(texRect.xMin, texRect.yMin);
+                    quv[ppt++] = new Vector2(texRect.xMax, texRect.yMin);
+                    quv[ppt++] = new Vector2(texRect.xMax, texRect.yMax);
+                    quv[ppt++] = new Vector2(texRect.xMin, texRect.yMax);
+                }
+            }
+
+            mesh.vertices = qv;
+            mesh.uv = quv;
+        }
+
+        Color[] qc = new Color[w * h * 4];
+        int ownDynLight = LogicStructure.GetLightValue();
+        int ppc = 0;
         for (int ly = y; ly < y + h; ly++)
         {
-            float actualOffsetX = shadowOffsFromReg + shadowOffsPerY * (fh - ly - 1);
+            int lTy = ly - (LogicStructure.Class.FullHeight - LogicStructure.Class.TileHeight);
             for (int lx = x; lx < x + w; lx++)
             {
-                qv[pp++] = new Vector3(lx * 32 + shadowOffsPerY + actualOffsetX, ly * 32, 0);
-                qv[pp++] = new Vector3(lx * 32 + 32 + shadowOffsPerY + actualOffsetX, ly * 32, 0);
-                qv[pp++] = new Vector3(lx * 32 + 32 + actualOffsetX, ly * 32 + 32, 0);
-                qv[pp++] = new Vector3(lx * 32 + actualOffsetX, ly * 32 + 32, 0);
+                float cellLight = 0.5f;
+                // check if terrain has dynlights. if so, add to current lightness.
+                int currentLightAtNode = Mathf.Max(MapLogic.Instance.Nodes[LogicStructure.X + lx, LogicStructure.Y + lTy].DynLight, ownDynLight);
+                if (currentLightAtNode > 0)
+                    cellLight += (float)currentLightAtNode / 255;
 
-                // handle odd structure animation method
-                int realFrame = ly * fw + lx;
-                if (frame > 0 && LogicStructure.Class.AnimMask[realFrame] == '+')
-                {
-                    if (fw == 1 && fh == 1)
-                        realFrame = frame;
-                    else
-                    {
-                        int preAnimCount = 0;
-                        for (int i = realFrame - 1; i >= 0; i--)
-                            if (LogicStructure.Class.AnimMask[i] == '+') preAnimCount++;
-                        realFrame = fw * fh + totalAnimCount * (frame - 1) + preAnimCount;
-                    }
-                }
-
-                Rect texRect = sprite.AtlasRects[realFrame];
-                quv[ppt++] = new Vector2(texRect.xMin, texRect.yMin);
-                quv[ppt++] = new Vector2(texRect.xMax, texRect.yMin);
-                quv[ppt++] = new Vector2(texRect.xMax, texRect.yMax);
-                quv[ppt++] = new Vector2(texRect.xMin, texRect.yMax);
+                qc[ppc++] = new Color(cellLight, cellLight, cellLight);
+                qc[ppc++] = new Color(cellLight, cellLight, cellLight);
+                qc[ppc++] = new Color(cellLight, cellLight, cellLight);
+                qc[ppc++] = new Color(cellLight, cellLight, cellLight);
             }
         }
 
-        mesh.vertices = qv;
-        mesh.uv = quv;
+        mesh.colors = qc;
 
         if (first)
         {
-            // todo: later update colors locally based on terrain dynamic lights (that's how structures get lit)
-            Color[] qc = new Color[w * h * 4];
-            for (int i = 0; i < qc.Length; i++)
-                qc[i] = new Color(0.5f, 0.5f, 0.5f, 1);
-            mesh.colors = qc;
-
             int[] qt = new int[w * h * 4];
             for (int i = 0; i < qt.Length; i++)
                 qt[i] = i;
@@ -172,10 +192,10 @@ public class MapViewStructure : MapViewObject
                 sprites = LogicStructure.Class.File.File;
                 Renderer.material = LogicStructure.Class.File.FileMaterial;
                 Renderer.material.SetTexture("_Palette", sprites.OwnPalette);
-                Renderer.material.SetFloat("_Lightness", 1);
+                Renderer.material.SetFloat("_Lightness", 1f);
                 OverlayRenderer.material = LogicStructure.Class.File.FileMaterial;
                 OverlayRenderer.material.SetTexture("_Palette", sprites.OwnPalette);
-                OverlayRenderer.material.SetFloat("_Lightness", 1);
+                OverlayRenderer.material.SetFloat("_Lightness", 1f);
                 if (ShadowRenderer != null)
                 {
                     ShadowRenderer.material = LogicStructure.Class.File.FileMaterial;
@@ -185,7 +205,7 @@ public class MapViewStructure : MapViewObject
                 spriteSet = true;
             }
 
-            int actualFrame = LogicStructure.Class.Frames[LogicStructure.CurrentFrame].Frame;
+            int actualFrame = cls.Frames[LogicStructure.CurrentFrame].Frame;
             Vector2 xP = MapView.Instance.MapToScreenCoords(LogicObject.X + 0.5f, LogicObject.Y + 0.5f, LogicStructure.Width, LogicStructure.Height);
             transform.localPosition = new Vector3(xP.x - 16,
                                                   xP.y - 16 - (cls.FullHeight - cls.TileHeight) * 32,
@@ -194,11 +214,20 @@ public class MapViewStructure : MapViewObject
             //Renderer.sprite = sprites.Sprites[actualFrame];
             //UpdateMesh(sprites, actualFrame, Filter.mesh, 0, false);
             //UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, true); // 0.3 of sprite height
-            StructureMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, cls.FullHeight - cls.TileHeight, cls.TileWidth, cls.TileHeight, 0, (StructureMesh == null));
-            OverlayMesh = UpdateMesh(sprites, actualFrame, OverlayFilter.mesh, 0, 0, cls.TileWidth, cls.FullHeight - cls.TileHeight, 0, (OverlayMesh == null));
-            if (ShadowFilter != null) ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0, 0, cls.TileWidth, cls.FullHeight, 0.3f, (ShadowMesh == null));
+            StructureMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, cls.FullHeight - cls.TileHeight, cls.TileWidth, cls.TileHeight, 0, (StructureMesh == null), false);
+            OverlayMesh = UpdateMesh(sprites, actualFrame, OverlayFilter.mesh, 0, 0, cls.TileWidth, cls.FullHeight - cls.TileHeight, 0, (OverlayMesh == null), false);
+            if (ShadowFilter != null) ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0, 0, cls.TileWidth, cls.FullHeight, 0.3f, (ShadowMesh == null), false);
 
             LogicStructure.DoUpdateView = false;
+        }
+        else if (Renderer != null)
+        {
+            StructureClass cls = LogicStructure.Class;
+            Images.AllodsSprite sprites = LogicStructure.Class.File.File;
+            int actualFrame = LogicStructure.Class.Frames[LogicStructure.CurrentFrame].Frame;
+
+            StructureMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, cls.FullHeight - cls.TileHeight, cls.TileWidth, cls.TileHeight, 0, (StructureMesh == null), false);
+            OverlayMesh = UpdateMesh(sprites, actualFrame, OverlayFilter.mesh, 0, 0, cls.TileWidth, cls.FullHeight - cls.TileHeight, 0, (OverlayMesh == null), false);
         }
     }
 }

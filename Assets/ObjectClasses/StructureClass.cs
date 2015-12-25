@@ -101,6 +101,10 @@ public class StructureClassLoader
                 cls.ShadowY = 0;
             }
 
+            // also this fixes Bee houses
+            if (cls.ShadowY > cls.FullHeight * 32)
+                cls.ShadowY = 0;
+
             cls.AnimMask = reg.GetString(on, "AnimMask", null);
             int phases = reg.GetInt(on, "Phases", 1);
             if (phases == 1)

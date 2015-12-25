@@ -77,7 +77,7 @@ class MapLogic
     }
 
     private TerrainLighting MapLighting = null;
-    private bool MapLightingNeedsUpdate = false;
+    public bool MapLightingNeedsUpdate { get; private set; }
     private Texture2D MapLightingTex = null;
     private Color MapLightingColor = new Color(1, 1, 1, 1);
     private bool MapLightingUpdated = false;
@@ -89,7 +89,6 @@ class MapLogic
             for (int x = 0; x < Width; x++)
                 Nodes[x, y].Light = MapLighting.Result[y * Width + x];
         MapLightingNeedsUpdate = true;
-        GetLightingTexture();
     }
 
     public void CalculateDynLighting()
@@ -107,17 +106,12 @@ class MapLogic
             }
         }
         MapLightingNeedsUpdate = true;
-        GetLightingTexture();
     }
 
     public Texture2D CheckLightingTexture()
     {
-        Texture2D tex = GetLightingTexture();
-        if (MapLightingUpdated)
-        {
-            MapLightingUpdated = false;
-            return tex;
-        }
+        if (MapLightingUpdated || MapLightingTex == null)
+            return GetLightingTexture();
         return null;
     }
 
@@ -150,18 +144,14 @@ class MapLogic
         return MapLightingTex;
     }
 
-    private bool MapFOWNeedsUpdate = false;
+    public bool MapFOWNeedsUpdate { get; private set; }
     private Texture2D MapFOWTex = null;
     private bool MapFOWUpdated = false;
 
     public Texture2D CheckFOWTexture()
     {
-        Texture2D tex = GetFOWTexture();
-        if (MapFOWUpdated)
-        {
-            MapFOWUpdated = false;
-            return tex;
-        }
+        if (MapFOWUpdated || MapFOWTex == null)
+            return GetFOWTexture();
         return null;
     }
 

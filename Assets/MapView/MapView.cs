@@ -21,11 +21,30 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         UiManager.Instance.Unsubscribe(this);
     }
 
+    IEnumerator DoUpdateLight()
+    {
+        while (true)
+        {
+            yield return new WaitUntil(() => (MapLogic.Instance.MapLightingNeedsUpdate));
+            MapLogic.Instance.GetLightingTexture(); // update lighting texture
+        }
+    }
+
+    IEnumerator DoUpdateFOW()
+    {
+        while (true)
+        {
+            yield return new WaitUntil(() => (MapLogic.Instance.MapFOWNeedsUpdate));
+            MapLogic.Instance.GetFOWTexture(); // update fog of war texture
+        }
+    }
+
     // Use this for initialization
     void Start ()
     {
         UiManager.Instance.Subscribe(this);
-
+        StartCoroutine(DoUpdateLight());
+        StartCoroutine(DoUpdateFOW());
         //InitFromFile("scenario/20.alm");
         //InitFromFile("an_heaven_5_8.alm");
         //InitFromFile("kids3.alm");

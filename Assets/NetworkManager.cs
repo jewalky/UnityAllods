@@ -31,8 +31,10 @@ public class NetworkManager : MonoBehaviour {
 
     private void InitGeneric(ushort port)
     {
+        NetworkTransport.Init();
         ConnectionConfig config = new ConnectionConfig();
         ReliableChannel = config.AddChannel(QosType.ReliableSequenced);
+        //ReliableChannel = config.AddChannel(QosType.ReliableFragmented);
         UnreliableChannel = config.AddChannel(QosType.Unreliable);
         Topology = new HostTopology(config, 256);
         ConnectionID = NetworkTransport.AddHost(Topology, port);
@@ -40,7 +42,7 @@ public class NetworkManager : MonoBehaviour {
 
     public void Start()
     {
-        NetworkTransport.Init();
+
     }
 
     public bool InitServer(ushort port)
@@ -81,6 +83,7 @@ public class NetworkManager : MonoBehaviour {
         ClientManager.Shutdown();
         byte error;
         NetworkTransport.Disconnect(HostID, ConnectionID, out error); // ignore error here
+        NetworkTransport.Shutdown();
         State = NetworkState.Disconnected;
     }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using UnityEngine;
 
 public enum ClientState
 {
@@ -38,6 +39,9 @@ public class Client
     public static void DisconnectedFromServer()
     {
         GameConsole.Instance.WriteLine("Disconnected from [{0}]:{1}.", ClientManager.ServerIPAddress, ClientManager.ServerIPPort);
+        // also kill MapDownloader
+        if (MapDownloader.Instance != null)
+            MapDownloader.Instance.Kill();
     }
 
     [Serializable()]
@@ -66,7 +70,11 @@ public class Client
                 // enter map download state locally.
                 //
                 State = ClientState.DownloadingMap;
-
+                MapDownloader dlHandler = Utils.CreateObjectWithScript<MapDownloader>();
+                dlHandler.Setup(FileName);
+                dlHandler.transform.parent = UiManager.Instance.transform;
+                Server.RequestDownloadCommand reqDlCmd;
+                ClientManager.SendCommand(reqDlCmd);
             }
             else
             {
@@ -93,6 +101,69 @@ public class Client
         {
             GameConsole.Instance.WriteLine("Error: {0}", Code.ToString());
             return false;
+        }
+    }
+
+    [Serializable()]
+    public struct DownloadStartCommand : IClientCommand
+    {
+        public int TotalSize;
+
+        public bool Process()
+        {
+            GameConsole.Instance.WriteLine("Downloading map from server ({0} bytes to download)...", TotalSize);
+            MapDownloader.Instance.Dl_FullSize = TotalSize;
+            MapDownloader.Instance.Dl_Content = new byte[TotalSize];
+            Server.RequestDownloadContinueCommand dlCntCmd;
+            ClientManager.SendCommand(dlCntCmd);
+            return true;
+        }
+    }
+
+    [Serializable()]
+    public struct DownloadCommand : IClientCommand
+    {
+        public byte[] PartialBytes;
+
+        public bool Process()
+        {
+            PartialBytes.CopyTo(MapDownloader.Instance.Dl_Content, MapDownloader.Instance.Dl_DoneSize);
+            MapDownloader.Instance.Dl_DoneSize += PartialBytes.Length;
+            Server.RequestDownloadContinueCommand dlCntCmd;
+            if (MapDownloader.Instance.Dl_DoneSize == MapDownloader.Instance.Dl_FullSize)
+            {
+                // save map file, and retry authentication
+                if (!Directory.Exists("maps"))
+                {
+                    try
+                    {
+                        DirectoryInfo info = Directory.CreateDirectory("maps");
+                    }
+                    catch (IOException)
+                    {
+                        GameConsole.Instance.WriteLine("Error: unable to write map file into \"maps\".");
+                        NetworkManager.Instance.Disconnect();
+                    }
+                }
+
+                try
+                {
+                    using (FileStream fs = File.OpenWrite("maps/" + MapDownloader.Instance.FileName))
+                        fs.Write(MapDownloader.Instance.Dl_Content, 0, MapDownloader.Instance.Dl_FullSize);
+                    GameConsole.Instance.WriteLine("Wrote the new map into \"maps/{0}\".", MapDownloader.Instance.FileName);
+                    Server.ClientAuthCommand authCmd;
+                    ClientManager.SendCommand(authCmd);
+                }
+                catch(IOException)
+                {
+                    GameConsole.Instance.WriteLine("Error: unable to write map file into \"maps\".");
+                    NetworkManager.Instance.Disconnect();
+                }
+
+                GameObject.Destroy(MapDownloader.Instance.gameObject);
+            }
+            else ClientManager.SendCommand(dlCntCmd); // next part
+            return true;
         }
     }
 }

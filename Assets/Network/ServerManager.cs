@@ -10,6 +10,12 @@ using System.Reflection;
 
 public class ServerClient
 {
+    // data for map download
+    public string Dl_Name;
+    public int Dl_Done;
+    public byte[] Dl_Bytes;
+
+    public ClientState State = ClientState.Connected;
     internal int ConnectionID;
     public string IPAddress { get; private set; }
     public ushort IPPort { get; private set; }

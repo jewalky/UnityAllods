@@ -122,6 +122,44 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
         // handle input events here
         if (e.type == EventType.KeyDown)
         {
+            if (e.keyCode == KeyCode.V && e.control)
+            {
+                // paste
+                int ss1 = Mathf.Min(Selection1, Selection2);
+                int ss2 = Mathf.Max(Selection1, Selection2);
+                if (ss1 != ss2)
+                {
+                    EditRendererA.Text = EditRendererA.Text.Remove(ss1 + 2, ss2 - ss1);
+                    Selection2 = Selection1 = ss1;
+                }
+
+                string cstr = GUIUtility.systemCopyBuffer;
+                string possibleText2 = EditRendererA.Text;
+                for (int i = 0; i < cstr.Length; i++)
+                {
+                    char ch = cstr[i];
+                    string possibleText = possibleText2.Insert(Selection2 + 2, "" + ch);
+                    if (EditRendererA.Font.Width(possibleText) <= Screen.width)
+                        possibleText2 = possibleText; // don't allow inserting characters if we don't have space
+                    Selection2 = ++Selection1;
+                }
+
+                EditRendererA.Text = possibleText2;
+                EditCursor = true;
+                return true;
+            }
+            else if (e.keyCode == KeyCode.C && e.control)
+            {
+                // copy
+                int ss1 = Mathf.Min(Selection1, Selection2);
+                int ss2 = Mathf.Max(Selection1, Selection2);
+                if (ss1 != ss2)
+                {
+                    string selected = EditRendererA.Text.Substring(ss1 + 2, ss2 - ss1);
+                    GUIUtility.systemCopyBuffer = selected;
+                }
+            }
+
             switch(e.keyCode)
             {
                 case KeyCode.UpArrow:
@@ -196,6 +234,14 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
                 default:
                     if (e.character >= 0x20 && e.character != '`' && e.character != '~')
                     {
+                        int ss1 = Mathf.Min(Selection1, Selection2);
+                        int ss2 = Mathf.Max(Selection1, Selection2);
+                        if (ss1 != ss2)
+                        {
+                            EditRendererA.Text = EditRendererA.Text.Remove(ss1 + 2, ss2 - ss1);
+                            Selection2 = Selection1 = ss1;
+                        }
+
                         // type!
                         string possibleText = EditRendererA.Text.Insert(Selection2 + 2, ""+e.character);
                         if (EditRendererA.Font.Width(possibleText) <= Screen.width)

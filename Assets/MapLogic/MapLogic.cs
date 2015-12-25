@@ -93,9 +93,10 @@ class MapLogic
 
     public void CalculateDynLighting()
     {
-        for (int y = 0; y < Height; y++)
+        Rect vRec = MapView.Instance.VisibleRect;
+        for (int y = (int)vRec.yMin; y < vRec.yMax; y++)
         {
-            for (int x = 0; x < Width; x++)
+            for (int x = (int)vRec.xMin; x < vRec.xMax; x++)
             {
                 Nodes[x, y].DynLight = 0;
                 foreach(MapLogicObject mobj in Nodes[x, y].Objects)

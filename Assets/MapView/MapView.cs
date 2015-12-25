@@ -25,7 +25,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     {
         while (true)
         {
-            yield return new WaitUntil(() => (MapLogic.Instance.MapLightingNeedsUpdate));
+            //yield return new WaitUntil(() => (MapLogic.Instance.MapLightingNeedsUpdate));
+            yield return new WaitForEndOfFrame();
             MapLogic.Instance.GetLightingTexture(); // update lighting texture
         }
     }
@@ -34,7 +35,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     {
         while (true)
         {
-            yield return new WaitUntil(() => (MapLogic.Instance.MapFOWNeedsUpdate));
+            //yield return new WaitUntil(() => (MapLogic.Instance.MapFOWNeedsUpdate));
+            yield return new WaitForEndOfFrame();
             MapLogic.Instance.GetFOWTexture(); // update fog of war texture
         }
     }
@@ -444,6 +446,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             float sx = _ScrollX;
             float sy = _ScrollY;
             this.transform.position = new Vector3((-sx * 32) / 100, (-sy * 32) / 100, 0);
+
+            MapLogic.Instance.CalculateDynLighting(); // this is needed due to the fact that we calculate dynlights based on viewrect
         }
     }
 

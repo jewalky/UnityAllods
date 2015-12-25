@@ -66,7 +66,7 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
         BgObject.transform.parent = transform;
         BgRenderer = BgObject.GetComponent<MeshRenderer>();
         BgObject.transform.localPosition = new Vector3(Screen.width / 2, ConsoleHeight / 2, 0f);
-        BgObject.transform.localScale = new Vector3(Screen.width, ConsoleHeight, 0.001f);
+        BgObject.transform.localScale = new Vector3(Screen.width, ConsoleHeight);
         BgRenderer.material = new Material(MainCamera.MainShader);
         BgRenderer.material.color = new Color(0, 0, 0, 0.6f);
         BgRenderer.enabled = false;
@@ -75,14 +75,14 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
         // prepare text. this renderer will wrap lines based on screen width.
         TextRendererA = new AllodsTextRenderer(Fonts.Font2, Font.Align.Left, Screen.width - 4, 0, true);
         TextObject = TextRendererA.GetNewGameObject(0.01f, transform, 100);
-        TextObject.transform.localPosition = new Vector3(2, 2, -1);
+        TextObject.transform.localPosition = new Vector3(2, 2, -0.001f);
         TextRenderer = TextObject.GetComponent<MeshRenderer>();
         TextRenderer.material.color = new Color(0.8f, 0.8f, 0.8f);
 
         // prepare editing field presentation
         EditRendererA = new AllodsTextRenderer(Fonts.Font2);
         EditObject = EditRendererA.GetNewGameObject(0.01f, transform, 100);
-        EditObject.transform.localPosition = new Vector3(2, ConsoleHeight - 13, -1);
+        EditObject.transform.localPosition = new Vector3(2, ConsoleHeight - 13, -0.001f);
         EditRenderer = EditObject.GetComponent<MeshRenderer>();
         EditRenderer.material.color = new Color(1, 1, 1);
         EditRendererA.Text = "> ";
@@ -90,7 +90,7 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
         SelectionObject = Utils.CreateObject();
         SelectionObject.transform.parent = transform;
         SelectionObject.transform.localScale = new Vector3(1, 1, 1);
-        SelectionObject.transform.localPosition = new Vector3(2, ConsoleHeight - 13, -0.9f);
+        SelectionObject.transform.localPosition = new Vector3(2, ConsoleHeight - 13, -0.0005f);
         SelectionMesh = new Mesh();
         MeshFilter selectionFilter = SelectionObject.AddComponent<MeshFilter>();
         MeshRenderer selectionRenderer = SelectionObject.AddComponent<MeshRenderer>();
@@ -281,7 +281,7 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
         if (ConsoleLines.Count > 100) // remove first N lines if range is too large
             ConsoleLines.RemoveRange(0, ConsoleLines.Count - 100);
         TextRendererA.Text = string.Join("\n", ConsoleLines.ToArray());
-        TextObject.transform.localPosition = new Vector3(2, ConsoleHeight - 14 - TextRendererA.Height, -1);
+        TextObject.transform.localPosition = new Vector3(2, ConsoleHeight - 14 - TextRendererA.Height, -0.001f);
     }
 
     public static string[] SplitArguments(string commandLine)

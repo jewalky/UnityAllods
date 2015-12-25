@@ -4,6 +4,10 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using System.IO;
+#if UNITY_EDITOR
+using UnityEditor;
+using System.Diagnostics;
+#endif
 
 public class Utils
 {
@@ -67,3 +71,17 @@ public class Utils
     }
 }
 
+#if UNITY_EDITOR
+public class ScriptBatch
+{
+    [MenuItem("MyTools/Linux dedicated server build")]
+    public static void BuildGame()
+    {
+        // Get filename.
+        string path = "ServerBuild";
+        string[] levels = new string[] { "Assets/Allods.unity" };
+        // Build player.
+        BuildPipeline.BuildPlayer(levels, path + "/AllodsServer.x86", BuildTarget.StandaloneLinux, BuildOptions.EnableHeadlessMode);
+    }
+}
+#endif

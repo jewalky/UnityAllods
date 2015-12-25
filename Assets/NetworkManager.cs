@@ -31,8 +31,14 @@ public class NetworkManager : MonoBehaviour {
 
     private void InitGeneric(ushort port)
     {
-        NetworkTransport.Init();
+        GlobalConfig gConfig = new GlobalConfig();
+        gConfig.MaxPacketSize = 65535;
+        NetworkTransport.Init(gConfig);
         ConnectionConfig config = new ConnectionConfig();
+        config.MaxSentMessageQueueSize = 65535;
+        config.MaxCombinedReliableMessageCount = 32;
+        config.MaxCombinedReliableMessageSize = 512;
+        config.PacketSize = 65535;
         ReliableChannel = config.AddChannel(QosType.ReliableSequenced);
         //ReliableChannel = config.AddChannel(QosType.ReliableFragmented);
         UnreliableChannel = config.AddChannel(QosType.Unreliable);
@@ -79,8 +85,10 @@ public class NetworkManager : MonoBehaviour {
 
     public void Disconnect()
     {
-        ServerManager.Shutdown();
-        ClientManager.Shutdown();
+        if (State == NetworkState.Server)
+            ServerManager.Shutdown();
+        if (State == NetworkState.Client)
+            ClientManager.Shutdown();
         byte error;
         NetworkTransport.Disconnect(HostID, ConnectionID, out error); // ignore error here
         NetworkTransport.Shutdown();

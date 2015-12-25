@@ -42,6 +42,8 @@ public class Client
         // also kill MapDownloader
         if (MapDownloader.Instance != null)
             MapDownloader.Instance.Kill();
+        // also unload map, because if we were connected, we had server map.
+        MapLogic.Instance.Unload();
     }
 
     [Serializable()]

@@ -91,8 +91,8 @@ public class Server
     {
         public bool Process(ServerClient client)
         {
-            Debug.Log(string.Format("client asked for next piece. dl_Done = {0}, dl_Total = {1}", client.Dl_Done, client.Dl_Bytes.Length));
-            int curLeft = (int)Mathf.Min(client.Dl_Bytes.Length - client.Dl_Done, 512);
+            //Debug.Log(string.Format("client asked for next piece. dl_Done = {0}, dl_Total = {1}", client.Dl_Done, client.Dl_Bytes.Length));
+            int curLeft = (int)Mathf.Min(client.Dl_Bytes.Length - client.Dl_Done, 1024);
             Client.DownloadCommand dlCmd;
             dlCmd.PartialBytes = client.Dl_Bytes.Skip(client.Dl_Done).Take(curLeft).ToArray();
             client.Dl_Done += curLeft;

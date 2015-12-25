@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Security.Cryptography;
 
 public class ResourceManager
 {
@@ -238,5 +239,16 @@ public class ResourceManager
 
         ResourceNode node = GetResourceNode(filename);
         return (node != null && !node.IsDirectory);
+    }
+
+    public static string CalcMD5(string filename)
+    {
+        using (MemoryStream ms = OpenRead(filename))
+        {
+            using (var md5 = MD5.Create())
+            {
+                return BitConverter.ToString(md5.ComputeHash(ms)).Replace("-", "").ToLower();
+            }
+        }
     }
 }

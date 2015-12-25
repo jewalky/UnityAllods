@@ -67,6 +67,22 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         }
     }
 
+    public void Unload()
+    {
+        for (int i = 0; i < MeshChunks.Length; i++)
+        {
+            Utils.DestroyObjectAndMesh(MeshChunks[i]);
+            Utils.DestroyObjectAndMesh(FOWMeshChunks[i]);
+            Utils.DestroyObjectAndMesh(GridMeshChunks[i]);
+        }
+
+        MeshChunks = new GameObject[0];
+        FOWMeshChunks = new GameObject[0];
+        GridMeshChunks = new GameObject[0];
+        MeshChunkRects = new Rect[0];
+        MeshChunkMeshes = new Mesh[0];
+    }
+
     public Texture2D MapTiles = null;
     public Rect[] MapRects = null;
     public void InitFromFile(string filename)
@@ -121,19 +137,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         if (GridMeshMaterial == null)
             GridMeshMaterial = new Material(MainCamera.MainShader);
 
-        for (int i = 0; i < MeshChunks.Length; i++)
-        {
-            Utils.DestroyObjectAndMesh(MeshChunks[i]);
-            Utils.DestroyObjectAndMesh(FOWMeshChunks[i]);
-            Utils.DestroyObjectAndMesh(GridMeshChunks[i]);
-        }
-
-        MeshChunks = new GameObject[0];
-        FOWMeshChunks = new GameObject[0];
-        GridMeshChunks = new GameObject[0];
-        MeshChunkRects = new Rect[0];
-        MeshChunkMeshes = new Mesh[0];
-
+        Unload();
         if (!MapLogic.Instance.IsLoaded)
             return;
 

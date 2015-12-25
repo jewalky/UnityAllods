@@ -42,6 +42,8 @@ class MapLogic
     }
 
     private AllodsMap MapStructure = null;
+    public string FileName { get; private set; }
+    public string FileMD5 { get; private set; }
     public int Width { get; private set; }
     public int Height { get; private set; }
     public MapNode[,] Nodes { get; private set; }
@@ -234,6 +236,9 @@ class MapLogic
             mo.Dispose();
         Objects.Clear();
         Players.Clear();
+        FileName = null;
+        MapStructure = null;
+        MapView.Instance.Unload();
     }
 
     private void InitGeneric()
@@ -250,8 +255,8 @@ class MapLogic
         Unload();
         InitGeneric();
 
-        MapStructure = AllodsMap.LoadFrom(filename);
-        if (MapStructure == null)
+        AllodsMap mapStructure = AllodsMap.LoadFrom(filename);
+        if (mapStructure == null)
         {
             //Core.Abort("Couldn't load \"{0}\"", filename);
             GameConsole.Instance.WriteLine("Couldn't load \"{0}\"", filename);
@@ -259,8 +264,8 @@ class MapLogic
             return;
         }
 
-        Width = (int)MapStructure.Data.Width;
-        Height = (int)MapStructure.Data.Height;
+        Width = (int)mapStructure.Data.Width;
+        Height = (int)mapStructure.Data.Height;
 
         Nodes = new MapNode[Width, Height];
         for (int y = 0; y < Height; y++)
@@ -268,20 +273,15 @@ class MapLogic
             for (int x = 0; x < Width; x++)
             {
                 Nodes[x, y] = new MapNode();
-                Nodes[x, y].Tile = (ushort)(MapStructure.Tiles[y * Width + x] & 0x3FF);
-                Nodes[x, y].Height = MapStructure.Heights[y * Width + x];
-                //Nodes[i].Flags = (ushort)(MapStructure.Tiles[y * Width + x] & 0xFC00);
-                //Nodes[i].Flags = MapNodeFlags.Discovered;
+                Nodes[x, y].Tile = (ushort)(mapStructure.Tiles[y * Width + x] & 0x3FF);
+                Nodes[x, y].Height = mapStructure.Heights[y * Width + x];
                 Nodes[x, y].Flags = 0;
                 Nodes[x, y].Light = 255;
             }
         }
 
-        MapLighting = new TerrainLighting(Width, Height);
-        CalculateLighting(180);
-
         // load players
-        foreach (AllodsMap.AlmPlayer almplayer in MapStructure.Players)
+        foreach (AllodsMap.AlmPlayer almplayer in mapStructure.Players)
         {
             MapLogicPlayer player = new MapLogicPlayer(almplayer);
             Players.Add(player);
@@ -296,7 +296,7 @@ class MapLogic
         {
             for (int x = 0; x < Width; x++)
             {
-                int typeId = MapStructure.Objects[y * Width + x];
+                int typeId = mapStructure.Objects[y * Width + x];
                 if (typeId <= 0) continue;
                 typeId -= 1;
                 MapLogicObstacle mob = new MapLogicObstacle(typeId);
@@ -307,7 +307,7 @@ class MapLogic
         }
 
         // load structures
-        foreach (AllodsMap.AlmStructure almstruc in MapStructure.Structures)
+        foreach (AllodsMap.AlmStructure almstruc in mapStructure.Structures)
         {
             MapLogicStructure struc;
             if (almstruc.IsBridge)
@@ -334,6 +334,13 @@ class MapLogic
 
             struc.LinkToWorld();
         }
+
+        // only if loaded
+        MapStructure = mapStructure;
+        FileName = filename;
+        FileMD5 = ResourceManager.CalcMD5(FileName);
+        MapLighting = new TerrainLighting(Width, Height);
+        CalculateLighting(180);
     }
 
     public int GetFreePlayerID(bool ai)

@@ -44,12 +44,12 @@ public class Images
 
             if (has_colormask)
             {
-                colormask &= 0xF0F0F0;
+                //colormask &= 0xF0F0F0;
                 Color32[] colors = texture.GetPixels32();
                 for (int i = 0; i < colors.Length; i++)
                 {
                     uint pixel = ((uint)colors[i].r << 16) | ((uint)colors[i].g << 8) | colors[i].b | ((uint)colors[i].a << 24);
-                    if ((pixel & 0xF0F0F0) == colormask)
+                    if (/*(pixel & 0xF0F0F0) == colormask*/ (pixel & 0xFFFFFF) == colormask)
                         colors[i].a = 0;
                 }
                 texture.SetPixels32(colors);
@@ -163,11 +163,11 @@ public class Images
 
                 if (has_colormask)
                 {
-                    colormask &= 0xF0F0F0;
+                    //colormask &= 0xF0F0F0;
                     for (int i = 0; i < colors.Length; i++)
                     {
                         uint pixel = ((uint)colors[i].r << 16) | ((uint)colors[i].g << 8) | colors[i].b | ((uint)colors[i].a << 24);
-                        if ((pixel & 0xF0F0F0) == colormask)
+                        if (/*(pixel & 0xF0F0F0) == colormask*/ (pixel & 0xFFFFFF) == colormask)
                             colors[i].a = 0;
                     }
                     texture.SetPixels32(colors);

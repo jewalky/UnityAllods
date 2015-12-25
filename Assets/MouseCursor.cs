@@ -53,6 +53,9 @@ public class MouseCursor : MonoBehaviour {
     private SpriteRenderer Renderer = null;
     void Start ()
     {
+        if (GameManager.Instance.IsHeadless) // don't use cursor in graphics-less mode
+            return;
+
         if (!Application.isEditor) // if we remove cursor in editor, it'll affect WHOLE DESKTOP
             Cursor.visible = false;
 
@@ -67,6 +70,9 @@ public class MouseCursor : MonoBehaviour {
 	// Update is called once per frame
 	void Update ()
     {
+        if (GameManager.Instance.IsHeadless)
+            return;
+
         if (CurrentCursor == null)
         {
             Renderer.enabled = false;

@@ -54,6 +54,16 @@ public class UiManager : MonoBehaviour
 
     void OnGUI()
     {
+        // pressing PrintScreen or Alt+S results in screenshot unconditionally.
+        if (Event.current.type == EventType.KeyDown &&
+            (Event.current.keyCode == KeyCode.Print ||
+             Event.current.keyCode == KeyCode.SysReq ||
+            (Event.current.keyCode == KeyCode.S && Event.current.alt)))
+        {
+            MainCamera.Instance.TakeScreenshot();
+            return;
+        }
+
         // send event.current to every object that has subscribed. if some object processes an event, don't send it further.
         EnumerateObjects();
         // reverse iteration

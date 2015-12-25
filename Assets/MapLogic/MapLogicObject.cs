@@ -110,11 +110,8 @@ public class MapLogicObject : IDisposable
                  Y > MapView.Instance.VisibleRect.yMax || Y + Height < MapView.Instance.VisibleRect.yMin);
     }
 
-    public int GetVisibility()
+    public int GetVisibilityInFOW()
     {
-        if (!GetVisibityInCamera())
-            return 0;
-
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;
         int TopFlag = 0;
@@ -133,5 +130,13 @@ public class MapLogicObject : IDisposable
         }
 
         return TopFlag;
+
+    }
+
+    public int GetVisibility()
+    {
+        if (!GetVisibityInCamera())
+            return 0;
+        return GetVisibilityInFOW();
     }
 }

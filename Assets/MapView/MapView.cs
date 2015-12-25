@@ -41,6 +41,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         }
     }
 
+    private MapViewMiniMap MiniMap;
+
     // Use this for initialization
     void Start ()
     {
@@ -50,6 +52,10 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         //InitFromFile("scenario/20.alm");
         //InitFromFile("an_heaven_5_8.alm");
         //InitFromFile("kids3.alm");
+
+        // create child objects
+        MiniMap = Utils.CreateObjectWithScript<MapViewMiniMap>();
+        MiniMap.transform.parent = UiManager.Instance.transform; // despite it being a part of minimap, it should be in UiManager since it doesn't move unlike the MapView
     }
 
     private Rect _VisibleRect = new Rect(0, 0, 0, 0);
@@ -89,6 +95,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
 
         InitMeshes();
         SetScroll(8, 8);
+        MiniMap.UpdateTexture(true);
     }
 
     GameObject[] MeshChunks = new GameObject[0];
@@ -414,7 +421,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     {
         int minX = 8;
         int minY = 8;
-        int screenWB = (int)((float)Screen.width / 32);
+        int screenWB = (int)((float)Screen.width / 32 - 5); // 5 map cells are the right panels. these are always there.
         int screenHB = (int)((float)Screen.height / 32);
         int maxX = MapLogic.Instance.Width - screenWB - 8;
         int maxY = MapLogic.Instance.Height - screenHB - 10;
@@ -459,8 +466,12 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     void Update()
     {
         if (!MapLogic.Instance.IsLoaded)
+        {
+            Utils.SetRendererEnabledWithChildren(MiniMap.gameObject, false);
             return;
+        }
 
+        Utils.SetRendererEnabledWithChildren(MiniMap.gameObject, true);
         // update lighting.
         Texture2D lightTex = MapLogic.Instance.CheckLightingTexture();
         if (lightTex != null)

@@ -5,7 +5,7 @@
 		[PerRendererData] _MainTex("Sprite Texture", 2D) = "white" {}
 		_Color("Tint", Color) = (1,1,1,1)
 		_Lightness("Lightness", Float) = 0.5
-		[MaterialToggle] PixelSnap("Pixel snap", Float) = 1
+		[MaterialToggle] PixelSnap("Pixel snap", Float) = 0
 	}
 
 	SubShader

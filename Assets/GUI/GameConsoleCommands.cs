@@ -50,4 +50,19 @@ public class GameConsoleCommands
     {
         MainCamera.Instance.TakeScreenshot();
     }
+
+    public void connect(string host)
+    {
+        NetworkManager.Instance.InitClient(host, 8000);
+    }
+
+    public void host()
+    {
+        NetworkManager.Instance.InitServer(8000);
+    }
+
+    public void disconnect()
+    {
+        NetworkManager.Instance.Disconnect();
+    }
 }

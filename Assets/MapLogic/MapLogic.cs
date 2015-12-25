@@ -118,6 +118,9 @@ class MapLogic
 
     public Texture2D GetLightingTexture()
     {
+        if (GameManager.Instance.IsHeadless)
+            return null;
+
         if (MapLightingTex == null)
         {
             MapLightingTex = new Texture2D(256, 256, TextureFormat.Alpha8, false);
@@ -158,6 +161,9 @@ class MapLogic
 
     public Texture2D GetFOWTexture()
     {
+        if (GameManager.Instance.IsHeadless)
+            return null;
+
         if (MapFOWTex == null)
         {
             MapFOWTex = new Texture2D(256, 256, TextureFormat.Alpha8, false);
@@ -311,7 +317,7 @@ class MapLogic
                 struc.Y = (int)almstruc.Y;
                 struc.Health = 0;
                 struc.Tag = almstruc.ID;
-                struc.Player = GetPlayerByID(almstruc.Player);
+                struc.Player = GetPlayerByID(almstruc.Player-1);
                 struc.IsBridge = true;
                 struc.Width = almstruc.Width;
                 struc.Health = almstruc.Height;
@@ -323,7 +329,7 @@ class MapLogic
                 struc.Y = (int)almstruc.Y;
                 struc.Health = almstruc.Health;
                 struc.Tag = almstruc.ID;
-                struc.Player = GetPlayerByID(almstruc.Player);
+                struc.Player = GetPlayerByID(almstruc.Player-1);
             }
 
             struc.LinkToWorld();

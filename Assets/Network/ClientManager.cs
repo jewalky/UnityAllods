@@ -35,6 +35,9 @@ public class ClientManager
             // failed. report somehow.
         }
 
+        connection.Client.Blocking = true;
+        connection.Client.ReceiveBufferSize = 1048576; // 1mb
+
         ClientThreadSend = new Thread(new ThreadStart(() => { ClientThreadSendProc(Connection); }));
         ClientThreadSend.Start(); // start packet sending thread once we're connected
 
@@ -76,6 +79,7 @@ public class ClientManager
 
     private static void ClientThreadSendProc(TcpClient connection)
     {
+        connection.Client.SendBufferSize = 1048576; // 1mb
         NetworkStream stream = connection.GetStream();
         BinaryWriter writer = new BinaryWriter(stream);
         while (true)
@@ -192,9 +196,9 @@ public class ClientManager
             if (!((IClientCommand)o).Process())
                 NetworkManager.Instance.Disconnect();
         }
-        catch(Exception)
+        catch(Exception e)
         {
-            GameConsole.Instance.WriteLine("Error encountered during command processing.");
+            GameConsole.Instance.WriteLine("Error encountered during command processing.\n{0}", e.ToString());
             NetworkManager.Instance.Disconnect();
         }
         finally

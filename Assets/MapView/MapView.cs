@@ -132,7 +132,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         }
 
         if (FOWMeshMaterial == null)
-            FOWMeshMaterial = new Material(MainCamera.MainShader);
+            FOWMeshMaterial = new Material(MainCamera.TerrainFOWShader);
 
         if (GridMeshMaterial == null)
             GridMeshMaterial = new Material(MainCamera.MainShader);
@@ -171,7 +171,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                     m_w = MapLogic.Instance.Width - m_x;
                 if (m_y + m_h > MapLogic.Instance.Height)
                     m_h = MapLogic.Instance.Height - m_y;
-                mf.mesh = CreatePartialMesh(new Rect(m_x, m_y, m_w, m_h));
+                mf.mesh = CreatePartialMesh(new Rect(m_x, m_y, m_w, m_h), false);
                 MeshChunkRects[mc] = new Rect(m_x, m_y, m_w, m_h);
                 MeshChunkMeshes[mc] = mf.mesh;
                 MeshChunks[mc] = go;
@@ -179,19 +179,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                 // also duplicate this object for fog of war drawing
                 FOWMeshChunks[mc] = GameObject.Instantiate(go);
                 FOWMeshChunks[mc].GetComponent<MeshRenderer>().material = FOWMeshMaterial;
-                Mesh m2 = FOWMeshChunks[mc].GetComponent<MeshFilter>().mesh;
+                Mesh m2 = CreatePartialMesh(new Rect(m_x, m_y, m_w, m_h), true);
                 // update m2 to have uv == uv2
                 m2.uv = m2.uv2;
-                Vector3[] qv = m2.vertices;
-                for (int i = 0; i < qv.Length; i += 4)
-                {
-                    // in normal terrain mesh, the quads are a bit overlapping, this shouldnt happen in alpha fog of war texture!
-                    qv[i + 1].x -= 1;
-                    qv[i + 2].x -= 1;
-                    qv[i + 2].y -= 1;
-                    qv[i + 3].y -= 1;
-                }
-                m2.vertices = qv;
                 FOWMeshChunks[mc].GetComponent<MeshFilter>().mesh = m2;
                 FOWMeshChunks[mc].transform.parent = transform;
                 FOWMeshChunks[mc].transform.localPosition = new Vector3(0, 0, -8192);
@@ -267,7 +257,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         FOWMeshMaterial.SetColor("_Color", new Color(0, 0, 0, 1));
     }
 
-    Mesh CreatePartialMesh(Rect rec)
+    Mesh CreatePartialMesh(Rect rec, bool inverted)
     {
         int x = (int)rec.x;
         int y = (int)rec.y;
@@ -278,8 +268,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
 
         // generate mesh
         Mesh mesh = new Mesh();
-        UpdatePartialMesh(mesh, rec);
-        UpdatePartialTiles(mesh, rec, waterAnimFrame);
+        UpdatePartialMesh(mesh, rec, inverted);
+        UpdatePartialTiles(mesh, rec, WaterAnimFrame);
         return mesh;
     }
 
@@ -291,7 +281,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         return 0;
     }
 
-    void UpdatePartialMesh(Mesh mesh, Rect rec)
+    void UpdatePartialMesh(Mesh mesh, Rect rec, bool inverted)
     {
         int x = (int)rec.x;
         int y = (int)rec.y;
@@ -329,16 +319,33 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         mesh.colors = qc;
 
         int[] qt = new int[6 * w * h];
-        pp = 0;
-        for (int i = 0; i < 4 * w * h; i += 4)
+        if (!inverted)
         {
-            qt[pp] = i;
-            qt[pp + 1] = i + 1;
-            qt[pp + 2] = i + 3;
-            qt[pp + 3] = i + 3;
-            qt[pp + 4] = i + 1;
-            qt[pp + 5] = i + 2;
-            pp += 6;
+            pp = 0;
+            for (int i = 0; i < 4 * w * h; i += 4)
+            {
+                qt[pp] = i;
+                qt[pp + 1] = i + 1;
+                qt[pp + 2] = i + 3;
+                qt[pp + 3] = i + 3;
+                qt[pp + 4] = i + 1;
+                qt[pp + 5] = i + 2;
+                pp += 6;
+            }
+        }
+        else
+        {
+            pp = qt.Length - 6;
+            for (int i = 0; i < 4 * w * h; i += 4)
+            {
+                qt[pp] = i;
+                qt[pp + 1] = i + 1;
+                qt[pp + 2] = i + 3;
+                qt[pp + 3] = i + 3;
+                qt[pp + 4] = i + 1;
+                qt[pp + 5] = i + 2;
+                pp -= 6;
+            }
         }
 
         mesh.triangles = qt;
@@ -360,9 +367,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         mesh.uv2 = quv2;
     }
 
-    void UpdatePartialTiles(Mesh mesh, Rect rec, int WaterAnimFrame = 0)
+    void UpdatePartialTiles(Mesh mesh, Rect rec, int waf)
     {
-        WaterAnimFrame %= 4;
+        waf %= 4;
         MapNode[,] nodes = MapLogic.Instance.Nodes;
 
         int x = (int)rec.x;
@@ -393,7 +400,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                     tilenum -= 0x20;
                     int tilewi = tilenum / 4;
                     int tilew = tilenum % 4;
-                    int waflocal = (tilewi + WaterAnimFrame) % 4;
+                    int waflocal = tilewi;
+                    if (waf != tilewi)
+                        waflocal = ++waflocal % 4;
                     tilenum = 0x20 + (4 * waflocal) + tilew;
                     node.Tile = (ushort)((tilenum << 4) | tilein);
                 }
@@ -462,10 +471,12 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         }
     }
 
+    public bool GridEnabled = false;
+
     // Update is called once per frame
     int ScrollDeltaX = 0;
     int ScrollDeltaY = 0;
-    int waterAnimFrame = 0;
+    int WaterAnimFrame = 0;
     float scrollTimer = 0;
     void Update()
     {
@@ -474,6 +485,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             Utils.SetRendererEnabledWithChildren(MiniMap.gameObject, false);
             return;
         }
+
+        if (GridEnabled) GridMeshMaterial.color = new Color(1, 0, 0, 0.5f);
+        else GridMeshMaterial.color = new Color(0, 0, 0, 0);
 
         Utils.SetRendererEnabledWithChildren(MiniMap.gameObject, true);
         // update lighting.
@@ -488,10 +502,10 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         UpdateLogic();
 
         int waterAnimFrameNew = (MapLogic.Instance.LevelTime % 20) / 5;
-        if (waterAnimFrame != waterAnimFrameNew)
+        if (WaterAnimFrame != waterAnimFrameNew)
         {
-            waterAnimFrame = waterAnimFrameNew;
-            UpdateTiles(waterAnimFrame);
+            WaterAnimFrame = waterAnimFrameNew;
+            UpdateTiles(WaterAnimFrame);
         }
     }
 
@@ -620,10 +634,10 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         }
     }
 
-    void UpdateTiles(int WaterAnimFrame)
+    void UpdateTiles(int waf)
     {
         for (int i = 0; i < MeshChunks.Length; i++)
-            UpdatePartialTiles(MeshChunkMeshes[i], MeshChunkRects[i], WaterAnimFrame);
+            UpdatePartialTiles(MeshChunkMeshes[i], MeshChunkRects[i], waf);
     }
 
     // create gameobject based off this instance for logic

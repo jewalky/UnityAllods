@@ -51,6 +51,7 @@ class MapLogic
     private int _TopObjectID = 0;
     public List<MapLogicPlayer> Players { get; private set; }
     public static readonly int MaxPlayers = 1024;
+    public MapLogicPlayer ConsolePlayer { get; set; } // the player that we're directly controlling.
 
     public bool IsLoaded
     {
@@ -236,6 +237,7 @@ class MapLogic
             mo.Dispose();
         Objects.Clear();
         Players.Clear();
+        ConsolePlayer = null;
         FileName = null;
         MapStructure = null;
         MapView.Instance.Unload();
@@ -341,6 +343,12 @@ class MapLogic
         FileMD5 = ResourceManager.CalcMD5(FileName);
         MapLighting = new TerrainLighting(Width, Height);
         CalculateLighting(180);
+
+        // postprocessing
+        // if we are playing in singleplayer, then console player is Self.
+        MapLogicPlayer Self = GetPlayerByName("Self");
+        if (Self == null) GameConsole.Instance.WriteLine("Error: couldn't set ConsolePlayer: Self not found!");
+        else ConsolePlayer = Self;
     }
 
     public int GetFreePlayerID(bool ai)
@@ -379,9 +387,10 @@ class MapLogic
 
     public MapLogicPlayer GetPlayerByName(string name)
     {
+        name = name.ToLower();
         foreach (MapLogicPlayer player in Players)
         {
-            if (player.Name == name)
+            if (player.Name.ToLower() == name)
                 return player;
         }
 
@@ -412,5 +421,53 @@ class MapLogic
         }
 
         MapFOWNeedsUpdate = true;
+    }
+
+    public MapLogicPlayer GetNetPlayer(ServerClient client)
+    {
+        foreach (MapLogicPlayer player in Players)
+        {
+            if (player.NetClient == client)
+                return player;
+        }
+
+        return null;
+    }
+
+    public void AddNetPlayer(MapLogicPlayer p, bool silent)
+    {
+        Players.Add(p);
+
+        if (NetworkManager.IsServer)
+            Server.NotifyPlayerJoined(p);
+        else if (NetworkManager.IsClient)
+        {
+            if (!silent)
+                GameConsole.Instance.WriteLine("{0} {1} {2}", Locale.Main[204], p.Name, Locale.Main[205]); // player ... has joined the game
+        }
+    }
+
+    public void DelNetPlayer(MapLogicPlayer p, bool silent, bool kicked) // this will remove player and all related objects
+    {
+        if (NetworkManager.IsServer)
+            Server.NotifyPlayerLeft(p, kicked);
+        else if (NetworkManager.IsClient)
+        {
+            if (kicked && !silent)
+                GameConsole.Instance.WriteLine("{0} {1} {2}", Locale.Main[78], p.Name, Locale.Main[79]); // player ... was kicked from the game
+        }
+
+        for (int i = 0; i < Objects.Count; i++)
+        {
+            MapLogicObject mobj = Objects[i];
+            if (mobj is IMapLogicPlayerPawn && ((IMapLogicPlayerPawn)mobj).GetPlayer() == p)
+            {
+                mobj.Dispose(); // delete object and associated GameObject, and also call UnlinkFromWorld
+                Objects.Remove(mobj); // remove from the list
+                i--;
+            }
+        }
+
+        Players.Remove(p); // remove the player himself.
     }
 }

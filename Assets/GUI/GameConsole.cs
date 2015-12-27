@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class GameConsole : MonoBehaviour, IUiEventProcessor
+public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBackground
 {
     private static GameConsole _Instance = null;
     public static GameConsole Instance
@@ -26,18 +26,8 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
     GameObject TextObject;
     MeshRenderer TextRenderer;
 
-    AllodsTextRenderer EditRendererA;
-    GameObject EditObject;
-    MeshRenderer EditRenderer;
-
-    // Mesh for cursor, mesh for selection, mesh for cat...owait.
-    GameObject SelectionObject;
-    Mesh SelectionMesh;
-
-    int Selection1;
-    int Selection2;
-    bool EditCursor;
-    float EditCursorTimer;
+    // editor field
+    TextField EditField;
 
     // command handler
     GameConsoleCommands CommandHandler;
@@ -79,25 +69,27 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
         TextRenderer = TextObject.GetComponent<MeshRenderer>();
         TextRenderer.material.color = new Color(0.8f, 0.8f, 0.8f);
 
-        // prepare editing field presentation
-        EditRendererA = new AllodsTextRenderer(Fonts.Font2);
-        EditObject = EditRendererA.GetNewGameObject(0.01f, transform, 100);
-        EditObject.transform.localPosition = new Vector3(2, ConsoleHeight - 13, -0.001f);
-        EditRenderer = EditObject.GetComponent<MeshRenderer>();
-        EditRenderer.material.color = new Color(1, 1, 1);
-        EditRendererA.Text = "> ";
-
-        SelectionObject = Utils.CreateObject();
-        SelectionObject.transform.parent = transform;
-        SelectionObject.transform.localScale = new Vector3(1, 1, 1);
-        SelectionObject.transform.localPosition = new Vector3(2, ConsoleHeight - 13, -0.0005f);
-        SelectionMesh = new Mesh();
-        MeshFilter selectionFilter = SelectionObject.AddComponent<MeshFilter>();
-        MeshRenderer selectionRenderer = SelectionObject.AddComponent<MeshRenderer>();
-        selectionFilter.mesh = SelectionMesh;
-        selectionRenderer.material = new Material(MainCamera.MainShader);
-
-        Selection1 = Selection2 = 0;
+        EditField = Utils.CreateObjectWithScript<TextField>();
+        EditField.transform.parent = transform;
+        EditField.transform.localPosition = new Vector3(2, ConsoleHeight - 13, -0.001f);
+        EditField.transform.localScale = new Vector3(1, 1, 0.001f);
+        EditField.Font = Fonts.Font2;
+        EditField.Prefix = "> ";
+        EditField.Width = Screen.width - 4;
+        EditField.Height = Fonts.Font2.LineHeight;
+        EditField.OnReturn = () =>
+        {
+            string cmd = EditField.Value;
+            if (cmd.Trim().Length > 0)
+            {
+                WriteLine("> " + cmd);
+                EditField.Value = "";
+                ExecuteCommand(cmd);
+                CommandHistory[CommandHistory.Count - 1] = cmd;
+                CommandHistory.Add("");
+                CommandHistoryPosition = CommandHistory.Count - 1;
+            }
+        };
 
         WriteLine("Welcome to UnityAllods!");
     }
@@ -109,10 +101,7 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
         {
             ConsoleActive = !ConsoleActive;
             if (ConsoleActive)
-            {
-                EditRendererA.Text = "> ";
-                Selection1 = Selection2 = 0;
-            }
+                EditField.Value = "";
             return true;
         }
 
@@ -122,147 +111,23 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
         // handle input events here
         if (e.type == EventType.KeyDown)
         {
-            if (e.keyCode == KeyCode.V && e.control)
-            {
-                // paste
-                int ss1 = Mathf.Min(Selection1, Selection2);
-                int ss2 = Mathf.Max(Selection1, Selection2);
-                if (ss1 != ss2)
-                {
-                    EditRendererA.Text = EditRendererA.Text.Remove(ss1 + 2, ss2 - ss1);
-                    Selection2 = Selection1 = ss1;
-                }
-
-                string cstr = GUIUtility.systemCopyBuffer;
-                string possibleText2 = EditRendererA.Text;
-                for (int i = 0; i < cstr.Length; i++)
-                {
-                    char ch = cstr[i];
-                    string possibleText = possibleText2.Insert(Selection2 + 2, "" + ch);
-                    if (EditRendererA.Font.Width(possibleText) <= Screen.width)
-                        possibleText2 = possibleText; // don't allow inserting characters if we don't have space
-                    Selection2 = ++Selection1;
-                }
-
-                EditRendererA.Text = possibleText2;
-                EditCursor = true;
-                return true;
-            }
-            else if (e.keyCode == KeyCode.C && e.control)
-            {
-                // copy
-                int ss1 = Mathf.Min(Selection1, Selection2);
-                int ss2 = Mathf.Max(Selection1, Selection2);
-                if (ss1 != ss2)
-                {
-                    string selected = EditRendererA.Text.Substring(ss1 + 2, ss2 - ss1);
-                    GUIUtility.systemCopyBuffer = selected;
-                }
-            }
-
             switch(e.keyCode)
             {
                 case KeyCode.UpArrow:
                     if (CommandHistoryPosition > 0)
                     {
                         if (CommandHistoryPosition == CommandHistory.Count - 1)
-                            CommandHistory[CommandHistory.Count - 1] = EditRendererA.Text.Substring(2);
+                            CommandHistory[CommandHistory.Count - 1] = EditField.Value;
                         CommandHistoryPosition--;
-                        EditRendererA.Text = "> " + CommandHistory[CommandHistoryPosition];
-                        Selection2 = Selection1 = EditRendererA.Text.Length - 2;
+                        EditField.Value = CommandHistory[CommandHistoryPosition];
                     }
-                    EditCursor = true;
                     break;
                 case KeyCode.DownArrow:
                     if (CommandHistoryPosition < CommandHistory.Count - 1)
                     {
                         CommandHistoryPosition++;
-                        EditRendererA.Text = "> " + CommandHistory[CommandHistoryPosition];
-                        Selection2 = Selection1 = EditRendererA.Text.Length - 2;
+                        EditField.Value = CommandHistory[CommandHistoryPosition];
                     }
-                    EditCursor = true;
-                    break;
-                case KeyCode.Backspace:
-                case KeyCode.Delete:
-                    int s1 = Mathf.Min(Selection1, Selection2);
-                    int s2 = Mathf.Max(Selection1, Selection2);
-                    if (s1 != s2)
-                    {
-                        EditRendererA.Text = EditRendererA.Text.Remove(s1 + 2, s2 - s1);
-                        Selection2 = Selection1 = s1;
-                    }
-                    else
-                    {
-                        if (e.keyCode == KeyCode.Backspace &&
-                            s1 > 0)
-                        {
-                            EditRendererA.Text = EditRendererA.Text.Remove(Selection2 + 2 - 1, 1);
-                            Selection1 = --Selection2;
-                        }
-                        else if (e.keyCode == KeyCode.Delete &&
-                            s1 < EditRendererA.Text.Length - 2)
-                        {
-                            EditRendererA.Text = EditRendererA.Text.Remove(Selection2 + 2, 1);
-                        }
-                    }
-                    EditCursor = true;
-                    break;
-                case KeyCode.RightArrow:
-                    if (Selection2 < EditRendererA.Text.Length - 2)
-                        Selection2++;
-                    if (!e.shift) Selection1 = Selection2;
-                    EditCursor = true;
-                    break;
-                case KeyCode.LeftArrow:
-                    if (Selection2 > 0)
-                        Selection2--;
-                    if (!e.shift) Selection1 = Selection2;
-                    EditCursor = true;
-                    break;
-                case KeyCode.Home:
-                case KeyCode.PageUp:
-                    Selection2 = 0;
-                    if (!e.shift) Selection1 = Selection2;
-                    EditCursor = true;
-                    break;
-                case KeyCode.End:
-                case KeyCode.PageDown:
-                    Selection2 = EditRendererA.Text.Length - 2;
-                    if (!e.shift) Selection1 = Selection2;
-                    EditCursor = true;
-                    break;
-                default:
-                    if (e.character >= 0x20 && e.character != '`' && e.character != '~')
-                    {
-                        int ss1 = Mathf.Min(Selection1, Selection2);
-                        int ss2 = Mathf.Max(Selection1, Selection2);
-                        if (ss1 != ss2)
-                        {
-                            EditRendererA.Text = EditRendererA.Text.Remove(ss1 + 2, ss2 - ss1);
-                            Selection2 = Selection1 = ss1;
-                        }
-
-                        // type!
-                        string possibleText = EditRendererA.Text.Insert(Selection2 + 2, ""+e.character);
-                        if (EditRendererA.Font.Width(possibleText) <= Screen.width)
-                            EditRendererA.Text = possibleText; // don't allow inserting characters if we don't have space
-                        Selection2 = ++Selection1;
-                        EditCursor = true;
-                    }
-                    break;
-                case KeyCode.Return:
-                case KeyCode.KeypadEnter:
-                    string cmd = EditRendererA.Text.Substring(2);
-                    if (cmd.Trim().Length > 0)
-                    {
-                        WriteLine(EditRendererA.Text);
-                        EditRendererA.Text = "> ";
-                        ExecuteCommand(cmd);
-                        CommandHistory[CommandHistory.Count - 1] = cmd;
-                        CommandHistory.Add("");
-                        CommandHistoryPosition = CommandHistory.Count - 1;
-                    }
-                    Selection1 = Selection2 = 0;
                     break;
             }
         }
@@ -270,53 +135,9 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor
         return true;
     }
 
-    private void UpdateMesh()
-    {
-        int s1 = Mathf.Min(Selection1, Selection2);
-        int s2 = Mathf.Max(Selection1, Selection2);
-        float s1pos = EditRendererA.Font.Width(EditRendererA.Text.Substring(0, s1 + 2));
-        float s2pos = EditRendererA.Font.Width(EditRendererA.Text.Substring(0, s2 + 2));
-        float cursorPos = EditRendererA.Font.Width(EditRendererA.Text.Substring(0, Selection2 + 2));
-
-        // selectionMesh 
-        SelectionMesh.Clear();
-        Vector3[] qv = new Vector3[8];
-        Color[] qc = new Color[8];
-        int[] qt = new int[8];
-        for (int i = 0; i < 8; i++)
-            qt[i] = i;
-        int pp = 0;
-        qv[pp++] = new Vector3(s1pos, -1, 0);
-        qv[pp++] = new Vector3(s2pos, -1, 0);
-        qv[pp++] = new Vector3(s2pos, 11, 0);
-        qv[pp++] = new Vector3(s1pos, 11, 0);
-        qv[pp++] = new Vector3(cursorPos, 0, 0);
-        qv[pp++] = new Vector3(cursorPos + 1, 0, 0);
-        qv[pp++] = new Vector3(cursorPos + 1, 10, 0);
-        qv[pp++] = new Vector3(cursorPos, 10, 0);
-
-        for (int i = 0; i < 8; i++)
-        {
-            if (i < 4) qc[i] = new Color(0, 0, 0, (s1 != s2) ? 1 : 0); // only show this part if selection rect exists!
-            else qc[i] = new Color(1, 1, 1, EditCursor ? 1 : 0);
-        }
-
-        SelectionMesh.vertices = qv;
-        SelectionMesh.colors = qc;
-        SelectionMesh.SetIndices(qt, MeshTopology.Quads, 0);
-    }
-
     public void Update()
     {
-        if (ConsoleActive) UpdateMesh();
         Utils.SetRendererEnabledWithChildren(gameObject, ConsoleActive);
-
-        EditCursorTimer += Time.unscaledDeltaTime;
-        if (EditCursorTimer >= 0.25)
-        {
-            EditCursorTimer = 0;
-            EditCursor = !EditCursor;
-        }
     }
 
     /// outside functions here

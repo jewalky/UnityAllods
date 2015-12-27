@@ -22,17 +22,25 @@ public class MainCamera : MonoBehaviour {
     public Shader _MainShader;
     public Shader _MainShaderPaletted;
     public Shader _TerrainShader;
+    public Shader _TerrainFOWShader;
 
     public static Shader MainShader { get { return Instance._MainShader; } }
     public static Shader MainShaderPaletted { get { return Instance._MainShaderPaletted; } }
     public static Shader TerrainShader { get { return Instance._TerrainShader; } }
+    public static Shader TerrainFOWShader { get { return Instance._TerrainFOWShader; } }
 
     // Use this for initialization
     private AllodsTextRenderer m_fpsr = null;
     private GameObject m_fpso = null;
 
+    public Images.AllodsSprite arrow;
+    public Texture2D arrowTex;
+
     void Start ()
     {
+        arrow = Images.Load256("graphics/projectiles/archer/arrow.256", false);
+        arrowTex = arrow.Atlas;
+
         // set w/h to screen res
         Camera camera = GetComponent<Camera>();
         //camera.transform.position = new Vector3(-0.5f, 0.5f);

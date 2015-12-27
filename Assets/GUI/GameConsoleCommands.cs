@@ -69,4 +69,9 @@ public class GameConsoleCommands
     {
         NetworkManager.Instance.Disconnect();
     }
+
+    public void grid()
+    {
+        MapView.Instance.GridEnabled = !MapView.Instance.GridEnabled;
+    }
 }

@@ -66,7 +66,9 @@ public class MapViewObstacle : MapViewObject
 
     public void Start()
     {
-        name = string.Format("Obstacle (ID={0}, Class={1})", LogicObstacle.ID, LogicObstacle.Class.DescText);
+        if (LogicObstacle.Class != null)
+            name = string.Format("Obstacle (ID={0}, Class={1})", LogicObstacle.ID, LogicObstacle.Class.DescText);
+        else name = string.Format("Obstacle (ID={0}, Class=<INVALID>)", LogicObstacle.ID);
         // let's give ourselves a sprite renderer first.
         Renderer = gameObject.AddComponent<MeshRenderer>();
         Renderer.enabled = false;

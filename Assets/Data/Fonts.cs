@@ -362,7 +362,7 @@ public class AllodsTextRenderer
         get { return _Material; }
     }
 
-    public GameObject GetNewGameObject(float shadowPos = 0, Transform parent_transform = null, float scale = 1f)
+    public GameObject GetNewGameObject(float shadowPos = 0, Transform parent_transform = null, float scale = 1f, float shadowOffs = 0.01f)
     {
         GameObject go = Utils.CreateObject();
         go.AddComponent<MeshFilter>().mesh = _Mesh;
@@ -370,14 +370,14 @@ public class AllodsTextRenderer
         mr.material = _Material;
         go.name = "AllodsTextRenderer$GetNewGameObject";
         go.transform.parent = parent_transform;
-        go.transform.position = new Vector3(0, 0, 0);
+        go.transform.localPosition = new Vector3(0, 0, 0);
         go.transform.localScale = new Vector3(scale, scale, 1);
         if (shadowPos != 0)
         {
             GameObject shadow = GameObject.Instantiate(go);
             shadow.name = "AllodsTextRenderer$GetNewGameObject$Shadow";
             shadow.transform.parent = go.transform;
-            shadow.transform.localPosition = new Vector3(shadowPos, shadowPos, 0.01f);
+            shadow.transform.localPosition = new Vector3(shadowPos, shadowPos, shadowOffs);
             shadow.transform.localScale = new Vector3(1, 1, 1);
             shadow.GetComponent<MeshRenderer>().material.color = new Color(0, 0, 0, 1);
         }

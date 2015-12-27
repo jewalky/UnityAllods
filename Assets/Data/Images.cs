@@ -249,7 +249,7 @@ public class Images
         public Sprite[] Sprites;
     }
 
-    public static AllodsSprite Load256(string filename)
+    public static AllodsSprite Load256(string filename, bool hasOwnPalette = true)
     {
         MemoryStream ms = ResourceManager.OpenRead(filename);
         if (ms == null)
@@ -267,9 +267,12 @@ public class Images
 
         AllodsSprite sprite = new AllodsSprite();
         // read palette
-        sprite.OwnPalette = LoadPaletteFromStream(br);
+        if (hasOwnPalette)
+            sprite.OwnPalette = LoadPaletteFromStream(br);
+        else sprite.OwnPalette = null;
         Texture2D[] frames = new Texture2D[count];
 
+        int oldCount = count;
         for (int i = 0; i < count; i++)
         {
             uint w = br.ReadUInt32();
@@ -277,10 +280,13 @@ public class Images
             uint ds = br.ReadUInt32();
             long cpos = ms.Position;
 
-            if (w == 0 || h == 0 || ds == 0)
+            if (w > 512 || h > 512 || ds > 1000000)
             {
-                Core.Abort("Invalid sprite \"{0}\": NULL frame #{1}", filename, i);
-                return null;
+                //Core.Abort("Invalid sprite \"{0}\": NULL frame #{1}", filename, i);
+                Debug.Log(string.Format("Invalid sprite \"{0}\": NULL frame #{1}", filename, i));
+                i--;
+                count--;
+                continue;
             }
 
             Color[] colors = new Color[w * h];
@@ -336,6 +342,9 @@ public class Images
 
         br.Close();
 
+        if (oldCount != count)
+            Array.Resize(ref frames, count);
+
         sprite.Atlas = new Texture2D(0, 0, TextureFormat.RGHalf, false);
         sprite.AtlasRects = sprite.Atlas.PackTextures(frames, 0);
         sprite.Atlas.filterMode = FilterMode.Point;
@@ -360,7 +369,7 @@ public class Images
         return sprite;
     }
 
-    public static AllodsSprite Load16A(string filename)
+    public static AllodsSprite Load16A(string filename, bool hasOwnPalette = true)
     {
         MemoryStream ms = ResourceManager.OpenRead(filename);
         if (ms == null)
@@ -378,9 +387,12 @@ public class Images
 
         AllodsSprite sprite = new AllodsSprite();
         // read palette
-        sprite.OwnPalette = LoadPaletteFromStream(br);
+        if (hasOwnPalette)
+            sprite.OwnPalette = LoadPaletteFromStream(br);
+        else sprite.OwnPalette = null;
         Texture2D[] frames = new Texture2D[count];
 
+        int oldCount = count;
         for (int i = 0; i < count; i++)
         {
             uint w = br.ReadUInt32();
@@ -388,10 +400,12 @@ public class Images
             uint ds = br.ReadUInt32();
             long cpos = ms.Position;
 
-            if (w == 0 || h == 0 || ds == 0)
+            if (w > 512 || h > 512 || ds > 1000000)
             {
-                Core.Abort("Invalid sprite \"{0}\": NULL frame #{1}", filename, i);
-                return null;
+                Debug.Log(string.Format("Invalid sprite \"{0}\": NULL frame #{1}", filename, i));
+                i--;
+                count--;
+                continue;
             }
 
             Color[] colors = new Color[w * h];
@@ -449,6 +463,9 @@ public class Images
 
         br.Close();
 
+        if (oldCount != count)
+            Array.Resize(ref frames, count);
+
         sprite.Atlas = new Texture2D(0, 0, TextureFormat.RGHalf, false);
         sprite.AtlasRects = sprite.Atlas.PackTextures(frames, 0);
         sprite.Atlas.filterMode = FilterMode.Point;
@@ -494,6 +511,7 @@ public class Images
         sprite.OwnPalette = null; // no such thing as the palette in .16 file
         Texture2D[] frames = new Texture2D[count];
 
+        int oldCount = count;
         for (int i = 0; i < count; i++)
         {
             uint w = br.ReadUInt32();
@@ -501,10 +519,12 @@ public class Images
             uint ds = br.ReadUInt32();
             long cpos = ms.Position;
 
-            if (w == 0 || h == 0 || ds == 0)
+            if (w > 512 || h > 512 || ds > 1000000)
             {
-                Core.Abort("Invalid sprite \"{0}\": NULL frame #{1}", filename, i);
-                return null;
+                Debug.Log(string.Format("Invalid sprite \"{0}\": NULL frame #{1}", filename, i));
+                i--;
+                count--;
+                continue;
             }
 
             Color[] colors = new Color[w * h];
@@ -570,6 +590,9 @@ public class Images
         }
 
         br.Close();
+
+        if (oldCount != count)
+            Array.Resize(ref frames, count);
 
         sprite.Atlas = new Texture2D(0, 0, TextureFormat.RGHalf, false);
         sprite.AtlasRects = sprite.Atlas.PackTextures(frames, 0);

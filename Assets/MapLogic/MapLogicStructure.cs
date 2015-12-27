@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class MapLogicStructure : MapLogicObject, IMapLogicDynlight
+public class MapLogicStructure : MapLogicObject, IMapLogicDynlight, IMapLogicPlayerPawn
 {
     public override MapLogicObjectType GetObjectType() { return MapLogicObjectType.Structure; }
     protected override Type GetGameObjectType() { return typeof(MapViewStructure); }
@@ -16,6 +16,7 @@ public class MapLogicStructure : MapLogicObject, IMapLogicDynlight
     public int HealthMax = 0;
     public int Health = 0;
     public MapLogicPlayer Player = null;
+    public MapLogicPlayer GetPlayer() { return Player; }
     public bool IsBridge = false;
     public int Tag = 0;
     public float ScanRange = 0;

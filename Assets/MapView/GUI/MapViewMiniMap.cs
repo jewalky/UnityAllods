@@ -145,9 +145,9 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
             Array.Resize<Color>(ref MapTextureColors, newW * newH);
         }
         
-        for (int y = 0; y < MapWidth; y++)
+        for (int y = 0; y < MapHeight; y++)
         {
-            for (int x = 0; x < MapHeight; x++)
+            for (int x = 0; x < MapWidth; x++)
             {
                 MapNode node = MapLogic.Instance.Nodes[x + 8, y + 8];
                 if ((node.Flags & MapNodeFlags.Discovered) == 0)

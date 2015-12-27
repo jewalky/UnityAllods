@@ -19,6 +19,11 @@ public interface IMapLogicDynlight
     int GetLightValue();
 }
 
+public interface IMapLogicPlayerPawn
+{
+    MapLogicPlayer GetPlayer();
+}
+
 public class MapLogicObject : IDisposable
 {
     public int X = 0;

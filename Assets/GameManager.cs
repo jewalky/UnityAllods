@@ -59,6 +59,11 @@ public class GameManager : MonoBehaviour
     public MapView MapView;
     public GameConsole GameConsole;
 
+    void Awake()
+    {
+        Locale.InitLocale(); // load locale strings, like main.txt, patch.txt, etc
+    }
+
     void Start()
     {
         GameConsole = Utils.CreateObjectWithScript<GameConsole>();

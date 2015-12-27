@@ -21,6 +21,22 @@ public class NetworkManager : MonoBehaviour {
         }
     }
 
+    public static bool IsServer
+    {
+        get
+        {
+            return (Instance.State == NetworkState.Server);
+        }
+    }
+
+    public static bool IsClient
+    {
+        get
+        {
+            return (Instance.State == NetworkState.Client);
+        }
+    }
+
     public NetworkState State { get; private set; }
 
     public HostTopology Topology { get; private set; }

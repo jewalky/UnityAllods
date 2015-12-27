@@ -49,6 +49,13 @@ public class ServerClient
         Server.ClientDisconnected(this);
     }
 
+    public void Disconnect()
+    {
+        byte error;
+        NetworkTransport.Disconnect(NetworkManager.Instance.HostID, ConnectionID, out error); // ignore unload errors
+        OnDisconnected();
+    }
+
     public void OnPacketReceived(byte[] packet)
     {
         // unserialize command
@@ -114,7 +121,7 @@ public class ServerClient
 
 public class ServerManager
 {
-    private static List<ServerClient> Clients = new List<ServerClient>();
+    public static List<ServerClient> Clients = new List<ServerClient>();
 
     public static bool Init(ushort port)
     {

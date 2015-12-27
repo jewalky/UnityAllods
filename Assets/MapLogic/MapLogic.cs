@@ -340,7 +340,7 @@ class MapLogic
 
         // postprocessing
         // if we are playing in singleplayer, then console player is Self.
-        if (!NetworkManager.IsClient && NetworkManager.IsServer) 
+        if (!NetworkManager.IsClient && !NetworkManager.IsServer) 
         {
             MapLogicPlayer Self = GetPlayerByName("Self");
             if (Self == null) GameConsole.Instance.WriteLine("Error: couldn't set ConsolePlayer: Self not found!");

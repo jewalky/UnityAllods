@@ -94,6 +94,8 @@ public class TextField : MonoBehaviour, IUiEventProcessor
                 for (int i = 0; i < cstr.Length; i++)
                 {
                     char ch = cstr[i];
+                    if (ch < 0x20) // disallow pasting of control characters and paste space instead
+                        ch = ' ';
                     string possibleText = possibleText2.Insert(Selection2, "" + ch);
                     if (EditRendererA.Font.Width(possibleText) <= Screen.width)
                     {

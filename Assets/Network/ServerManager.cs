@@ -142,6 +142,7 @@ public class ServerClient
     {
         Connection.Client.Blocking = true;
         Connection.Client.ReceiveBufferSize = 1048576; // 1mb
+        Connection.Client.ReceiveTimeout = 30000;
         NetworkStream stream = Connection.GetStream();
         while (true)
         {
@@ -181,6 +182,7 @@ public class ServerClient
     private void ServerClientThreadSendProc()
     {
         Connection.Client.SendBufferSize = 1048576; // 1mb
+        Connection.Client.SendTimeout = 30000;
         NetworkStream stream = Connection.GetStream();
         BinaryWriter writer = new BinaryWriter(stream);
         while (true)

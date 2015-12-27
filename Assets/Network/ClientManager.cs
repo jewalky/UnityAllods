@@ -37,6 +37,7 @@ public class ClientManager
 
         connection.Client.Blocking = true;
         connection.Client.ReceiveBufferSize = 1048576; // 1mb
+        connection.Client.ReceiveTimeout = 30000;
 
         ClientThreadSend = new Thread(new ThreadStart(() => { ClientThreadSendProc(Connection); }));
         ClientThreadSend.Start(); // start packet sending thread once we're connected
@@ -80,6 +81,7 @@ public class ClientManager
     private static void ClientThreadSendProc(TcpClient connection)
     {
         connection.Client.SendBufferSize = 1048576; // 1mb
+        connection.Client.SendTimeout = 30000;
         NetworkStream stream = connection.GetStream();
         BinaryWriter writer = new BinaryWriter(stream);
         while (true)

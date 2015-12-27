@@ -20,6 +20,14 @@ public class Server
     public static void ClientDisconnected(ServerClient cl)
     {
         GameConsole.Instance.WriteLine("Client [{0}]:{1} has disconnected.", cl.IPAddress, cl.IPPort);
+        // right now, we don't have any special handling for offline (yet present) players. that will only be implemented when we'll have a master server (hat).
+        // so when a player disconnects, we immediately kick him out without giving a chance to reconnect flawlessly.
+        if (MapLogic.Instance.IsLoaded)
+        {
+            MapLogicPlayer player = MapLogic.Instance.GetNetPlayer(cl);
+            if (player != null)
+                MapLogic.Instance.DelNetPlayer(player, false, false);
+        }
     }
 
     public static void DisconnectPlayer(MapLogicPlayer player)

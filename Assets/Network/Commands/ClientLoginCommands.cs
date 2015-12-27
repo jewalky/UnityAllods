@@ -34,7 +34,7 @@ namespace ClientCommands
                 //
                 Client.State = ClientState.DownloadingMap;
                 MapDownloader dlHandler = Utils.CreateObjectWithScript<MapDownloader>();
-                dlHandler.Setup(FileName);
+                dlHandler.Setup(baseFilename);
                 dlHandler.transform.parent = UiManager.Instance.transform;
                 ServerCommands.RequestDownloadStart reqDlCmd;
                 ClientManager.SendCommand(reqDlCmd);
@@ -78,8 +78,6 @@ namespace ClientCommands
             GameConsole.Instance.WriteLine("Downloading map from server ({0} bytes to download)...", TotalSize);
             MapDownloader.Instance.Dl_FullSize = TotalSize;
             MapDownloader.Instance.Dl_Content = new byte[TotalSize];
-            ServerCommands.RequestDownloadContinue dlCntCmd;
-            ClientManager.SendCommand(dlCntCmd);
             return true;
         }
     }
@@ -93,7 +91,6 @@ namespace ClientCommands
         {
             PartialBytes.CopyTo(MapDownloader.Instance.Dl_Content, MapDownloader.Instance.Dl_DoneSize);
             MapDownloader.Instance.Dl_DoneSize += PartialBytes.Length;
-            ServerCommands.RequestDownloadContinue dlCntCmd;
             if (MapDownloader.Instance.Dl_DoneSize == MapDownloader.Instance.Dl_FullSize)
             {
                 // save map file, and retry authentication
@@ -118,15 +115,14 @@ namespace ClientCommands
                     ServerCommands.ClientAuth authCmd;
                     ClientManager.SendCommand(authCmd);
                 }
-                catch (IOException)
+                catch (IOException e)
                 {
-                    GameConsole.Instance.WriteLine("Error: unable to write map file into \"maps\".");
+                    GameConsole.Instance.WriteLine("Error: unable to write map file into \"maps\".\n{0}", e.ToString());
                     NetworkManager.Instance.Disconnect();
                 }
 
                 GameObject.Destroy(MapDownloader.Instance.gameObject);
             }
-            else ClientManager.SendCommand(dlCntCmd); // next part
             return true;
         }
     }

@@ -8,7 +8,7 @@ using System.IO;
 
 public class GameManager : MonoBehaviour
 {
-    public delegate void LoadCoroutine();
+    public delegate bool LoadCoroutine();
 
     private static GameManager _Instance = null;
     public static GameManager Instance
@@ -72,8 +72,12 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator DelegateCoroutine(LoadCoroutine del)
     {
-        yield return new WaitForEndOfFrame();
-        del();
+        while (true)
+        {
+            yield return new WaitForEndOfFrame();
+            if (!del())
+                break;
+        }
     }
 
     public void CallDelegateOnNextFrame(LoadCoroutine del)

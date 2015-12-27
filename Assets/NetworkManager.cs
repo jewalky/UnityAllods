@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UnityEngine.Networking;
+using System.Net;
+using System.Net.Sockets;
 
 public enum NetworkState
 {
@@ -39,27 +40,9 @@ public class NetworkManager : MonoBehaviour {
 
     public NetworkState State { get; private set; }
 
-    public HostTopology Topology { get; private set; }
-    public int HostID { get; private set; }
-    public int ConnectionID { get; private set; }
-    public int ReliableChannel { get; private set; }
-    public int UnreliableChannel { get; private set; }
-
     private void InitGeneric(ushort port)
     {
-        GlobalConfig gConfig = new GlobalConfig();
-        gConfig.MaxPacketSize = 65535;
-        NetworkTransport.Init(gConfig);
-        ConnectionConfig config = new ConnectionConfig();
-        config.MaxSentMessageQueueSize = 65535;
-        config.MaxCombinedReliableMessageCount = 32;
-        config.MaxCombinedReliableMessageSize = 512;
-        config.PacketSize = 65535;
-        ReliableChannel = config.AddChannel(QosType.ReliableSequenced);
-        //ReliableChannel = config.AddChannel(QosType.ReliableFragmented);
-        UnreliableChannel = config.AddChannel(QosType.Unreliable);
-        Topology = new HostTopology(config, 256);
-        ConnectionID = NetworkTransport.AddHost(Topology, port);
+
     }
 
     public void Start()
@@ -102,16 +85,16 @@ public class NetworkManager : MonoBehaviour {
     public void Disconnect()
     {
         if (State == NetworkState.Server)
-            ServerManager.Shutdown();
+            ServerManager.Shutdown(false);
         if (State == NetworkState.Client)
-            ClientManager.Shutdown();
-        if (State != NetworkState.Disconnected)
-        {
-            byte error;
-            NetworkTransport.Disconnect(HostID, ConnectionID, out error); // ignore error here
-            NetworkTransport.Shutdown();
-        }
+            ClientManager.Shutdown(false);
         State = NetworkState.Disconnected;
+    }
+
+    public void OnDestroy()
+    {
+        ServerManager.Shutdown(true);
+        ClientManager.Shutdown(true);
     }
 
     public void Update()

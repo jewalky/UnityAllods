@@ -77,25 +77,24 @@ namespace ServerCommands
             ClientCommands.DownloadStart dlStart;
             dlStart.TotalSize = client.Dl_Bytes.Length;
             client.SendCommand(dlStart);
-            return true;
-        }
-    }
 
-    [Serializable()]
-    public struct RequestDownloadContinue : IServerCommand
-    {
-        public bool Process(ServerClient client)
-        {
-            if (client.State != ClientState.DownloadingMap)
-                return false;
+            // send the client the current map.
+            GameManager.Instance.CallDelegateOnNextFrame(() =>
+            {
+                int curLeft = (int)Mathf.Min(client.Dl_Bytes.Length - client.Dl_Done, 5120); // try to push 5kb per frame
+                ClientCommands.DownloadContinue dlCmd;
+                dlCmd.PartialBytes = client.Dl_Bytes.Skip(client.Dl_Done).Take(curLeft).ToArray();
+                client.Dl_Done += curLeft;
+                client.SendCommand(dlCmd);
+                if (client.Dl_Done == client.Dl_Bytes.Length)
+                {
+                    client.State = ClientState.DownloadedMap;
+                    return false; // stop coroutine
+                }
 
-            int curLeft = (int)Mathf.Min(client.Dl_Bytes.Length - client.Dl_Done, 1024);
-            ClientCommands.DownloadContinue dlCmd;
-            dlCmd.PartialBytes = client.Dl_Bytes.Skip(client.Dl_Done).Take(curLeft).ToArray();
-            client.Dl_Done += curLeft;
-            client.SendCommand(dlCmd);
-            if (client.Dl_Done == client.Dl_Bytes.Length)
-                client.State = ClientState.DownloadedMap;
+                return true;
+            });
+
             return true;
         }
     }

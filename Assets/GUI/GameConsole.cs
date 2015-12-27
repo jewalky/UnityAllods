@@ -138,17 +138,21 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
     public void Update()
     {
         Utils.SetRendererEnabledWithChildren(gameObject, ConsoleActive);
+        // we do this in every frame because WriteLine needs to be multithreaded.
+        TextRendererA.Text = string.Join("\n", ConsoleLines.ToArray());
+        TextObject.transform.localPosition = new Vector3(2, ConsoleHeight - 14 - TextRendererA.Height, -0.001f);
     }
 
     /// outside functions here
     List<string> ConsoleLines = new List<string>();
     public void WriteLine(string line, params object[] args)
     {
-        ConsoleLines.AddRange(string.Format(line, args).Split(new char[] { '\n' }));
-        if (ConsoleLines.Count > 100) // remove first N lines if range is too large
-            ConsoleLines.RemoveRange(0, ConsoleLines.Count - 100);
-        TextRendererA.Text = string.Join("\n", ConsoleLines.ToArray());
-        TextObject.transform.localPosition = new Vector3(2, ConsoleHeight - 14 - TextRendererA.Height, -0.001f);
+        lock (ConsoleLines)
+        {
+            ConsoleLines.AddRange(string.Format(line, args).Split(new char[] { '\n' }));
+            if (ConsoleLines.Count > 100) // remove first N lines if range is too large
+                ConsoleLines.RemoveRange(0, ConsoleLines.Count - 100);
+        }
     }
 
     public static string[] SplitArguments(string commandLine)

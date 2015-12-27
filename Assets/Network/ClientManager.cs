@@ -6,81 +6,152 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.Networking;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
 
 public class ClientManager
 {
     // our connection to the server
     public static string ServerIPAddress { get; private set; }
     public static ushort ServerIPPort { get; private set; }
-    public static int ConnectionID { get; private set; }
+    public static TcpClient Connection { get; private set; }
+
+    private static bool DidConnect = false;
+    private static bool DidFailConnect = false;
+    private static bool DoDisconnectMe = false;
+    private static Thread ClientThread;
+    private static Thread ClientThreadSend;
+    private static List<byte[]> ConnectionPackets = new List<byte[]>();
+    private static List<byte[]> ConnectionPacketsToSend = new List<byte[]>();
+    private static void ClientThreadProc(TcpClient connection, string host, int port)
+    {
+        try
+        {
+            connection.Connect(host, port);
+        }
+        catch(Exception)
+        {
+            // failed. report somehow.
+        }
+
+        ClientThreadSend = new Thread(new ThreadStart(() => { ClientThreadSendProc(Connection); }));
+        ClientThreadSend.Start(); // start packet sending thread once we're connected
+
+        NetworkStream stream = connection.GetStream();
+        while (true)
+        {
+            Thread.Sleep(1);
+            try
+            {
+                if (!(Connection.Client.Poll(0, SelectMode.SelectRead) && Connection.Client.Available >= 4))
+                    continue;
+
+                // try to recv packet header.
+                byte[] packet_size_buf = new byte[4];
+                if (stream.Read(packet_size_buf, 0, 4) != 4)
+                    continue;
+                uint packet_size = BitConverter.ToUInt32(packet_size_buf, 0);
+                // recv packet data.
+                byte[] packet_data = new byte[packet_size];
+                stream.Read(packet_data, 0, (int)packet_size);
+                // put into local receive queue.
+                lock (ConnectionPackets)
+                    ConnectionPackets.Add(packet_data);
+            }
+            catch (Exception)
+            {
+                DoDisconnectMe = true;
+                break;
+            }
+        }
+    }
+
+    private static void ClientThreadSendProc(TcpClient connection)
+    {
+        NetworkStream stream = connection.GetStream();
+        BinaryWriter writer = new BinaryWriter(stream);
+        while (true)
+        {
+            try
+            {
+                lock (ConnectionPacketsToSend)
+                {
+                    foreach (byte[] packet in ConnectionPacketsToSend)
+                    {
+                        // write packet header
+                        writer.Write((uint)packet.Length);
+                        writer.Write(packet);
+                    }
+
+                    ConnectionPacketsToSend.Clear();
+                }
+            }
+            catch (Exception)
+            {
+                DoDisconnectMe = true;
+                break;
+            }
+
+            Thread.Sleep(1);
+        }
+    }
 
     public static bool Init(string host, ushort port)
     {
+        Shutdown(false);
         GameConsole.Instance.WriteLine("Connecting to {0}:{1}...", host, port);
-        byte error;
-        ConnectionID = NetworkTransport.Connect(NetworkManager.Instance.HostID, host, port, 0, out error);
-        if (error != (byte)NetworkError.Ok)
-        {
-            GameConsole.Instance.WriteLine("Failed (Error: {0})", ((NetworkError)error).ToString());
-            return false;
-        }
+        ServerIPAddress = host;
+        ServerIPPort = port;
+        Connection = new TcpClient();
+        // how init packet stuff
+        ClientThread = new Thread(new ThreadStart(() => { ClientThreadProc(Connection, host, port); }));
+        ClientThread.Start();
         return true;
     }
 
-    public static void Shutdown()
+    public static void Shutdown(bool force)
     {
-        byte error;
-        NetworkTransport.Disconnect(NetworkManager.Instance.HostID, ConnectionID, out error); // ignore unload errors
-        OnDisconnected();
+        if (force)
+        {
+            if (ClientThread != null)
+                ClientThread.Abort();
+            ClientThread = null;
+            if (ClientThreadSend != null)
+                ClientThreadSend.Abort();
+            ClientThreadSend = null;
+        }
+        if (Connection != null)
+            Connection.Close();
+        Connection = null;
+        DidConnect = false;
+        DidFailConnect = false;
     }
 
-    private static byte[] RecBuffer = new byte[4096];
     public static void Update()
     {
-        int RecHostID;
-        int RecConnectionID;
-        int RecChannelID;
-        int DataSize;
-        byte Error;
-        NetworkEventType recData = NetworkTransport.Receive(out RecHostID, out RecConnectionID, out RecChannelID, RecBuffer, RecBuffer.Length, out DataSize, out Error);
-        switch (recData)
+        lock (ConnectionPackets)
         {
-            case NetworkEventType.ConnectEvent:
-                //Debug.Log(string.Format("{0} = {1}, {2}, {3}", recData, RecHostID, RecConnectionID, RecChannelID));
-                if (RecConnectionID == ConnectionID)
-                    OnConnected();
-                break;
-            case NetworkEventType.DisconnectEvent:
-                //Debug.Log(string.Format("{0} = {1}, {2}, {3}", recData, RecHostID, RecConnectionID, RecChannelID));
-                if (RecConnectionID == ConnectionID)
-                    OnDisconnected();
-                break;
-            case NetworkEventType.DataEvent:
-                //Debug.Log(string.Format("{0} = {1}, {2}, {3}", recData, RecHostID, RecConnectionID, RecChannelID));
-                if (RecConnectionID == ConnectionID)
-                    OnPacketReceived(RecBuffer.Take(DataSize).ToArray());
-                break;
+            foreach (byte[] packet in ConnectionPackets)
+                OnPacketReceived(packet);
+            ConnectionPackets.Clear();
+        }
+
+        if (!DidConnect && (Connection != null && Connection.Connected))
+        {
+            OnConnected();
+            DidConnect = true;
+        }
+
+        if (DoDisconnectMe)
+        {
+            OnDisconnected();
+            Shutdown(false);
         }
     }
 
     public static void OnConnected()
     {
-        byte error;
-        int port;
-        ulong _network;
-        ushort _dstNode;
-        string ip = NetworkTransport.GetConnectionInfo(NetworkManager.Instance.HostID, ConnectionID, out port, out _network, out _dstNode, out error);
-        if (error != (byte)NetworkError.Ok)
-        {
-            ServerIPAddress = "<error>";
-            ServerIPPort = 0;
-            return;
-        }
-
-        ServerIPAddress = ip;
-        ServerIPPort = (ushort)port;
-
         Client.ConnectedToServer();
     }
 
@@ -120,10 +191,8 @@ public class ClientManager
 
     private static bool SendPacket(byte[] packet)
     {
-        byte error;
-        NetworkTransport.Send(NetworkManager.Instance.HostID, ConnectionID, NetworkManager.Instance.ReliableChannel, packet, packet.Length, out error);
-        if (error != (byte)NetworkError.Ok)
-            return false;
+        lock (ConnectionPacketsToSend)
+            ConnectionPacketsToSend.Add(packet);
         return true;
     }
 

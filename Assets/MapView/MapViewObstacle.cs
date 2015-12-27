@@ -141,7 +141,9 @@ public class MapViewObstacle : MapViewObject
 
     void OnDestroy()
     {
-        GameObject.DestroyImmediate(Filter.mesh, true);
-        GameObject.DestroyImmediate(ShadowFilter.mesh, true);
+        if (Filter.mesh != null)
+            DestroyImmediate(Filter.mesh, true);
+        if (ShadowFilter.mesh != null)
+            DestroyImmediate(ShadowFilter.mesh, true);
     }
 }

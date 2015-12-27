@@ -26,7 +26,6 @@ public class MapLogicPlayer
 {
     public static Color32[] AllColors =
         { new Color32(0x52, 0x79, 0xE7, 0xFF),
-          new Color32(0x52, 0x79, 0xE7, 0xFF),
           new Color32(0x84, 0xE7, 0x52, 0xFF),
           new Color32(0xE7, 0x55, 0x7B, 0xFF),
           new Color32(0xE7, 0x71, 0x52, 0xFF),
@@ -48,7 +47,7 @@ public class MapLogicPlayer
     };
 
     public const int AllColorsSystem = 17; // FFFFFF
-    public const int AllColorsChat = 17; // FFFF42
+    public const int AllColorsChat = 18; // FFFF42
 
     public int ID { get; set; }
     public int Color { get; set; }

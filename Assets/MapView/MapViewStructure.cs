@@ -264,5 +264,15 @@ public class MapViewStructure : MapViewObject
             OverlayMesh = UpdateMesh(sprites, actualFrame, OverlayFilter.mesh, 0, 0, cls.TileWidth, cls.FullHeight - cls.TileHeight, 0, (OverlayMesh == null), false);
         }
     }
+
+    public void OnDestroy()
+    {
+        if (Filter.mesh != null)
+            DestroyImmediate(Filter.mesh, true);
+        if (OverlayFilter.mesh != null)
+            DestroyImmediate(OverlayFilter.mesh, true);
+        if (ShadowFilter != null && ShadowFilter.mesh != null)
+            DestroyImmediate(ShadowFilter.mesh, true);
+    }
 }
  

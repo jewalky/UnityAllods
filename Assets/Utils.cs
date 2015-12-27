@@ -9,7 +9,7 @@ using UnityEditor;
 using System.Diagnostics;
 #endif
 
-public class Utils
+public partial class Utils
 {
     public static Vector3 Vec3InvertY(Vector3 _in)
     {

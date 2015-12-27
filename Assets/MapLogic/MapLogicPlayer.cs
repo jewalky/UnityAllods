@@ -42,7 +42,13 @@ public class MapLogicPlayer
           new Color32(0xBD, 0x69, 0x21, 0xFF),
           new Color32(0x21, 0xBE, 0x94, 0xFF),
           new Color32(0x6B, 0x6D, 0x6B, 0xFF),
-          new Color32(0x00, 0x00, 0x10, 0xFF) };
+          new Color32(0x00, 0x00, 0x10, 0xFF),
+          new Color32(0xFF, 0xFF, 0xFF, 0xFF), // system color
+          new Color32(0xFF, 0xFF, 0x42, 0xFF), // chat color (alternate)
+    };
+
+    public const int AllColorsSystem = 17; // FFFFFF
+    public const int AllColorsChat = 17; // FFFF42
 
     public int ID { get; set; }
     public int Color { get; set; }

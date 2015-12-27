@@ -85,7 +85,7 @@ public class ServerClient
         }
     }
 
-    public bool SendPacket(byte[] packet)
+    private bool SendPacket(byte[] packet)
     {
         byte error;
         NetworkTransport.Send(NetworkManager.Instance.HostID, ConnectionID, NetworkManager.Instance.ReliableChannel, packet, packet.Length, out error);
@@ -94,7 +94,7 @@ public class ServerClient
         return true;
     }
 
-    public bool SendCommand(object o)
+    public bool SendCommand(IClientCommand o)
     {
         MemoryStream ms = new MemoryStream();
         try

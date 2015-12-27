@@ -19,8 +19,10 @@ namespace ClientCommands
 
         public bool Process()
         {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
             if (MapLogic.Instance.GetPlayerByID(ID) != null)
-                return true; // don't disconnect, who knows what happened... just skip this player
+                return false; // player already exists: this should NOT happen
 
             MapLogicPlayer player = new MapLogicPlayer((ServerClient)null);
             player.ID = ID;
@@ -48,11 +50,31 @@ namespace ClientCommands
 
         public bool Process()
         {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
             MapLogicPlayer player = MapLogic.Instance.GetPlayerByID(ID);
             if (player == MapLogic.Instance.ConsolePlayer)
                 MapLogic.Instance.ConsolePlayer = null;
             if (player != null)
                 MapLogic.Instance.DelNetPlayer(player, Silent, Kick);
+            return true;
+        }
+    }
+
+    [Serializable()]
+    public struct ChatMessage : IClientCommand
+    {
+        public int PlayerID;
+        public string Text;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+            MapLogicPlayer player = (PlayerID > 0) ? MapLogic.Instance.GetPlayerByID(PlayerID) : null;
+            int color = (player != null) ? player.Color : MapLogicPlayer.AllColorsSystem;
+            string text = (player != null) ? player.Name + ": " + Text : "<server>: " + Text;
+            MapViewChat.Instance.AddChatMessage(color, text);
             return true;
         }
     }

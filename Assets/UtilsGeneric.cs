@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 /// (c) 2015 Richard Prinz. Downloaded from http://www.codeproject.com/Articles/19274/A-printf-implementation-in-C.
 /// </summary>
 
-public static class UtilsGeneric
+public partial class Utils
 {
     #region Public Methods
     #region IsNumericType
@@ -244,13 +244,13 @@ public static class UtilsGeneric
     #region printf
     public static void printf(string Format, params object[] Parameters)
     {
-        Console.Write(UtilsGeneric.sprintf(Format, Parameters));
+        Console.Write(Utils.sprintf(Format, Parameters));
     }
     #endregion
     #region fprintf
     public static void fprintf(TextWriter Destination, string Format, params object[] Parameters)
     {
-        Destination.Write(UtilsGeneric.sprintf(Format, Parameters));
+        Destination.Write(Utils.sprintf(Format, Parameters));
     }
     #endregion
     #region sprintf

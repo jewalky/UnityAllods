@@ -41,6 +41,8 @@ public class Server
     {
         foreach (ServerClient client in ServerManager.Clients)
         {
+            if (client.State != ClientState.Playing)
+                continue;
             if (client == player.NetClient) // don't send own info, this is done separately.
                 continue;
 
@@ -60,6 +62,8 @@ public class Server
     {
         foreach (ServerClient client in ServerManager.Clients)
         {
+            if (client.State != ClientState.Playing)
+                continue;
             if (client == player.NetClient) // don't send own info, this is done separately.
                 continue;
 
@@ -68,6 +72,20 @@ public class Server
             plCmd.Kick = kicked;
             plCmd.Silent = false;
             client.SendCommand(plCmd);
+        }
+    }
+
+    public static void NotifyChatMessage(MapLogicPlayer player, string message)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            ClientCommands.ChatMessage chatCmd;
+            chatCmd.PlayerID = player.ID;
+            chatCmd.Text = message;
+            client.SendCommand(chatCmd);
         }
     }
 }

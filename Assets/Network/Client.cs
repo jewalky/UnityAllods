@@ -45,4 +45,22 @@ public class Client
         // also unload map, because if we were connected, we had server map.
         MapLogic.Instance.Unload();
     }
+
+    public static void SendChatMessage(string text)
+    {
+        if (NetworkManager.IsClient)
+        {
+            if (State != ClientState.Playing)
+                return;
+
+            ServerCommands.ChatMessage chatCmd;
+            chatCmd.Text = text;
+            ClientManager.SendCommand(chatCmd);
+        }
+        else if (MapLogic.Instance.ConsolePlayer != null)
+        {
+            // jsut add the message. local play.
+            MapViewChat.Instance.AddChatMessage(MapLogic.Instance.ConsolePlayer.Color, MapLogic.Instance.ConsolePlayer.Name + ": " + text);
+        }
+    }
 }

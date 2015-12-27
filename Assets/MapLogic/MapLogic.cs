@@ -443,7 +443,10 @@ class MapLogic
         else if (NetworkManager.IsClient)
         {
             if (!silent)
-                GameConsole.Instance.WriteLine("{0} {1} {2}", Locale.Main[204], p.Name, Locale.Main[205]); // player ... has joined the game
+            {
+                // player ... has joined the game
+                MapViewChat.Instance.AddChatMessage(MapLogicPlayer.AllColorsSystem, string.Format("{0} {1} {2}", Locale.Main[204], p.Name, Locale.Main[205]));
+            }
         }
     }
 
@@ -454,7 +457,10 @@ class MapLogic
         else if (NetworkManager.IsClient)
         {
             if (kicked && !silent)
-                GameConsole.Instance.WriteLine("{0} {1} {2}", Locale.Main[78], p.Name, Locale.Main[79]); // player ... was kicked from the game
+            {
+                // player ... was kicked from the game
+                MapViewChat.Instance.AddChatMessage(MapLogicPlayer.AllColorsSystem, string.Format("{0} {1} {2}", Locale.Main[78], p.Name, Locale.Main[79]));
+            }
         }
 
         for (int i = 0; i < Objects.Count; i++)

@@ -42,6 +42,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     }
 
     private MapViewMiniMap MiniMap;
+    private MapViewChat Chat;
 
     // Use this for initialization
     void Start ()
@@ -56,6 +57,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         // create child objects
         MiniMap = Utils.CreateObjectWithScript<MapViewMiniMap>();
         MiniMap.transform.parent = UiManager.Instance.transform; // despite it being a part of minimap, it should be in UiManager since it doesn't move unlike the MapView
+        Chat = Utils.CreateObjectWithScript<MapViewChat>();
+        Chat.transform.parent = UiManager.Instance.transform;
     }
 
     private Rect _VisibleRect = new Rect(0, 0, 0, 0);

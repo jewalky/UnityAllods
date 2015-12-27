@@ -54,12 +54,11 @@ public class TextField : MonoBehaviour, IUiEventProcessor
         UiManager.Instance.Subscribe(this);
         if (Font == null) Font = Fonts.Font1;
 
-        EditRendererA = new AllodsTextRenderer(Fonts.Font2);
+        EditRendererA = new AllodsTextRenderer(Font);
         EditObject = EditRendererA.GetNewGameObject(0.01f, transform, 100, 1);
         EditObject.transform.localPosition = new Vector3(0, 0, 0);
         EditRenderer = EditObject.GetComponent<MeshRenderer>();
         EditRenderer.material.color = new Color(1, 1, 1);
-        _Value = Prefix;
 
         SelectionObject = Utils.CreateObject();
         SelectionObject.transform.parent = transform;
@@ -213,6 +212,11 @@ public class TextField : MonoBehaviour, IUiEventProcessor
         float s1pos = EditRendererA.Font.Width(EditRendererA.Text.Substring(0, s1 + Prefix.Length));
         float s2pos = EditRendererA.Font.Width(EditRendererA.Text.Substring(0, s2 + Prefix.Length));
         float cursorPos = EditRendererA.Font.Width(EditRendererA.Text.Substring(0, Selection2 + Prefix.Length));
+        float selectionHeight = EditRendererA.Font.LineHeight;
+        float curLeft = 0;
+        float curRight = 1; // cursor offset in pixels, to left and right from actual position. defines cursor width.
+        if (selectionHeight > 10)
+            curLeft = -1;
 
         // selectionMesh 
         SelectionMesh.Clear();
@@ -224,12 +228,12 @@ public class TextField : MonoBehaviour, IUiEventProcessor
         int pp = 0;
         qv[pp++] = new Vector3(s1pos, -1, 0);
         qv[pp++] = new Vector3(s2pos, -1, 0);
-        qv[pp++] = new Vector3(s2pos, 11, 0);
-        qv[pp++] = new Vector3(s1pos, 11, 0);
-        qv[pp++] = new Vector3(cursorPos, 0, 0);
-        qv[pp++] = new Vector3(cursorPos + 1, 0, 0);
-        qv[pp++] = new Vector3(cursorPos + 1, 10, 0);
-        qv[pp++] = new Vector3(cursorPos, 10, 0);
+        qv[pp++] = new Vector3(s2pos, selectionHeight+1, 0);
+        qv[pp++] = new Vector3(s1pos, selectionHeight+1, 0);
+        qv[pp++] = new Vector3(cursorPos + curLeft, 0, 0);
+        qv[pp++] = new Vector3(cursorPos + curRight, 0, 0);
+        qv[pp++] = new Vector3(cursorPos + curRight, selectionHeight, 0);
+        qv[pp++] = new Vector3(cursorPos + curLeft, selectionHeight, 0);
 
         for (int i = 0; i < 8; i++)
         {

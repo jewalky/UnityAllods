@@ -96,4 +96,14 @@ public class Server
             client.SendCommand(chatCmd);
         }
     }
+
+    public static void ObjectBecameVisible(MapLogicPlayer player, MapLogicObject mobj)
+    {
+
+    }
+
+    public static void ObjectBecameInvisible(MapLogicPlayer player, MapLogicObject mobj)
+    {
+
+    }
 }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class MapLogicStructure : MapLogicObject, IMapLogicDynlight, IMapLogicPlayerPawn
+public class MapLogicStructure : MapLogicObject, IMapLogicDynlight, IMapLogicPlayerPawn, IDisposable
 {
     public override MapLogicObjectType GetObjectType() { return MapLogicObjectType.Structure; }
     protected override Type GetGameObjectType() { return typeof(MapViewStructure); }
@@ -15,8 +15,25 @@ public class MapLogicStructure : MapLogicObject, IMapLogicDynlight, IMapLogicPla
     public int CurrentTime = 0;
     public int HealthMax = 0;
     public int Health = 0;
-    public MapLogicPlayer Player = null;
-    public MapLogicPlayer GetPlayer() { return Player; }
+    private MapLogicPlayer _Player;
+
+    public MapLogicPlayer Player
+    {
+        get
+        {
+            return _Player;
+        }
+
+        set
+        {
+            if (_Player != null)
+                _Player.Objects.Remove(this);
+            _Player = value;
+            _Player.Objects.Add(this);
+        }
+    }
+
+    public MapLogicPlayer GetPlayer() { return _Player; }
     public bool IsBridge = false;
     public int Tag = 0;
     public float ScanRange = 0;
@@ -26,8 +43,6 @@ public class MapLogicStructure : MapLogicObject, IMapLogicDynlight, IMapLogicPla
     private int LightFrame = 0;
     private int LightValue = 0; // basically, this gets set if structure is a dynlight
     public int GetLightValue() { return LightValue; }
-
-    public ulong PlayerVisibility = 0;
 
     public MapLogicStructure(int typeId)
     {
@@ -43,6 +58,13 @@ public class MapLogicStructure : MapLogicObject, IMapLogicDynlight, IMapLogicPla
         if (Class == null)
             Debug.Log(string.Format("Invalid structure created (name={0})", name));
         else InitStructure();
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        if (_Player != null)
+            _Player.Objects.Remove(this);
     }
 
     private void InitStructure()
@@ -66,6 +88,10 @@ public class MapLogicStructure : MapLogicObject, IMapLogicDynlight, IMapLogicPla
     {
         if (Class == null)
             return;
+
+        UpdateNetVisibility();
+
+        // perform animation
         // do not animate if visibility != 2, also do not render at all if visibility == 0
         if (Class.Frames.Length > 1 && GetVisibility() == 2)
         {

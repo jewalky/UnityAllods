@@ -37,20 +37,20 @@ public class MapLogicObject : IDisposable
     public virtual MapLogicObjectType GetObjectType() { return MapLogicObjectType.Object; }
     protected virtual Type GetGameObjectType() { return typeof(MapViewObject); }
 
-    public ulong PlayerVisibility = 0;
+    public ulong NetPlayerVisibility = 0;
     public bool IsVisibleForNetPlayer(MapLogicPlayer player)
     {
         int netId = player.ID - 16;
-        ulong mask = PlayerVisibility & (1ul << netId);
-        return (PlayerVisibility & mask) != 0;
+        ulong mask = NetPlayerVisibility & (1ul << netId);
+        return (NetPlayerVisibility & mask) != 0;
     }
 
     public void SetVisibleForNetPlayer(MapLogicPlayer player, bool visible)
     {
         int netId = player.ID - 16;
-        ulong mask = PlayerVisibility & (1ul << netId);
-        if (visible) PlayerVisibility |= mask;
-        else PlayerVisibility &= ~mask;
+        ulong mask = NetPlayerVisibility & (1ul << netId);
+        if (visible) NetPlayerVisibility |= mask;
+        else NetPlayerVisibility &= ~mask;
     }
 
     public MapLogicObject()
@@ -59,7 +59,7 @@ public class MapLogicObject : IDisposable
         GameObject = MapView.Instance.CreateObject(GetGameObjectType(), this);
     }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         UnlinkFromWorld();
         if (GameObject != null)
@@ -71,7 +71,7 @@ public class MapLogicObject : IDisposable
 
     public virtual void Update()
     {
-        // this is the global logic update
+
     }
 
     public virtual MapNodeFlags GetNodeLinkFlags(int x, int y)
@@ -159,5 +159,43 @@ public class MapLogicObject : IDisposable
         if (!GetVisibityInCamera())
             return 0;
         return GetVisibilityInFOW();
+    }
+
+    public void UpdateNetVisibility()
+    {
+        // perform simple multiplayer vision check
+        // this vision check is only used to determine whether multiplayer clients receive info about this building.
+        // clients "see" everything that server allows them to see. local player just sees everything. so this only makes sense for servers.
+        if (!NetworkManager.IsServer)
+            return;
+
+        ulong oldPlayerVisibility = NetPlayerVisibility;
+        NetPlayerVisibility = 0;
+        foreach (MapLogicPlayer player in MapLogic.Instance.Players)
+        {
+            if ((player.Flags & MapLogicPlayerFlags.NetClient) == 0)
+                continue;
+
+            bool wasVisibleForPlayer = IsVisibleForNetPlayer(player);
+            bool isVisibleForPlayer = false;
+            foreach (MapLogicObject playerMobj in player.Objects)
+            {
+                if (Math.Abs(playerMobj.X - X) > 30 ||
+                    Math.Abs(playerMobj.Y - Y) > 30) continue; // basic coordinate check in 60x60 square with player unit in the center
+                isVisibleForPlayer = true;
+                break;
+            }
+
+            if (isVisibleForPlayer && !wasVisibleForPlayer)
+            {
+                SetVisibleForNetPlayer(player, true);
+                Server.ObjectBecameVisible(player, this);
+            }
+            else if (!isVisibleForPlayer && wasVisibleForPlayer)
+            {
+                SetVisibleForNetPlayer(player, false);
+                Server.ObjectBecameInvisible(player, this);
+            }
+        }
     }
 }

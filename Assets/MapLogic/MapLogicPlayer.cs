@@ -55,6 +55,7 @@ public class MapLogicPlayer
     public long Money { get; set; }
     public string Name { get; set; }
     public Dictionary<int, DiplomacyFlags> Diplomacy { get; private set; }
+    public List<MapLogicObject> Objects { get; private set; }
 
     // only for human players
     public ServerClient NetClient { get; private set; }
@@ -62,6 +63,7 @@ public class MapLogicPlayer
     public MapLogicPlayer(AllodsMap.AlmPlayer almp)
     {
         Diplomacy = new Dictionary<int, DiplomacyFlags>();
+        Objects = new List<MapLogicObject>();
 
         // these are only AI players.
         // AI players will have money set at 0 no matter what.
@@ -86,6 +88,7 @@ public class MapLogicPlayer
     public MapLogicPlayer(ServerClient client)
     {
         Diplomacy = new Dictionary<int, DiplomacyFlags>();
+        Objects = new List<MapLogicObject>();
 
         // this player is always a Human player, i.e. we never set any additional flags on it.
         ID = MapLogic.Instance.GetFreePlayerID(false);
@@ -108,5 +111,8 @@ public class MapLogicPlayer
             p.Diplomacy[ID] = dAItoSelf;
             Diplomacy[p.ID] = dSelftoAI;
         }
+
+        // set ally+vision to self
+        Diplomacy[ID] = DiplomacyFlags.Ally | DiplomacyFlags.Vision;
     }
 }

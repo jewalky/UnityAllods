@@ -162,7 +162,6 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
             return false;
         if (e.type == EventType.KeyDown)
         {
-            Debug.Log(string.Format("k = {0}", e.keyCode));
             switch (e.keyCode)
             {
                 case KeyCode.Return:

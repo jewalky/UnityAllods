@@ -15,6 +15,7 @@ public class TextField : MonoBehaviour, IUiEventProcessor
     // Mesh for cursor, mesh for selection, mesh for cat...owait.
     GameObject SelectionObject;
     Mesh SelectionMesh;
+    MeshRenderer SelectionRenderer;
 
     int Selection1;
     int Selection2;
@@ -49,6 +50,19 @@ public class TextField : MonoBehaviour, IUiEventProcessor
         UiManager.Instance.Unsubscribe(this);
     }
 
+    public bool Visible
+    {
+        get
+        {
+            return (EditRenderer.enabled && SelectionRenderer.enabled);
+        }
+
+        set
+        {
+            Utils.SetRendererEnabledWithChildren(gameObject, value);
+        }
+    }
+
     public void Start()
     {
         UiManager.Instance.Subscribe(this);
@@ -66,11 +80,12 @@ public class TextField : MonoBehaviour, IUiEventProcessor
         SelectionObject.transform.localPosition = new Vector3(0, 0, 0.1f);
         SelectionMesh = new Mesh();
         MeshFilter selectionFilter = SelectionObject.AddComponent<MeshFilter>();
-        MeshRenderer selectionRenderer = SelectionObject.AddComponent<MeshRenderer>();
+        SelectionRenderer = SelectionObject.AddComponent<MeshRenderer>();
         selectionFilter.mesh = SelectionMesh;
-        selectionRenderer.material = new Material(MainCamera.MainShader);
+        SelectionRenderer.material = new Material(MainCamera.MainShader);
 
         Selection1 = Selection2 = 0;
+        Visible = false;
     }
 
     public bool ProcessEvent(Event e)
@@ -138,11 +153,24 @@ public class TextField : MonoBehaviour, IUiEventProcessor
                         {
                             _Value = _Value.Remove(Selection2 - 1, 1);
                             Selection1 = --Selection2;
+                            if (e.control)
+                            {
+                                while (Selection2 > 0 && (Selection2 > _Value.Length || _Value[Selection2 - 1] != ' '))
+                                {
+                                    _Value = _Value.Remove(Selection2 - 1, 1);
+                                    Selection1 = --Selection2;
+                                }
+                            }
                         }
                         else if (e.keyCode == KeyCode.Delete &&
                             s1 < _Value.Length)
                         {
                             _Value = _Value.Remove(Selection2, 1);
+                            if (e.control)
+                            {
+                                while (Selection2 < _Value.Length && _Value[Selection2] != ' ')
+                                    _Value = _Value.Remove(Selection2, 1);
+                            }
                         }
                     }
                     EditCursor = true;
@@ -150,12 +178,22 @@ public class TextField : MonoBehaviour, IUiEventProcessor
                 case KeyCode.RightArrow:
                     if (Selection2 < _Value.Length)
                         Selection2++;
+                    if (e.control)
+                    {
+                        while (Selection2 < _Value.Length && (Selection2 < 0 || _Value[Selection2] != ' '))
+                            Selection2++;
+                    }
                     if (!e.shift) Selection1 = Selection2;
                     EditCursor = true;
                     return true;
                 case KeyCode.LeftArrow:
                     if (Selection2 > 0)
                         Selection2--;
+                    if (e.control)
+                    {
+                        while (Selection2 > 0 && (Selection2 > _Value.Length || _Value[Selection2 - 1] != ' '))
+                            Selection2--;
+                    }
                     if (!e.shift) Selection1 = Selection2;
                     EditCursor = true;
                     return true;

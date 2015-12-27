@@ -105,9 +105,12 @@ public class NetworkManager : MonoBehaviour {
             ServerManager.Shutdown();
         if (State == NetworkState.Client)
             ClientManager.Shutdown();
-        byte error;
-        NetworkTransport.Disconnect(HostID, ConnectionID, out error); // ignore error here
-        NetworkTransport.Shutdown();
+        if (State != NetworkState.Disconnected)
+        {
+            byte error;
+            NetworkTransport.Disconnect(HostID, ConnectionID, out error); // ignore error here
+            NetworkTransport.Shutdown();
+        }
         State = NetworkState.Disconnected;
     }
 

@@ -121,45 +121,68 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         ChatField.OnReturn = () =>
         {
             string text = ChatField.Value;
+            ChatField.Value = "";
+            ChatField.Visible = false; // hide chat after successful message
             if (text.Trim().Length > 0)
             {
-                ChatField.Value = "";
-                Utils.SetRendererEnabledWithChildren(ChatField.gameObject, false); // hide chat after successful message
                 // handle chat.
                 SendChatMessage(text);
             }
         };
-        Utils.SetRendererEnabledWithChildren(ChatField.gameObject, false);
+
+        Hide();
+    }
+
+    public void Show()
+    {
+        Utils.SetRendererEnabledWithChildren(gameObject, true);
+        ChatFieldEnabled = false;
+        ChatField.Value = "";
+        ChatField.Visible = false;
+    }
+
+    public void Hide()
+    {
+        Utils.SetRendererEnabledWithChildren(gameObject, false);
+        ChatFieldEnabled = false;
+        ChatField.Value = "";
+        foreach (ChatMessage msg in Messages)
+            msg.Renderer.DestroyImmediate();
+        Messages.Clear();
     }
 
     public void Update()
     {
-        if (!MapLogic.Instance.IsLoaded)
-        {
-            Utils.SetRendererEnabledWithChildren(ChatField.gameObject, false);
-            ChatFieldEnabled = false;
-            ChatField.Value = "";
-            return;
-        }
-
         UpdateChatMessages();
     }
 
     public bool ProcessEvent(Event e)
     {
+        if (!MapLogic.Instance.IsLoaded)
+            return false;
         if (e.type == EventType.KeyDown)
         {
+            Debug.Log(string.Format("k = {0}", e.keyCode));
             switch (e.keyCode)
             {
                 case KeyCode.Return:
                 case KeyCode.KeypadEnter:
                     ChatFieldEnabled = true;
-                    Utils.SetRendererEnabledWithChildren(ChatField.gameObject, true);
+                    ChatField.Visible = true;
                     return true;
                 case KeyCode.Backspace: // remove all messages
                     foreach (ChatMessage msg in Messages)
                         msg.TimeLeft = 0;
                     return true;
+                case KeyCode.Escape:
+                    if (ChatFieldEnabled)
+                    {
+                        ChatFieldEnabled = false;
+                        ChatField.Value = "";
+                        ChatField.Visible = false;
+                        return true;
+                    }
+                    break;
             }
         }
 

@@ -70,6 +70,12 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         }
     }
 
+    public void Load()
+    {
+        // show UI parts
+        Chat.Show();
+    }
+
     public void Unload()
     {
         for (int i = 0; i < MeshChunks.Length; i++)
@@ -84,6 +90,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         GridMeshChunks = new GameObject[0];
         MeshChunkRects = new Rect[0];
         MeshChunkMeshes = new Mesh[0];
+
+        // hide UI parts
+        Chat.Hide();
     }
 
     public Texture2D MapTiles = null;
@@ -115,6 +124,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         InitMeshes();
         SetScroll(8, 8);
         MiniMap.UpdateTexture(true);
+
+        // run generic load
+        Load();
     }
 
     GameObject[] MeshChunks = new GameObject[0];

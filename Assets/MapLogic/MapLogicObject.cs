@@ -37,6 +37,22 @@ public class MapLogicObject : IDisposable
     public virtual MapLogicObjectType GetObjectType() { return MapLogicObjectType.Object; }
     protected virtual Type GetGameObjectType() { return typeof(MapViewObject); }
 
+    public ulong PlayerVisibility = 0;
+    public bool IsVisibleForNetPlayer(MapLogicPlayer player)
+    {
+        int netId = player.ID - 16;
+        ulong mask = PlayerVisibility & (1ul << netId);
+        return (PlayerVisibility & mask) != 0;
+    }
+
+    public void SetVisibleForNetPlayer(MapLogicPlayer player, bool visible)
+    {
+        int netId = player.ID - 16;
+        ulong mask = PlayerVisibility & (1ul << netId);
+        if (visible) PlayerVisibility |= mask;
+        else PlayerVisibility &= ~mask;
+    }
+
     public MapLogicObject()
     {
         MapLogic.Instance.Objects.Add(this);

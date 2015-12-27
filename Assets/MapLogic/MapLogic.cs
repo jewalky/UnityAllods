@@ -50,7 +50,7 @@ class MapLogic
     public List<MapLogicObject> Objects { get; private set; }
     private int _TopObjectID = 0;
     public List<MapLogicPlayer> Players { get; private set; }
-    public static readonly int MaxPlayers = 1024;
+    public const int MaxPlayers = 64;
     public MapLogicPlayer ConsolePlayer { get; set; } // the player that we're directly controlling.
 
     public bool IsLoaded
@@ -469,5 +469,17 @@ class MapLogic
         }
 
         Players.Remove(p); // remove the player himself.
+    }
+
+    public int GetNetPlayerCount()
+    {
+        int count = 0;
+        foreach (MapLogicPlayer player in Players)
+        {
+            if ((player.Flags & MapLogicPlayerFlags.NetClient) != 0)
+                count++;
+        }
+
+        return count;
     }
 }

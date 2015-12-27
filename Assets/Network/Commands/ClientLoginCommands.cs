@@ -56,7 +56,8 @@ namespace ClientCommands
     {
         public enum ErrorCode
         {
-            MapNotLoaded
+            MapNotLoaded,
+            ServerFull
         }
         public ErrorCode Code;
 

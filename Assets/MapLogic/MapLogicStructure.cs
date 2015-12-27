@@ -27,6 +27,8 @@ public class MapLogicStructure : MapLogicObject, IMapLogicDynlight, IMapLogicPla
     private int LightValue = 0; // basically, this gets set if structure is a dynlight
     public int GetLightValue() { return LightValue; }
 
+    public ulong PlayerVisibility = 0;
+
     public MapLogicStructure(int typeId)
     {
         Class = StructureClassLoader.GetStructureClassById(typeId);

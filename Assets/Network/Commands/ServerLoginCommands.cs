@@ -27,9 +27,18 @@ namespace ServerCommands
         // nothing here for now. will possibly put network version or smth later. (or hat-related stuff)
         public bool Process(ServerClient client)
         {
-            // send client the current map, or tell him to go away if the map isn't loaded ATM
+            // send client the current map, or tell him to go away
             if (MapLogic.Instance.IsLoaded)
             {
+                if (MapLogic.Instance.GetNetPlayerCount() >= MapLogic.MaxPlayers)
+                {
+                    client.State = ClientState.Disconnected;
+                    ClientCommands.Error errCmd;
+                    errCmd.Code = ClientCommands.Error.ErrorCode.ServerFull;
+                    client.SendCommand(errCmd);
+                    return true;
+                }
+
                 client.State = ClientState.Connected;
                 ClientCommands.SwitchMap mapCmd;
                 mapCmd.FileName = MapLogic.Instance.FileName;

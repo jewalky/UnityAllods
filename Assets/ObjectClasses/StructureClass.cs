@@ -33,6 +33,7 @@ public class StructureClass
     public bool Indestructible = false;
     public bool Usable = false;
     public bool Flat = false;
+    public bool VariableSize = false;
     public int LightRadius = MagicIntNull;
     public int LightPulse = MagicIntNull;
 }
@@ -140,6 +141,7 @@ public class StructureClassLoader
             cls.Indestructible = reg.GetInt(on, "Indestructible", 0)!=0;
             cls.Usable = reg.GetInt(on, "Usable", 0)!=0;
             cls.Flat = reg.GetInt(on, "Flat", 0)!=0;
+            cls.VariableSize = reg.GetInt(on, "VariableSize", 0) != 0;
             cls.LightRadius = reg.GetInt(on, "LightRadius", 0);
             cls.LightPulse = reg.GetInt(on, "LightPulse", 0);
             Classes.Add(cls);

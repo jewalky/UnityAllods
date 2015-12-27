@@ -34,13 +34,22 @@ public class MapViewStructure : MapViewObject
 
     private Mesh UpdateMesh(Images.AllodsSprite sprite, int frame, Mesh mesh, int x, int y, int w, int h, float shadowOffs, bool first, bool onlyColors)
     {
+        bool isBridge = LogicStructure.Class.VariableSize;
         int totalAnimCount = 0;
         foreach (char ch in LogicStructure.Class.AnimMask)
             if (ch == '+') totalAnimCount++;
         float shadowOffsPerY = shadowOffs * 32;
         float shadowOffsFromReg = -((float)LogicStructure.Class.ShadowY / LogicStructure.Class.FullHeight * shadowOffs);
-        int fw = LogicStructure.Class.TileWidth;
-        int fh = LogicStructure.Class.FullHeight;
+        int fw = isBridge ? LogicStructure.Width : LogicStructure.Class.TileWidth;
+        int fh = isBridge ? LogicStructure.Height : LogicStructure.Class.FullHeight;
+
+        if (isBridge)
+        {
+            w = fw;
+            h = fh;
+            x = 0;
+            y = 0;
+        }
 
         if (!onlyColors || first)
         {
@@ -60,19 +69,41 @@ public class MapViewStructure : MapViewObject
                     qv[pp++] = new Vector3(lx * 32 + 32 + actualOffsetX, ly * 32 + 32, 0);
                     qv[pp++] = new Vector3(lx * 32 + actualOffsetX, ly * 32 + 32, 0);
 
-                    // handle odd structure animation method
-                    int realFrame = ly * fw + lx;
-                    if (frame > 0 && LogicStructure.Class.AnimMask[realFrame] == '+')
+                    int realFrame;
+                    if (!isBridge)
                     {
-                        if (fw == 1 && fh == 1)
-                            realFrame = frame;
-                        else
+                        // handle odd structure animation method
+                        realFrame = ly * fw + lx;
+                        if (frame > 0 && LogicStructure.Class.AnimMask[realFrame] == '+')
                         {
-                            int preAnimCount = 0;
-                            for (int i = realFrame - 1; i >= 0; i--)
-                                if (LogicStructure.Class.AnimMask[i] == '+') preAnimCount++;
-                            realFrame = fw * fh + totalAnimCount * (frame - 1) + preAnimCount;
+                            if (fw == 1 && fh == 1)
+                                realFrame = frame;
+                            else
+                            {
+                                int preAnimCount = 0;
+                                for (int i = realFrame - 1; i >= 0; i--)
+                                    if (LogicStructure.Class.AnimMask[i] == '+') preAnimCount++;
+                                realFrame = fw * fh + totalAnimCount * (frame - 1) + preAnimCount;
+                            }
                         }
+                    }
+                    else
+                    {
+                        // handle resizable things (normally bridges)
+                        int bx = 1;
+                        int by = 1;
+
+                        if (lx == 0)
+                            bx = 0;
+                        else if (lx == fw-1)
+                            bx = 2;
+
+                        if (ly == 0)
+                            by = 0;
+                        else if (ly == fh-1)
+                            by = 2;
+
+                        realFrame = by * 3 + bx;
                     }
 
                     Rect texRect = sprite.AtlasRects[realFrame];
@@ -117,7 +148,6 @@ public class MapViewStructure : MapViewObject
                 qt[i] = i;
             mesh.SetIndices(qt, MeshTopology.Quads, 0);
         }
-        
 
         return mesh;
     }
@@ -210,13 +240,17 @@ public class MapViewStructure : MapViewObject
             transform.localPosition = new Vector3(xP.x - 16,
                                                   xP.y - 16 - (cls.FullHeight - cls.TileHeight) * 32,
                                                   MakeZFromY(xP.y));
-            //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicObstacle.Class.CenterX));
-            //Renderer.sprite = sprites.Sprites[actualFrame];
-            //UpdateMesh(sprites, actualFrame, Filter.mesh, 0, false);
-            //UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, true); // 0.3 of sprite height
-            StructureMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, cls.FullHeight - cls.TileHeight, cls.TileWidth, cls.TileHeight, 0, (StructureMesh == null), false);
-            OverlayMesh = UpdateMesh(sprites, actualFrame, OverlayFilter.mesh, 0, 0, cls.TileWidth, cls.FullHeight - cls.TileHeight, 0, (OverlayMesh == null), false);
-            if (ShadowFilter != null) ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0, 0, cls.TileWidth, cls.FullHeight, 0.3f, (ShadowMesh == null), false);
+
+            if (LogicStructure.Class.VariableSize)
+            {
+                StructureMesh = UpdateMesh(sprites, 0, Filter.mesh, 0, 0, LogicStructure.Width, LogicStructure.Height, 0, (StructureMesh == null), false);
+            }
+            else
+            {
+                StructureMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, cls.FullHeight - cls.TileHeight, cls.TileWidth, cls.TileHeight, 0, (StructureMesh == null), false);
+                OverlayMesh = UpdateMesh(sprites, actualFrame, OverlayFilter.mesh, 0, 0, cls.TileWidth, cls.FullHeight - cls.TileHeight, 0, (OverlayMesh == null), false);
+                if (ShadowFilter != null) ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0, 0, cls.TileWidth, cls.FullHeight, 0.3f, (ShadowMesh == null), false);
+            }
 
             LogicStructure.DoUpdateView = false;
         }

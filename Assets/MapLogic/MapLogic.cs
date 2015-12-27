@@ -312,26 +312,20 @@ class MapLogic
         foreach (AllodsMap.AlmStructure almstruc in mapStructure.Structures)
         {
             MapLogicStructure struc;
+            struc = new MapLogicStructure(almstruc.TypeID);
+            struc.X = (int)almstruc.X;
+            struc.Y = (int)almstruc.Y;
+            struc.Health = almstruc.Health;
+            struc.Tag = almstruc.ID;
+            struc.Player = GetPlayerByID(almstruc.Player-1);
             if (almstruc.IsBridge)
             {
-                struc = new MapLogicStructure(37); // typeId 37 is "horisontal wooden bridge"
-                struc.X = (int)almstruc.X;
-                struc.Y = (int)almstruc.Y;
-                struc.Health = 0;
-                struc.Tag = almstruc.ID;
-                struc.Player = GetPlayerByID(almstruc.Player-1);
-                struc.IsBridge = true;
                 struc.Width = almstruc.Width;
-                struc.Health = almstruc.Height;
-            }
-            else
-            {
-                struc = new MapLogicStructure(almstruc.TypeID);
-                struc.X = (int)almstruc.X;
-                struc.Y = (int)almstruc.Y;
-                struc.Health = almstruc.Health;
-                struc.Tag = almstruc.ID;
-                struc.Player = GetPlayerByID(almstruc.Player-1);
+                struc.Height = almstruc.Height;
+                // also this crutch is apparently done by ROM2
+                if (struc.Width < 2) struc.Width = 2;
+                if (struc.Height < 2) struc.Height = 2;
+                struc.IsBridge = true;
             }
 
             struc.LinkToWorld();

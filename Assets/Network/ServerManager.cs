@@ -146,8 +146,14 @@ public class ServerClient
             Thread.Sleep(1);
             try
             {
-                if (!(Connection.Client.Poll(0, SelectMode.SelectRead) && Connection.Client.Available >= 4))
+                if (!Connection.Client.Poll(0, SelectMode.SelectRead))
                     continue;
+                if (Connection.Client.Available == 0)
+                {
+                    Debug.Log(string.Format("receiver implicitly disconnected"));
+                    DoDisconnectMe = true;
+                    break;
+                }
 
                 // try to recv packet header.
                 byte[] packet_size_buf = new byte[4];
@@ -163,7 +169,7 @@ public class ServerClient
             }
             catch(Exception e)
             {
-                Debug.Log(string.Format("recevier exception = {0}", e));
+                Debug.Log(string.Format("receiver exception = {0}", e));
                 DoDisconnectMe = true;
                 break;
             }
@@ -265,6 +271,14 @@ public class ServerManager
                 client.Kill();
             Clients.Clear();
         }
+        else
+        {
+            for (int i = 0; i < Clients.Count; i++)
+            {
+                DisconnectClient(Clients[i]);
+                i--;
+            }
+        }
         if (Listener != null)
             Listener.Stop();
         Listener = null;
@@ -273,6 +287,9 @@ public class ServerManager
     private static byte[] RecBuffer = new byte[4096];
     public static void Update()
     {
+        if (!NetworkManager.IsServer)
+            return;
+
         lock (NewClients)
         {
             foreach (ServerClient client in NewClients)

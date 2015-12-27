@@ -99,14 +99,7 @@ public class NetworkManager : MonoBehaviour {
 
     public void Update()
     {
-        switch(State)
-        {
-            case NetworkState.Server:
-                ServerManager.Update();
-                break;
-            case NetworkState.Client:
-                ClientManager.Update();
-                break;
-        }
+        ServerManager.Update();
+        ClientManager.Update();
     }
 }

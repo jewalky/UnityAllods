@@ -44,8 +44,14 @@ public class ClientManager
             Thread.Sleep(1);
             try
             {
-                if (!(Connection.Client.Poll(0, SelectMode.SelectRead) && Connection.Client.Available >= 4))
+                if (!connection.Client.Poll(0, SelectMode.SelectRead))
                     continue;
+                if (connection.Client.Available == 0)
+                {
+                    Debug.Log(string.Format("receiver implicitly disconnected"));
+                    DoDisconnectMe = true;
+                    break;
+                }
 
                 // try to recv packet header.
                 byte[] packet_size_buf = new byte[4];
@@ -59,8 +65,9 @@ public class ClientManager
                 lock (ConnectionPackets)
                     ConnectionPackets.Add(packet_data);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Debug.Log(string.Format("receiver exception = {0}", e));
                 DoDisconnectMe = true;
                 break;
             }
@@ -100,6 +107,11 @@ public class ClientManager
     public static bool Init(string host, ushort port)
     {
         Shutdown(false);
+        DidConnect = false;
+        DidFailConnect = false;
+        DoDisconnectMe = false;
+        ConnectionPackets.Clear();
+        ConnectionPacketsToSend.Clear();
         GameConsole.Instance.WriteLine("Connecting to {0}:{1}...", host, port);
         ServerIPAddress = host;
         ServerIPPort = port;
@@ -124,29 +136,31 @@ public class ClientManager
         if (Connection != null)
             Connection.Close();
         Connection = null;
-        DidConnect = false;
-        DidFailConnect = false;
     }
 
     public static void Update()
     {
-        lock (ConnectionPackets)
+        if (NetworkManager.IsClient)
         {
-            foreach (byte[] packet in ConnectionPackets)
-                OnPacketReceived(packet);
-            ConnectionPackets.Clear();
-        }
+            lock (ConnectionPackets)
+            {
+                foreach (byte[] packet in ConnectionPackets)
+                    OnPacketReceived(packet);
+                ConnectionPackets.Clear();
+            }
 
-        if (!DidConnect && (Connection != null && Connection.Connected))
-        {
-            OnConnected();
-            DidConnect = true;
+            if (!DidConnect && (Connection != null && Connection.Connected))
+            {
+                OnConnected();
+                DidConnect = true;
+            }
         }
 
         if (DoDisconnectMe)
         {
             OnDisconnected();
             Shutdown(false);
+            DoDisconnectMe = false;
         }
     }
 

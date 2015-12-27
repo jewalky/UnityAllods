@@ -91,10 +91,21 @@ public class Server
                 continue;
 
             ClientCommands.ChatMessage chatCmd;
-            chatCmd.PlayerID = player.ID;
+            chatCmd.PlayerID = (player != null) ? player.ID : -1;
             chatCmd.Text = message;
             client.SendCommand(chatCmd);
         }
+    }
+
+    // clients will see anything sent with this function as a "<server>: blablabla" in their chat.
+    public static void SendChatMessage(string text)
+    {
+        // local chat presentation.
+        int color = MapLogicPlayer.AllColorsSystem;
+        string actualText = "<server>: " + text;
+        MapViewChat.Instance.AddChatMessage(color, actualText);
+
+        NotifyChatMessage(null, text);
     }
 
     public static void ObjectBecameVisible(MapLogicPlayer player, MapLogicObject mobj)

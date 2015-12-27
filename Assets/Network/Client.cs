@@ -57,9 +57,8 @@ public class Client
             chatCmd.Text = text;
             ClientManager.SendCommand(chatCmd);
         }
-        else if (MapLogic.Instance.ConsolePlayer != null)
+        else if (MapLogic.Instance.ConsolePlayer != null) // local game
         {
-            // jsut add the message. local play.
             MapViewChat.Instance.AddChatMessage(MapLogic.Instance.ConsolePlayer.Color, MapLogic.Instance.ConsolePlayer.Name + ": " + text);
         }
     }

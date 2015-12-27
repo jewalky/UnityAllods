@@ -169,8 +169,7 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
     public void SendChatMessage(string text)
     {
         if (NetworkManager.IsServer)
-            return;
-
-        Client.SendChatMessage(text);
+            Server.SendChatMessage(text);
+        else Client.SendChatMessage(text);
     }
 }

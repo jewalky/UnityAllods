@@ -89,7 +89,7 @@ namespace ServerCommands
             if (client.State != ClientState.DownloadingMap)
                 return false;
 
-            int curLeft = (int)Mathf.Min(client.Dl_Bytes.Length - client.Dl_Done, 10240);
+            int curLeft = (int)Mathf.Min(client.Dl_Bytes.Length - client.Dl_Done, 5120);
             ClientCommands.DownloadContinue dlCmd;
             dlCmd.PartialBytes = client.Dl_Bytes.Skip(client.Dl_Done).Take(curLeft).ToArray();
             client.Dl_Done += curLeft;

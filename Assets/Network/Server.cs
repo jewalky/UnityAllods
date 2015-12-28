@@ -119,7 +119,6 @@ public class Server
             speedCmd.NewSpeed = newSpeed;
             client.SendCommand(speedCmd);
         }
-
     }
 
     public static void ObjectBecameVisible(MapLogicPlayer player, MapLogicObject mobj)

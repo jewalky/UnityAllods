@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection;
 using UnityEngine;
 
 public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBackground
@@ -30,7 +31,7 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
     TextField EditField;
 
     // command handler
-    GameConsoleCommands CommandHandler;
+    GameConsoleCommands CommandHandler = new GameConsoleCommands();
 
     // command history
     int CommandHistoryPosition = 0;
@@ -44,7 +45,6 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
     public void Start()
     {
         UiManager.Instance.Subscribe(this);
-        CommandHandler = new GameConsoleCommands(this);
         CommandHistory.Add("");
 
         transform.localScale = new Vector3(1, 1, 1);
@@ -120,6 +120,7 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
                             CommandHistory[CommandHistory.Count - 1] = EditField.Value;
                         CommandHistoryPosition--;
                         EditField.Value = CommandHistory[CommandHistoryPosition];
+                        EditField.CursorPosition = EditField.Value.Length;
                     }
                     break;
                 case KeyCode.DownArrow:
@@ -127,6 +128,7 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
                     {
                         CommandHistoryPosition++;
                         EditField.Value = CommandHistory[CommandHistoryPosition];
+                        EditField.CursorPosition = EditField.Value.Length;
                     }
                     break;
             }
@@ -155,6 +157,30 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         }
     }
 
+    public static string JoinArguments(string[] args)
+    {
+        string os = "";
+        foreach (string arg in args)
+        {
+            bool enclose = arg.Contains(' ');
+            if (enclose) os += '"';
+            foreach (char ch in arg)
+            {
+                if (ch == '\\')
+                    os += "\\\\";
+                else if (ch == '"')
+                    os += "\\\"";
+                else if (ch == '\'')
+                    os += "\\'";
+                else os += ch;
+            }
+            if (enclose) os += '"';
+            os += ' ';
+        }
+
+        return os;
+    }
+
     public static string[] SplitArguments(string commandLine)
     {
         var parmChars = commandLine.ToCharArray();
@@ -178,10 +204,10 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         return (new string(parmChars)).Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
     }
 
-    public void ExecuteCommand(string cmd)
+    public bool ExecuteCommand(string cmd)
     {
         if (cmd.Trim().Length <= 0)
-            return;
+            return false;
 
         string[] args = SplitArguments(cmd);
         args[0] = args[0].ToLower();
@@ -216,7 +242,107 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
 
         if (!cmdFound)
         {
-            WriteLine("{0}: command not found.", args[0]);
+            // now, go through Config class
+            string varVal = (args.Length > 1) ? args[1] : null;
+            PropertyInfo[] configFields = typeof(Config).GetProperties(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+            foreach (PropertyInfo field in configFields)
+            {
+                if (field.Name.ToLower() == args[0])
+                {
+                    // check type. only int, float, bool and string values are supported.
+                    if (varVal == null)
+                    {
+                        try
+                        {
+                            string oV;
+                            if (field.PropertyType == typeof(int) ||
+                                field.PropertyType == typeof(float) ||
+                                field.PropertyType == typeof(bool) ||
+                                field.PropertyType == typeof(string)) oV = field.GetValue(null, null).ToString();
+                            else continue;
+                            WriteLine("{0} is \"{1}\"", args[0], oV);
+                            cmdFound = true;
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            cmdFound = false;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            if (field.PropertyType == typeof(int))
+                            {
+                                try
+                                {
+                                    field.SetValue(null, int.Parse(varVal), null);
+                                    WriteLine("{0} is now \"{1}\"", args[0], field.GetValue(null, null).ToString());
+                                }
+                                catch (Exception)
+                                {
+                                    WriteLine("{0}: should be an integer.", args[0]);
+                                }
+                            }
+                            else if (field.PropertyType == typeof(float))
+                            {
+                                try
+                                {
+                                    field.SetValue(null, float.Parse(varVal), null);
+                                    WriteLine("{0} is now \"{1}\"", args[0], field.GetValue(null, null).ToString());
+                                }
+                                catch (Exception)
+                                {
+                                    WriteLine("{0}: should be a float.", args[0]);
+                                }
+                            }
+                            else if (field.PropertyType == typeof(bool))
+                            {
+                                try
+                                {
+                                    field.SetValue(null, (int.Parse(varVal) != 0), null);
+                                    WriteLine("{0} is now \"{1}\"", args[0], field.GetValue(null, null).ToString());
+                                }
+                                catch (Exception)
+                                {
+                                    try
+                                    {
+                                        field.SetValue(null, bool.Parse(varVal), null);
+                                    }
+                                    catch (Exception)
+                                    {
+                                        WriteLine("{0}: should be a boolean.", args[0]);
+                                    }
+                                }
+                            }
+                            else if (field.PropertyType == typeof(string))
+                            {
+                                field.SetValue(null, varVal, null);
+                                WriteLine("{0} is now \"{1}\"", args[0], field.GetValue(null, null).ToString());
+                            }
+                            else continue;
+                            cmdFound = true;
+                            break;
+                        }
+                        catch (Exception)
+                        {
+                            WriteLine("{0} is read-only.", args[0]);
+                            cmdFound = true;
+                            break;
+                        }
+                    }
+                }
+            }
         }
+
+        if (!cmdFound)
+        {
+            WriteLine("{0}: command not found.", args[0]);
+            return false;
+        }
+
+        return true;
     }
 }

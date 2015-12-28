@@ -154,33 +154,20 @@ public class MapLogicStats
 
     public override string ToString()
     {
-        List<string> osv = new List<string>();
-        MapLogicStats outObj = new MapLogicStats();
-        FieldInfo[] fields = typeof(MapLogicStats).GetFields();
-        foreach (FieldInfo field in fields)
+        var sb = new StringBuilder();
+        foreach (var field in typeof(MapLogicStats).GetFields())
         {
             if (field.FieldType == typeof(byte))
-            {
-                osv.Add(string.Format("byte {0} = {1}", field.Name, field.GetValue(this)));
-            }
+                sb.Append(string.Format("byte {0} = {1}\n", field.Name, field.GetValue(this)));
             else if (field.FieldType == typeof(short))
-            {
-                osv.Add(string.Format("short {0} = {1}", field.Name, field.GetValue(this)));
-            }
+                sb.Append(string.Format("short {0} = {1}\n", field.Name, field.GetValue(this)));
             else if (field.FieldType == typeof(int))
-            {
-                osv.Add(string.Format("int {0} = {1}", field.Name, field.GetValue(this)));
-            }
+                sb.Append(string.Format("int {0} = {1}\n", field.Name, field.GetValue(this)));
             else if (field.FieldType == typeof(long))
-            {
-                osv.Add(string.Format("long {0} = {1}", field.Name, field.GetValue(this)));
-            }
+                sb.Append(string.Format("long {0} = {1}\n", field.Name, field.GetValue(this)));
             else if (field.FieldType == typeof(float))
-            {
-                osv.Add(string.Format("float {0} = {1}", field.Name, field.GetValue(this)));
-            }
+                sb.Append(string.Format("float {0} = {1}\n", field.Name, field.GetValue(this)));
         }
-
-        return string.Join("\n", osv.ToArray());
+        return sb.ToString().Trim();
     }
 }

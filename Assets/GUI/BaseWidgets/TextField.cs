@@ -42,6 +42,21 @@ public class TextField : MonoBehaviour, IUiEventProcessor
                 Selection1 = _Value.Length;
             if (Selection2 > _Value.Length)
                 Selection2 = _Value.Length;
+            EditCursor = true;
+        }
+    }
+
+    public int CursorPosition
+    {
+        get
+        {
+            return Selection2;
+        }
+
+        set
+        {
+            Selection1 = Selection2 = value;
+            EditCursor = true;
         }
     }
 
@@ -112,7 +127,7 @@ public class TextField : MonoBehaviour, IUiEventProcessor
                     if (ch < 0x20) // disallow pasting of control characters and paste space instead
                         ch = ' ';
                     string possibleText = possibleText2.Insert(Selection2, "" + ch);
-                    if (EditRendererA.Font.Width(possibleText) <= Screen.width)
+                    if (EditRendererA.Font.Width(possibleText) <= Width)
                     {
                         possibleText2 = possibleText; // don't allow inserting characters if we don't have space
                         Selection2 = ++Selection1;
@@ -222,7 +237,7 @@ public class TextField : MonoBehaviour, IUiEventProcessor
 
                         // type!
                         string possibleText = _Value.Insert(Selection2, "" + e.character);
-                        if (EditRendererA.Font.Width(possibleText) <= Screen.width)
+                        if (EditRendererA.Font.Width(possibleText) <= Width)
                         {
                             _Value = possibleText; // don't allow inserting characters if we don't have space
                             Selection2 = ++Selection1;

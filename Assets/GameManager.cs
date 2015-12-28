@@ -68,6 +68,12 @@ public class GameManager : MonoBehaviour
     {
         GameConsole = Utils.CreateObjectWithScript<GameConsole>();
         GameConsole.transform.parent = UiManager.Instance.transform;
+        Config.Load();
+    }
+
+    void OnDestroy()
+    {
+
     }
 
     private IEnumerator DelegateCoroutine(LoadCoroutine del)

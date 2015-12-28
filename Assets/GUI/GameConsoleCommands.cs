@@ -6,12 +6,6 @@ using UnityEngine;
 
 public class GameConsoleCommands
 {
-    private GameConsole GameConsole;
-    public GameConsoleCommands(GameConsole con)
-    {
-        GameConsole = con;
-    }
-
     public void quit()
     {
         Application.Quit();
@@ -42,11 +36,11 @@ public class GameConsoleCommands
 
         if (actualFilename == null)
         {
-            GameConsole.WriteLine("Error: map not found for \"{0}\"", filename);
+            GameConsole.Instance.WriteLine("Error: map not found for \"{0}\"", filename);
             return;
         }
 
-        GameConsole.WriteLine("Switching to map \"{0}\" (found as \"{1}\")", filename, actualFilename);
+        GameConsole.Instance.WriteLine("Switching to map \"{0}\" (found as \"{1}\")", filename, actualFilename);
         MapView.Instance.InitFromFile(actualFilename);
     }
 
@@ -73,5 +67,11 @@ public class GameConsoleCommands
     public void grid()
     {
         MapView.Instance.GridEnabled = !MapView.Instance.GridEnabled;
+    }
+
+    public void rcon(params string[] args)
+    {
+        string toSend = GameConsole.JoinArguments(args);
+        //
     }
 }

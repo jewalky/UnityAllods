@@ -142,70 +142,45 @@ public class ServerClient
     {
         Connection.Client.Blocking = true;
         Connection.Client.ReceiveBufferSize = 1048576; // 1mb
-        Connection.Client.ReceiveTimeout = 30000;
-        NetworkStream stream = Connection.GetStream();
+
         while (true)
         {
             Thread.Sleep(1);
-            try
+            byte[] packet = NetworkManager.DoReadPacketFromStream(Connection.Client);
+            if (packet == null)
             {
-                if (!Connection.Client.Poll(0, SelectMode.SelectRead))
-                    continue;
-                if (Connection.Client.Available == 0)
-                {
-                    Debug.Log(string.Format("receiver implicitly disconnected"));
-                    DoDisconnectMe = true;
-                    break;
-                }
-
-                // try to recv packet header.
-                byte[] packet_size_buf = new byte[4];
-                if (stream.Read(packet_size_buf, 0, 4) != 4)
-                    continue;
-                uint packet_size = BitConverter.ToUInt32(packet_size_buf, 0);
-                // recv packet data.
-                byte[] packet_data = new byte[packet_size];
-                stream.Read(packet_data, 0, (int)packet_size);
-                // put into local receive queue.
-                lock (ConnectionPackets)
-                    ConnectionPackets.Add(packet_data);
-            }
-            catch(Exception e)
-            {
-                Debug.Log(string.Format("receiver exception = {0}", e));
                 DoDisconnectMe = true;
                 break;
             }
+
+            lock (ConnectionPackets)
+                ConnectionPackets.Add(packet);
         }
     }
 
     private void ServerClientThreadSendProc()
     {
+        Connection.Client.Blocking = true;
         Connection.Client.SendBufferSize = 1048576; // 1mb
-        Connection.Client.SendTimeout = 30000;
-        NetworkStream stream = Connection.GetStream();
-        BinaryWriter writer = new BinaryWriter(stream);
+
         while (true)
         {
-            try
+            lock (ConnectionPacketsToSend)
             {
-                lock (ConnectionPacketsToSend)
+                foreach (byte[] packet in ConnectionPacketsToSend)
                 {
-                    foreach (byte[] packet in ConnectionPacketsToSend)
+                    if (!NetworkManager.DoWritePacketToStream(Connection.Client, packet))
                     {
-                        // write packet header
-                        writer.Write((uint)packet.Length);
-                        writer.Write(packet);
+                        DoDisconnectMe = true;
+                        break;
                     }
-
-                    ConnectionPacketsToSend.Clear();
                 }
+
+                ConnectionPacketsToSend.Clear();
             }
-            catch(Exception)
-            {
-                DoDisconnectMe = true;
+
+            if (DoDisconnectMe)
                 break;
-            }
 
             Thread.Sleep(1);
         }

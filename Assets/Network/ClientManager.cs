@@ -37,74 +37,48 @@ public class ClientManager
 
         connection.Client.Blocking = true;
         connection.Client.ReceiveBufferSize = 1048576; // 1mb
-        connection.Client.ReceiveTimeout = 30000;
 
         ClientThreadSend = new Thread(new ThreadStart(() => { ClientThreadSendProc(Connection); }));
         ClientThreadSend.Start(); // start packet sending thread once we're connected
 
-        NetworkStream stream = connection.GetStream();
         while (true)
         {
             Thread.Sleep(1);
-            try
+            byte[] packet = NetworkManager.DoReadPacketFromStream(connection.Client);
+            if (packet == null)
             {
-                if (!connection.Client.Poll(0, SelectMode.SelectRead))
-                    continue;
-                if (connection.Client.Available == 0)
-                {
-                    Debug.Log(string.Format("receiver implicitly disconnected"));
-                    DoDisconnectMe = true;
-                    break;
-                }
-
-                // try to recv packet header.
-                byte[] packet_size_buf = new byte[4];
-                if (stream.Read(packet_size_buf, 0, 4) != 4)
-                    continue;
-                uint packet_size = BitConverter.ToUInt32(packet_size_buf, 0);
-                // recv packet data.
-                byte[] packet_data = new byte[packet_size];
-                stream.Read(packet_data, 0, (int)packet_size);
-                // put into local receive queue.
-                lock (ConnectionPackets)
-                    ConnectionPackets.Add(packet_data);
-            }
-            catch (Exception e)
-            {
-                Debug.Log(string.Format("receiver exception = {0}", e));
                 DoDisconnectMe = true;
                 break;
             }
+
+            lock(ConnectionPackets)
+                ConnectionPackets.Add(packet);
         }
     }
 
     private static void ClientThreadSendProc(TcpClient connection)
     {
+        Connection.Client.Blocking = true;
         connection.Client.SendBufferSize = 1048576; // 1mb
-        connection.Client.SendTimeout = 30000;
-        NetworkStream stream = connection.GetStream();
-        BinaryWriter writer = new BinaryWriter(stream);
+
         while (true)
         {
-            try
+            lock (ConnectionPacketsToSend)
             {
-                lock (ConnectionPacketsToSend)
+                foreach (byte[] packet in ConnectionPacketsToSend)
                 {
-                    foreach (byte[] packet in ConnectionPacketsToSend)
+                    if (!NetworkManager.DoWritePacketToStream(connection.Client, packet))
                     {
-                        // write packet header
-                        writer.Write((uint)packet.Length);
-                        writer.Write(packet);
+                        DoDisconnectMe = true;
+                        break;
                     }
-
-                    ConnectionPacketsToSend.Clear();
                 }
+
+                ConnectionPacketsToSend.Clear();
             }
-            catch (Exception)
-            {
-                DoDisconnectMe = true;
+
+            if (DoDisconnectMe)
                 break;
-            }
 
             Thread.Sleep(1);
         }

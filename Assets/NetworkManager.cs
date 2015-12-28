@@ -144,6 +144,8 @@ public class NetworkManager : MonoBehaviour {
         if (packet_size_buf == null)
             return null;
         uint packet_size = BitConverter.ToUInt32(packet_size_buf, 0);
+        if (packet_size > 65535) // separate packets of size larger than 65535 shouldn't exist. this is a protection against memory allocation DOS by the clients.
+            return null;
         byte[] packet_buf = DoReadDataFromStream(sock, (int)packet_size);
         return packet_buf;
     }

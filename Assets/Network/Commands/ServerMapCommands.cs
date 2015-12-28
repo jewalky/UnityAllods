@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using ProtoBuf;
 
 namespace ServerCommands
 {
-    [Serializable()]
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.ChatMessage)]
     public struct ChatMessage : IServerCommand
     {
+        [ProtoMember(1)]
         public string Text;
 
         public bool Process(ServerClient client)

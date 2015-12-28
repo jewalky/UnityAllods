@@ -4,13 +4,17 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using UnityEngine;
+using ProtoBuf;
 
 namespace ClientCommands
 {
-    [Serializable()]
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.SwitchMap)]
     public struct SwitchMap : IClientCommand
     {
+        [ProtoMember(1)]
         public string FileName;
+        [ProtoMember(2)]
         public string MD5;
 
         public bool Process()
@@ -51,7 +55,8 @@ namespace ClientCommands
         }
     }
 
-    [Serializable()]
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.Error)]
     public struct Error : IClientCommand
     {
         public enum ErrorCode
@@ -59,6 +64,8 @@ namespace ClientCommands
             MapNotLoaded,
             ServerFull
         }
+
+        [ProtoMember(1)]
         public ErrorCode Code;
 
         public bool Process()
@@ -68,9 +75,11 @@ namespace ClientCommands
         }
     }
 
-    [Serializable()]
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.DownloadStart)]
     public struct DownloadStart : IClientCommand
     {
+        [ProtoMember(1)]
         public int TotalSize;
 
         public bool Process()
@@ -84,9 +93,11 @@ namespace ClientCommands
         }
     }
 
-    [Serializable()]
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.DownloadContinue)]
     public struct DownloadContinue : IClientCommand
     {
+        [ProtoMember(1)]
         public byte[] PartialBytes;
 
         public bool Process()

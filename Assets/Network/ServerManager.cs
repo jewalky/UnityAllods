@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using ProtoBuf;
 
 public class ServerClient
 {
@@ -86,8 +87,18 @@ public class ServerClient
         MemoryStream ms = new MemoryStream(packet);
         try
         {
-            BinaryFormatter bf = new BinaryFormatter();
-            object o = bf.Deserialize(ms);
+            // get class identifier.
+            BinaryReader br = new BinaryReader(ms);
+            byte pid = br.ReadByte();
+            Type objType = NetworkManager.FindTypeFromPacketId("ServerCommands", pid);
+            if (objType == null)
+            {
+                GameConsole.Instance.WriteLine("Unknown command ID={0:X2}.", pid);
+                ServerManager.DisconnectClient(this);
+                return;
+            }
+
+            object o = Serializer.Deserialize(objType, ms);
             if (!(o is IServerCommand))
             {
                 GameConsole.Instance.WriteLine("Server commands should implement IServerCommand.");
@@ -98,9 +109,9 @@ public class ServerClient
             if (!((IServerCommand)o).Process(this))
                 ServerManager.DisconnectClient(this);
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            GameConsole.Instance.WriteLine("Error encountered during command processing.");
+            GameConsole.Instance.WriteLine("Error encountered during command processing.\n{0}", e.ToString());
             ServerManager.DisconnectClient(this);
         }
         finally
@@ -121,9 +132,18 @@ public class ServerClient
         MemoryStream ms = new MemoryStream();
         try
         {
-            BinaryFormatter bf = new BinaryFormatter();
-            bf.Serialize(ms, o);
-            return SendPacket(ms.GetBuffer());
+            BinaryWriter writer = new BinaryWriter(ms);
+            // write packet ID. currently a byte.
+            NetworkPacketId[] npi = (NetworkPacketId[])o.GetType().GetCustomAttributes(typeof(NetworkPacketId), false);
+            if (npi.Length != 0)
+            {
+                writer.Write(npi[0].PacketID);
+                Serializer.Serialize(ms, o);
+                return SendPacket(ms.ToArray());
+            }
+
+            Debug.Log(string.Format("ERROR: Can't send commands without ID! (type = {0})", o.GetType().Name));
+            return false;
         }
         catch(Exception)
         {

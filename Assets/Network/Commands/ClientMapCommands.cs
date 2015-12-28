@@ -3,18 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using ProtoBuf;
 
 namespace ClientCommands
 {
-    [Serializable()]
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.AddPlayer)]
     public struct AddPlayer : IClientCommand
     {
+        [ProtoMember(1)]
         public int ID;
+        [ProtoMember(2)]
         public string Name;
+        [ProtoMember(3)]
         public int Color;
+        [ProtoMember(4)]
         public long Money;
+        [ProtoMember(5)]
         public Dictionary<int, DiplomacyFlags> Diplomacy;
+        [ProtoMember(6)]
         public bool Silent; // whether to display the "player has connected" or not.
+        [ProtoMember(7)]
         public bool ConsolePlayer; // this is true when the server says us that we have control over this one.
 
         public bool Process()
@@ -41,11 +50,15 @@ namespace ClientCommands
         }
     }
 
-    [Serializable()]
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.DelPlayer)]
     public struct DelPlayer : IClientCommand
     {
+        [ProtoMember(1)]
         public int ID;
+        [ProtoMember(2)]
         public bool Kick; // whether the "player was kicked" message will be displayed (if Silent is false)
+        [ProtoMember(3)]
         public bool Silent;
 
         public bool Process()
@@ -61,10 +74,13 @@ namespace ClientCommands
         }
     }
 
-    [Serializable()]
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.ChatMessage)]
     public struct ChatMessage : IClientCommand
     {
+        [ProtoMember(1)]
         public int PlayerID;
+        [ProtoMember(2)]
         public string Text;
 
         public bool Process()

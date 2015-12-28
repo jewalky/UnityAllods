@@ -26,7 +26,7 @@ public class Client
 
     public static void ConnectedToServer()
     {
-        GameConsole.Instance.WriteLine("Connected to [{0}]:{1}!", ClientManager.ServerIPAddress, ClientManager.ServerIPPort);
+        GameConsole.Instance.WriteLine("Connected to {0}:{1}!", ClientManager.ServerIPAddress, ClientManager.ServerIPPort);
         State = ClientState.Connected;
 
         // unload local map and tell the server that we're going to play.
@@ -38,7 +38,7 @@ public class Client
 
     public static void DisconnectedFromServer()
     {
-        GameConsole.Instance.WriteLine("Disconnected from [{0}]:{1}.", ClientManager.ServerIPAddress, ClientManager.ServerIPPort);
+        GameConsole.Instance.WriteLine("Disconnected from {0}:{1}.", ClientManager.ServerIPAddress, ClientManager.ServerIPPort);
         // also kill MapDownloader
         if (MapDownloader.Instance != null)
             MapDownloader.Instance.Kill();

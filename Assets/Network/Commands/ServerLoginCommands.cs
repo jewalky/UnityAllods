@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using System.IO;
+using ProtoBuf;
 
 /// <summary>
 /// On login, clients send ClientAuth.
@@ -21,7 +22,8 @@ using System.IO;
 
 namespace ServerCommands
 {
-    [Serializable()]
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.ClientAuth)]
     public struct ClientAuth : IServerCommand
     {
         // nothing here for now. will possibly put network version or smth later. (or hat-related stuff)
@@ -57,7 +59,8 @@ namespace ServerCommands
         }
     }
 
-    [Serializable()]
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.RequestDownloadStart)]
     public struct RequestDownloadStart : IServerCommand
     {
         public bool Process(ServerClient client)
@@ -81,7 +84,8 @@ namespace ServerCommands
         }
     }
 
-    [Serializable()]
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.RequestDownloadContinue)]
     public struct RequestDownloadContinue : IServerCommand
     {
         public bool Process(ServerClient client)
@@ -100,7 +104,8 @@ namespace ServerCommands
         }
     }
 
-    [Serializable()]
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.RequestGamestate)]
     public struct RequestGamestate : IServerCommand
     {
         public bool Process(ServerClient client)

@@ -1,17 +1,36 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System;
 using System.Linq;
 using System.Threading;
 using System.IO;
+using System.Reflection;
 
 public enum NetworkState
 {
     Disconnected,
     Client,
     Server
+}
+
+public class NetworkPacketId : Attribute
+{
+    public byte PacketID { get; private set; }
+    public NetworkPacketId(byte id)
+    {
+        PacketID = id;
+    }
+    public NetworkPacketId(ClientIdentifiers cid)
+    {
+        PacketID = (byte)cid;
+    }
+    public NetworkPacketId(ServerIdentifiers sid)
+    {
+        PacketID = (byte)sid;
+    }
 }
 
 public class NetworkManager : MonoBehaviour {
@@ -127,7 +146,11 @@ public class NetworkManager : MonoBehaviour {
                 ovtmp.Take(doneNow).ToArray().CopyTo(ov, done);
                 done += doneNow;
                 if (done == size)
+                {
+                    /*using (FileStream fs = File.Open("recvDbg.bin", FileMode.Append, FileAccess.Write))
+                        fs.Write(ov, 0, ov.Length);*/
                     return ov;
+                }
             }
         }
         catch(Exception e)
@@ -152,6 +175,8 @@ public class NetworkManager : MonoBehaviour {
 
     private static bool DoWriteDataToStream(Socket sock, byte[] data)
     {
+        /*using (FileStream fs = File.Open("sendDbg.bin", FileMode.Append, FileAccess.Write))
+            fs.Write(data, 0, data.Length);*/
         try
         {
             int done = 0;
@@ -183,5 +208,34 @@ public class NetworkManager : MonoBehaviour {
         if (!DoWriteDataToStream(sock, packet))
             return false;
         return true;
+    }
+
+    // types are unlikely to change IN THIS CASE
+    private static List<Type> PacketTypes = null;
+    public static Type FindTypeFromPacketId(string ns, byte pid)
+    {
+        if (PacketTypes == null)
+        {
+            PacketTypes = new List<Type>();
+            Type[] types = Assembly.GetExecutingAssembly().GetTypes();
+            foreach (Type type in types)
+            {
+                NetworkPacketId[] npi = (NetworkPacketId[])type.GetCustomAttributes(typeof(NetworkPacketId), false);
+                if (npi.Length <= 0)
+                    continue;
+                PacketTypes.Add(type);
+            }
+        }
+
+        foreach (Type type in PacketTypes)
+        {
+            if (type.Namespace != ns)
+                continue;
+            NetworkPacketId[] npi = (NetworkPacketId[])type.GetCustomAttributes(typeof(NetworkPacketId), false);
+            if (npi[0].PacketID == pid)
+                return type;
+        }
+
+        return null;
     }
 }

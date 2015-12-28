@@ -9,6 +9,7 @@ using UnityEngine;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using ProtoBuf;
 
 public class ClientManager
 {
@@ -160,8 +161,18 @@ public class ClientManager
         MemoryStream ms = new MemoryStream(packet);
         try
         {
-            BinaryFormatter bf = new BinaryFormatter();
-            object o = bf.Deserialize(ms);
+            // get class identifier.
+            BinaryReader br = new BinaryReader(ms);
+            byte pid = br.ReadByte();
+            Type objType = NetworkManager.FindTypeFromPacketId("ClientCommands", pid);
+            if (objType == null)
+            {
+                GameConsole.Instance.WriteLine("Unknown command ID={0:X2}.", pid);
+                NetworkManager.Instance.Disconnect();
+                return;
+            }
+
+            object o = Serializer.Deserialize(objType, ms);
             if (!(o is IClientCommand))
             {
                 GameConsole.Instance.WriteLine("Client commands should implement IClientCommand.");
@@ -190,14 +201,23 @@ public class ClientManager
         return true;
     }
 
-    public static bool SendCommand(IServerCommand o)
+    public static bool SendCommand<T>(T o) where T : IServerCommand
     {
         MemoryStream ms = new MemoryStream();
         try
         {
-            BinaryFormatter bf = new BinaryFormatter();
-            bf.Serialize(ms, o);
-            return SendPacket(ms.GetBuffer());
+            BinaryWriter writer = new BinaryWriter(ms);
+            // write packet ID. currently a byte.
+            NetworkPacketId[] npi = (NetworkPacketId[])o.GetType().GetCustomAttributes(typeof(NetworkPacketId), false);
+            if (npi.Length != 0)
+            {
+                writer.Write(npi[0].PacketID);
+                Serializer.Serialize(ms, o);
+                return SendPacket(ms.ToArray());
+            }
+
+            Debug.Log(string.Format("ERROR: Can't send commands without ID! (type = {0})", o.GetType().Name));
+            return false;
         }
         catch (Exception)
         {

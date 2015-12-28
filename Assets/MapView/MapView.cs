@@ -629,9 +629,6 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     float lastUpTime = 0;
     void UpdateLogic()
     {
-        if (NetworkManager.IsClient)
-            return; // not handled here. clients run game logic only on server's command.
-
         lastLogTime += Time.deltaTime;
         lastLogicUpdateTime += Time.deltaTime;
         if (lastLogicUpdateTime >= 1)

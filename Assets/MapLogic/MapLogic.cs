@@ -229,9 +229,6 @@ class MapLogic
         _LevelTime++;
         foreach (MapLogicObject mo in Objects)
             mo.Update();
-        // tell clients to update too
-        if (NetworkManager.IsServer)
-            Server.NotifyLogicFrame();
     }
 
     public void Unload()

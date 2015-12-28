@@ -14,6 +14,5 @@ public enum ClientIdentifiers
     // map
     AddPlayer,
     DelPlayer,
-    ChatMessage,
-    LogicFrame
+    ChatMessage
 }

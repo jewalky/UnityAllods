@@ -108,6 +108,20 @@ public class Server
         NotifyChatMessage(null, text);
     }
 
+    public static void NotifySpeedChanged(int newSpeed)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            ClientCommands.SpeedChanged speedCmd;
+            speedCmd.NewSpeed = newSpeed;
+            client.SendCommand(speedCmd);
+        }
+
+    }
+
     public static void ObjectBecameVisible(MapLogicPlayer player, MapLogicObject mobj)
     {
 

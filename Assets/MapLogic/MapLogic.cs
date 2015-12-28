@@ -213,9 +213,13 @@ class MapLogic
         {
             if (value < 0) value = 0;
             if (value > 8) value = 8;
+
             _Speed = value;
             float scale = 5 * (_Speed+1);
             Time.timeScale = scale;
+
+            if (NetworkManager.IsServer)
+                Server.NotifySpeedChanged(value);
         }
 
         get

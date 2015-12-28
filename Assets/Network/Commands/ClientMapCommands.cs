@@ -94,4 +94,24 @@ namespace ClientCommands
             return true;
         }
     }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.SpeedChanged)]
+    public struct SpeedChanged : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int NewSpeed;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+            if (NewSpeed != MapLogic.Instance.Speed)
+            {
+                MapLogic.Instance.Speed = NewSpeed;
+                MapViewChat.Instance.AddChatMessage(MapLogicPlayer.AllColorsSystem, Locale.Main[108 + NewSpeed]);
+            }
+            return true;
+        }
+    }
 }

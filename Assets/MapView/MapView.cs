@@ -547,12 +547,25 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                         ScrollDeltaY = 1;
                     return true;
                 case KeyCode.Plus:
+                case KeyCode.Equals: // + = =
                 case KeyCode.KeypadPlus:
-                    MapLogic.Instance.Speed++;
+                    {
+                        int oldSpeed = MapLogic.Instance.Speed;
+                        if (!NetworkManager.IsClient)
+                            MapLogic.Instance.Speed++;
+                        if (oldSpeed != MapLogic.Instance.Speed)
+                            MapViewChat.Instance.AddChatMessage(MapLogicPlayer.AllColorsSystem, Locale.Main[108 + MapLogic.Instance.Speed]);
+                    }
                     return true;
                 case KeyCode.Minus:
                 case KeyCode.KeypadMinus:
-                    MapLogic.Instance.Speed--;
+                    {
+                        int oldSpeed = MapLogic.Instance.Speed;
+                        if (!NetworkManager.IsClient)
+                            MapLogic.Instance.Speed--;
+                        if (oldSpeed != MapLogic.Instance.Speed)
+                            MapViewChat.Instance.AddChatMessage(MapLogicPlayer.AllColorsSystem, Locale.Main[108 + MapLogic.Instance.Speed]);
+                    }
                     return true;
             }
         }

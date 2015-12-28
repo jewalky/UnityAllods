@@ -146,8 +146,13 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         Utils.SetRendererEnabledWithChildren(gameObject, false);
         ChatFieldEnabled = false;
         ChatField.Value = "";
+
         foreach (ChatMessage msg in Messages)
-            msg.Renderer.DestroyImmediate();
+        {
+            if (msg.Renderer != null)
+                msg.Renderer.DestroyImmediate();
+        }
+
         Messages.Clear();
     }
 
@@ -184,6 +189,9 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
                     break;
             }
         }
+
+        if (ChatFieldEnabled)
+            return true; // do not allow events to leak down into the map
 
         return false;
     }

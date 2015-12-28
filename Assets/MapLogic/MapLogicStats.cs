@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection;
 
 // this class is used by items, monsters and humans.
 // this class should be optimized because it gets sent over network.
+// current size is ~80 bytes.
 public class MapLogicStats
 {
     public byte NoneStat; // dummy value
@@ -57,4 +59,128 @@ public class MapLogicStats
     public short DamageEarth;
     public short DamageAstral;
     public short DamageBonus;
+    // monster stats only
+    public byte ProtectionBlade;
+    public byte ProtectionAxe;
+    public byte ProtectionBludgeon;
+    public byte ProtectionPike;
+    public byte ProtectionShooting;
+
+    public static MapLogicStats operator +(MapLogicStats a, MapLogicStats b)
+    {
+        MapLogicStats outObj = new MapLogicStats();
+        FieldInfo[] fields = typeof(MapLogicStats).GetFields();
+        foreach (FieldInfo field in fields)
+        {
+            // we process byte, short, int, float and long.
+            // handle overflows.
+            if (field.FieldType == typeof(byte))
+            {
+                int fa = (byte)field.GetValue(a);
+                int fb = (byte)field.GetValue(b);
+                field.SetValue(outObj, (byte)Math.Min(fa + fb, 255));
+            }
+            else if (field.FieldType == typeof(short))
+            {
+                int fa = (short)field.GetValue(a);
+                int fb = (short)field.GetValue(b);
+                field.SetValue(outObj, (short)Math.Max(Math.Min(fa + fb, 32767), -32768));
+            }
+            else if (field.FieldType == typeof(int))
+            {
+                long fa = (int)field.GetValue(a);
+                long fb = (int)field.GetValue(b);
+                field.SetValue(outObj, (int)Math.Max(Math.Min(fa + fb, 2147483647), -2147483648));
+            }
+            else if (field.FieldType == typeof(long))
+            {
+                long fa = (long)field.GetValue(a);
+                long fb = (long)field.GetValue(b);
+                field.SetValue(outObj, fa + fb);
+            }
+            else if (field.FieldType == typeof(float))
+            {
+                float fa = (float)field.GetValue(a);
+                float fb = (float)field.GetValue(b);
+                field.SetValue(outObj, fa + fb);
+            }
+        }
+
+        return outObj;
+    }
+
+    public static MapLogicStats operator -(MapLogicStats a, MapLogicStats b)
+    {
+        MapLogicStats outObj = new MapLogicStats();
+        FieldInfo[] fields = typeof(MapLogicStats).GetFields();
+        foreach (FieldInfo field in fields)
+        {
+            // we process byte, short, int, float and long.
+            // handle overflows.
+            if (field.FieldType == typeof(byte))
+            {
+                int fa = (byte)field.GetValue(a);
+                int fb = (byte)field.GetValue(b);
+                field.SetValue(outObj, (byte)Math.Min(fa - fb, 255));
+            }
+            else if (field.FieldType == typeof(short))
+            {
+                int fa = (short)field.GetValue(a);
+                int fb = (short)field.GetValue(b);
+                field.SetValue(outObj, (short)Math.Max(Math.Min(fa - fb, 32767), -32768));
+            }
+            else if (field.FieldType == typeof(int))
+            {
+                long fa = (int)field.GetValue(a);
+                long fb = (int)field.GetValue(b);
+                field.SetValue(outObj, (int)Math.Max(Math.Min(fa - fb, 2147483647), -2147483648));
+            }
+            else if (field.FieldType == typeof(long))
+            {
+                long fa = (long)field.GetValue(a);
+                long fb = (long)field.GetValue(b);
+                field.SetValue(outObj, fa - fb);
+            }
+            else if (field.FieldType == typeof(float))
+            {
+                float fa = (float)field.GetValue(a);
+                float fb = (float)field.GetValue(b);
+                field.SetValue(outObj, fa - fb);
+            }
+        }
+
+        return outObj;
+    }
+
+    public override string ToString()
+    {
+        List<string> osv = new List<string>();
+        MapLogicStats outObj = new MapLogicStats();
+        FieldInfo[] fields = typeof(MapLogicStats).GetFields();
+        foreach (FieldInfo field in fields)
+        {
+            if (field.FieldType == typeof(byte))
+            {
+                osv.Add(string.Format("byte {0} = {1}", field.Name, field.GetValue(this)));
+            }
+            else if (field.FieldType == typeof(short))
+            {
+                osv.Add(string.Format("short {0} = {1}", field.Name, field.GetValue(this)));
+            }
+            else if (field.FieldType == typeof(int))
+            {
+                osv.Add(string.Format("int {0} = {1}", field.Name, field.GetValue(this)));
+            }
+            else if (field.FieldType == typeof(long))
+            {
+                osv.Add(string.Format("long {0} = {1}", field.Name, field.GetValue(this)));
+            }
+            else if (field.FieldType == typeof(float))
+            {
+                osv.Add(string.Format("float {0} = {1}", field.Name, field.GetValue(this)));
+            }
+        }
+
+        return string.Join("\n", osv.ToArray());
+    }
 }

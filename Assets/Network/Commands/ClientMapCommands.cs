@@ -94,4 +94,17 @@ namespace ClientCommands
             return true;
         }
     }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.LogicFrame)]
+    public struct LogicFrame : IClientCommand
+    {
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+            MapLogic.Instance.Update();
+            return true;
+        }
+    }
 }

@@ -108,6 +108,17 @@ public class Server
         NotifyChatMessage(null, text);
     }
 
+    public static void NotifyLogicFrame()
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+            ClientCommands.LogicFrame chatCmd;
+            client.SendCommand(chatCmd);
+        }
+    }
+
     public static void ObjectBecameVisible(MapLogicPlayer player, MapLogicObject mobj)
     {
 

@@ -116,6 +116,15 @@ public class Player
         // set ally+vision to self
         Diplomacy[ID] = DiplomacyFlags.Ally | DiplomacyFlags.Vision;
 
+        // set nothing to everyone else
+        foreach (Player p2 in MapLogic.Instance.Players)
+        {
+            if ((p2.Flags & PlayerFlags.NetClient) == 0)
+                continue;
+            Diplomacy[p2.ID] = 0;
+            p2.Diplomacy[ID] = 0;
+        }
+
         // make avatar if we're the server. if we're not, we'll be informed of the avatar separately.
         if (NetworkManager.IsServer)
             Avatar = MapLogic.Instance.CreateAvatar(this);

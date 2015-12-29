@@ -56,7 +56,6 @@ public class MapLogicObject : IDisposable
 
     public MapLogicObject()
     {
-        MapLogic.Instance.Objects.Add(this);
         GameObject = MapView.Instance.CreateObject(GetGameObjectType(), this);
         GameScript = (MonoBehaviour)GameObject.GetComponent(GetGameObjectType());
     }

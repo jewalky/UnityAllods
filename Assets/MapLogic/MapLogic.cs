@@ -309,6 +309,7 @@ class MapLogic
                 mob.X = x;
                 mob.Y = y;
                 mob.LinkToWorld();
+                Objects.Add(mob);
             }
         }
 
@@ -333,6 +334,7 @@ class MapLogic
             }
 
             struc.LinkToWorld();
+            Objects.Add(struc);
         }
 
         // only if loaded

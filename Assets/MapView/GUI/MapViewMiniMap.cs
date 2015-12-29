@@ -198,7 +198,16 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
 
     public bool ProcessEvent(Event e)
     {
-
+        if (e.type == EventType.MouseDown ||
+            e.type == EventType.MouseUp ||
+            e.type == EventType.MouseMove)
+        {
+            Vector2 mPos = Utils.GetMousePosition();
+            if (mPos.x > transform.localPosition.x &&
+                mPos.y > transform.localPosition.y &&
+                mPos.x < transform.localPosition.x + 176 &&
+                mPos.y < transform.localPosition.y + 158) return true;
+        }
         return false;
     }
 }

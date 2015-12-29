@@ -32,6 +32,8 @@ public class MapLogicObstacle : MapLogicObject
     private void InitObstacle()
     {
         // ???
+        Width = 1;
+        Height = 1;
         DoUpdateView = true;
     }
 

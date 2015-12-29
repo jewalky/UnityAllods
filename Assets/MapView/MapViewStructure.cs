@@ -303,12 +303,12 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
 
     public bool ProcessEventPic(Event e)
     {
-        throw new NotImplementedException();
+        return false;
     }
 
     public bool ProcessEventInfo(Event e)
     {
-        throw new NotImplementedException();
+        return false;
     }
 
     public void DisplayPic(bool on, Transform parent)
@@ -342,7 +342,7 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
 
     public void DisplayInfo(bool on, Transform parent)
     {
-        throw new NotImplementedException();
+        
     }
 }
  

@@ -103,8 +103,8 @@ public class UiManager : MonoBehaviour
 
         // also fake mouse event for each processor
         Vector2 mPos = Utils.GetMousePosition();
-        if (mPos.x != lastMouseX ||
-            mPos.y != lastMouseY)
+        /*if (mPos.x != lastMouseX ||
+            mPos.y != lastMouseY)*/
         {
             Event ef = new Event();
             ef.type = EventType.MouseMove;
@@ -115,6 +115,9 @@ public class UiManager : MonoBehaviour
                 if (((IUiEventProcessor)Processors[i]).ProcessEvent(ef))
                     break;
             }
+
+            //lastMouseX = mPos.x;
+            //lastMouseY = mPos.y;
         }
     }
 

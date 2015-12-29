@@ -528,6 +528,14 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             WaterAnimFrame = waterAnimFrameNew;
             UpdateTiles(WaterAnimFrame);
         }
+
+        // update scrolling
+        scrollTimer += Time.unscaledDeltaTime;
+        if (scrollTimer > 0.01)
+        {
+            SetScroll(ScrollX + ScrollDeltaX, ScrollY + ScrollDeltaY);
+            scrollTimer = 0;
+        }
     }
 
     public bool ProcessEvent(Event e)
@@ -688,14 +696,6 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             if (HoveredObject.GetObjectType() == MapLogicObjectType.Structure &&
                 ((MapLogicStructure)HoveredObject).Class.Usable) MouseCursor.SetCursor(MouseCursor.CurSelectStructure);
             else MouseCursor.SetCursor(MouseCursor.CurSelect);
-        }
-
-        // PERMANENT
-        scrollTimer += Time.unscaledDeltaTime;
-        if (scrollTimer > 0.01)
-        {
-            SetScroll(ScrollX + ScrollDeltaX, ScrollY + ScrollDeltaY);
-            scrollTimer = 0;
         }
     }
 

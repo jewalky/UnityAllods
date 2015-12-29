@@ -282,14 +282,11 @@ public class Images
                     if (_Texture == null)
                     {
                         // this is inefficient, but this is the ONLY way it works.
-                        _Texture = new Texture2D(Width, Height, TextureFormat.RGHalf, false);
-                        _Texture.filterMode = FilterMode.Point;
-                        _Texture.SetPixels(0, 0, Width, Height, _Colors);
-                        GameObject.Destroy(_Texture);
-                        Texture2D nTex = new Texture2D(0, 0, TextureFormat.RGHalf, false);
-                        nTex.PackTextures(new Texture2D[] { _Texture }, 0);
-                        nTex.Apply(false, true);
-                        _Texture = nTex;
+                        Texture2D tmpTex = new Texture2D(Width, Height, TextureFormat.RGHalf, false);
+                        tmpTex.SetPixels(0, 0, Width, Height, _Colors);
+                        _Texture = new Texture2D(0, 0, TextureFormat.RGHalf, false);
+                        _Texture.PackTextures(new Texture2D[] { tmpTex }, 0);
+                        GameObject.Destroy(tmpTex);
                         _Texture.filterMode = FilterMode.Point;
                         _Colors = null;
                     }

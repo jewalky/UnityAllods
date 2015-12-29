@@ -11,12 +11,24 @@ using System.Diagnostics;
 
 public partial class Utils
 {
+    // the following custom code is so that we can finally start using virtual fullscreen mode
+    // without suffering from the cursor being out of screen bounds.
+    // all code should refer to GetMousePosition instead of using Input.mousePosition directly.
+
+    private static float MouseX = 0;
+    private static float MouseY = 0;
+
+    public static void SetMousePosition(float deltaX, float deltaY)
+    {
+        MouseX = Mathf.Clamp(MouseX + deltaX, 0, Screen.width);
+        MouseY = Mathf.Clamp(MouseY + deltaY, 0, Screen.height);
+    }
+
     public static Vector3 GetMousePosition()
     {
-        Vector3 mPos = Vec3InvertY(Input.mousePosition);
-        mPos.x *= 100;
-        mPos.y *= 100;
-        return mPos;
+        //Vector3 mPos = new Vector3(MouseX, MouseY, 0);
+        //return mPos;
+        return new Vector3(Input.mousePosition.x, (Screen.height - Input.mousePosition.y), Input.mousePosition.z);
     }
 
     public static Vector3 Vec3InvertY(Vector3 _in)

@@ -104,6 +104,16 @@ public class MainCamera : MonoBehaviour {
                             fpstr += string.Format("\nHoveredObject: {0}", ((MapLogicUnit)ho).Template.Name);
                     }
                     else fpstr += "\nHoveredObject: <none>";
+
+                    MapLogicObject so = MapView.Instance.SelectedObject;
+                    if (so != null)
+                    {
+                        if (so.GetObjectType() == MapLogicObjectType.Structure)
+                            fpstr += string.Format("\nSelectedObject: {0}", ((MapLogicStructure)so).Class.DescText);
+                        else if (so.GetObjectType() == MapLogicObjectType.Monster)
+                            fpstr += string.Format("\nSelectedObject: {0}", ((MapLogicUnit)so).Template.Name);
+                    }
+                    else fpstr += "\nSelectedObject: <none>";
                 }
                 m_fpsr.Text = fpstr;
                 //fps_timer = 0;

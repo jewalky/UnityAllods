@@ -45,6 +45,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     private MapViewInfowindow Infowindow;
     private MapViewChat Chat;
 
+    public MapLogicObject SelectedObject { get; private set; }
     public MapLogicObject HoveredObject { get; private set; }
 
     // Use this for initialization
@@ -617,6 +618,24 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         {
             UpdateInput();
         }
+        else if (e.rawType == EventType.MouseDown)
+        {
+            // select unit if not selected yet
+            if (HoveredObject != null)
+            {
+                SelectedObject = HoveredObject;
+            }
+            else if (SelectedObject != null)
+            {
+                // try to walk.
+                if (SelectedObject.GetObjectType() == MapLogicObjectType.Monster)
+                {
+                    MapLogicUnit unit = (MapLogicUnit)SelectedObject;
+                    unit.WalkX = MouseCellX;
+                    unit.WalkY = MouseCellY;
+                }
+            }
+        }
 
         return false;
     }
@@ -642,7 +661,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             float h = h1 * (1f - cXFrac) + h2 * cXFrac;
             if (mPos.y < h)
             {
-                _MouseCellY = y;
+                _MouseCellY = y - 1;
                 break;
             }
         }
@@ -687,6 +706,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
 
         if (o != null && (o.GameScript is IMapViewSelfie))
             Infowindow.Viewer = (IMapViewSelfie)o.GameScript;
+        else if (SelectedObject != null && (SelectedObject.GameScript is IMapViewSelfie))
+            Infowindow.Viewer = (IMapViewSelfie)SelectedObject.GameScript;
         else Infowindow.Viewer = null;
         HoveredObject = o;
 

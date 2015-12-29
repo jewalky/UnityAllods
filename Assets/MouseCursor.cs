@@ -66,8 +66,12 @@ public class MouseCursor : MonoBehaviour {
         if (GameManager.Instance.IsHeadless) // don't use cursor in graphics-less mode
             return;
 
-        if (!Application.isEditor) // if we remove cursor in editor, it'll affect WHOLE DESKTOP
+        if (!Application.isEditor)
+        {
             Cursor.visible = false;
+            //Cursor.lockState = CursorLockMode.Locked;
+            Cursor.lockState = CursorLockMode.Confined;
+        }
 
         CurDefault = CreateCursor("graphics/cursors/default/sprites.16a", 4, 4, 0);
         CurSelect = CreateCursor("graphics/cursors/select/sprites.16a", 3, 3, 0);
@@ -78,7 +82,16 @@ public class MouseCursor : MonoBehaviour {
         transform.localScale = new Vector3(1, 1);
         Renderer = GetComponent<SpriteRenderer>();
     }
-	
+
+    public void Update()
+    {
+        /*Vector3 deltaPos = Input.mousePosition - oldPosition;
+        Utils.SetMousePosition(deltaPos.x, deltaPos.y);*/
+        float xDelta = Input.GetAxis("MouseX") * 2.5f;
+        float yDelta = Input.GetAxis("MouseY") * 2.5f;
+        Utils.SetMousePosition(xDelta, yDelta);
+    }
+
     // set / display cursor (called from the camera)
 	public static void OnPreRenderCursor()
     {
@@ -106,7 +119,9 @@ public class MouseCursor : MonoBehaviour {
         else CurrentCursorFrame = 0;
 
         Renderer.enabled = true;
-        Vector3 mPos = Utils.Vec3InvertY(Input.mousePosition);
+        Vector3 mPos = Utils.GetMousePosition();
+        mPos.x /= 100;
+        mPos.y /= 100;
         Instance.transform.position = new Vector3(mPos.x - (float)CurrentCursor.Xoffs / 100, mPos.y - (float)CurrentCursor.Yoffs / 100, MainCamera.MouseZ);
         Renderer.sprite = CurrentCursor.Sprites[CurrentCursorFrame];
         Renderer.material.shader = MainCamera.MainShaderPaletted;

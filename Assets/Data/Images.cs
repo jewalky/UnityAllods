@@ -261,16 +261,36 @@ public class Images
             internal Color[] _Colors;
             internal Texture2D _Texture;
 
+            private int GetNearestPOT(int v)
+            {
+                if (v <= 1) return v;
+                int vv = 1;
+                for (int i = 0; i < 128; i++)
+                {
+                    vv *= 2;
+                    if (vv >= v)
+                        return vv;
+                }
+
+                return 0;
+            }
+
             public Texture2D Texture
             {
                 get
                 {
                     if (_Texture == null)
                     {
+                        // this is inefficient, but this is the ONLY way it works.
                         _Texture = new Texture2D(Width, Height, TextureFormat.RGHalf, false);
                         _Texture.filterMode = FilterMode.Point;
-                        _Texture.SetPixels(_Colors);
-                        _Texture.Apply(false, true);
+                        _Texture.SetPixels(0, 0, Width, Height, _Colors);
+                        GameObject.Destroy(_Texture);
+                        Texture2D nTex = new Texture2D(0, 0, TextureFormat.RGHalf, false);
+                        nTex.PackTextures(new Texture2D[] { _Texture }, 0);
+                        nTex.Apply(false, true);
+                        _Texture = nTex;
+                        _Texture.filterMode = FilterMode.Point;
                         _Colors = null;
                     }
 

@@ -23,12 +23,13 @@ public class MapViewObstacle : MapViewObject
     private MeshFilter ShadowFilter;
     private Mesh ShadowMesh;
 
-    private Mesh UpdateMesh(Images.AllodsSprite sprite, int frame, Mesh mesh, float shadowOffs, bool first)
+    private Mesh UpdateMesh(Images.AllodsSpriteSeparate sprite, int frame, Mesh mesh, float shadowOffs, bool first)
     {
-        Rect texRect = sprite.AtlasRects[frame];
-
-        float sW = sprite.Sprites[frame].rect.width;
-        float sH = sprite.Sprites[frame].rect.height;
+        Texture2D sTex = sprite.Frames[frame].Texture;
+        float sW = sprite.Frames[frame].Width;
+        float sH = sprite.Frames[frame].Height;
+        float tMaxX = sW / sTex.width;
+        float tMaxY = sH / sTex.height;
 
         float shadowOffsReal = shadowOffs * sH;
         float shadowOffsXLeft = -shadowOffsReal * (1f - LogicObstacle.Class.CenterY);
@@ -41,10 +42,10 @@ public class MapViewObstacle : MapViewObject
         qv[pp++] = new Vector3(shadowOffsXLeft, sH, 0);
 
         Vector2[] quv = new Vector2[4];
-        quv[0] = new Vector2(texRect.xMin, texRect.yMin);
-        quv[1] = new Vector2(texRect.xMax, texRect.yMin);
-        quv[2] = new Vector2(texRect.xMax, texRect.yMax);
-        quv[3] = new Vector2(texRect.xMin, texRect.yMax);
+        quv[0] = new Vector2(0, 0);
+        quv[1] = new Vector2(tMaxX, 0);
+        quv[2] = new Vector2(tMaxX, tMaxY);
+        quv[3] = new Vector2(0, tMaxY);
 
         mesh.vertices = qv;
         mesh.uv = quv;
@@ -60,6 +61,9 @@ public class MapViewObstacle : MapViewObject
                 qt[i] = i;
             mesh.SetIndices(qt, MeshTopology.Quads, 0);
         }
+
+        Renderer.material.mainTexture = sTex;
+        ShadowRenderer.material.mainTexture = sTex;
 
         return mesh;
     }
@@ -113,24 +117,23 @@ public class MapViewObstacle : MapViewObject
             Renderer.enabled = true;
             ShadowRenderer.enabled = true;
 
-            Images.AllodsSprite sprites = LogicObstacle.Class.File.File;
+            Images.AllodsSpriteSeparate sprites = LogicObstacle.Class.File.File;
 
             if (!spriteSet)
             {
                 LogicObstacle.Class.File.UpdateSprite();
                 sprites = LogicObstacle.Class.File.File;
-                Renderer.material = LogicObstacle.Class.File.FileMaterial;
+                Renderer.material = new Material(MainCamera.MainShaderPaletted);
                 Renderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
-                ShadowRenderer.material = LogicObstacle.Class.File.FileMaterial;
+                ShadowRenderer.material = Renderer.material;
                 ShadowRenderer.material.color = new Color(0, 0, 0, 0.5f);
-                ShadowRenderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
                 spriteSet = true;
             }
 
             int actualFrame = LogicObstacle.Class.Frames[LogicObstacle.CurrentFrame].Frame + LogicObstacle.Class.Index;
             Vector2 xP = MapView.Instance.MapToScreenCoords(LogicObject.X + 0.5f, LogicObject.Y + 0.5f, 1, 1);
-            transform.localPosition = new Vector3(xP.x - sprites.Sprites[actualFrame].rect.width * LogicObstacle.Class.CenterX,
-                                                    xP.y - sprites.Sprites[actualFrame].rect.height * LogicObstacle.Class.CenterY,
+            transform.localPosition = new Vector3(xP.x - (float)sprites.Frames[actualFrame].Width * LogicObstacle.Class.CenterX,
+                                                    xP.y - (float)sprites.Frames[actualFrame].Height * LogicObstacle.Class.CenterY,
                                                     MakeZFromY(xP.y)); // order sprites by y coordinate basically
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicObstacle.Class.CenterX));
             //Renderer.sprite = sprites.Sprites[actualFrame];

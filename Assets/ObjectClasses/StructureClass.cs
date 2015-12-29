@@ -38,7 +38,43 @@ public class StructureClass
     public int LightPulse = MagicIntNull;
 }
 
-public class StructureFile : ObstacleFile { }
+
+
+public class StructureFile
+{
+    public Images.AllodsSprite File = null;
+    public Images.AllodsSprite FileB = null;
+    public Material FileMaterial = null;
+    public string FileName = "";
+    private bool Loaded = false;
+
+    public void UpdateSprite()
+    {
+        if (!Loaded)
+        {
+            try
+            {
+                File = Images.Load256(FileName + ".256");
+                FileMaterial = new Material(MainCamera.MainShaderPaletted);
+                FileMaterial.mainTexture = File.Atlas;
+                FileMaterial.SetTexture("_Palette", File.OwnPalette);
+            }
+            catch (AllodsException)
+            {
+                File = null;
+            }
+            try
+            {
+                FileB = Images.Load256(FileName + "b.256");
+            }
+            catch (AllodsException)
+            {
+                FileB = null;
+            }
+            Loaded = true;
+        }
+    }
+}
 
 public class StructureClassLoader
 {

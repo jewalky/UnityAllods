@@ -25,9 +25,11 @@ public class MapViewUnit : MapViewObject
 
     private Mesh UpdateMesh(Images.AllodsSpriteSeparate sprite, int frame, Mesh mesh, float shadowOffs, bool first)
     {
+        Texture2D sTex = sprite.Frames[frame].Texture;
         float sW = sprite.Frames[frame].Width;
         float sH = sprite.Frames[frame].Height;
-        Texture2D sTex = sprite.Frames[frame].Texture;
+        float tMaxX = sW / sTex.width;
+        float tMaxY = sH / sTex.height;
 
         float shadowOffsReal = shadowOffs * sH;
         float shadowOffsXLeft = -shadowOffsReal * (1f - LogicUnit.Class.CenterY);
@@ -41,9 +43,9 @@ public class MapViewUnit : MapViewObject
 
         Vector2[] quv = new Vector2[4];
         quv[0] = new Vector2(0, 0);
-        quv[1] = new Vector2(1, 0);
-        quv[2] = new Vector2(1, 1);
-        quv[3] = new Vector2(0, 1);
+        quv[1] = new Vector2(tMaxX, 0);
+        quv[2] = new Vector2(tMaxX, tMaxY);
+        quv[3] = new Vector2(0, tMaxY);
 
         mesh.vertices = qv;
         mesh.uv = quv;
@@ -130,8 +132,8 @@ public class MapViewUnit : MapViewObject
 
             int actualFrame = LogicUnit.Class.Index; // draw frame 0 of each unit
             Vector2 xP = MapView.Instance.MapToScreenCoords(LogicObject.X + 0.5f, LogicObject.Y + 0.5f, 1, 1);
-            transform.localPosition = new Vector3(xP.x - sprites.Frames[actualFrame].Width * LogicUnit.Class.CenterX,
-                                                    xP.y - sprites.Frames[actualFrame].Height * LogicUnit.Class.CenterY,
+            transform.localPosition = new Vector3(xP.x - (float)sprites.Frames[actualFrame].Width * LogicUnit.Class.CenterX,
+                                                    xP.y - (float)sprites.Frames[actualFrame].Height * LogicUnit.Class.CenterY,
                                                     MakeZFromY(xP.y)); // order sprites by y coordinate basically
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicUnit.Class.CenterX));
             //Renderer.sprite = sprites.Sprites[actualFrame];

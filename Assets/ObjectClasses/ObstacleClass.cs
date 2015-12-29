@@ -27,9 +27,8 @@ public class ObstacleClass
 
 public class ObstacleFile
 {
-    public Images.AllodsSprite File = null;
-    public Images.AllodsSprite FileB = null;
-    public Material FileMaterial = null;
+    public Images.AllodsSpriteSeparate File = null;
+    public Images.AllodsSpriteSeparate FileB = null;
     public string FileName = "";
     private bool Loaded = false;
 
@@ -39,20 +38,17 @@ public class ObstacleFile
         {
             try
             {
-                File = Images.Load256(FileName + ".256");
-                FileMaterial = new Material(MainCamera.MainShaderPaletted);
-                FileMaterial.mainTexture = File.Atlas;
-                FileMaterial.SetTexture("_Palette", File.OwnPalette);
+                File = Images.Load256Separate(FileName + ".256");
             }
-            catch(AllodsException)
+            catch (AllodsException)
             {
                 File = null;
             }
             try
             {
-                FileB = Images.Load256(FileName + "b.256");
+                FileB = Images.Load256Separate(FileName + "b.256");
             }
-            catch(AllodsException)
+            catch (AllodsException)
             {
                 FileB = null;
             }

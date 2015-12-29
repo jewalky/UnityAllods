@@ -567,6 +567,14 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                             MapViewChat.Instance.AddChatMessage(MapLogicPlayer.AllColorsSystem, Locale.Main[108 + MapLogic.Instance.Speed]);
                     }
                     return true;
+                case KeyCode.Escape:
+                    // open main menu!
+                    // well, just window for now.
+                    {
+                        Window wnd = Utils.CreateObjectWithScript<Window>();
+                        Debug.Log(string.Format("created a window!"));
+                    }
+                    return true;
             }
         }
         else if (e.type == EventType.KeyUp)

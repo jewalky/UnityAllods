@@ -48,7 +48,7 @@
 				float4 vertex   : SV_POSITION;
 				fixed4 color : COLOR;
 				half2 texcoord  : TEXCOORD0;
-				float4 vertexS  : TANGENT;
+				float4 vertexS  : TEXCOORD2;
 			};
 
 			fixed4 _Color;

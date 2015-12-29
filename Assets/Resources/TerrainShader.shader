@@ -50,7 +50,7 @@
 				fixed4 color : COLOR;
 				half2 texcoord  : TEXCOORD0;
 				half2 texcoord2 : TEXCOORD1;
-				float4 vertexS  : TANGENT; // we don't use this anyway
+				float4 vertexS  : TEXCOORD2; // we don't use this anyway
 			};
 
 			fixed4 _Color;

@@ -4,9 +4,9 @@ using System.IO;
 using System;
 
 public class MainCamera : MonoBehaviour {
-    public static readonly float OverlayZ = -83;
-    public static readonly float InterfaceZ = -84;
-    public static readonly float MouseZ = -85;
+    public const float OverlayZ = -83;
+    public const float InterfaceZ = -84;
+    public const float MouseZ = -95;
 
     private static MainCamera _Instance;
     public static MainCamera Instance

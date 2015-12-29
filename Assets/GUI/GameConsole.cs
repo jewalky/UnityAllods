@@ -60,7 +60,7 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         BgRenderer.material = new Material(MainCamera.MainShader);
         BgRenderer.material.color = new Color(0, 0, 0, 0.6f);
         BgRenderer.enabled = false;
-        transform.position = new Vector3(0, 0, MainCamera.InterfaceZ - 0.99f);
+        transform.position = new Vector3(0, 0, MainCamera.MouseZ + 0.01f);
 
         // prepare text. this renderer will wrap lines based on screen width.
         TextRendererA = new AllodsTextRenderer(Fonts.Font2, Font.Align.Left, Screen.width - 4, 0, true);

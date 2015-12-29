@@ -69,6 +69,28 @@ public partial class Utils
         foreach (Renderer renderer in renderers)
             renderer.enabled = enabled;
     }
+
+    public static void PutQuadInMesh(Vector3[] qv, Vector2[] quv, Color[] qc, ref int pp, ref int ppt, ref int ppc, int x, int y, int w, int h, Rect texRect, Color color)
+    {
+        qv[pp++] = new Vector3(x, y, 0);
+        qv[pp++] = new Vector3(x + w, y, 0);
+        qv[pp++] = new Vector3(x + w, y + h, 0);
+        qv[pp++] = new Vector3(x, y + h, 0);
+        if (quv != null)
+        {
+            quv[ppt++] = new Vector2(texRect.xMin, texRect.yMin);
+            quv[ppt++] = new Vector2(texRect.xMax, texRect.yMin);
+            quv[ppt++] = new Vector2(texRect.xMax, texRect.yMax);
+            quv[ppt++] = new Vector2(texRect.xMin, texRect.yMax);
+        }
+        if (qc != null)
+        {
+            qc[ppc++] = color;
+            qc[ppc++] = color;
+            qc[ppc++] = color;
+            qc[ppc++] = color;
+        }
+    }
 }
 
 #if UNITY_EDITOR

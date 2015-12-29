@@ -23,6 +23,42 @@ public class UiManager : MonoBehaviour
         }
     }
 
+    // each Window occupies certain Z position in the interface layer. Interface layer is a 1..10 field, and a window occupies approximately 0.05 in this field.
+    // shadow is 0.00, background is 0.01, element shadows are 0.02, elements are 0.03, element overlays are 0.04.
+    // as such, there's a maximum of 200 windows at once.
+    public float TopZ = MainCamera.InterfaceZ;
+    private List<MonoBehaviour> Windows = new List<MonoBehaviour>();
+
+    private void UpdateTopZ()
+    {
+        TopZ = MainCamera.InterfaceZ;
+        foreach (MonoBehaviour wnd in Windows)
+        {
+            if (wnd.transform.position.z - 0.05f < TopZ)
+                TopZ = wnd.transform.position.z - 0.05f;
+        }
+    }
+
+    public float RegisterWindow(MonoBehaviour wnd)
+    {
+        Windows.Add(wnd);
+        UpdateTopZ();
+        return TopZ;
+    }
+
+    public void UnregisterWindow(MonoBehaviour wnd)
+    {
+        Windows.Remove(wnd);
+        UpdateTopZ();
+    }
+
+    public void ClearWindows()
+    {
+        foreach (MonoBehaviour wnd in Windows)
+            Destroy(wnd);
+        Windows.Clear();
+    }
+
     void Start()
     {
 

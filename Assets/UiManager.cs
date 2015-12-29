@@ -68,9 +68,54 @@ public class UiManager : MonoBehaviour
     private List<MonoBehaviour> Processors = new List<MonoBehaviour>();
     private List<bool> ProcessorsEnabled = new List<bool>();
 
+
+    private float lastMouseX = 0;
+    private float lastMouseY = 0;
     void Update()
     {
         GotProcessors = false;
+        EnumerateObjects();
+        // get all events.
+        Event e = new Event();
+        while (Event.PopEvent(e))
+        {
+            // pressing PrintScreen or Alt+S results in screenshot unconditionally.
+            if (e.type == EventType.KeyDown &&
+                (e.keyCode == KeyCode.Print ||
+                 e.keyCode == KeyCode.SysReq ||
+                (e.keyCode == KeyCode.S && e.alt)))
+            {
+                MainCamera.Instance.TakeScreenshot();
+                return;
+            }
+
+            // reverse iteration
+            bool EventIsGlobal = (e.type == EventType.KeyUp ||
+                                  e.type == EventType.MouseUp);
+            for (int i = Processors.Count - 1; i >= 0; i--)
+            {
+                // check if processor's renderer is enabled. implicitly don't give any events to invisible objects.
+                if (!ProcessorsEnabled[i]) continue;
+                if (((IUiEventProcessor)Processors[i]).ProcessEvent(e) && !EventIsGlobal)
+                    break;
+            }
+        }
+
+        // also fake mouse event for each processor
+        Vector2 mPos = Utils.GetMousePosition();
+        if (mPos.x != lastMouseX ||
+            mPos.y != lastMouseY)
+        {
+            Event ef = new Event();
+            ef.type = EventType.MouseMove;
+            for (int i = Processors.Count - 1; i >= 0; i--)
+            {
+                // check if processor's renderer is enabled. implicitly don't give any events to invisible objects.
+                if (!ProcessorsEnabled[i]) continue;
+                if (((IUiEventProcessor)Processors[i]).ProcessEvent(ef))
+                    break;
+            }
+        }
     }
 
     public void Subscribe(IUiEventProcessor mb)
@@ -118,31 +163,5 @@ public class UiManager : MonoBehaviour
         }
 
         GotProcessors = true;
-    }
-
-    void OnGUI()
-    {
-        // pressing PrintScreen or Alt+S results in screenshot unconditionally.
-        if (Event.current.type == EventType.KeyDown &&
-            (Event.current.keyCode == KeyCode.Print ||
-             Event.current.keyCode == KeyCode.SysReq ||
-            (Event.current.keyCode == KeyCode.S && Event.current.alt)))
-        {
-            MainCamera.Instance.TakeScreenshot();
-            return;
-        }
-
-        // send event.current to every object that has subscribed. if some object processes an event, don't send it further.
-        EnumerateObjects();
-        // reverse iteration
-        bool EventIsGlobal = (Event.current.type == EventType.KeyUp ||
-                              Event.current.type == EventType.MouseUp);
-        for (int i = Processors.Count - 1; i >= 0; i--)
-        {
-            // check if processor's renderer is enabled. implicitly don't give any events to invisible objects.
-            if (!ProcessorsEnabled[i]) continue;
-            if (((IUiEventProcessor)Processors[i]).ProcessEvent(Event.current) && !EventIsGlobal)
-                break;
-        }
     }
 }

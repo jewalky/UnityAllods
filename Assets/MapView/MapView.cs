@@ -42,7 +42,10 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     }
 
     private MapViewMiniMap MiniMap;
+    private MapViewInfowindow Infowindow;
     private MapViewChat Chat;
+
+    public MapLogicObject HoveredObject { get; private set; }
 
     // Use this for initialization
     void Start ()
@@ -59,6 +62,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         MiniMap.transform.parent = UiManager.Instance.transform; // despite it being a part of minimap, it should be in UiManager since it doesn't move unlike the MapView
         Chat = Utils.CreateObjectWithScript<MapViewChat>();
         Chat.transform.parent = UiManager.Instance.transform;
+        Infowindow = Utils.CreateObjectWithScript<MapViewInfowindow>();
+        Infowindow.transform.parent = UiManager.Instance.transform;
     }
 
     private Rect _VisibleRect = new Rect(0, 0, 0, 0);
@@ -498,6 +503,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         if (!MapLogic.Instance.IsLoaded)
         {
             Utils.SetRendererEnabledWithChildren(MiniMap.gameObject, false);
+            Utils.SetRendererEnabledWithChildren(Infowindow.gameObject, false);
             return;
         }
 
@@ -505,6 +511,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         else GridMeshMaterial.color = new Color(0, 0, 0, 0);
 
         Utils.SetRendererEnabledWithChildren(MiniMap.gameObject, true);
+        Utils.SetRendererEnabledWithChildren(Infowindow.gameObject, true);
         // update lighting.
         Texture2D lightTex = MapLogic.Instance.CheckLightingTexture();
         if (lightTex != null)
@@ -513,7 +520,6 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         if (fowTex != null)
             UpdateFOW(fowTex);
 
-        UpdateInput();
         UpdateLogic();
 
         int waterAnimFrameNew = (MapLogic.Instance.LevelTime % 20) / 5;
@@ -599,18 +605,23 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                     return true;
             }
         }
+        else if (e.type == EventType.MouseMove)
+        {
+            UpdateInput();
+        }
 
         return false;
     }
 
     void UpdateInput()
     {
+        if (!MapLogic.Instance.IsLoaded)
+            return;
+
         // update mouse x/y
         int oldMouseCellX = MouseCellX;
         int oldMouseCellY = MouseCellY;
-        Vector3 mPos = Utils.Vec3InvertY(Input.mousePosition);
-        mPos.x *= 100;
-        mPos.y *= 100;
+        Vector3 mPos = Utils.GetMousePosition();
         mPos.x += ScrollX * 32;
         mPos.y += ScrollY * 32;
         float cXFrac = (mPos.x / 32) - Mathf.Floor(mPos.x / 32);
@@ -634,6 +645,49 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             oldMouseCellY != MouseCellY)
         {
             MapLogic.Instance.SetTestingVisibility(MouseCellX, MouseCellY, 5);
+        }
+
+        // PERMANENT (x2)
+        // check currently hovered object
+        MapNode[,] nodes = MapLogic.Instance.Nodes;
+        MapLogicObject o = null;
+        float oZ = 0;
+        for (int y = (int)_VisibleRect.yMin; y <= _VisibleRect.yMax; y++)
+        {
+            for (int x = (int)_VisibleRect.xMin; x <= _VisibleRect.xMax; x++)
+            {
+                foreach (MapLogicObject mobj in nodes[x, y].Objects)
+                {
+                    if (mobj.GameObject == null || mobj.GameScript == null)
+                        continue;
+
+                    //
+                    if (!(mobj.GameScript is IMapViewSelectable) || !((IMapViewSelectable)mobj.GameScript).IsSelected((int)mPos.x, (int)mPos.y))
+                        continue;
+
+                    if (mobj.GameObject.transform.position.z < oZ)
+                    {
+                        o = mobj;
+                        oZ = mobj.GameObject.transform.position.z;
+                    }
+                }
+            }
+        }
+
+        MouseCursor.SetCursor(MouseCursor.CurDefault);
+        bool hoveringDarkness = (nodes[MouseCellX, MouseCellY].Flags & MapNodeFlags.Visible) == 0;
+
+        if (o != null && (o.GameScript is IMapViewSelfie))
+            Infowindow.Viewer = (IMapViewSelfie)o.GameScript;
+        else Infowindow.Viewer = null;
+        HoveredObject = o;
+
+        if (!hoveringDarkness && HoveredObject != null)
+        {
+            // hovered usable buildings have different cursor picture.
+            if (HoveredObject.GetObjectType() == MapLogicObjectType.Structure &&
+                ((MapLogicStructure)HoveredObject).Class.Usable) MouseCursor.SetCursor(MouseCursor.CurSelectStructure);
+            else MouseCursor.SetCursor(MouseCursor.CurSelect);
         }
 
         // PERMANENT

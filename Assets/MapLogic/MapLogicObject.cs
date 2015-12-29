@@ -31,6 +31,7 @@ public class MapLogicObject : IDisposable
     public int Width = 0;
     public int Height = 0;
     public GameObject GameObject = null;
+    public MonoBehaviour GameScript = null;
     public readonly int ID = MapLogic.Instance.TopObjectID;
     public bool DoUpdateView = false;
 
@@ -57,6 +58,7 @@ public class MapLogicObject : IDisposable
     {
         MapLogic.Instance.Objects.Add(this);
         GameObject = MapView.Instance.CreateObject(GetGameObjectType(), this);
+        GameScript = (MonoBehaviour)GameObject.GetComponent(GetGameObjectType());
     }
 
     public virtual void Dispose()

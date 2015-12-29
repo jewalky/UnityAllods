@@ -11,6 +11,14 @@ using System.Diagnostics;
 
 public partial class Utils
 {
+    public static Vector3 GetMousePosition()
+    {
+        Vector3 mPos = Vec3InvertY(Input.mousePosition);
+        mPos.x *= 100;
+        mPos.y *= 100;
+        return mPos;
+    }
+
     public static Vector3 Vec3InvertY(Vector3 _in)
     {
        return new Vector3(_in.x / 100, ((float)Screen.height - _in.y) / 100, _in.z / 100);

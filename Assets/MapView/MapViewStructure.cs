@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class MapViewStructure : MapViewObject
+public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfie
 {
     public MapLogicStructure LogicStructure
     {
@@ -31,6 +31,13 @@ public class MapViewStructure : MapViewObject
     private MeshRenderer ShadowRenderer = null;
     private MeshFilter ShadowFilter = null;
     private Mesh ShadowMesh = null;
+
+
+    // infowindow stuff
+    private GameObject TexObject;
+    private MeshRenderer TexRenderer;
+    private Material TexMaterial;
+
 
     private Mesh UpdateMesh(Images.AllodsSprite sprite, int frame, Mesh mesh, int x, int y, int w, int h, float shadowOffs, bool first, bool onlyColors)
     {
@@ -273,6 +280,63 @@ public class MapViewStructure : MapViewObject
             DestroyImmediate(OverlayFilter.mesh, true);
         if (ShadowFilter != null && ShadowFilter.mesh != null)
             DestroyImmediate(ShadowFilter.mesh, true);
+    }
+
+    public bool IsSelected(int x, int y)
+    {
+        if (LogicStructure.Class.Flat || (LogicStructure.Class.Indestructible && !LogicStructure.Class.Usable))
+            return false; // these can't be selected and don't have a picture
+        int cx = x - (int)transform.localPosition.x;
+        int cy = y - (int)transform.localPosition.y;
+        if (cx > LogicStructure.Class.SelectionX1 &&
+            cx < LogicStructure.Class.SelectionX2 &&
+            cy > LogicStructure.Class.SelectionY1 &&
+            cy < LogicStructure.Class.SelectionY2) return true;
+        return false;
+    }
+
+    public bool ProcessEventPic(Event e)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool ProcessEventInfo(Event e)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void DisplayPic(bool on, Transform parent)
+    {
+        if (on)
+        {
+            // load infowindow texture.
+            if (LogicStructure.Class.PictureFile == null)
+                LogicStructure.Class.PictureFile = Images.LoadImage(LogicStructure.Class.Picture, 0, Images.ImageType.AllodsBMP);
+            // init infowindow
+            if (TexMaterial == null)
+                TexMaterial = new Material(MainCamera.MainShader);
+            TexObject = Utils.CreatePrimitive(PrimitiveType.Quad);
+            TexRenderer = TexObject.GetComponent<MeshRenderer>();
+            TexRenderer.material = TexMaterial;
+            TexRenderer.material.mainTexture = LogicStructure.Class.PictureFile;
+            TexRenderer.enabled = true;
+            TexRenderer.transform.parent = parent;
+            TexRenderer.transform.localPosition = new Vector3((float)LogicStructure.Class.PictureFile.width / 2 + 16,
+                                                         (float)LogicStructure.Class.PictureFile.height / 2 + 2, -0.01f);
+            TexRenderer.transform.localScale = new Vector3(LogicStructure.Class.PictureFile.width,
+                                                           LogicStructure.Class.PictureFile.height, 1);
+        }
+        else
+        {
+            Destroy(TexObject);
+            TexObject = null;
+            TexRenderer = null;
+        }
+    }
+
+    public void DisplayInfo(bool on, Transform parent)
+    {
+        throw new NotImplementedException();
     }
 }
  

@@ -12,10 +12,20 @@ public class MouseCursor : MonoBehaviour {
         internal float Delay;
     }
 
-    public MapCursorSettings CurrentCursor = null;
-    public Texture2D tex = null;
-    private float LastCursorTime = 0;
-    private int CurrentCursorFrame = 0;
+    private static MouseCursor _Instance;
+    public static MouseCursor Instance
+    {
+        get
+        {
+            if (_Instance == null) _Instance = FindObjectOfType<MouseCursor>();
+            return _Instance;
+        }
+    }
+
+    public static MapCursorSettings CurrentCursor = null;
+    public static Texture2D tex = null;
+    private static float LastCursorTime = 0;
+    private static int CurrentCursorFrame = 0;
     
     public static MapCursorSettings CreateCursor(string filename, int x, int y, float delay)
     {
@@ -31,15 +41,13 @@ public class MouseCursor : MonoBehaviour {
 
     public static void SetCursor(MapCursorSettings mcs)
     {
-        MouseCursor instance = GameObject.FindObjectOfType<MouseCursor>();
-        if (instance.CurrentCursor == mcs)
+        if (CurrentCursor == mcs)
             return;
-        instance.CurrentCursor = mcs;
-        if (instance.CurrentCursor == null)
+        CurrentCursor = mcs;
+        if (CurrentCursor == null)
             return;
-        instance.LastCursorTime = Time.unscaledTime;
-        instance.CurrentCursorFrame = 0;
-        instance.tex = instance.CurrentCursor.Sprite.Atlas;
+        LastCursorTime = Time.unscaledTime;
+        CurrentCursorFrame = 0;
     }
 
     //public MapCus
@@ -48,9 +56,11 @@ public class MouseCursor : MonoBehaviour {
     //Texture2D[] spritePalettes = new Texture2D[5];
     // Use this for initialization
     public static MapCursorSettings CurDefault = null;
+    public static MapCursorSettings CurSelect = null;
+    public static MapCursorSettings CurSelectStructure = null;
     public static MapCursorSettings CurWait = null;
 
-    private SpriteRenderer Renderer = null;
+    private static SpriteRenderer Renderer = null;
     void Start ()
     {
         if (GameManager.Instance.IsHeadless) // don't use cursor in graphics-less mode
@@ -60,6 +70,8 @@ public class MouseCursor : MonoBehaviour {
             Cursor.visible = false;
 
         CurDefault = CreateCursor("graphics/cursors/default/sprites.16a", 4, 4, 0);
+        CurSelect = CreateCursor("graphics/cursors/select/sprites.16a", 3, 3, 0);
+        CurSelectStructure = CreateCursor("graphics/cursors/town/sprites.16a", 16, 16, 0);
         CurWait = CreateCursor("graphics/cursors/wait/sprites.16a", 16, 16, 0.05f);
         SetCursor(CurDefault);
 
@@ -67,8 +79,8 @@ public class MouseCursor : MonoBehaviour {
         Renderer = GetComponent<SpriteRenderer>();
     }
 	
-	// Update is called once per frame
-	void Update ()
+    // set / display cursor (called from the camera)
+	public static void OnPreRenderCursor()
     {
         if (GameManager.Instance.IsHeadless)
             return;
@@ -95,7 +107,7 @@ public class MouseCursor : MonoBehaviour {
 
         Renderer.enabled = true;
         Vector3 mPos = Utils.Vec3InvertY(Input.mousePosition);
-        transform.position = new Vector3(mPos.x - (float)CurrentCursor.Xoffs / 100, mPos.y - (float)CurrentCursor.Yoffs / 100, MainCamera.MouseZ);
+        Instance.transform.position = new Vector3(mPos.x - (float)CurrentCursor.Xoffs / 100, mPos.y - (float)CurrentCursor.Yoffs / 100, MainCamera.MouseZ);
         Renderer.sprite = CurrentCursor.Sprites[CurrentCursorFrame];
         Renderer.material.shader = MainCamera.MainShaderPaletted;
         Renderer.material.SetTexture("_Palette", CurrentCursor.Sprite.OwnPalette);

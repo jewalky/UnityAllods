@@ -148,4 +148,9 @@ public class MainCamera : MonoBehaviour {
             GameConsole.Instance.WriteLine("Failed to save screenshot as \"{0}\"!", screenshotFileName);
         }
     }
+
+    void OnPreRender()
+    {
+        MouseCursor.OnPreRenderCursor();
+    }
 }

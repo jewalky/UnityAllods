@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class MapLogicStructure : MapLogicObject, IMapLogicDynlight, IMapLogicPlayerPawn, IDisposable
+public class MapStructure : MapObject, IDynlight, IPlayerPawn, IDisposable
 {
-    public override MapLogicObjectType GetObjectType() { return MapLogicObjectType.Structure; }
+    public override MapObjectType GetObjectType() { return MapObjectType.Structure; }
     protected override Type GetGameObjectType() { return typeof(MapViewStructure); }
 
     public StructureClass Class = null;
@@ -15,9 +15,9 @@ public class MapLogicStructure : MapLogicObject, IMapLogicDynlight, IMapLogicPla
     public int CurrentTime = 0;
     public int HealthMax = 0;
     public int Health = 0;
-    private MapLogicPlayer _Player;
+    private Player _Player;
 
-    public MapLogicPlayer Player
+    public Player Player
     {
         get
         {
@@ -33,7 +33,7 @@ public class MapLogicStructure : MapLogicObject, IMapLogicDynlight, IMapLogicPla
         }
     }
 
-    public MapLogicPlayer GetPlayer() { return _Player; }
+    public Player GetPlayer() { return _Player; }
     public bool IsBridge = false;
     public int Tag = 0;
     public float ScanRange = 0;
@@ -44,19 +44,19 @@ public class MapLogicStructure : MapLogicObject, IMapLogicDynlight, IMapLogicPla
     private int LightValue = 0; // basically, this gets set if structure is a dynlight
     public int GetLightValue() { return LightValue; }
 
-    public MapLogicStructure(int typeId)
+    public MapStructure(int typeId)
     {
         Class = StructureClassLoader.GetStructureClassById(typeId);
         if (Class == null)
-            Debug.Log(string.Format("Invalid structure created (typeId={0})", typeId));
+            Debug.LogFormat("Invalid structure created (typeId={0})", typeId);
         else InitStructure();
     }
 
-    public MapLogicStructure(string name)
+    public MapStructure(string name)
     {
         Class = StructureClassLoader.GetStructureClassByName(name);
         if (Class == null)
-            Debug.Log(string.Format("Invalid structure created (name={0})", name));
+            Debug.LogFormat("Invalid structure created (name={0})", name);
         else InitStructure();
     }
 
@@ -72,7 +72,7 @@ public class MapLogicStructure : MapLogicObject, IMapLogicDynlight, IMapLogicPla
         Template = TemplateLoader.GetStructureById(Class.ID);
         if (Template == null)
         {
-            Debug.Log(string.Format("Invalid structure created (template not found, typeId={0})", Class.ID));
+            Debug.LogFormat("Invalid structure created (template not found, typeId={0})", Class.ID);
             Class = null;
             return;
         }

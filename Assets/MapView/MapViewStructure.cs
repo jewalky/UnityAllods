@@ -6,11 +6,11 @@ using UnityEngine;
 
 public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfie
 {
-    public MapLogicStructure LogicStructure
+    public MapStructure LogicStructure
     {
         get
         {
-            return (MapLogicStructure)LogicObject;
+            return (MapStructure)LogicObject;
         }
     }
 

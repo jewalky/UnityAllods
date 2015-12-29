@@ -77,7 +77,7 @@ public class Templates
                     if (isNotNull == 0)
                     {
                         if (Logging)
-                            Debug.Log("{0} is skipped (null byte set)");
+                            Debug.LogFormat("{0} is skipped (null byte set)", field.Name);
                         continue;
                     }
                 }
@@ -86,7 +86,7 @@ public class Templates
                 {
                     IList arr = (IList)field.GetValue(this);
                     if (Logging)
-                        Debug.Log(string.Format("{0} is {1} len {2}", field.Name, field.FieldType.Name, arr.Count));
+                        Debug.LogFormat("{0} is {1} len {2}", field.Name, field.FieldType.Name, arr.Count);
                     for (int i = 0; i < arr.Count; i++)
                         arr[i] = LoadObjectFromStream(field.FieldType.GetElementType(), br);
                 }
@@ -94,7 +94,7 @@ public class Templates
                 {
                     field.SetValue(this, LoadObjectFromStream(field.FieldType, br));
                     if (Logging)
-                        Debug.Log(string.Format("{0} is {1}, value = {2}", field.Name, field.FieldType.Name, field.GetValue(this)));
+                        Debug.LogFormat("{0} is {1}, value = {2}", field.Name, field.FieldType.Name, field.GetValue(this));
                     
                     // FieldCountController-marked fields control the "nullness" of this object.
                     // if the value read into this field was zero, we need to skip N bytes and not read the values further.

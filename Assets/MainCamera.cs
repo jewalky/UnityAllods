@@ -47,7 +47,7 @@ public class MainCamera : MonoBehaviour {
         camera.orthographicSize = Screen.height / 2;
         camera.transform.Translate((float)Screen.width / 2 / 100, (float)Screen.height / 2 / 100, 0, Space.World);
         camera.projectionMatrix *= Matrix4x4.Scale(new Vector3(100, -100, 1));
-        Debug.Log(string.Format("{0}x{1}", Screen.width, Screen.height));
+        Debug.LogFormat("{0}x{1}", Screen.width, Screen.height);
 
         m_fpsr = new AllodsTextRenderer(Fonts.Font1, Font.Align.Right, Screen.width-176);
         m_fpso = m_fpsr.GetNewGameObject(0.01f, SceneRoot.Instance.transform);
@@ -95,23 +95,23 @@ public class MainCamera : MonoBehaviour {
                 {
                     fpstr += string.Format("\nMouseCell: {0},{1}\nScroll: {2},{3}", MapView.Instance.MouseCellX, MapView.Instance.MouseCellY,
                                                                                     MapView.Instance.ScrollX, MapView.Instance.ScrollY);
-                    MapLogicObject ho = MapView.Instance.HoveredObject;
+                    MapObject ho = MapView.Instance.HoveredObject;
                     if (ho != null)
                     {
-                        if (ho.GetObjectType() == MapLogicObjectType.Structure)
-                            fpstr += string.Format("\nHoveredObject: {0}", ((MapLogicStructure)ho).Class.DescText);
-                        else if (ho.GetObjectType() == MapLogicObjectType.Monster)
-                            fpstr += string.Format("\nHoveredObject: {0}", ((MapLogicUnit)ho).Template.Name);
+                        if (ho.GetObjectType() == MapObjectType.Structure)
+                            fpstr += string.Format("\nHoveredObject: {0}", ((MapStructure)ho).Class.DescText);
+                        else if (ho.GetObjectType() == MapObjectType.Monster)
+                            fpstr += string.Format("\nHoveredObject: {0}", ((MapUnit)ho).Template.Name);
                     }
                     else fpstr += "\nHoveredObject: <none>";
 
-                    MapLogicObject so = MapView.Instance.SelectedObject;
+                    MapObject so = MapView.Instance.SelectedObject;
                     if (so != null)
                     {
-                        if (so.GetObjectType() == MapLogicObjectType.Structure)
-                            fpstr += string.Format("\nSelectedObject: {0}", ((MapLogicStructure)so).Class.DescText);
-                        else if (so.GetObjectType() == MapLogicObjectType.Monster)
-                            fpstr += string.Format("\nSelectedObject: {0}", ((MapLogicUnit)so).Template.Name);
+                        if (so.GetObjectType() == MapObjectType.Structure)
+                            fpstr += string.Format("\nSelectedObject: {0}", ((MapStructure)so).Class.DescText);
+                        else if (so.GetObjectType() == MapObjectType.Monster)
+                            fpstr += string.Format("\nSelectedObject: {0}", ((MapUnit)so).Template.Name);
                     }
                     else fpstr += "\nSelectedObject: <none>";
                 }

@@ -6,11 +6,11 @@ using UnityEngine;
 
 public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie
 {
-    public MapLogicUnit LogicUnit
+    public MapUnit LogicUnit
     {
         get
         {
-            return (MapLogicUnit)LogicObject;
+            return (MapUnit)LogicObject;
         }
     }
 
@@ -32,7 +32,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie
 
     private bool DrawSelected = false;
 
-    private Mesh UpdateMesh(Images.AllodsSpriteSeparate sprite, int frame, Mesh mesh, float shadowOffs, bool first)
+    private Mesh UpdateMesh(Images.AllodsSpriteSeparate sprite, int frame, Mesh mesh, float shadowOffs, bool first, bool flip)
     {
         Texture2D sTex = sprite.Frames[frame].Texture;
         float sW = sprite.Frames[frame].Width;
@@ -56,19 +56,30 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie
         }
         else
         {
-            float shadowOffsX = shadowOffsReal;
+            float shadowOffs1 = shadowOffs * 64;
+            float shadowOffs2 = shadowOffs1 + sW;
             shadowOffs = -4;
-            qv[pp++] = new Vector3(shadowOffsX, shadowOffs, 0);
-            qv[pp++] = new Vector3(shadowOffsX + sW, shadowOffs, 0);
-            qv[pp++] = new Vector3(shadowOffsX + sW, shadowOffs + sH, 0);
-            qv[pp++] = new Vector3(shadowOffsX, shadowOffs + sH, 0);
+            qv[pp++] = new Vector3(shadowOffs1, shadowOffs, 0);
+            qv[pp++] = new Vector3(shadowOffs2, shadowOffs, 0);
+            qv[pp++] = new Vector3(shadowOffs2, shadowOffs + sH, 0);
+            qv[pp++] = new Vector3(shadowOffs1, shadowOffs + sH, 0);
         }
 
         Vector2[] quv = new Vector2[4];
-        quv[0] = new Vector2(0, 0);
-        quv[1] = new Vector2(tMaxX, 0);
-        quv[2] = new Vector2(tMaxX, tMaxY);
-        quv[3] = new Vector2(0, tMaxY);
+        if (!flip)
+        {
+            quv[0] = new Vector2(0, 0);
+            quv[1] = new Vector2(tMaxX, 0);
+            quv[2] = new Vector2(tMaxX, tMaxY);
+            quv[3] = new Vector2(0, tMaxY);
+        }
+        else
+        {
+            quv[0] = new Vector2(tMaxX, 0);
+            quv[1] = new Vector2(0, 0);
+            quv[2] = new Vector2(0, tMaxY);
+            quv[3] = new Vector2(tMaxX, tMaxY);
+        }
 
         mesh.vertices = qv;
         mesh.uv = quv;
@@ -157,15 +168,108 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie
             }
 
             int actualFrame = LogicUnit.Class.Index; // draw frame 0 of each unit
-            Vector2 xP = MapView.Instance.MapToScreenCoords(LogicObject.X + (float)LogicObject.Width / 2, LogicObject.Y + (float)LogicObject.Height / 2, LogicUnit.Width, LogicUnit.Height);
+
+            // first (idle) state is 0..8 frames. frames 1 to 7 are flipped. frames 0 and 8 aren't.
+            //  135 180 225
+            //  90      270
+            //  45   0  315
+            bool doFlip = false;
+            if (LogicUnit.VState == UnitVisualState.Rotating || (LogicUnit.VState == UnitVisualState.Idle && LogicUnit.Class.IdlePhases == 1))
+            {
+                if (LogicUnit.Class.Flip)
+                {
+                    if (LogicUnit.Angle < 180)
+                    {
+                        int actualAngle = LogicUnit.Angle * 8 / 180;
+                        actualFrame = actualAngle;
+                    }
+                    else
+                    {
+                        int actualAngle = (180 - (LogicUnit.Angle - 180)) * 8 / 180;
+                        actualFrame = actualAngle;
+                        doFlip = true;
+                    }
+                }
+                else
+                {
+                    int actualAngle = LogicUnit.Angle * 16 / 360;
+                    actualFrame = actualAngle;
+                }
+            }
+            else if (LogicUnit.VState == UnitVisualState.Idle)
+            {
+                if (LogicUnit.Class.IdlePhases > 1)
+                {
+                    int idlePhasesCount;
+                    // 0..4 rotations if flipped. 0..8 if not.
+                    if (LogicUnit.Class.Flip)
+                    {
+                        if (LogicUnit.Angle < 180)
+                        {
+                            int actualAngle = LogicUnit.Angle * 4 / 180;
+                            actualFrame = LogicUnit.Class.IdlePhases * actualAngle;
+                        }
+                        else
+                        {
+                            int actualAngle = (180 - (LogicUnit.Angle - 180)) * 4 / 180;
+                            actualFrame = LogicUnit.Class.IdlePhases * actualAngle;
+                            doFlip = true;
+                        }
+                        idlePhasesCount = 5 * LogicUnit.Class.IdlePhases;
+                    }
+                    else
+                    {
+                        int actualAngle = LogicUnit.Angle * 8 / 360;
+                        actualFrame = LogicUnit.Class.IdlePhases * actualAngle;
+                        idlePhasesCount = 8 * LogicUnit.Class.IdlePhases;
+                    }
+
+                    actualFrame = sprites.Frames.Length - idlePhasesCount + actualFrame;
+                    actualFrame += LogicUnit.Class.IdleFrames[LogicUnit.IdleFrame].Frame;
+                }
+            }
+            else if (LogicUnit.VState == UnitVisualState.Moving)
+            {
+                int moveSize = LogicUnit.Class.MoveBeginPhases + LogicUnit.Class.MovePhases;
+
+                if (LogicUnit.Class.Flip)
+                {
+                    if (LogicUnit.Angle < 180)
+                    {
+                        int actualAngle = LogicUnit.Angle * 4 / 180;
+                        actualFrame = 8 + moveSize * actualAngle;
+                    }
+                    else
+                    {
+                        int actualAngle = (180 - (LogicUnit.Angle - 180)) * 4 / 180;
+                        actualFrame = 8 + moveSize * actualAngle;
+                        doFlip = true;
+                    }
+                }
+                else
+                {
+                    int actualAngle = LogicUnit.Angle * 8 / 360;
+                    actualFrame = 16 + moveSize * actualAngle;
+                }
+
+                actualFrame += LogicUnit.Class.MoveBeginPhases; // movebeginphases, we don't animate this yet
+                actualFrame += LogicUnit.Class.MoveFrames[LogicUnit.MoveFrame].Frame;
+            }
+
+            Vector2 xP = MapView.Instance.MapToScreenCoords(LogicUnit.X + (float)LogicUnit.Width / 2 + LogicUnit.FracX,
+                                                            LogicUnit.Y + (float)LogicUnit.Height / 2 + LogicUnit.FracY,
+                                                            LogicUnit.Width, LogicUnit.Height);
             CurrentPoint = xP;
+            float zInv = 0;
+            if (LogicUnit.Template.MovementType == 3)
+                zInv = -128;
             transform.localPosition = new Vector3(xP.x - (float)sprites.Frames[actualFrame].Width * LogicUnit.Class.CenterX,
                                                     xP.y - (float)sprites.Frames[actualFrame].Height * LogicUnit.Class.CenterY,
-                                                    MakeZFromY(xP.y)); // order sprites by y coordinate basically
+                                                    MakeZFromY(xP.y)+zInv); // order sprites by y coordinate basically
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicUnit.Class.CenterX));
             //Renderer.sprite = sprites.Sprites[actualFrame];
-            ObstacleMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (ObstacleMesh == null));
-            ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null)); // 0.3 of sprite height
+            ObstacleMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (ObstacleMesh == null), doFlip);
+            ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null), doFlip); // 0.3 of sprite height
 
             LogicUnit.DoUpdateView = false;
         }

@@ -6,11 +6,11 @@ using UnityEngine;
 
 public class MapViewObstacle : MapViewObject
 {
-    public MapLogicObstacle LogicObstacle
+    public MapObstacle LogicObstacle
     {
         get
         {
-            return (MapLogicObstacle)LogicObject;
+            return (MapObstacle)LogicObject;
         }
     }
 

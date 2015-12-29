@@ -21,6 +21,7 @@ public class UnitClass
     public UnitClass Parent = null;
     public UnitFile File = null;
     public int Index = MagicIntNull;
+    public int IdlePhases = MagicIntNull;
     public int MovePhases = MagicIntNull;
     public int MoveBeginPhases = MagicIntNull;
     public int AttackPhases = MagicIntNull;
@@ -34,6 +35,7 @@ public class UnitClass
     public int SelectionY2 = MagicIntNull;
     public AnimationFrame[] AttackFrames = null;
     public AnimationFrame[] MoveFrames = null;
+    public AnimationFrame[] IdleFrames = null;
     public int DyingID = MagicIntNull;
     public UnitClass Dying = null;
     public int Palette = MagicIntNull;
@@ -162,6 +164,7 @@ public class UnitClassLoader
                 cls.File = Files[clsFile];
             cls.ParentID = reg.GetInt(on, "Parent", cls.ParentID);
             cls.Index = reg.GetInt(on, "Index", cls.Index);
+            cls.IdlePhases = reg.GetInt(on, "IdlePhases", cls.IdlePhases);
             cls.MovePhases = reg.GetInt(on, "MovePhases", cls.MovePhases);
             cls.MoveBeginPhases = reg.GetInt(on, "MoveBeginPhases", cls.MoveBeginPhases);
             cls.AttackPhases = reg.GetInt(on, "AttackPhases", cls.AttackPhases);
@@ -224,6 +227,21 @@ public class UnitClassLoader
                 }
             }
 
+            int[] idleAnimFrame = reg.GetArray(on, "IdleAnimFrame", null);
+            int[] idleAnimTime = reg.GetArray(on, "IdleAnimTime", null);
+            if (idleAnimFrame != null && idleAnimTime != null &&
+                idleAnimFrame.Length == idleAnimTime.Length)
+            {
+                cls.IdleFrames = new UnitClass.AnimationFrame[idleAnimFrame.Length];
+                for (int j = 0; j < cls.IdleFrames.Length; j++)
+                {
+                    UnitClass.AnimationFrame af;
+                    af.Frame = idleAnimFrame[j];
+                    af.Time = idleAnimTime[j];
+                    cls.IdleFrames[j] = af;
+                }
+            }
+
             cls.DyingID = reg.GetInt(on, "Dying", cls.DyingID);
             cls.Palette = reg.GetInt(on, "Palette", cls.Palette);
             cls.AttackDelay = reg.GetInt(on, "AttackDelay", cls.AttackDelay);
@@ -261,6 +279,8 @@ public class UnitClassLoader
                     cls.File = clsp.File;
                 if (cls.Index == UnitClass.MagicIntNull)
                     cls.Index = clsp.Index;
+                if (cls.IdlePhases == UnitClass.MagicIntNull)
+                    cls.IdlePhases = clsp.IdlePhases;
                 if (cls.MovePhases == UnitClass.MagicIntNull)
                     cls.MovePhases = clsp.MovePhases;
                 if (cls.MoveBeginPhases == UnitClass.MagicIntNull)
@@ -310,6 +330,8 @@ public class UnitClassLoader
                 cls.DescText = "<INVALID>";
             if (cls.Index == UnitClass.MagicIntNull)
                 cls.Index = 0;
+            if (cls.IdlePhases == UnitClass.MagicIntNull)
+                cls.IdlePhases = 1;
             if (cls.MovePhases == UnitClass.MagicIntNull)
                 cls.MovePhases = 0;
             if (cls.MoveBeginPhases == UnitClass.MagicIntNull)

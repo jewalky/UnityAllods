@@ -240,7 +240,7 @@ public class AllodsMap
             Angle = reader.ReadInt32();
             Health = reader.ReadInt16();
             HealthMax = reader.ReadInt16();
-            ID = reader.ReadInt32();
+            ID = reader.ReadInt32() & 0xFFFF;
             Group = reader.ReadInt32();
         }
     }

@@ -14,7 +14,7 @@ public enum DiplomacyFlags
 }
 
 [Flags]
-public enum MapLogicPlayerFlags
+public enum PlayerFlags
 {
     AI          = 0x0001,
     QuestKill   = 0x0002,
@@ -22,7 +22,7 @@ public enum MapLogicPlayerFlags
     NetClient   = 0x0008
 }
 
-public class MapLogicPlayer
+public class Player
 {
     public static Color32[] AllColors =
         { new Color32(0x52, 0x79, 0xE7, 0xFF),
@@ -51,27 +51,28 @@ public class MapLogicPlayer
 
     public int ID { get; set; }
     public int Color { get; set; }
-    public MapLogicPlayerFlags Flags { get; set; }
+    public PlayerFlags Flags { get; set; }
     public long Money { get; set; }
     public string Name { get; set; }
     public Dictionary<int, DiplomacyFlags> Diplomacy { get; private set; }
-    public List<MapLogicObject> Objects { get; private set; }
+    public List<MapObject> Objects { get; private set; }
+    public IPlayerPawn Avatar { get; set; }
 
     // only for human players
     public ServerClient NetClient { get; private set; }
 
-    public MapLogicPlayer(AllodsMap.AlmPlayer almp)
+    public Player(AllodsMap.AlmPlayer almp)
     {
         Diplomacy = new Dictionary<int, DiplomacyFlags>();
-        Objects = new List<MapLogicObject>();
+        Objects = new List<MapObject>();
 
         // these are only AI players.
         // AI players will have money set at 0 no matter what.
         ID = MapLogic.Instance.GetFreePlayerID(true);
         Color = almp.Color;
-        Flags |= MapLogicPlayerFlags.AI;
-        if ((almp.Flags & 0x01) == 0) Flags |= MapLogicPlayerFlags.Dormant;
-        if ((almp.Flags & 0x02) != 0) Flags |= MapLogicPlayerFlags.QuestKill;
+        Flags |= PlayerFlags.AI;
+        if ((almp.Flags & 0x01) == 0) Flags |= PlayerFlags.Dormant;
+        if ((almp.Flags & 0x02) != 0) Flags |= PlayerFlags.QuestKill;
         Money = 0;
         Name = almp.Name;
         // set diplomacy with other AI players
@@ -85,27 +86,27 @@ public class MapLogicPlayer
         }
     }
 
-    public MapLogicPlayer(ServerClient client)
+    public Player(ServerClient client)
     {
         Diplomacy = new Dictionary<int, DiplomacyFlags>();
-        Objects = new List<MapLogicObject>();
+        Objects = new List<MapObject>();
 
         // this player is always a Human player, i.e. we never set any additional flags on it.
         ID = MapLogic.Instance.GetFreePlayerID(false);
         Color = ID % 16; // we can have only 16 colors for humans
         // this will later be used for disconnected player timeout.
         // also on the client, network players have this flag, but null NetClient field.
-        Flags = MapLogicPlayerFlags.NetClient;
+        Flags = PlayerFlags.NetClient;
         Money = 0;
         Name = string.Format("Player {0}", ID);
         NetClient = client;
         // set default diplomacy with AI players based on AI players diplomacy to Self
-        MapLogicPlayer Self = MapLogic.Instance.GetPlayerByName("Self");
+        Player Self = MapLogic.Instance.GetPlayerByName("Self");
         for (int i = 0; i < 16; i++)
         {
-            MapLogicPlayer p = MapLogic.Instance.GetPlayerByID(i);
+            Player p = MapLogic.Instance.GetPlayerByID(i);
             // skip null or non-AI players (although everything below 16 should be AI, just make sure here)
-            if (p == null || ((p.Flags & MapLogicPlayerFlags.AI) == 0)) continue;
+            if (p == null || ((p.Flags & PlayerFlags.AI) == 0)) continue;
             DiplomacyFlags dAItoSelf = p.Diplomacy[Self.ID];
             DiplomacyFlags dSelftoAI = Self.Diplomacy[p.ID];
             p.Diplomacy[ID] = dAItoSelf;
@@ -114,5 +115,10 @@ public class MapLogicPlayer
 
         // set ally+vision to self
         Diplomacy[ID] = DiplomacyFlags.Ally | DiplomacyFlags.Vision;
+
+        // make avatar if we're the server. if we're not, we'll be informed of the avatar separately.
+        if (NetworkManager.IsServer)
+            Avatar = MapLogic.Instance.CreateAvatar(this);
+        else Avatar = null;
     }
 }

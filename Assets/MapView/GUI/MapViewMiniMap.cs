@@ -171,14 +171,14 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
                 if ((node.Flags & MapNodeFlags.Visible) == 0)
                     c.a = 0.5f; // rom2 didn't do this, but this is because they had CPU renderer!
 
-                foreach (MapLogicObject mobj in node.Objects)
+                foreach (MapObject mobj in node.Objects)
                 {
-                    if (!(mobj is IMapLogicPlayerPawn))
+                    if (!(mobj is IPlayerPawn))
                         continue;
-                    if (((node.Flags & MapNodeFlags.Visible) == 0) && (mobj.GetObjectType() != MapLogicObjectType.Structure))
+                    if (((node.Flags & MapNodeFlags.Visible) == 0) && (mobj.GetObjectType() != MapObjectType.Structure))
                         continue; // don't show invisible monsters on minimap
-                    MapLogicPlayer player = ((IMapLogicPlayerPawn)mobj).GetPlayer();
-                    Color pColor = (player != null) ? (Color)MapLogicPlayer.AllColors[player.Color] : new Color(1, 1, 1, 1);
+                    Player player = ((IPlayerPawn)mobj).GetPlayer();
+                    Color pColor = (player != null) ? (Color)Player.AllColors[player.Color] : new Color(1, 1, 1, 1);
 
                     pColor.a = c.a;
                     c = pColor;

@@ -19,7 +19,7 @@ namespace ServerCommands
             if (client.State != ClientState.Playing)
                 return false;
 
-            MapLogicPlayer player = MapLogic.Instance.GetNetPlayer(client);
+            Player player = MapLogic.Instance.GetNetPlayer(client);
             if (player == null)
                 return false; // huehue, same as "order error" in a2server.exe, except we just boot them
 
@@ -29,6 +29,39 @@ namespace ServerCommands
             MapViewChat.Instance.AddChatMessage(color, text);
 
             Server.NotifyChatMessage(player, Text);
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.WalkUnit)]
+    public struct WalkUnit : IServerCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public int X;
+        [ProtoMember(3)]
+        public int Y;
+
+        public bool Process(ServerClient client)
+        {
+            if (client.State != ClientState.Playing)
+                return false;
+
+            Player player = MapLogic.Instance.GetNetPlayer(client);
+            if (player == null)
+                return false; // huehue, same as "order error" in a2server.exe, except we just boot them
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null)
+                return false; // bad desync
+
+            if (unit.Player != player)
+                return true; // do nothing
+
+            unit.WalkX = X;
+            unit.WalkY = Y;
             return true;
         }
     }

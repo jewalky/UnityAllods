@@ -6,7 +6,7 @@ using System.Text;
 // this enum duplicates MapLogicStats.
 // it does NOT need to be synced when you edit MapLogicStats,
 // but it should be synced with locale/stats.txt or item stats won't be displayed correctly.
-public class MapLogicItemEffect
+public class ItemEffect
 {
     public enum Effects
     {
@@ -76,12 +76,12 @@ public class MapLogicItemEffect
     Effects Type2 = Effects.NoneStat;
     int Value2 = 0;
 
-    public MapLogicItemEffect()
+    public ItemEffect()
     {
         // wat
     }
 
-    public MapLogicItemEffect(string effect)
+    public ItemEffect(string effect)
     {
         string[] efs = effect.Split('='); // yes you can write castSpell=Stone_Curse=30 lol.
         if (efs.Length != 2)
@@ -107,7 +107,7 @@ public class MapLogicItemEffect
 
             try
             {
-                int spell = (int)Enum.Parse(typeof(MapLogicSpell.Spells), efs2[0], true);
+                int spell = (int)Enum.Parse(typeof(Spell.Spells), efs2[0], true);
                 Value1 = spell;
             }
             catch (Exception)
@@ -154,7 +154,7 @@ public class MapLogicItemEffect
         string value;
         if (Type1 == Effects.TeachSpell || Type1 == Effects.CastSpell)
         {
-            value = ((MapLogicSpell.Spells)Value1).ToString();
+            value = ((Spell.Spells)Value1).ToString();
             if (Type1 == Effects.CastSpell)
                 value += string.Format(":{0}", Value2);
         }
@@ -163,7 +163,7 @@ public class MapLogicItemEffect
     }
 }
 
-public class MapLogicItem
+public class Item
 {
     // stats are already in Templates.
     // power for castSpell is stored in paired mageSkill0.

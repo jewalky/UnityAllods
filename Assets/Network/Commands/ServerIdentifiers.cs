@@ -12,5 +12,6 @@ public enum ServerIdentifiers
     RequestGamestate,
 
     // map
-    ChatMessage
+    ChatMessage,
+    WalkUnit
 }

@@ -62,4 +62,24 @@ public class Client
             MapViewChat.Instance.AddChatMessage(MapLogic.Instance.ConsolePlayer.Color, MapLogic.Instance.ConsolePlayer.Name + ": " + text);
         }
     }
+
+    public static void SendWalkUnit(MapUnit unit, int x, int y)
+    {
+        if (NetworkManager.IsClient)
+        {
+            ServerCommands.WalkUnit walkCmd;
+            walkCmd.Tag = unit.Tag;
+            walkCmd.X = x;
+            walkCmd.Y = y;
+            ClientManager.SendCommand(walkCmd);
+        }
+        else
+        {
+            if (MapLogic.Instance.ConsolePlayer == unit.Player)
+            {
+                unit.WalkX = x;
+                unit.WalkY = y;
+            }
+        }
+    }
 }

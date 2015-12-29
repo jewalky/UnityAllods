@@ -45,8 +45,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     private MapViewInfowindow Infowindow;
     private MapViewChat Chat;
 
-    public MapLogicObject SelectedObject { get; private set; }
-    public MapLogicObject HoveredObject { get; private set; }
+    public MapObject SelectedObject { get; private set; }
+    public MapObject HoveredObject { get; private set; }
 
     // Use this for initialization
     void Start ()
@@ -123,7 +123,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         }
 
         MapLogic.Instance.InitFromFile(filename);
-        Debug.Log(string.Format("map = {0} ({1}x{2})", MapLogic.Instance.Title, MapLogic.Instance.Width - 16, MapLogic.Instance.Height - 16));
+        Debug.LogFormat("map = {0} ({1}x{2})", MapLogic.Instance.Title, MapLogic.Instance.Width - 16, MapLogic.Instance.Height - 16);
 
         this.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
 
@@ -451,6 +451,18 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     public int ScrollX { get { return _ScrollX; } }
     public int ScrollY { get { return _ScrollY; } }
 
+    public void CenterOnObject(MapObject mobj)
+    {
+        CenterOnCell(mobj.X+mobj.Width/2, mobj.Y+mobj.Height/2);
+    }
+
+    public void CenterOnCell(int x, int y)
+    {
+        int screenWB = (int)((float)Screen.width / 32 - 5); // 5 map cells are the right panels. these are always there.
+        int screenHB = (int)((float)Screen.height / 32);
+        SetScroll(x - screenWB / 2, y - screenHB / 2);
+    }
+
     public void SetScroll(int x, int y)
     {
         int minX = 8;
@@ -569,7 +581,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                         if (!NetworkManager.IsClient)
                             MapLogic.Instance.Speed++;
                         if (oldSpeed != MapLogic.Instance.Speed)
-                            MapViewChat.Instance.AddChatMessage(MapLogicPlayer.AllColorsSystem, Locale.Main[108 + MapLogic.Instance.Speed]);
+                            MapViewChat.Instance.AddChatMessage(Player.AllColorsSystem, Locale.Main[108 + MapLogic.Instance.Speed]);
                     }
                     return true;
                 case KeyCode.Minus:
@@ -579,7 +591,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                         if (!NetworkManager.IsClient)
                             MapLogic.Instance.Speed--;
                         if (oldSpeed != MapLogic.Instance.Speed)
-                            MapViewChat.Instance.AddChatMessage(MapLogicPlayer.AllColorsSystem, Locale.Main[108 + MapLogic.Instance.Speed]);
+                            MapViewChat.Instance.AddChatMessage(Player.AllColorsSystem, Locale.Main[108 + MapLogic.Instance.Speed]);
                     }
                     return true;
                 case KeyCode.Escape:
@@ -587,7 +599,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                     // well, just window for now.
                     {
                         Window wnd = Utils.CreateObjectWithScript<Window>();
-                        Debug.Log(string.Format("created a window!"));
+                        Debug.LogFormat("created a window!");
                     }
                     return true;
             }
@@ -627,12 +639,14 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             }
             else if (SelectedObject != null)
             {
-                // try to walk.
-                if (SelectedObject.GetObjectType() == MapLogicObjectType.Monster)
+                if (SelectedObject is IPlayerPawn && ((IPlayerPawn)SelectedObject).GetPlayer() == MapLogic.Instance.ConsolePlayer)
                 {
-                    MapLogicUnit unit = (MapLogicUnit)SelectedObject;
-                    unit.WalkX = MouseCellX;
-                    unit.WalkY = MouseCellY;
+                    // try to walk.
+                    if (SelectedObject.GetObjectType() == MapObjectType.Monster)
+                    {
+                        MapUnit unit = (MapUnit)SelectedObject;
+                        Client.SendWalkUnit(unit, MouseCellX, MouseCellY);
+                    }
                 }
             }
         }
@@ -668,22 +682,25 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         //Debug.Log(string.Format("mouse = {0} {1} (from {2} {3})", _MouseCellX, _MouseCellY, mPos.x, mPos.y));
 
         // temporary!
-        if (oldMouseCellX != MouseCellX ||
-            oldMouseCellY != MouseCellY)
+        if (MapLogic.Instance.ConsolePlayer == null) // mostly if we're server
         {
-            MapLogic.Instance.SetTestingVisibility(MouseCellX, MouseCellY, 5);
+            if (oldMouseCellX != MouseCellX ||
+                oldMouseCellY != MouseCellY)
+            {
+                MapLogic.Instance.SetTestingVisibility(MouseCellX, MouseCellY, 5);
+            }
         }
 
         // PERMANENT (x2)
         // check currently hovered object
         MapNode[,] nodes = MapLogic.Instance.Nodes;
-        MapLogicObject o = null;
+        MapObject o = null;
         float oZ = 0;
         for (int y = (int)_VisibleRect.yMin; y <= _VisibleRect.yMax; y++)
         {
             for (int x = (int)_VisibleRect.xMin; x <= _VisibleRect.xMax; x++)
             {
-                foreach (MapLogicObject mobj in nodes[x, y].Objects)
+                foreach (MapObject mobj in nodes[x, y].Objects)
                 {
                     if (mobj.GameObject == null || mobj.GameScript == null)
                         continue;
@@ -714,8 +731,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         if (!hoveringDarkness && HoveredObject != null)
         {
             // hovered usable buildings have different cursor picture.
-            if (HoveredObject.GetObjectType() == MapLogicObjectType.Structure &&
-                ((MapLogicStructure)HoveredObject).Class.Usable) MouseCursor.SetCursor(MouseCursor.CurSelectStructure);
+            if (HoveredObject.GetObjectType() == MapObjectType.Structure &&
+                ((MapStructure)HoveredObject).Class.Usable) MouseCursor.SetCursor(MouseCursor.CurSelectStructure);
             else MouseCursor.SetCursor(MouseCursor.CurSelect);
         }
     }
@@ -752,7 +769,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     }
 
     // create gameobject based off this instance for logic
-    public GameObject CreateObject(Type t, MapLogicObject obj)
+    public GameObject CreateObject(Type t, MapObject obj)
     {
         GameObject o = Utils.CreateObject();
         MapViewObject viewscript = (MapViewObject)o.AddComponent(t);
@@ -765,9 +782,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     {
         float height = 0;
         int count = 0;
-        for (int ly = (int)y; ly < y + h; ly++)
+        for (int ly = (int)y; ly < (int)y + h; ly++)
         {
-            for (int lx = (int)x; lx < x + w; lx++)
+            for (int lx = (int)x; lx < (int)x + w; lx++)
             {
                 int baseX = lx;
                 int baseY = ly;

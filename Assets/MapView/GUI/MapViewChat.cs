@@ -74,11 +74,11 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         {
             switch (color)
             {
-                case MapLogicPlayer.AllColorsSystem:
+                case Player.AllColorsSystem:
                     color = 3;
                     break;
                 default:
-                    color = MapLogicPlayer.AllColorsChat;
+                    color = Player.AllColorsChat;
                     break;
             }
         }
@@ -93,7 +93,7 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         }
 
         ChatMessage msg = new ChatMessage();
-        msg.MsgColor = MapLogicPlayer.AllColors[color];
+        msg.MsgColor = Player.AllColors[color];
         msg.Text = text;
         float timeLeftTop = (Messages.Count != 0) ? Messages.Last().TimeLeft : 0;
         msg.TimeLeft = timeLeftTop + 5f; // 5 seconds + top message timeleft, so they disappear in order.

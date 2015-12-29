@@ -15,5 +15,9 @@ public enum ClientIdentifiers
     AddPlayer,
     DelPlayer,
     ChatMessage,
-    SpeedChanged
+    SpeedChanged,
+
+    AddUnit, // also update unit if ID already exists
+    DelUnit,
+    WalkUnit,
 }

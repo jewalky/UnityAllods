@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-public class MapLogicSpell
+public class Spell
 {
     // order should be same as data.bin spells or locale spell.txt
     public enum Spells

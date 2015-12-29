@@ -45,11 +45,18 @@ public class PriorityQueue<P, V>
 	
 	
 	public void Replace(V value, P oldPriority, P newPriority){
-        LinkedList<V> v = list[oldPriority];
-        v.Remove(value);
+        try
+        {
+            LinkedList<V> v = list[oldPriority];
+            v.Remove(value);
 
-        if (v.Count == 0) { // nothing left of the top priority.
-            list.Remove(oldPriority);
+            if (v.Count == 0) { // nothing left of the top priority.
+                list.Remove(oldPriority);
+            }
+        }
+        catch (KeyNotFoundException)
+        {
+            return;
         }
 
 		Enqueue(value, newPriority);

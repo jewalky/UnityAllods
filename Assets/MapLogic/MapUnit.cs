@@ -4,104 +4,29 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public interface IMapLogicUnitState
+public interface IUnitState
 {
     bool Process();
 }
 
-public class MapLogicUnit : MapLogicObject, IMapLogicPlayerPawn, IDisposable
+public enum UnitVisualState
 {
-    public class IdleState : IMapLogicUnitState
-    {
-        private MapLogicUnit Unit;
+    Idle,
+    Rotating,
+    Moving
+}
 
-        public IdleState(MapLogicUnit unit)
-        {
-            Unit = unit;
-        }
-
-        public virtual bool Process()
-        {
-            if (Unit.WalkX > 0 && Unit.WalkY > 0)
-            {
-                Debug.Log(string.Format("idle state: walk to {0},{1}", Unit.WalkX, Unit.WalkY));
-                if (Unit.WalkX == Unit.X && Unit.WalkY == Unit.Y)
-                {
-                    Unit.WalkX = -1;
-                    Unit.WalkY = -1;
-                    return true;
-                }
-
-                // try to pathfind
-                Vector2i path = Unit.DecideNextMove(Unit.WalkX, Unit.WalkY);
-                if (path == null)
-                {
-                    Debug.Log(string.Format("idle state: path to {0},{1} not found", Unit.WalkX, Unit.WalkY));
-                    Unit.WalkX = -1;
-                    Unit.WalkY = -1;
-                    return true;
-                }
-
-                // next path node found
-                Unit.States.Add(new WalkState(Unit, path.x, path.y));
-            }
-            return true; // idle state is always present
-        }
-    }
-
-    public class RotateState : IMapLogicUnitState
-    {
-        private MapLogicUnit Unit;
-        private int TargetAngle;
-
-        public RotateState(MapLogicUnit unit, int targetAngle)
-        {
-            Unit = unit;
-            TargetAngle = targetAngle;
-        }
-
-        public virtual bool Process()
-        {
-            // 
-            Unit.Angle = TargetAngle;
-            return false;
-        }
-    }
-
-    public class WalkState : IMapLogicUnitState
-    {
-        private MapLogicUnit Unit;
-        private int TargetX;
-        private int TargetY;
-
-        public WalkState(MapLogicUnit unit, int x, int y)
-        {
-            Unit = unit;
-            TargetX = x;
-            TargetY = y;
-        }
-
-        public virtual bool Process()
-        {
-            Debug.Log(string.Format("walk state: moved to {0},{1}", TargetX, TargetY));
-            Unit.UnlinkFromWorld();
-            Unit.X = TargetX;
-            Unit.Y = TargetY;
-            Unit.LinkToWorld();
-            Unit.DoUpdateView = true;
-            return false;
-        }
-    }
-
-    public override MapLogicObjectType GetObjectType() { return MapLogicObjectType.Monster; }
+public class MapUnit : MapObject, IPlayerPawn, IDisposable
+{
+    public override MapObjectType GetObjectType() { return MapObjectType.Monster; }
     protected override Type GetGameObjectType() { return typeof(MapViewUnit); }
 
     public UnitClass Class = null;
     public Templates.TplMonster Template = null; // 
-    public MapLogicStats Stats { get; private set; }
-    private MapLogicPlayer _Player;
+    public UnitStats Stats;
+    private Player _Player;
 
-    public MapLogicPlayer Player
+    public Player Player
     {
         get
         {
@@ -117,27 +42,53 @@ public class MapLogicUnit : MapLogicObject, IMapLogicPlayerPawn, IDisposable
         }
     }
 
-    public MapLogicPlayer GetPlayer() { return _Player; }
+    public Player GetPlayer() { return _Player; }
     public int Tag = 0;
-    public int Angle = 0;
-    private List<IMapLogicUnitState> States = new List<IMapLogicUnitState>();
+    private int _Angle = 0;
+    public int Angle
+    {
+        get
+        {
+            return _Angle;
+        }
 
+        set
+        {
+            _Angle = value;
+            while (_Angle < 0)
+                _Angle += 360;
+            while (_Angle >= 360)
+                _Angle -= 360;
+        }
+    }
+
+    public List<IUnitState> States = new List<IUnitState>();
+    public UnitVisualState VState = UnitVisualState.Idle;
+    public int IdleFrame = 0;
+    public int IdleTime = 0;
+    public int MoveFrame = 0;
+    public int MoveTime = 0;
+    // for visual state stuff
+    public float FracX = 0;
+    public float FracY = 0;
+
+    // for AI
     public int WalkX = -1;
     public int WalkY = -1;
 
-    public MapLogicUnit(int serverId)
+    public MapUnit(int serverId)
     {
         Template = TemplateLoader.GetMonsterById(serverId);
         if (Template == null)
-            Debug.Log(string.Format("Invalid unit created (serverId={0})", serverId));
+            Debug.LogFormat("Invalid unit created (serverId={0})", serverId);
         else InitUnit();
     }
 
-    public MapLogicUnit(string name)
+    public MapUnit(string name)
     {
         Template = TemplateLoader.GetMonsterByName(name);
         if (Template == null)
-            Debug.Log(string.Format("Invalid unit created (name={0})", name));
+            Debug.LogFormat("Invalid unit created (name={0})", name);
         else InitUnit();
     }
 
@@ -146,17 +97,25 @@ public class MapLogicUnit : MapLogicObject, IMapLogicPlayerPawn, IDisposable
         Class = UnitClassLoader.GetUnitClassById(Template.TypeID);
         if (Class == null)
         {
-            Debug.Log(string.Format("Invalid unit created (class not found, serverId={0}, typeId={1})", Template.ServerID, Template.TypeID));
+            Debug.LogFormat("Invalid unit created (class not found, serverId={0}, typeId={1})", Template.ServerID, Template.TypeID);
             Template = null;
             return;
         }
 
+        Stats = new UnitStats();
         Width = Template.TokenSize;
         Height = Template.TokenSize;
+        Stats.RotationSpeed = (byte)Template.RotationSpeed;
+        if (Stats.RotationSpeed < 1)
+            Stats.RotationSpeed = 1;
+        Stats.Speed = (byte)Template.Speed;
+        if (Stats.Speed < 1)
+            Stats.Speed = 1;
+        Stats.ScanRange = Template.ScanRange;
 
-        Stats = new MapLogicStats();
         States.Add(new IdleState(this));
         DoUpdateView = true;
+        VState = UnitVisualState.Idle;
     }
 
     public override void Dispose()
@@ -168,6 +127,11 @@ public class MapLogicUnit : MapLogicObject, IMapLogicPlayerPawn, IDisposable
 
     public override void Update()
     {
+        if (Class == null)
+            return;
+
+        UpdateNetVisibility();
+
         while (!States.Last().Process())
             States.RemoveAt(States.Count - 1);
     }
@@ -189,9 +153,9 @@ public class MapLogicUnit : MapLogicObject, IMapLogicPlayerPawn, IDisposable
 
     class AstarHelper : IShortestPath<Vector2i, Vector2i>
     {
-        private MapLogicUnit unit;
+        private MapUnit unit;
 
-        public AstarHelper(MapLogicUnit unit)
+        public AstarHelper(MapUnit unit)
         {
             this.unit = unit;
         }
@@ -266,6 +230,10 @@ public class MapLogicUnit : MapLogicObject, IMapLogicPlayerPawn, IDisposable
         }
     }
 
+    /// <summary>
+    /// EVERYTHING BELOW IS STATES
+    /// </summary>
+
     // returns true if cell is walkable for this unit
     public bool CheckWalkableForUnit(int x, int y)
     {
@@ -274,8 +242,8 @@ public class MapLogicUnit : MapLogicObject, IMapLogicPlayerPawn, IDisposable
             for (int lx = x; lx < x + Width; lx++)
             {
                 // skip cells currently taken
-                if (lx >= X && lx < X + Width &&
-                    ly >= Y && ly < Y + Height) continue;
+                if (MapLogic.Instance.Nodes[lx, ly].Objects.Contains(this))
+                    continue; // if we are already on this cell, skip it as passible
                 uint tile = MapLogic.Instance.Nodes[lx, ly].Tile;
                 MapNodeFlags flags = MapLogic.Instance.Nodes[lx, ly].Flags;
                 if (Template.MovementType == 1 && (flags & MapNodeFlags.Unblocked) == 0 && (tile >= 0x1C0 && tile <= 0x2FF))
@@ -288,5 +256,18 @@ public class MapLogicUnit : MapLogicObject, IMapLogicPlayerPawn, IDisposable
         }
 
         return true;
+    }
+
+    public int FaceCell(int x, int y)
+    {
+        // from current x/y
+        float deltaY = y - Y;
+        float deltaX = x - X;
+        int sang = (int)(Math.Atan2(deltaY, deltaX) * 180 / Math.PI) - 90;
+        while (sang > 360)
+            sang -= 360;
+        while (sang < 0)
+            sang += 360;
+        return sang;
     }
 }

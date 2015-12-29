@@ -331,7 +331,7 @@ public class Images
             if (w > 512 || h > 512 || ds > 1000000)
             {
                 //Core.Abort("Invalid sprite \"{0}\": NULL frame #{1}", filename, i);
-                Debug.Log(string.Format("Invalid sprite \"{0}\": NULL frame #{1}", filename, i));
+                Debug.LogFormat("Invalid sprite \"{0}\": NULL frame #{1}", filename, i);
                 i--;
                 count--;
                 continue;
@@ -435,7 +435,7 @@ public class Images
             if (w > 512 || h > 512 || ds > 1000000)
             {
                 //Core.Abort("Invalid sprite \"{0}\": NULL frame #{1}", filename, i);
-                Debug.Log(string.Format("Invalid sprite \"{0}\": NULL frame #{1}", filename, i));
+                Debug.LogFormat("Invalid sprite \"{0}\": NULL frame #{1}", filename, i);
                 i--;
                 count--;
                 continue;
@@ -554,7 +554,7 @@ public class Images
 
             if (w > 512 || h > 512 || ds > 1000000)
             {
-                Debug.Log(string.Format("Invalid sprite \"{0}\": NULL frame #{1}", filename, i));
+                Debug.LogFormat("Invalid sprite \"{0}\": NULL frame #{1}", filename, i);
                 i--;
                 count--;
                 continue;
@@ -673,7 +673,7 @@ public class Images
 
             if (w > 512 || h > 512 || ds > 1000000)
             {
-                Debug.Log(string.Format("Invalid sprite \"{0}\": NULL frame #{1}", filename, i));
+                Debug.LogFormat("Invalid sprite \"{0}\": NULL frame #{1}", filename, i);
                 i--;
                 count--;
                 continue;

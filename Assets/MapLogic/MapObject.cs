@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public enum MapLogicObjectType
+public enum MapObjectType
 {
     Object,
     Obstacle,
@@ -14,17 +14,17 @@ public enum MapLogicObjectType
     Effect
 }
 
-public interface IMapLogicDynlight
+public interface IDynlight
 {
     int GetLightValue();
 }
 
-public interface IMapLogicPlayerPawn
+public interface IPlayerPawn
 {
-    MapLogicPlayer GetPlayer();
+    Player GetPlayer();
 }
 
-public class MapLogicObject : IDisposable
+public class MapObject : IDisposable
 {
     public int X = 0;
     public int Y = 0;
@@ -35,26 +35,26 @@ public class MapLogicObject : IDisposable
     public readonly int ID = MapLogic.Instance.TopObjectID;
     public bool DoUpdateView = false;
 
-    public virtual MapLogicObjectType GetObjectType() { return MapLogicObjectType.Object; }
+    public virtual MapObjectType GetObjectType() { return MapObjectType.Object; }
     protected virtual Type GetGameObjectType() { return typeof(MapViewObject); }
 
     public ulong NetPlayerVisibility = 0;
-    public bool IsVisibleForNetPlayer(MapLogicPlayer player)
+    public bool IsVisibleForNetPlayer(Player player)
     {
         int netId = player.ID - 16;
-        ulong mask = NetPlayerVisibility & (1ul << netId);
+        ulong mask = (1ul << netId);
         return (NetPlayerVisibility & mask) != 0;
     }
 
-    public void SetVisibleForNetPlayer(MapLogicPlayer player, bool visible)
+    public void SetVisibleForNetPlayer(Player player, bool visible)
     {
         int netId = player.ID - 16;
-        ulong mask = NetPlayerVisibility & (1ul << netId);
+        ulong mask = (1ul << netId);
         if (visible) NetPlayerVisibility |= mask;
         else NetPlayerVisibility &= ~mask;
     }
 
-    public MapLogicObject()
+    public MapObject()
     {
         GameObject = MapView.Instance.CreateObject(GetGameObjectType(), this);
         GameScript = (MonoBehaviour)GameObject.GetComponent(GetGameObjectType());
@@ -62,7 +62,12 @@ public class MapLogicObject : IDisposable
 
     public virtual void Dispose()
     {
-        UnlinkFromWorld();
+        //UnlinkFromWorld();
+        if (NetworkManager.IsServer)
+            Server.NotifyDelObject(this);
+        for (int y = 0; y < MapLogic.Instance.Height; y++)
+            for (int x = 0; x < MapLogic.Instance.Width; x++)
+                MapLogic.Instance.Nodes[x, y].Objects.Remove(this);
         if (GameObject != null)
         {
             GameObject.Destroy(GameObject);
@@ -91,9 +96,9 @@ public class MapLogicObject : IDisposable
         MapNode[,] nodes = MapLogic.Instance.Nodes;
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;
-        for (int ly = Y; ly < Y + Height; ly++)
+        for (int ly = y; ly < y + Height; ly++)
         {
-            for (int lx = X; lx < X + Width; lx++)
+            for (int lx = x; lx < x + Width; lx++)
             {
                 if (lx < 0 || lx >= mw || ly < 0 || ly >= mh)
                     continue;
@@ -114,14 +119,16 @@ public class MapLogicObject : IDisposable
         MapNode[,] nodes = MapLogic.Instance.Nodes;
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;
-        for (int ly = Y; ly < Y + Height; ly++)
+        for (int ly = y; ly < y + Height; ly++)
         {
-            for (int lx = X; lx < X + Width; lx++)
+            for (int lx = x; lx < x + Width; lx++)
             {
                 if (lx < 0 || lx >= mw || ly < 0 || ly >= mh)
                     continue;
-                nodes[lx, ly].Objects.Add(this); // if any, obviously.
-                nodes[lx, ly].Flags |= GetNodeLinkFlags(lx-X, ly-Y);
+                MapNode node = nodes[lx, ly];
+                if (!node.Objects.Contains(this))
+                    node.Objects.Add(this); // if any, obviously.
+                node.Flags |= GetNodeLinkFlags(lx-X, ly-Y);
             }
         }
     }
@@ -134,7 +141,7 @@ public class MapLogicObject : IDisposable
 
     public int GetVisibilityInFOW()
     {
-        int extRadius = (GetObjectType() == MapLogicObjectType.Obstacle) ? 2 : 0;
+        int extRadius = (GetObjectType() == MapObjectType.Obstacle) ? 2 : 0;
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;
         int TopFlag = 0;
@@ -171,21 +178,27 @@ public class MapLogicObject : IDisposable
         if (!NetworkManager.IsServer)
             return;
 
-        ulong oldPlayerVisibility = NetPlayerVisibility;
-        NetPlayerVisibility = 0;
-        foreach (MapLogicPlayer player in MapLogic.Instance.Players)
+        Player ownPlayer = (this is IPlayerPawn) ? ((IPlayerPawn)this).GetPlayer() : null;
+        foreach (Player player in MapLogic.Instance.Players)
         {
-            if ((player.Flags & MapLogicPlayerFlags.NetClient) == 0)
+            if (player.NetClient == null)
                 continue;
 
             bool wasVisibleForPlayer = IsVisibleForNetPlayer(player);
             bool isVisibleForPlayer = false;
-            foreach (MapLogicObject playerMobj in player.Objects)
+            if (player == ownPlayer)
             {
-                if (Math.Abs(playerMobj.X - X) > 30 ||
-                    Math.Abs(playerMobj.Y - Y) > 30) continue; // basic coordinate check in 60x60 square with player unit in the center
                 isVisibleForPlayer = true;
-                break;
+            }
+            else
+            {
+                foreach (MapObject playerMobj in player.Objects)
+                {
+                    if (Math.Abs(playerMobj.X - X) > 30 ||
+                        Math.Abs(playerMobj.Y - Y) > 30) continue; // basic coordinate check in 60x60 square with player unit in the center
+                    isVisibleForPlayer = true;
+                    break;
+                }
             }
 
             if (isVisibleForPlayer && !wasVisibleForPlayer)

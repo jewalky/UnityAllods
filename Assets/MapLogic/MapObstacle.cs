@@ -4,28 +4,28 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class MapLogicObstacle : MapLogicObject
+public class MapObstacle : MapObject
 {
-    public override MapLogicObjectType GetObjectType() { return MapLogicObjectType.Obstacle; }
+    public override MapObjectType GetObjectType() { return MapObjectType.Obstacle; }
     protected override Type GetGameObjectType() { return typeof(MapViewObstacle); }
 
     public ObstacleClass Class = null;
     public int CurrentFrame = 0;
     public int CurrentTime = 0;
 
-    public MapLogicObstacle(int typeId)
+    public MapObstacle(int typeId)
     {
         Class = ObstacleClassLoader.GetObstacleClassById(typeId);
         if (Class == null)
-            Debug.Log(string.Format("Invalid obstacle created (typeId={0})", typeId));
+            Debug.LogFormat("Invalid obstacle created (typeId={0})", typeId);
         else InitObstacle();
     }
 
-    public MapLogicObstacle(string name)
+    public MapObstacle(string name)
     {
         Class = ObstacleClassLoader.GetObstacleClassByName(name);
         if (Class == null)
-            Debug.Log(string.Format("Invalid obstacle created (name={0})", name));
+            Debug.LogFormat("Invalid obstacle created (name={0})", name);
         else InitObstacle();
     }
 

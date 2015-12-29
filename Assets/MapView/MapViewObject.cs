@@ -19,8 +19,8 @@ public interface IMapViewSelectable
 
 public class MapViewObject : MonoBehaviour
 {
-    protected MapLogicObject LogicObject = null;
-    public void SetLogicObject(MapLogicObject lo)
+    protected MapObject LogicObject = null;
+    public void SetLogicObject(MapObject lo)
     {
         if (LogicObject == null)
             LogicObject = lo;

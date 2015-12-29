@@ -19,7 +19,7 @@ public class MapNode
     public int DynLight = 0;
     public ushort Tile = 0;
     public MapNodeFlags Flags = 0;
-    public List<MapLogicObject> Objects = new List<MapLogicObject>();
+    public List<MapObject> Objects = new List<MapObject>();
 }
 
 class MapLogic
@@ -37,8 +37,8 @@ class MapLogic
 
     private MapLogic()
     {
-        Objects = new List<MapLogicObject>();
-        Players = new List<MapLogicPlayer>();
+        Objects = new List<MapObject>();
+        Players = new List<Player>();
     }
 
     private AllodsMap MapStructure = null;
@@ -47,11 +47,12 @@ class MapLogic
     public int Width { get; private set; }
     public int Height { get; private set; }
     public MapNode[,] Nodes { get; private set; }
-    public List<MapLogicObject> Objects { get; private set; }
+    public List<MapObject> Objects { get; private set; }
     private int _TopObjectID = 0;
-    public List<MapLogicPlayer> Players { get; private set; }
+    public List<Player> Players { get; private set; }
     public const int MaxPlayers = 64;
-    public MapLogicPlayer ConsolePlayer { get; set; } // the player that we're directly controlling.
+    public Player ConsolePlayer { get; set; } // the player that we're directly controlling.
+    public ScanrangeCalc VisionCalc = new ScanrangeCalc();
 
     public bool IsLoaded
     {
@@ -102,10 +103,10 @@ class MapLogic
             for (int x = (int)vRec.xMin; x < vRec.xMax; x++)
             {
                 Nodes[x, y].DynLight = 0;
-                foreach(MapLogicObject mobj in Nodes[x, y].Objects)
+                foreach(MapObject mobj in Nodes[x, y].Objects)
                 {
-                    if (mobj is IMapLogicDynlight)
-                        Nodes[x, y].DynLight += ((IMapLogicDynlight)mobj).GetLightValue();
+                    if (mobj is IDynlight)
+                        Nodes[x, y].DynLight += ((IDynlight)mobj).GetLightValue();
                 }
             }
         }
@@ -231,11 +232,15 @@ class MapLogic
     public void Update()
     {
         _LevelTime++;
+
+        // update local scanrange every few tics (every 5?)
+        if (ConsolePlayer != null && (_LevelTime % 5 == 0))
+            UpdateVisibility();
     }
 
     public void Unload()
     {
-        foreach (MapLogicObject mo in Objects)
+        foreach (MapObject mo in Objects)
             mo.Dispose();
         Objects.Clear();
         Players.Clear();
@@ -253,6 +258,7 @@ class MapLogic
         TemplateLoader.LoadTemplates();
         MapLightingNeedsUpdate = true;
         MapFOWNeedsUpdate = true;
+        VisionCalc.InitializeTables();
     }
 
     public void InitFromFile(string filename)
@@ -288,7 +294,7 @@ class MapLogic
         // load players
         foreach (AllodsMap.AlmPlayer almplayer in mapStructure.Players)
         {
-            MapLogicPlayer player = new MapLogicPlayer(almplayer);
+            Player player = new Player(almplayer);
             Players.Add(player);
             //Debug.Log(string.Format("player ID={2} {0} (flags {1})", player.Name, player.Flags, player.ID));
         }
@@ -304,7 +310,7 @@ class MapLogic
                 int typeId = mapStructure.Objects[y * Width + x];
                 if (typeId <= 0) continue;
                 typeId -= 1;
-                MapLogicObstacle mob = new MapLogicObstacle(typeId);
+                MapObstacle mob = new MapObstacle(typeId);
                 mob.X = x;
                 mob.Y = y;
                 mob.LinkToWorld();
@@ -317,8 +323,8 @@ class MapLogic
         {
             foreach (AllodsMap.AlmStructure almstruc in mapStructure.Structures)
             {
-                MapLogicStructure struc;
-                struc = new MapLogicStructure(almstruc.TypeID);
+                MapStructure struc;
+                struc = new MapStructure(almstruc.TypeID);
                 struc.X = (int)almstruc.X;
                 struc.Y = (int)almstruc.Y;
                 struc.Health = almstruc.Health;
@@ -340,15 +346,15 @@ class MapLogic
         }
 
         // load units
-        if (mapStructure.Units != null)
+        if (!NetworkManager.IsClient && mapStructure.Units != null)
         {
             foreach (AllodsMap.AlmUnit almunit in mapStructure.Units)
             {
                 if ((almunit.Flags & 0x10) != 0)
                     continue; // skip humans for now
 
-                MapLogicUnit unit;
-                unit = new MapLogicUnit(almunit.ServerID);
+                MapUnit unit;
+                unit = new MapUnit(almunit.ServerID);
                 unit.X = (int)almunit.X;
                 unit.Y = (int)almunit.Y;
                 unit.Tag = almunit.ID;
@@ -370,9 +376,16 @@ class MapLogic
         // if we are playing in singleplayer, then console player is Self.
         if (!NetworkManager.IsClient && !NetworkManager.IsServer) 
         {
-            MapLogicPlayer Self = GetPlayerByName("Self");
+            Player Self = GetPlayerByName("Self");
             if (Self == null) GameConsole.Instance.WriteLine("Error: couldn't set ConsolePlayer: Self not found!");
             else ConsolePlayer = Self;
+            if (ConsolePlayer != null)
+            {
+                ConsolePlayer.Diplomacy[ConsolePlayer.ID] = DiplomacyFlags.Ally | DiplomacyFlags.Vision;
+                ConsolePlayer.Avatar = CreateAvatar(ConsolePlayer);
+                // center view on avatar.
+                MapView.Instance.CenterOnObject((MapObject)ConsolePlayer.Avatar);
+            }
         }
     }
 
@@ -384,7 +397,7 @@ class MapLogic
         for (; startingFrom < MaxPlayers; startingFrom++)
         {
             bool used = false;
-            foreach (MapLogicPlayer player in Players)
+            foreach (Player player in Players)
             {
                 if (player.ID == startingFrom)
                 {
@@ -399,9 +412,9 @@ class MapLogic
         return -1;
     }
 
-    public MapLogicPlayer GetPlayerByID(int id)
+    public Player GetPlayerByID(int id)
     {
-        foreach (MapLogicPlayer player in Players)
+        foreach (Player player in Players)
         {
             if (player.ID == id)
                 return player;
@@ -410,10 +423,10 @@ class MapLogic
         return null;
     }
 
-    public MapLogicPlayer GetPlayerByName(string name)
+    public Player GetPlayerByName(string name)
     {
         name = name.ToLower();
-        foreach (MapLogicPlayer player in Players)
+        foreach (Player player in Players)
         {
             if (player.Name.ToLower() == name)
                 return player;
@@ -422,17 +435,53 @@ class MapLogic
         return null;
     }
 
+    public void UpdateVisibility()
+    {
+        if (ConsolePlayer == null)
+            return;
+
+        for (int ly = 0; ly < Height; ly++)
+            for (int lx = 0; lx < Width; lx++)
+                Nodes[lx, ly].Flags &= ~MapNodeFlags.Visible;
+
+        foreach (Player player in Players)
+        {
+            if ((player.Diplomacy[ConsolePlayer.ID] & DiplomacyFlags.Vision) != 0)
+            {
+                foreach(MapObject mobj in player.Objects)
+                {
+                    // this mobj should add to the vision.
+                    if (mobj.GetObjectType() != MapObjectType.Monster &&
+                        mobj.GetObjectType() != MapObjectType.Human) continue;
+                    MapUnit unit = (MapUnit)mobj;
+                    VisionCalc.CalculateVision(unit.X, unit.Y, unit.Stats.ScanRange);
+                    int xOrigin = unit.X - 20;
+                    int yOrigin = unit.Y - 20;
+                    for (int ly = yOrigin; ly < yOrigin + 41; ly++)
+                    {
+                        if (ly < 8 || ly > Height) continue;
+                        for (int lx = xOrigin; lx < xOrigin + 41; lx++)
+                        {
+                            if (lx < 8 || lx > Width) continue;
+                            if (VisionCalc.pTablesVision[lx - xOrigin, ly - yOrigin] > 0)
+                                Nodes[lx, ly].Flags |= MapNodeFlags.Visible | MapNodeFlags.Discovered;
+                        }
+                    }
+                }
+            }
+        }
+
+        MapFOWNeedsUpdate = true;
+    }
+
+    // this is still used on the server.
     public void SetTestingVisibility(int x, int y, float range)
     {
         int ri = (int)range;
         // first, delete existing visibility
         for (int ly = 0; ly < Height; ly++)
-        {
             for (int lx = 0; lx < Width; lx++)
-            {
                 Nodes[lx, ly].Flags &= ~MapNodeFlags.Visible;
-            }
-        }
 
         for (int ly = y - ri; ly <= y + ri; ly++)
         {
@@ -448,9 +497,9 @@ class MapLogic
         MapFOWNeedsUpdate = true;
     }
 
-    public MapLogicPlayer GetNetPlayer(ServerClient client)
+    public Player GetNetPlayer(ServerClient client)
     {
-        foreach (MapLogicPlayer player in Players)
+        foreach (Player player in Players)
         {
             if (player.NetClient == client)
                 return player;
@@ -459,7 +508,7 @@ class MapLogic
         return null;
     }
 
-    public void AddNetPlayer(MapLogicPlayer p, bool silent)
+    public void AddNetPlayer(Player p, bool silent)
     {
         Players.Add(p);
 
@@ -470,12 +519,12 @@ class MapLogic
             if (!silent)
             {
                 // player ... has joined the game
-                MapViewChat.Instance.AddChatMessage(MapLogicPlayer.AllColorsSystem, string.Format("{0} {1} {2}", Locale.Main[204], p.Name, Locale.Main[205]));
+                MapViewChat.Instance.AddChatMessage(Player.AllColorsSystem, string.Format("{0} {1} {2}", Locale.Main[204], p.Name, Locale.Main[205]));
             }
         }
     }
 
-    public void DelNetPlayer(MapLogicPlayer p, bool silent, bool kicked) // this will remove player and all related objects
+    public void DelNetPlayer(Player p, bool silent, bool kicked) // this will remove player and all related objects
     {
         if (NetworkManager.IsServer)
             Server.NotifyPlayerLeft(p, kicked);
@@ -484,14 +533,14 @@ class MapLogic
             if (kicked && !silent)
             {
                 // player ... was kicked from the game
-                MapViewChat.Instance.AddChatMessage(MapLogicPlayer.AllColorsSystem, string.Format("{0} {1} {2}", Locale.Main[78], p.Name, Locale.Main[79]));
+                MapViewChat.Instance.AddChatMessage(Player.AllColorsSystem, string.Format("{0} {1} {2}", Locale.Main[78], p.Name, Locale.Main[79]));
             }
         }
 
         for (int i = 0; i < Objects.Count; i++)
         {
-            MapLogicObject mobj = Objects[i];
-            if (mobj is IMapLogicPlayerPawn && ((IMapLogicPlayerPawn)mobj).GetPlayer() == p)
+            MapObject mobj = Objects[i];
+            if (mobj is IPlayerPawn && ((IPlayerPawn)mobj).GetPlayer() == p)
             {
                 mobj.Dispose(); // delete object and associated GameObject, and also call UnlinkFromWorld
                 Objects.Remove(mobj); // remove from the list
@@ -505,12 +554,53 @@ class MapLogic
     public int GetNetPlayerCount()
     {
         int count = 0;
-        foreach (MapLogicPlayer player in Players)
+        foreach (Player player in Players)
         {
-            if ((player.Flags & MapLogicPlayerFlags.NetClient) != 0)
+            if ((player.Flags & PlayerFlags.NetClient) != 0)
                 count++;
         }
 
         return count;
     }
+
+    // create main unit for player.
+    public IPlayerPawn CreateAvatar(Player player)
+    {
+        MapUnit unit = new MapUnit("M_Skeleton.3");
+        unit.X = 16;
+        unit.Y = 16;
+        unit.Player = player;
+        unit.Tag = GetFreeUnitTag(); // this is also used as network ID.
+        unit.LinkToWorld();
+        Objects.Add(unit);
+        return unit;
+    }
+
+    public int GetFreeUnitTag()
+    {
+        int topTag = 0;
+        foreach (MapObject mobj in Objects)
+        {
+            if (mobj.GetObjectType() != MapObjectType.Monster &&
+                mobj.GetObjectType() != MapObjectType.Human) continue;
+            MapUnit unit = (MapUnit)mobj;
+            if (unit.Tag > topTag) topTag = unit.Tag;
+        }
+
+        return topTag + 1;
+    }
+
+    public MapUnit GetUnitByTag(int tag)
+    {
+        foreach (MapObject mobj in Objects)
+        {
+            if (mobj.GetObjectType() != MapObjectType.Monster &&
+                mobj.GetObjectType() != MapObjectType.Human) continue;
+            MapUnit unit = (MapUnit)mobj;
+            if (unit.Tag == tag)
+                return unit;
+        }
+
+        return null;
+        }
 }

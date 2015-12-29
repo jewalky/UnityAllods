@@ -142,7 +142,7 @@ public class ServerClient
                 return SendPacket(ms.ToArray());
             }
 
-            Debug.Log(string.Format("ERROR: Can't send commands without ID! (type = {0})", o.GetType().Name));
+            Debug.LogFormat("ERROR: Can't send commands without ID! (type = {0})", o.GetType().Name);
             return false;
         }
         catch(Exception)
@@ -231,7 +231,7 @@ public class ServerManager
             }
             catch(Exception e)
             {
-                Debug.Log(string.Format("ServerThreadProc: socket disconnected because {0}", e.ToString()));
+                Debug.LogFormat("ServerThreadProc: socket disconnected because {0}", e.ToString());
                 break;
             }
         }

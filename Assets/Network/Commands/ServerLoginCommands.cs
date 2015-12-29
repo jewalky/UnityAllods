@@ -117,14 +117,14 @@ namespace ServerCommands
             // give this client a MapLogicPlayer instance.
             if (MapLogic.Instance.GetNetPlayer(client) != null) // there's already a player attached to this client. i.e. player is trying to login twice.
                 return false;
-            MapLogicPlayer player = new MapLogicPlayer(client);
+            Player player = new Player(client);
             MapLogic.Instance.AddNetPlayer(player, false); // I don't really care here, silent affects only clients
             // basic setup
             player.Money = 1000;
             // notify the client of all players in the game.
-            foreach (MapLogicPlayer notifyplayer in MapLogic.Instance.Players)
+            foreach (Player notifyplayer in MapLogic.Instance.Players)
             {
-                if ((notifyplayer.Flags & MapLogicPlayerFlags.NetClient) == 0) // only send netclients! all other players are loaded from alm on client side
+                if ((notifyplayer.Flags & PlayerFlags.NetClient) == 0) // only send netclients! all other players are loaded from alm on client side
                     continue;
 
                 ClientCommands.AddPlayer plCmd;

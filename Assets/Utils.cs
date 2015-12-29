@@ -146,6 +146,22 @@ public class ScriptBatch
             File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
     }
 
+    [MenuItem("MyTools/OSX client build")]
+    public static void BuildMacClient()
+    {
+        // Get filename.
+        string path = "MacBuild";
+        string[] levels = new string[] { "Assets/Allods.unity" };
+        // Build player.
+        BuildPipeline.BuildPlayer(levels, path + "/Allods.app", BuildTarget.StandaloneOSXIntel64, BuildOptions.Il2CPP);
+        // copy libs
+        const string sourceDir = @"DLLs";
+        const string targetDir = @"MacBuild\Allods.app\Contents\Resources\Data\Managed";
+        foreach (var file in Directory.GetFiles(sourceDir))
+            File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
+    }
+
+
     [MenuItem("MyTools/Windows build")]
     public static void BuildGameWindows()
     {

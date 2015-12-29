@@ -133,6 +133,11 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
                     break;
             }
         }
+        else if (e.type == EventType.MouseMove)
+        {
+            if (ConsoleActive)
+                MouseCursor.SetCursor(MouseCursor.CurDefault);
+        }
 
         return true;
     }

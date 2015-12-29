@@ -127,6 +127,11 @@ public class Window : MonoBehaviour, IUiEventProcessor
                     break;
             }
         }
+        else if (e.type == EventType.MouseMove)
+        {
+            MouseCursor.SetCursor(MouseCursor.CurDefault);
+        }
+
         return true;
     }
 }

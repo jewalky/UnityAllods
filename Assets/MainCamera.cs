@@ -92,8 +92,19 @@ public class MainCamera : MonoBehaviour {
             {
                 string fpstr = string.Format("FPS: {0}\nMeshDebug: {1}", (int)fps_lastFramerate, m_fpsr.Height);
                 if (MapLogic.Instance.IsLoaded)
+                {
                     fpstr += string.Format("\nMouseCell: {0},{1}\nScroll: {2},{3}", MapView.Instance.MouseCellX, MapView.Instance.MouseCellY,
                                                                                     MapView.Instance.ScrollX, MapView.Instance.ScrollY);
+                    MapLogicObject ho = MapView.Instance.HoveredObject;
+                    if (ho != null)
+                    {
+                        if (ho.GetObjectType() == MapLogicObjectType.Structure)
+                            fpstr += string.Format("\nHoveredObject: {0}", ((MapLogicStructure)ho).Class.DescText);
+                        else if (ho.GetObjectType() == MapLogicObjectType.Monster)
+                            fpstr += string.Format("\nHoveredObject: {0}", ((MapLogicUnit)ho).Template.Name);
+                    }
+                    else fpstr += "\nHoveredObject: <none>";
+                }
                 m_fpsr.Text = fpstr;
                 //fps_timer = 0;
             }

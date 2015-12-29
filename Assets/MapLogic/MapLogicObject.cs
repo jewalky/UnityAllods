@@ -134,12 +134,13 @@ public class MapLogicObject : IDisposable
 
     public int GetVisibilityInFOW()
     {
+        int extRadius = (GetObjectType() == MapLogicObjectType.Obstacle) ? 2 : 0;
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;
         int TopFlag = 0;
-        for (int ly = Y - 2; ly <= Y + Height + 2; ly++)
+        for (int ly = Y - extRadius; ly <= Y + Height + extRadius; ly++)
         {
-            for (int lx = X - 2; lx <= X + Width + 2; lx++)
+            for (int lx = X - extRadius; lx <= X + Width + extRadius; lx++)
             {
                 if (lx < 0 || lx >= mw || ly < 0 || ly >= mh)
                     continue;

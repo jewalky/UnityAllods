@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using UnityEngine;
 
 public class UnitClass
@@ -27,10 +28,10 @@ public class UnitClass
     public int BonePhases = MagicIntNull; // same as above.
     public float CenterX = -2;
     public float CenterY = -2;
-    public float SelectionX1 = -2;
-    public float SelectionX2 = -2;
-    public float SelectionY1 = -2;
-    public float SelectionY2 = -2;
+    public int SelectionX1 = MagicIntNull;
+    public int SelectionX2 = MagicIntNull;
+    public int SelectionY1 = MagicIntNull;
+    public int SelectionY2 = MagicIntNull;
     public AnimationFrame[] AttackFrames = null;
     public AnimationFrame[] MoveFrames = null;
     public int DyingID = MagicIntNull;
@@ -49,6 +50,7 @@ public class UnitFile
     public Images.AllodsSpriteSeparate FileB = null;
     public string FileName = "";
     private bool Loaded = false;
+    private Dictionary<int, Texture2D> Palettes = new Dictionary<int, Texture2D>();
 
     public void UpdateSprite()
     {
@@ -72,6 +74,19 @@ public class UnitFile
             }
             Loaded = true;
         }
+    }
+
+    public Texture2D UpdatePalette(int num)
+    {
+        if (Palettes.ContainsKey(num))
+            return Palettes[num];
+
+        string filename = "palette.pal";
+        if (num > 1) filename = string.Format("palette{0}.pal", num);
+        string dirname = Path.GetDirectoryName(FileName);
+        Texture2D palette = Images.LoadPalette(dirname + "/" + filename);
+        Palettes[num] = palette;
+        return palette;
     }
 }
 
@@ -156,10 +171,11 @@ public class UnitClassLoader
                 if (s1x != UnitClass.MagicIntNull && s1y != UnitClass.MagicIntNull &&
                     s2x != UnitClass.MagicIntNull && s2y != UnitClass.MagicIntNull)
                 {
-                    cls.SelectionX1 = (float)s1x / w;
-                    cls.SelectionX2 = (float)s2x / w;
-                    cls.SelectionY1 = (float)s1y / h;
-                    cls.SelectionY2 = (float)s2y / h;
+                    cls.SelectionX1 = s1x - cx;
+                    cls.SelectionX2 = s2x - cx;
+                    cls.SelectionY1 = s1y - cy;
+                    cls.SelectionY2 = s2y - cy;
+                    
                 }
             }
 
@@ -244,13 +260,13 @@ public class UnitClassLoader
                     cls.CenterX = clsp.CenterX;
                 if (cls.CenterY == -2)
                     cls.CenterY = clsp.CenterY;
-                if (cls.SelectionX1 == -2)
+                if (cls.SelectionX1 == UnitClass.MagicIntNull)
                     cls.SelectionX1 = clsp.SelectionX1;
-                if (cls.SelectionY1 == -2)
+                if (cls.SelectionY1 == UnitClass.MagicIntNull)
                     cls.SelectionY1 = clsp.SelectionY1;
-                if (cls.SelectionX2 == -2)
+                if (cls.SelectionX2 == UnitClass.MagicIntNull)
                     cls.SelectionX2 = clsp.SelectionX1;
-                if (cls.SelectionY2 == -2)
+                if (cls.SelectionY2 == UnitClass.MagicIntNull)
                     cls.SelectionY2 = clsp.SelectionY1;
                 if (cls.AttackFrames == null)
                     cls.AttackFrames = clsp.AttackFrames;
@@ -293,13 +309,13 @@ public class UnitClassLoader
                 cls.CenterX = 0;
             if (cls.CenterY == -2)
                 cls.CenterY = 0;
-            if (cls.SelectionX1 == -2)
+            if (cls.SelectionX1 == UnitClass.MagicIntNull)
                 cls.SelectionX1 = 0;
-            if (cls.SelectionY1 == -2)
+            if (cls.SelectionY1 == UnitClass.MagicIntNull)
                 cls.SelectionY1 = 0;
-            if (cls.SelectionX2 == -2)
+            if (cls.SelectionX2 == UnitClass.MagicIntNull)
                 cls.SelectionX2 = 0;
-            if (cls.SelectionY2 == -2)
+            if (cls.SelectionY2 == UnitClass.MagicIntNull)
                 cls.SelectionY2 = 0;
             if (cls.AttackFrames == null)
                 cls.AttackFrames = null;
@@ -314,6 +330,7 @@ public class UnitClassLoader
             if (cls.InfoPicture == null)
                 cls.InfoPicture = "beeh";
             cls.Dying = GetUnitClassById(cls.DyingID);
+            cls.InfoPicture = "graphics/infowindow/" + cls.InfoPicture;
         }
     }
 

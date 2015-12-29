@@ -59,6 +59,9 @@ public class MapLogicUnit : MapLogicObject, IMapLogicPlayerPawn, IDisposable
             return;
         }
 
+        Width = Template.TokenSize;
+        Height = Template.TokenSize;
+
         Stats = new MapLogicStats();
         DoUpdateView = true;
     }

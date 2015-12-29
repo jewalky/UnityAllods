@@ -4,6 +4,8 @@
 	{
 		[PerRendererData] _MainTex("Sprite Texture", 2D) = "white" {}
 		_Color("Tint", Color) = (1,1,1,1)
+		[MaterialToggle] DoClip("Clipping enabled", Float) = 0
+		ClipArea("Clipping area", Vector) = (0,0,0,0)
 		[MaterialToggle] PixelSnap("Pixel snap", Float) = 0
 	}
 
@@ -48,7 +50,6 @@
 				float4 vertex   : POSITION;
 				float4 color    : COLOR;
 				float2 texcoord : TEXCOORD0;
-				float2 texcoord2 : TEXCOORD1;
 			};
 
 			struct v2f
@@ -56,7 +57,7 @@
 				float4 vertex   : SV_POSITION;
 				fixed4 color : COLOR;
 				half2 texcoord  : TEXCOORD0;
-				half2 texcoord2 : TEXCOORD1;
+				float4 vertexS  : TANGENT;
 			};
 
 			fixed4 _Color;
@@ -65,8 +66,8 @@
 			{
 				v2f OUT;
 				OUT.vertex = mul(UNITY_MATRIX_MVP, IN.vertex);
+				OUT.vertexS = ComputeScreenPos(OUT.vertex);
 				OUT.texcoord = IN.texcoord;
-				OUT.texcoord2 = IN.texcoord2;
 				OUT.color = IN.color * _Color;
 #ifdef PIXELSNAP_ON
 				OUT.vertex = UnityPixelSnap(OUT.vertex);
@@ -77,9 +78,21 @@
 
 			sampler2D _MainTex;
 			sampler2D _LightTex;
+			float DoClip;
+			float4 ClipArea;
 
 			fixed4 frag(v2f IN) : COLOR
 			{
+				if (DoClip > 0)
+				{
+					float2 wcoord = (IN.vertexS.xy / IN.vertexS.w * _ScreenParams.xy);
+					wcoord.y = _ScreenParams.y - wcoord.y;
+					if (wcoord.x < ClipArea[0] ||
+						wcoord.y < ClipArea[1] ||
+						wcoord.x >= ClipArea[0] + ClipArea[2] ||
+						wcoord.y >= ClipArea[1] + ClipArea[3]) discard;
+				}
+
 				half4 texcol = tex2D(_MainTex, IN.texcoord) * IN.color;
 				return texcol;
 			}

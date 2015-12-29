@@ -58,6 +58,8 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
             y = 0;
         }
 
+        bool dead = (!LogicStructure.Class.Indestructible && LogicStructure.Health <= 0);
+
         if (!onlyColors || first)
         {
             Vector3[] qv = new Vector3[w * h * 4];
@@ -81,7 +83,11 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
                     {
                         // handle odd structure animation method
                         realFrame = ly * fw + lx;
-                        if (frame > 0 && LogicStructure.Class.AnimMask[realFrame] == '+')
+                        if (dead)
+                        {
+                            realFrame = sprite.Sprites.Length - (fw * fh) + realFrame; // last frame is always full flat frame
+                        }
+                        else if (frame > 0 && LogicStructure.Class.AnimMask[realFrame] == '+')
                         {
                             if (fw == 1 && fh == 1)
                                 realFrame = frame;

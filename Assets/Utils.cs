@@ -111,7 +111,7 @@ public class ScriptBatch
         string path = "ServerBuild";
         string[] levels = new string[] { "Assets/Allods.unity" };
         // Build player.
-        BuildPipeline.BuildPlayer(levels, path + "/AllodsServer.x64", BuildTarget.StandaloneLinux64, BuildOptions.EnableHeadlessMode);
+        BuildPipeline.BuildPlayer(levels, path + "/AllodsServer.x64", BuildTarget.StandaloneLinux64, BuildOptions.EnableHeadlessMode|BuildOptions.Il2CPP);
         // copy libs
         const string sourceDir = @"DLLs";
         const string targetDir = @"ServerBuild\AllodsServer_Data\Managed";
@@ -126,7 +126,7 @@ public class ScriptBatch
         string path = "ClientBuild";
         string[] levels = new string[] { "Assets/Allods.unity" };
         // Build player.
-        BuildPipeline.BuildPlayer(levels, path + "/Allods.exe", BuildTarget.StandaloneWindows, BuildOptions.None);
+        BuildPipeline.BuildPlayer(levels, path + "/Allods.exe", BuildTarget.StandaloneWindows, BuildOptions.Il2CPP);
         // Then put some DLLs in it
         const string sourceDir = @"DLLs";
         const string targetDir = @"ClientBuild\Allods_Data\Managed";

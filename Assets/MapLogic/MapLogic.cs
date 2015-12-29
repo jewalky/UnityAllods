@@ -566,7 +566,7 @@ class MapLogic
     // create main unit for player.
     public IPlayerPawn CreateAvatar(Player player)
     {
-        MapUnit unit = new MapUnit("M_Skeleton.3");
+        MapUnit unit = new MapUnit("Goblin_Pike");
         unit.X = 16;
         unit.Y = 16;
         unit.Player = player;

@@ -58,6 +58,7 @@ public class MouseCursor : MonoBehaviour {
     public static MapCursorSettings CurDefault = null;
     public static MapCursorSettings CurSelect = null;
     public static MapCursorSettings CurSelectStructure = null;
+    public static MapCursorSettings CurMove = null;
     public static MapCursorSettings CurWait = null;
 
     private static SpriteRenderer Renderer = null;
@@ -76,6 +77,7 @@ public class MouseCursor : MonoBehaviour {
         CurDefault = CreateCursor("graphics/cursors/default/sprites.16a", 4, 4, 0);
         CurSelect = CreateCursor("graphics/cursors/select/sprites.16a", 3, 3, 0);
         CurSelectStructure = CreateCursor("graphics/cursors/town/sprites.16a", 16, 16, 0);
+        CurMove = CreateCursor("graphics/cursors/move/sprites.16a", 3, 3, 0.08f);
         CurWait = CreateCursor("graphics/cursors/wait/sprites.16a", 16, 16, 0.05f);
         SetCursor(CurDefault);
 

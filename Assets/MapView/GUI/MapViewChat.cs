@@ -165,6 +165,7 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
     {
         if (!MapLogic.Instance.IsLoaded)
             return false;
+
         if (e.type == EventType.KeyDown)
         {
             switch (e.keyCode)
@@ -190,7 +191,7 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
             }
         }
 
-        if (ChatFieldEnabled)
+        if (ChatField.Visible)
             return true; // do not allow events to leak down into the map
 
         return false;

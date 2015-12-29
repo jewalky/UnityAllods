@@ -735,6 +735,13 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                 ((MapStructure)HoveredObject).Class.Usable) MouseCursor.SetCursor(MouseCursor.CurSelectStructure);
             else MouseCursor.SetCursor(MouseCursor.CurSelect);
         }
+
+        if (HoveredObject == null && SelectedObject is IPlayerPawn)
+        {
+            Player sp = ((IPlayerPawn)SelectedObject).GetPlayer();
+            if (sp == MapLogic.Instance.ConsolePlayer)
+                MouseCursor.SetCursor(MouseCursor.CurMove);
+        }
     }
 
     float lastLogicUpdateTime = 0;

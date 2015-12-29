@@ -233,8 +233,11 @@ class MapLogic
     {
         _LevelTime++;
 
-        foreach (MapObject mobj in Objects)
+        for (int i = 0; i < Objects.Count; i++)
+        {
+            MapObject mobj = Objects[i];
             mobj.Update();
+        }
 
         // update local scanrange every few tics (every 5?)
         if (ConsolePlayer != null && (_LevelTime % 5 == 0))

@@ -213,6 +213,10 @@ public class MapUnit : MapObject, IPlayerPawn, IDisposable
     private ShortestPathGraphSearch<Vector2i, Vector2i> AstarSearcher = null;
     public Vector2i DecideNextMove(int targetX, int targetY)
     {
+        // if targetX,targetY is blocked, refuse to pathfind.
+        if (!CheckWalkableForUnit(targetX, targetY))
+            return null;
+
         if (AstarSearcher == null)
             AstarSearcher = new ShortestPathGraphSearch<Vector2i, Vector2i>(new AstarHelper(this));
         try

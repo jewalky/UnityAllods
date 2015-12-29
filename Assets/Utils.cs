@@ -131,6 +131,21 @@ public class ScriptBatch
             File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
     }
 
+    [MenuItem("MyTools/Linux client build")]
+    public static void BuildLinuxClient()
+    {
+        // Get filename.
+        string path = "LinuxClientBuild";
+        string[] levels = new string[] { "Assets/Allods.unity" };
+        // Build player.
+        BuildPipeline.BuildPlayer(levels, path + "/Allods.x86", BuildTarget.StandaloneLinux, BuildOptions.Il2CPP);
+        // copy libs
+        const string sourceDir = @"DLLs";
+        const string targetDir = @"LinuxClientBuild\Allods_Data\Managed";
+        foreach (var file in Directory.GetFiles(sourceDir))
+            File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
+    }
+
     [MenuItem("MyTools/Windows build")]
     public static void BuildGameWindows()
     {

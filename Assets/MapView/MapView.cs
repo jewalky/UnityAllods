@@ -749,8 +749,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     float lastUpTime = 0;
     void UpdateLogic()
     {
-        foreach (MapObject mobj in MapLogic.Instance.Objects)
+        for (int i = 0; i < MapLogic.Instance.Objects.Count; i++)
         {
+            MapObject mobj = MapLogic.Instance.Objects[i];
             if (mobj.GameScript is IObjectManualUpdate)
                 ((IObjectManualUpdate)mobj.GameScript).OnUpdate();
         }

@@ -95,6 +95,9 @@ public class MapViewObstacle : MapViewObject, IObjectManualUpdate
     private bool oldVisibility = false;
     public void OnUpdate()
     {
+        if (Renderer == null)
+            return;
+
         if (LogicObstacle.GetVisibility() == 0)
         {
             oldVisibility = false;

@@ -39,9 +39,24 @@ public class UnitClass
     public int Palette = MagicIntNull;
     public int AttackDelay = MagicIntNull;
     public string InfoPicture = null;
-    public Texture2D InfoPictureFile = null;
+    //public Texture2D InfoPictureFile = null;
+    private Dictionary<int, Texture2D> TextureFile = new Dictionary<int, Texture2D>();
     public bool InMapEditor = false;
     public bool Flip = false; // if sprite flip should be done
+
+    public Texture2D UpdateInfoPicture(int face)
+    {
+        if (TextureFile.ContainsKey(face))
+            return TextureFile[face];
+
+        string picName = InfoPicture;
+        if (face > 1)
+            picName += face.ToString();
+        picName += ".bmp";
+        Texture2D pic = Images.LoadImage(picName, 0, Images.ImageType.AllodsBMP);
+        TextureFile[face] = pic;
+        return pic;
+    }
 }
 
 public class UnitFile

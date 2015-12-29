@@ -352,6 +352,7 @@ class MapLogic
                 unit.X = (int)almunit.X;
                 unit.Y = (int)almunit.Y;
                 unit.Tag = almunit.ID;
+                unit.Player = GetPlayerByID(almunit.Player - 1);
 
                 unit.LinkToWorld();
                 Objects.Add(unit);

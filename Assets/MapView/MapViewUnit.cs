@@ -211,27 +211,20 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie
         if (on)
         {
             // load infowindow texture.
-            if (LogicUnit.Class.InfoPictureFile == null)
-            {
-                string picName = LogicUnit.Class.InfoPicture;
-                if (LogicUnit.Template.Face > 1)
-                    picName += LogicUnit.Template.Face.ToString();
-                picName += ".bmp";
-                LogicUnit.Class.InfoPictureFile = Images.LoadImage(picName, 0, Images.ImageType.AllodsBMP);
-            }
+            Texture2D pic = LogicUnit.Class.UpdateInfoPicture(LogicUnit.Template.Face);
             // init infowindow
             if (TexMaterial == null)
                 TexMaterial = new Material(MainCamera.MainShader);
             TexObject = Utils.CreatePrimitive(PrimitiveType.Quad);
             TexRenderer = TexObject.GetComponent<MeshRenderer>();
             TexRenderer.material = TexMaterial;
-            TexRenderer.material.mainTexture = LogicUnit.Class.InfoPictureFile;
+            TexRenderer.material.mainTexture = pic;
             TexRenderer.enabled = true;
             TexRenderer.transform.parent = parent;
-            TexRenderer.transform.localPosition = new Vector3((float)LogicUnit.Class.InfoPictureFile.width / 2 + 16,
-                                                         (float)LogicUnit.Class.InfoPictureFile.height / 2 + 2, -0.01f);
-            TexRenderer.transform.localScale = new Vector3(LogicUnit.Class.InfoPictureFile.width,
-                                                           LogicUnit.Class.InfoPictureFile.height, 1);
+            TexRenderer.transform.localPosition = new Vector3((float)pic.width / 2 + 16,
+                                                         (float)pic.height / 2 + 2, -0.01f);
+            TexRenderer.transform.localScale = new Vector3(pic.width,
+                                                           pic.height, 1);
         }
         else
         {

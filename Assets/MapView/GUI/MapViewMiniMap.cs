@@ -173,14 +173,11 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
 
                 foreach (MapLogicObject mobj in node.Objects)
                 {
-                    if ((mobj.GetObjectType() != MapLogicObjectType.Structure &&
-                         mobj.GetObjectType() != MapLogicObjectType.Monster &&
-                         mobj.GetObjectType() != MapLogicObjectType.Human))
+                    if (!(mobj is IMapLogicPlayerPawn))
                         continue;
-
-                    MapLogicPlayer player = null;
-                    if (mobj.GetObjectType() == MapLogicObjectType.Structure)
-                        player = ((MapLogicStructure)mobj).Player;
+                    if (((node.Flags & MapNodeFlags.Visible) == 0) && (mobj.GetObjectType() != MapLogicObjectType.Structure))
+                        continue; // don't show invisible monsters on minimap
+                    MapLogicPlayer player = ((IMapLogicPlayerPawn)mobj).GetPlayer();
                     Color pColor = (player != null) ? (Color)MapLogicPlayer.AllColors[player.Color] : new Color(1, 1, 1, 1);
 
                     pColor.a = c.a;

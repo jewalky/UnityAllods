@@ -93,10 +93,13 @@ public class ShortestPathGraphSearch<State, Action> {
 			if (node.state.Equals(toState)) return BuildSolution(node);
 			exploredSet.Add(node.state);
             // dirty hack to prevent jumping overhead
-            if (exploredSet.Count > 1024)
+            if (exploredSet.Count > 2048)
                 return null;
-			// expand node and add to frontier
-			foreach (Action action in info.Expand(node.state)){
+            // expand node and add to frontier
+            List<Action> exp = info.Expand(node.state);
+            for (int i = 0; i <exp.Count; i++)
+            {
+                Action action = exp[i];
 				State child = info.ApplyAction(node.state, action);
 				
 				SearchNode<State,Action> frontierNode = null;

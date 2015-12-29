@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie
+public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IObjectManualUpdate
 {
     public MapUnit LogicUnit
     {
@@ -127,10 +127,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie
 
     private bool spriteSet = false;
     private bool oldVisibility = false;
-    public override void Update()
+    public void OnUpdate()
     {
-        base.Update();
-
         if (LogicUnit.GetVisibility() != 2)
         {
             oldVisibility = false;

@@ -749,6 +749,12 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     float lastUpTime = 0;
     void UpdateLogic()
     {
+        foreach (MapObject mobj in MapLogic.Instance.Objects)
+        {
+            if (mobj.GameScript is IObjectManualUpdate)
+                ((IObjectManualUpdate)mobj.GameScript).OnUpdate();
+        }
+
         lastLogTime += Time.deltaTime;
         lastLogicUpdateTime += Time.deltaTime;
         if (lastLogicUpdateTime >= 1)

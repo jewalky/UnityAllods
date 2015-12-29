@@ -17,6 +17,11 @@ public interface IMapViewSelectable
     bool IsSelected(int x, int y); // mouse coords
 }
 
+public interface IObjectManualUpdate
+{
+    void OnUpdate();
+}
+
 public class MapViewObject : MonoBehaviour
 {
     protected MapObject LogicObject = null;
@@ -29,15 +34,5 @@ public class MapViewObject : MonoBehaviour
     protected float MakeZFromY(float y)
     {
         return -y;
-    }
-
-    private int LocalLevelTime = MapLogic.Instance.LevelTime;
-    public virtual void Update()
-    {
-        while (LocalLevelTime < MapLogic.Instance.LevelTime)
-        {
-            LogicObject.Update();
-            LocalLevelTime++;
-        }
     }
 }

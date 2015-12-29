@@ -233,6 +233,9 @@ class MapLogic
     {
         _LevelTime++;
 
+        foreach (MapObject mobj in Objects)
+            mobj.Update();
+
         // update local scanrange every few tics (every 5?)
         if (ConsolePlayer != null && (_LevelTime % 5 == 0))
             UpdateVisibility();

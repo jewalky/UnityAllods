@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class MapViewObstacle : MapViewObject
+public class MapViewObstacle : MapViewObject, IObjectManualUpdate
 {
     public MapObstacle LogicObstacle
     {
@@ -93,10 +93,8 @@ public class MapViewObstacle : MapViewObject
 
     private bool spriteSet = false;
     private bool oldVisibility = false;
-    public override void Update()
+    public void OnUpdate()
     {
-        base.Update();
-
         if (LogicObstacle.GetVisibility() == 0)
         {
             oldVisibility = false;

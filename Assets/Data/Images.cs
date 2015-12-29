@@ -249,6 +249,141 @@ public class Images
         public Sprite[] Sprites;
     }
 
+    public class AllodsSpriteSeparate
+    {
+        public Texture2D OwnPalette;
+        public Frame[] Frames;
+
+        public class Frame
+        {
+            public int Width { get; internal set; }
+            public int Height { get; internal set; }
+            internal Color[] _Colors;
+            internal Texture2D _Texture;
+
+            public Texture2D Texture
+            {
+                get
+                {
+                    if (_Texture == null)
+                    {
+                        _Texture = new Texture2D(Width, Height, TextureFormat.RGHalf, false);
+                        _Texture.filterMode = FilterMode.Point;
+                        _Texture.SetPixels(_Colors);
+                        _Texture.Apply(false, true);
+                        _Colors = null;
+                    }
+
+                    return _Texture;
+                }
+            }
+        }
+    }
+
+    public static AllodsSpriteSeparate Load256Separate(string filename, bool hasOwnPalette = true)
+    {
+        MemoryStream ms = ResourceManager.OpenRead(filename);
+        if (ms == null)
+        {
+            Core.Abort("Couldn't load \"{0}\"", filename);
+            return null;
+        }
+
+        BinaryReader br = new BinaryReader(ms);
+
+        ms.Position = ms.Length - 4;
+        int count = br.ReadInt32() & 0x7FFFFFFF;
+
+        ms.Position = 0;
+
+        AllodsSpriteSeparate sprite = new AllodsSpriteSeparate();
+        // read palette
+        if (hasOwnPalette)
+            sprite.OwnPalette = LoadPaletteFromStream(br);
+        else sprite.OwnPalette = null;
+        AllodsSpriteSeparate.Frame[] frames = new AllodsSpriteSeparate.Frame[count];
+
+        int oldCount = count;
+        for (int i = 0; i < count; i++)
+        {
+            uint w = br.ReadUInt32();
+            uint h = br.ReadUInt32();
+            uint ds = br.ReadUInt32();
+            long cpos = ms.Position;
+
+            if (w > 512 || h > 512 || ds > 1000000)
+            {
+                //Core.Abort("Invalid sprite \"{0}\": NULL frame #{1}", filename, i);
+                Debug.Log(string.Format("Invalid sprite \"{0}\": NULL frame #{1}", filename, i));
+                i--;
+                count--;
+                continue;
+            }
+
+            Color[] colors = new Color[w * h];
+            for (int j = 0; j < colors.Length; j++)
+                colors[j].g = 0;
+
+            int ix = 0;
+            int iy = 0;
+            int ids = (int)ds;
+            while (ids > 0)
+            {
+                ushort ipx = br.ReadByte();
+                ipx |= (ushort)(ipx << 8);
+                ipx &= 0xC03F;
+                ids--;
+
+                if ((ipx & 0xC000) > 0)
+                {
+                    if ((ipx & 0xC000) == 0x4000)
+                    {
+                        ipx &= 0x3F;
+                        SpriteAddIXIY(ref ix, ref iy, w, ipx * w);
+                    }
+                    else
+                    {
+                        ipx &= 0x3F;
+                        SpriteAddIXIY(ref ix, ref iy, w, ipx);
+                    }
+                }
+                else
+                {
+                    ipx &= 0x3F;
+                    for (int j = 0; j < ipx; j++)
+                    {
+                        byte ss = br.ReadByte();
+                        //uint px = (ss << 16) | (ss << 8) | (ss) | 0xFF000000;
+                        colors[iy * w + ix] = new Color((float)ss / 255f, 1, 0, 0);
+                        SpriteAddIXIY(ref ix, ref iy, w, 1);
+                    }
+
+                    ids -= ipx;
+                }
+            }
+
+            // add tex here
+            //Texture2D texture = new Texture2D((int)w, (int)h, TextureFormat.RGHalf, false); // too large, but meh.
+            //texture.filterMode = FilterMode.Point;
+            //texture.SetPixels(colors);
+            //texture.Apply(false);
+            frames[i] = new AllodsSpriteSeparate.Frame();
+            frames[i].Width = (int)w;
+            frames[i].Height = (int)h;
+            frames[i]._Colors = colors;
+            frames[i]._Texture = null;
+            ms.Position = cpos + ds;
+        }
+
+        br.Close();
+
+        if (oldCount != count)
+            Array.Resize(ref frames, count);
+        sprite.Frames = frames;
+
+        return sprite;
+    }
+
     public static AllodsSprite Load256(string filename, bool hasOwnPalette = true)
     {
         MemoryStream ms = ResourceManager.OpenRead(filename);

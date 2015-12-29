@@ -23,12 +23,11 @@ public class MapViewUnit : MapViewObject
     private MeshFilter ShadowFilter;
     private Mesh ShadowMesh;
 
-    private Mesh UpdateMesh(Images.AllodsSprite sprite, int frame, Mesh mesh, float shadowOffs, bool first)
+    private Mesh UpdateMesh(Images.AllodsSpriteSeparate sprite, int frame, Mesh mesh, float shadowOffs, bool first)
     {
-        Rect texRect = sprite.AtlasRects[frame];
-
-        float sW = sprite.Sprites[frame].rect.width;
-        float sH = sprite.Sprites[frame].rect.height;
+        float sW = sprite.Frames[frame].Width;
+        float sH = sprite.Frames[frame].Height;
+        Texture2D sTex = sprite.Frames[frame].Texture;
 
         float shadowOffsReal = shadowOffs * sH;
         float shadowOffsXLeft = -shadowOffsReal * (1f - LogicUnit.Class.CenterY);
@@ -41,10 +40,10 @@ public class MapViewUnit : MapViewObject
         qv[pp++] = new Vector3(shadowOffsXLeft, sH, 0);
 
         Vector2[] quv = new Vector2[4];
-        quv[0] = new Vector2(texRect.xMin, texRect.yMin);
-        quv[1] = new Vector2(texRect.xMax, texRect.yMin);
-        quv[2] = new Vector2(texRect.xMax, texRect.yMax);
-        quv[3] = new Vector2(texRect.xMin, texRect.yMax);
+        quv[0] = new Vector2(0, 0);
+        quv[1] = new Vector2(1, 0);
+        quv[2] = new Vector2(1, 1);
+        quv[3] = new Vector2(0, 1);
 
         mesh.vertices = qv;
         mesh.uv = quv;
@@ -60,6 +59,9 @@ public class MapViewUnit : MapViewObject
                 qt[i] = i;
             mesh.SetIndices(qt, MeshTopology.Quads, 0);
         }
+
+        Renderer.material.mainTexture = sTex;
+        ShadowRenderer.material.mainTexture = sTex;
 
         return mesh;
     }
@@ -113,24 +115,23 @@ public class MapViewUnit : MapViewObject
             Renderer.enabled = true;
             ShadowRenderer.enabled = true;
 
-            Images.AllodsSprite sprites = LogicUnit.Class.File.File;
+            Images.AllodsSpriteSeparate sprites = LogicUnit.Class.File.File;
 
             if (!spriteSet)
             {
                 LogicUnit.Class.File.UpdateSprite();
                 sprites = LogicUnit.Class.File.File;
-                Renderer.material = LogicUnit.Class.File.FileMaterial;
+                Renderer.material = new Material(MainCamera.MainShaderPaletted);
                 Renderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
-                ShadowRenderer.material = LogicUnit.Class.File.FileMaterial;
+                ShadowRenderer.material = Renderer.material;
                 ShadowRenderer.material.color = new Color(0, 0, 0, 0.5f);
-                ShadowRenderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
                 spriteSet = true;
             }
 
             int actualFrame = LogicUnit.Class.Index; // draw frame 0 of each unit
             Vector2 xP = MapView.Instance.MapToScreenCoords(LogicObject.X + 0.5f, LogicObject.Y + 0.5f, 1, 1);
-            transform.localPosition = new Vector3(xP.x - sprites.Sprites[actualFrame].rect.width * LogicUnit.Class.CenterX,
-                                                    xP.y - sprites.Sprites[actualFrame].rect.height * LogicUnit.Class.CenterY,
+            transform.localPosition = new Vector3(xP.x - sprites.Frames[actualFrame].Width * LogicUnit.Class.CenterX,
+                                                    xP.y - sprites.Frames[actualFrame].Height * LogicUnit.Class.CenterY,
                                                     MakeZFromY(xP.y)); // order sprites by y coordinate basically
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicUnit.Class.CenterX));
             //Renderer.sprite = sprites.Sprites[actualFrame];

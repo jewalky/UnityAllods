@@ -231,8 +231,6 @@ class MapLogic
     public void Update()
     {
         _LevelTime++;
-        foreach (MapLogicObject mo in Objects)
-            mo.Update();
     }
 
     public void Unload()
@@ -251,6 +249,7 @@ class MapLogic
     {
         ObstacleClassLoader.InitClasses();
         StructureClassLoader.InitClasses();
+        UnitClassLoader.InitClasses();
         TemplateLoader.LoadTemplates();
         MapLightingNeedsUpdate = true;
         MapFOWNeedsUpdate = true;
@@ -314,27 +313,49 @@ class MapLogic
         }
 
         // load structures
-        foreach (AllodsMap.AlmStructure almstruc in mapStructure.Structures)
+        if (mapStructure.Structures != null)
         {
-            MapLogicStructure struc;
-            struc = new MapLogicStructure(almstruc.TypeID);
-            struc.X = (int)almstruc.X;
-            struc.Y = (int)almstruc.Y;
-            struc.Health = almstruc.Health;
-            struc.Tag = almstruc.ID;
-            struc.Player = GetPlayerByID(almstruc.Player-1);
-            if (almstruc.IsBridge)
+            foreach (AllodsMap.AlmStructure almstruc in mapStructure.Structures)
             {
-                struc.Width = almstruc.Width;
-                struc.Height = almstruc.Height;
-                // also this crutch is apparently done by ROM2
-                if (struc.Width < 2) struc.Width = 2;
-                if (struc.Height < 2) struc.Height = 2;
-                struc.IsBridge = true;
-            }
+                MapLogicStructure struc;
+                struc = new MapLogicStructure(almstruc.TypeID);
+                struc.X = (int)almstruc.X;
+                struc.Y = (int)almstruc.Y;
+                struc.Health = almstruc.Health;
+                struc.Tag = almstruc.ID;
+                struc.Player = GetPlayerByID(almstruc.Player - 1);
+                if (almstruc.IsBridge)
+                {
+                    struc.Width = almstruc.Width;
+                    struc.Height = almstruc.Height;
+                    // also this crutch is apparently done by ROM2
+                    if (struc.Width < 2) struc.Width = 2;
+                    if (struc.Height < 2) struc.Height = 2;
+                    struc.IsBridge = true;
+                }
 
-            struc.LinkToWorld();
-            Objects.Add(struc);
+                struc.LinkToWorld();
+                Objects.Add(struc);
+            }
+        }
+
+        // load units
+        if (mapStructure.Units != null)
+        {
+            foreach (AllodsMap.AlmUnit almunit in mapStructure.Units)
+            {
+                if ((almunit.Flags & 0x10) != 0)
+                    continue; // skip humans for now
+
+                MapLogicUnit unit;
+                unit = new MapLogicUnit(almunit.ServerID);
+                unit.X = (int)almunit.X;
+                unit.Y = (int)almunit.Y;
+                unit.Tag = almunit.ID;
+
+                unit.LinkToWorld();
+                Objects.Add(unit);
+            }
         }
 
         // only if loaded

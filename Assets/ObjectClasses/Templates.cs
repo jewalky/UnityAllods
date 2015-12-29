@@ -220,7 +220,6 @@ public class Templates
         public int Absorbtion;
         public int Charge;
         public int Relax;
-        public int DyingTime;
         public int ProtectionFire;
         public int ProtectionWater;
         public int ProtectionAir;
@@ -231,11 +230,11 @@ public class Templates
         public int ProtectionBludgeon;
         public int ProtectionPike;
         public int ProtectionShooting;
-        public int ServerID;
         public int TypeID;
         public int Face;
         public int TokenSize;
         public int MovementType;
+        public int DyingTime;
         public int Withdraw;
         public int Wimpy;
         public int SeeInvisible;
@@ -257,6 +256,7 @@ public class Templates
         public int Spell3;
         public int Spell3Prob;
         public int SpellPower;
+        public int ServerID;
         public uint KnownSpells;
         public int SkillFire;
         public int SkillWater;
@@ -480,6 +480,29 @@ public static class TemplateLoader
         {
             if (struc.Name.ToLower() == name)
                 return struc;
+        }
+
+        return null;
+    }
+
+    public static Templates.TplMonster GetMonsterById(int serverId)
+    {
+        foreach (Templates.TplMonster unit in Templates.Monsters)
+        {
+            if (unit.ServerID == serverId)
+                return unit;
+        }
+
+        return null;
+    }
+
+    public static Templates.TplMonster GetMonsterByName(string name)
+    {
+        name = name.ToLower();
+        foreach (Templates.TplMonster unit in Templates.Monsters)
+        {
+            if (unit.Name.ToLower() == name)
+                return unit;
         }
 
         return null;

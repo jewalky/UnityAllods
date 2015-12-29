@@ -201,8 +201,10 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
 
     private bool spriteSet = false;
     private bool oldVisibility = false;
-    public void Update()
+    public override void Update()
     {
+        base.Update();
+
         if (LogicStructure.GetVisibility() == 0)
         {
             oldVisibility = false;

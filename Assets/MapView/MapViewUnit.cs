@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class MapViewObstacle : MapViewObject
+public class MapViewUnit : MapViewObject
 {
-    public MapLogicObstacle LogicObstacle
+    public MapLogicUnit LogicUnit
     {
         get
         {
-            return (MapLogicObstacle)LogicObject;
+            return (MapLogicUnit)LogicObject;
         }
     }
 
@@ -31,7 +31,7 @@ public class MapViewObstacle : MapViewObject
         float sH = sprite.Sprites[frame].rect.height;
 
         float shadowOffsReal = shadowOffs * sH;
-        float shadowOffsXLeft = -shadowOffsReal * (1f - LogicObstacle.Class.CenterY);
+        float shadowOffsXLeft = -shadowOffsReal * (1f - LogicUnit.Class.CenterY);
 
         Vector3[] qv = new Vector3[4];
         int pp = 0;
@@ -66,16 +66,16 @@ public class MapViewObstacle : MapViewObject
 
     public void Start()
     {
-        if (LogicObstacle.Class != null)
-            name = string.Format("Obstacle (ID={0}, Class={1})", LogicObstacle.ID, LogicObstacle.Class.DescText);
-        else name = string.Format("Obstacle (ID={0}, Class=<INVALID>)", LogicObstacle.ID);
+        if (LogicUnit.Class != null)
+            name = string.Format("Unit (ID={0}, Class={1})", LogicUnit.ID, LogicUnit.Template.Name);
+        else name = string.Format("Unit (ID={0}, Class=<INVALID>)", LogicUnit.ID);
         // let's give ourselves a sprite renderer first.
         Renderer = gameObject.AddComponent<MeshRenderer>();
         Renderer.enabled = false;
         Filter = gameObject.AddComponent<MeshFilter>();
         Filter.mesh = new Mesh();
         transform.localScale = new Vector3(1, 1, 1);
-        
+
         ShadowObject = Utils.CreateObject();
         ShadowObject.name = "Shadow";
         ShadowObject.transform.parent = transform;
@@ -93,7 +93,7 @@ public class MapViewObstacle : MapViewObject
     {
         base.Update();
 
-        if (LogicObstacle.GetVisibility() == 0)
+        if (LogicUnit.GetVisibility() == 0)
         {
             oldVisibility = false;
             Renderer.enabled = false;
@@ -108,36 +108,36 @@ public class MapViewObstacle : MapViewObject
             return;
         }
 
-        if (LogicObstacle.DoUpdateView)
+        if (LogicUnit.DoUpdateView)
         {
             Renderer.enabled = true;
             ShadowRenderer.enabled = true;
 
-            Images.AllodsSprite sprites = LogicObstacle.Class.File.File;
+            Images.AllodsSprite sprites = LogicUnit.Class.File.File;
 
             if (!spriteSet)
             {
-                LogicObstacle.Class.File.UpdateSprite();
-                sprites = LogicObstacle.Class.File.File;
-                Renderer.material = LogicObstacle.Class.File.FileMaterial;
+                LogicUnit.Class.File.UpdateSprite();
+                sprites = LogicUnit.Class.File.File;
+                Renderer.material = LogicUnit.Class.File.FileMaterial;
                 Renderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
-                ShadowRenderer.material = LogicObstacle.Class.File.FileMaterial;
+                ShadowRenderer.material = LogicUnit.Class.File.FileMaterial;
                 ShadowRenderer.material.color = new Color(0, 0, 0, 0.5f);
                 ShadowRenderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
                 spriteSet = true;
             }
 
-            int actualFrame = LogicObstacle.Class.Frames[LogicObstacle.CurrentFrame].Frame + LogicObstacle.Class.Index;
+            int actualFrame = LogicUnit.Class.Index; // draw frame 0 of each unit
             Vector2 xP = MapView.Instance.MapToScreenCoords(LogicObject.X + 0.5f, LogicObject.Y + 0.5f, 1, 1);
-            transform.localPosition = new Vector3(xP.x - sprites.Sprites[actualFrame].rect.width * LogicObstacle.Class.CenterX,
-                                                    xP.y - sprites.Sprites[actualFrame].rect.height * LogicObstacle.Class.CenterY,
+            transform.localPosition = new Vector3(xP.x - sprites.Sprites[actualFrame].rect.width * LogicUnit.Class.CenterX,
+                                                    xP.y - sprites.Sprites[actualFrame].rect.height * LogicUnit.Class.CenterY,
                                                     MakeZFromY(xP.y)); // order sprites by y coordinate basically
-            //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicObstacle.Class.CenterX));
+            //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicUnit.Class.CenterX));
             //Renderer.sprite = sprites.Sprites[actualFrame];
             ObstacleMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (ObstacleMesh == null));
             ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null)); // 0.3 of sprite height
 
-            LogicObstacle.DoUpdateView = false;
+            LogicUnit.DoUpdateView = false;
         }
     }
 

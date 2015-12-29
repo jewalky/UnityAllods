@@ -207,12 +207,51 @@ public class AllodsMap
         }
     }
 
+    public class AlmUnit
+    {
+        public float X;
+        public float Y;
+        public ushort TypeID;
+        public ushort Face;
+        public uint Flags;
+        public uint Flags2;
+        public int ServerID;
+        public int Player;
+        public int Sack;
+        public int Angle;
+        public short Health;
+        public short HealthMax;
+        public int ID;
+        public int Group;
+
+        public void LoadFromStream(BinaryReader reader)
+        {
+            int xRaw = reader.ReadInt32();
+            int yRaw = reader.ReadInt32();
+            X = ((xRaw & 0x0000FF00) >> 8) + (float)(xRaw & 0x00FF) / 256; // 00 10 00 80 = 16.5
+            Y = ((yRaw & 0x0000FF00) >> 8) + (float)(yRaw & 0x00FF) / 256;
+            TypeID = reader.ReadUInt16();
+            Face = reader.ReadUInt16();
+            Flags = reader.ReadUInt32();
+            Flags2 = reader.ReadUInt32();
+            ServerID = reader.ReadInt32();
+            Player = reader.ReadInt32();
+            Sack = reader.ReadInt32();
+            Angle = reader.ReadInt32();
+            Health = reader.ReadInt16();
+            HealthMax = reader.ReadInt16();
+            ID = reader.ReadInt32();
+            Group = reader.ReadInt32();
+        }
+    }
+
     public AlmData Data = new AlmData();
     public ushort[] Tiles;
     public sbyte[] Heights;
     public byte[] Objects;
     public AlmPlayer[] Players;
     public AlmStructure[] Structures;
+    public AlmUnit[] Units;
 
     // ====================================
     //  constructors
@@ -334,6 +373,21 @@ public class AllodsMap
                     {
                         alm.Structures[j] = new AlmStructure();
                         alm.Structures[j].LoadFromStream(msb);
+                    }
+                }
+                else if (sec_id == 6) // units
+                {
+                    if (!DataLoaded)
+                    {
+                        ms.Close();
+                        return null;
+                    }
+
+                    alm.Units = new AlmUnit[alm.Data.CountUnits];
+                    for (uint j = 0; j < alm.Data.CountUnits; j++)
+                    {
+                        alm.Units[j] = new AlmUnit();
+                        alm.Units[j].LoadFromStream(msb);
                     }
                 }
                 else

@@ -30,4 +30,14 @@ public class MapViewObject : MonoBehaviour
     {
         return -y;
     }
+
+    private int LocalLevelTime = MapLogic.Instance.LevelTime;
+    public virtual void Update()
+    {
+        while (LocalLevelTime < MapLogic.Instance.LevelTime)
+        {
+            LogicObject.Update();
+            LocalLevelTime++;
+        }
+    }
 }

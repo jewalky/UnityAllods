@@ -532,6 +532,8 @@ class MapLogic
 
     public void DelNetPlayer(Player p, bool silent, bool kicked) // this will remove player and all related objects
     {
+        if ((p.Flags & PlayerFlags.NetClient) == 0)
+            return; // can't remove non-net players with this function
         if (NetworkManager.IsServer)
             Server.NotifyPlayerLeft(p, kicked);
         else if (NetworkManager.IsClient)
@@ -552,6 +554,9 @@ class MapLogic
                 Objects.Remove(mobj); // remove from the list
                 i--;
             }
+
+            // also if this object is NOT an object of this player, we might need to recalc net visibility.
+            mobj.SetVisibleForNetPlayer(p, false);
         }
 
         Players.Remove(p); // remove the player himself.

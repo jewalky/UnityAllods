@@ -137,6 +137,13 @@ public class Server
             unitCmd.ServerID = unit.Template.ServerID;
             unitCmd.CurrentStats = unit.Stats;
             unitCmd.IsAvatar = (unit == unit.Player.Avatar);
+            unitCmd.VState = unit.VState;
+            unitCmd.IdleFrame = unit.IdleFrame;
+            unitCmd.IdleTime = unit.IdleTime;
+            unitCmd.MoveFrame = unit.MoveFrame;
+            unitCmd.MoveTime = unit.MoveTime;
+            unitCmd.FracX = unit.FracX;
+            unitCmd.FracY = unit.FracY;
             player.NetClient.SendCommand(unitCmd);
             Debug.LogFormat("sending player {0} unit {1}", player.Name, unitCmd.Tag);
         }

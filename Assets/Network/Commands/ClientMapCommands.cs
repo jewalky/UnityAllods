@@ -135,6 +135,20 @@ namespace ClientCommands
         public UnitStats CurrentStats;
         [ProtoMember(8)]
         public bool IsAvatar;
+        [ProtoMember(9)]
+        public UnitVisualState VState;
+        [ProtoMember(10)]
+        public int IdleFrame;
+        [ProtoMember(11)]
+        public int IdleTime;
+        [ProtoMember(12)]
+        public int MoveFrame;
+        [ProtoMember(13)]
+        public int MoveTime;
+        [ProtoMember(14)]
+        public float FracX;
+        [ProtoMember(15)]
+        public float FracY;
 
         public bool Process()
         {
@@ -167,8 +181,16 @@ namespace ClientCommands
             unit.LinkToWorld();
             unit.Angle = Angle;
             unit.Stats = CurrentStats;
+            unit.VState = VState;
+            unit.IdleFrame = IdleFrame;
+            unit.IdleTime = IdleTime;
+            unit.MoveFrame = MoveFrame;
+            unit.MoveTime = MoveTime;
+            unit.FracX = FracX;
+            unit.FracY = FracY;
             if (newUnit)
                 MapLogic.Instance.Objects.Add(unit);
+            else unit.DoUpdateView = true; // update view if unit already present on map (otherwise its automatically done)
             return true;
         }
     }

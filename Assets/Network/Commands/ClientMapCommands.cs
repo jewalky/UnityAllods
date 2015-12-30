@@ -174,7 +174,7 @@ namespace ClientCommands
             unit.Player = player;
             if (IsAvatar)
                 unit.Player.Avatar = unit;
-            unit.States.RemoveRange(1, unit.States.Count - 1); // clear states.
+            unit.Actions.RemoveRange(1, unit.Actions.Count - 1); // clear states.
             unit.SetPosition(X, Y);
             unit.Angle = Angle;
             unit.Stats = CurrentStats;
@@ -220,27 +220,27 @@ namespace ClientCommands
     }
 
     [ProtoContract]
-    [NetworkPacketId(ClientIdentifiers.AddUnitStates)]
-    public struct AddUnitStates : IClientCommand
+    [NetworkPacketId(ClientIdentifiers.AddUnitActions)]
+    public struct AddUnitActions : IClientCommand
     {
         [ProtoContract]
-        public class AddUnitState
+        public class AddUnitAction
         {
             [ProtoMember(1)]
-            public RotateState RotateState;
+            public RotateAction Rotate;
             [ProtoMember(2)]
-            public MoveState MoveState;
+            public MoveAction Move;
         }
 
-        public static AddUnitState GetAddUnitState(IUnitState state)
+        public static AddUnitAction GetAddUnitAction(IUnitAction state)
         {
-            AddUnitState aus = new AddUnitState();
-            if (state.GetType() == typeof(RotateState))
-                aus.RotateState = (RotateState)state;
-            else aus.RotateState = null;
-            if (state.GetType() == typeof(MoveState))
-                aus.MoveState = (MoveState)state;
-            else aus.MoveState = null;
+            AddUnitAction aus = new AddUnitAction();
+            if (state.GetType() == typeof(RotateAction))
+                aus.Rotate = (RotateAction)state;
+            else aus.Rotate = null;
+            if (state.GetType() == typeof(MoveAction))
+                aus.Move = (MoveAction)state;
+            else aus.Move = null;
             return aus;
         }
 
@@ -249,9 +249,9 @@ namespace ClientCommands
         [ProtoMember(2)]
         public int Position;
         [ProtoMember(3)]
-        public AddUnitState State1;
+        public AddUnitAction State1;
         [ProtoMember(4)]
-        public AddUnitState State2;
+        public AddUnitAction State2;
 
         public bool Process()
         {
@@ -267,24 +267,24 @@ namespace ClientCommands
                 // we can't expect ideal sync here.
                 // for this reason we don't just "add" state.
                 // we put it exactly where it was on server's side at the moment.
-                int pPos = Math.Min(Position, unit.States.Count);
+                int pPos = Math.Min(Position, unit.Actions.Count);
                 // reverse iteration
-                AddUnitState[] States = new AddUnitState[2] { State1, State2 };
+                AddUnitAction[] States = new AddUnitAction[2] { State1, State2 };
                 for (int i = States.Length - 1; i >= 0; i--)
                 {
                     if (States[i] == null)
                         continue;
 
-                    if (States[i].RotateState != null)
+                    if (States[i].Rotate != null)
                     {
-                        States[i].RotateState.Unit = unit;
-                        unit.States.Insert(pPos, States[i].RotateState);
+                        States[i].Rotate.Unit = unit;
+                        unit.Actions.Insert(pPos, States[i].Rotate);
                     }
 
-                    if (States[i].MoveState != null)
+                    if (States[i].Move != null)
                     {
-                        States[i].MoveState.Unit = unit;
-                        unit.States.Insert(pPos, States[i].MoveState);
+                        States[i].Move.Unit = unit;
+                        unit.Actions.Insert(pPos, States[i].Move);
                     }
                 }
             }
@@ -319,7 +319,7 @@ namespace ClientCommands
             {
                 unit.SetPosition(X, Y);
                 unit.Angle = Angle;
-                unit.States.RemoveRange(1, unit.States.Count - 1);
+                unit.Actions.RemoveRange(1, unit.Actions.Count - 1);
                 unit.VState = UnitVisualState.Idle;
                 unit.DoUpdateView = true;
             }

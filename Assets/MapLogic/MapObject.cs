@@ -24,6 +24,31 @@ public interface IPlayerPawn
     Player GetPlayer();
 }
 
+[Flags]
+public enum DamageFlags
+{
+    TerrainDamage = 0x0001,
+    Fire = 0x0002,
+    Air = 0x0004,
+    Water = 0x0008,
+    Earth = 0x0010,
+    Astral = 0x0020,
+    Blade = 0x0040,
+    Axe = 0x0080,
+    Bludgeon = 0x0100,
+    Pike = 0x0200,
+    Shooting = 0x0400,
+    Raw = 0x0800,
+
+    PhysicalDamage = Blade|Axe|Bludgeon|Pike|Shooting,
+    MagicDamage = Fire|Air|Water|Earth|Astral
+}
+
+public interface IVulnerable
+{
+    int TakeDamage(DamageFlags flags, MapUnit source, int count);
+}
+
 public class MapObject : IDisposable
 {
     public int X = 0;

@@ -40,7 +40,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         float tMaxX = sW / sTex.width;
         float tMaxY = sH / sTex.height;
 
-        bool flying = (LogicUnit.Template.MovementType == 3);
+        bool flying = LogicUnit.Template.IsFlying;
 
         float shadowOffsReal = shadowOffs * sH;
         float shadowOffsXLeft = -shadowOffsReal * (1f - LogicUnit.Class.CenterY);
@@ -262,7 +262,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                                                             LogicUnit.Width, LogicUnit.Height);
             CurrentPoint = xP;
             float zInv = 0;
-            if (LogicUnit.Template.MovementType == 3)
+            if (LogicUnit.Template.IsFlying)
                 zInv = -128;
             transform.localPosition = new Vector3(xP.x - (float)sprites.Frames[actualFrame].Width * LogicUnit.Class.CenterX,
                                                     xP.y - (float)sprites.Frames[actualFrame].Height * LogicUnit.Class.CenterY,

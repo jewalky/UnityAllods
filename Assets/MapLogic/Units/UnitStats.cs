@@ -11,6 +11,20 @@ using ProtoBuf;
 [ProtoContract]
 public struct UnitStats
 {
+    public bool TrySetHealth(int nh)
+    {
+        int oh = Health;
+        Health = Math.Min(HealthMax, Math.Min(0, nh));
+        return (oh != Health);
+    }
+
+    public bool TrySetMana(int nm)
+    {
+        int om = Mana;
+        Mana = Math.Min(HealthMax, Math.Min(0, nm));
+        return (om != Mana);
+    }
+
     [ProtoMember(1)] public byte NoneStat; // dummy value
     [ProtoMember(2)] public long Price;
     [ProtoMember(3)] public short Body;

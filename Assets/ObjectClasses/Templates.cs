@@ -198,6 +198,11 @@ public class Templates
 
     public class TplMonster : TplSimpleReader
     {
+        public bool IsIgnoringArmor { get { return (AttackType == 3); } }
+        public bool IsWalking { get { return (MovementType == 1); } }
+        public bool IsHovering { get { return (MovementType == 2); } }
+        public bool IsFlying { get { return (MovementType == 3); } }
+
         public string Name;
         [FieldCountController(2)]
         public ushort FieldCount;

@@ -264,7 +264,6 @@ class MapLogic
         TemplateLoader.LoadTemplates();
         MapLightingNeedsUpdate = true;
         MapFOWNeedsUpdate = true;
-        VisionCalc.InitializeTables();
     }
 
     public void InitFromFile(string filename)
@@ -460,7 +459,6 @@ class MapLogic
                     if (mobj.GetObjectType() != MapObjectType.Monster &&
                         mobj.GetObjectType() != MapObjectType.Human) continue;
                     MapUnit unit = (MapUnit)mobj;
-                    VisionCalc.CalculateVision(unit.X, unit.Y, unit.Stats.ScanRange);
                     int xOrigin = unit.X - 20;
                     int yOrigin = unit.Y - 20;
                     for (int ly = yOrigin; ly < yOrigin + 41; ly++)
@@ -469,7 +467,7 @@ class MapLogic
                         for (int lx = xOrigin; lx < xOrigin + 41; lx++)
                         {
                             if (lx < 8 || lx > Width) continue;
-                            if (VisionCalc.pTablesVision[lx - xOrigin, ly - yOrigin] > 0)
+                            if (unit.VisionCalc.pTablesVision[lx - xOrigin, ly - yOrigin] > 0)
                                 Nodes[lx, ly].Flags |= MapNodeFlags.Visible | MapNodeFlags.Discovered;
                         }
                     }
@@ -578,11 +576,9 @@ class MapLogic
     public IPlayerPawn CreateAvatar(Player player)
     {
         MapUnit unit = new MapUnit("Goblin_Pike");
-        unit.X = 16;
-        unit.Y = 16;
         unit.Player = player;
         unit.Tag = GetFreeUnitTag(); // this is also used as network ID.
-        unit.LinkToWorld();
+        unit.SetPosition(16, 16);
         Objects.Add(unit);
         return unit;
     }

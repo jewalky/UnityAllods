@@ -19,6 +19,6 @@ public enum ClientIdentifiers
 
     AddUnit, // also update unit if ID already exists
     DelUnit,
-    AddUnitStates,
+    AddUnitActions,
     IdleUnit
 }

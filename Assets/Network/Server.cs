@@ -149,7 +149,7 @@ public class Server
             unitCmd.FracY = unit.FracY;
             player.NetClient.SendCommand(unitCmd);
             // also notify of current unit state
-            NotifyAddUnitStatesSingle(player.NetClient, unit, unit.States.Skip(1).ToArray());
+            NotifyAddUnitActionsSingle(player.NetClient, unit, unit.Actions.Skip(1).ToArray());
             //Debug.LogFormat("sending player {0} unit {1}", player.Name, unitCmd.Tag);
         }
     }
@@ -181,23 +181,23 @@ public class Server
         }
     }
 
-    public static void NotifyAddUnitStatesSingle(ServerClient client, MapUnit unit, IUnitState[] states)
+    public static void NotifyAddUnitActionsSingle(ServerClient client, MapUnit unit, IUnitAction[] states)
     {
-        ClientCommands.AddUnitStates statesCmd;
+        ClientCommands.AddUnitActions statesCmd;
         statesCmd.Tag = unit.Tag;
-        statesCmd.Position = unit.States.Count - states.Length;
+        statesCmd.Position = unit.Actions.Count - states.Length;
         // for some reason we can't send array of these objects even if properly configured.
         // client will always receive NULL.
         statesCmd.State1 = null;
         statesCmd.State2 = null;
         if (states.Length > 0)
-            statesCmd.State1 = ClientCommands.AddUnitStates.GetAddUnitState(states[0]);
+            statesCmd.State1 = ClientCommands.AddUnitActions.GetAddUnitAction(states[0]);
         if (states.Length > 1)
-            statesCmd.State2 = ClientCommands.AddUnitStates.GetAddUnitState(states[1]);
+            statesCmd.State2 = ClientCommands.AddUnitActions.GetAddUnitAction(states[1]);
         client.SendCommand(statesCmd);
     }
 
-    public static void NotifyAddUnitStates(MapUnit unit, IUnitState[] states)
+    public static void NotifyAddUnitActions(MapUnit unit, IUnitAction[] states)
     {
         foreach (ServerClient client in ServerManager.Clients)
         {
@@ -207,7 +207,7 @@ public class Server
             Player p = MapLogic.Instance.GetNetPlayer(client);
             if (unit.IsVisibleForNetPlayer(p))
             {
-                NotifyAddUnitStatesSingle(client, unit, states);
+                NotifyAddUnitActionsSingle(client, unit, states);
             }
         }
     }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class MapStructure : MapObject, IDynlight, IPlayerPawn, IDisposable
+public class MapStructure : MapObject, IDynlight, IPlayerPawn, IVulnerable, IDisposable
 {
     public override MapObjectType GetObjectType() { return MapObjectType.Structure; }
     protected override Type GetGameObjectType() { return typeof(MapViewStructure); }
@@ -14,7 +14,23 @@ public class MapStructure : MapObject, IDynlight, IPlayerPawn, IDisposable
     public int CurrentFrame = 0;
     public int CurrentTime = 0;
     public int HealthMax = 0;
-    public int Health = 0;
+    private int _Health = 0;
+    public int Health
+    {
+        get
+        {
+            return _Health;
+        }
+
+        set
+        {
+            if (value > HealthMax)
+                value = HealthMax;
+            if (value < 0)
+                value = 0;
+            _Health = value;
+        }
+    }
     private Player _Player;
 
     public Player Player
@@ -125,5 +141,15 @@ public class MapStructure : MapObject, IDynlight, IPlayerPawn, IDisposable
         if (!canPass) return MapNodeFlags.Unblocked;
         if (canNotPass) return MapNodeFlags.BlockedGround;
         return 0;
+    }
+
+    public int TakeDamage(DamageFlags flags, MapUnit source, int count)
+    {
+        if ((flags & DamageFlags.TerrainDamage) == 0)
+            return 0;
+
+        int oldHealth = Health;
+        Health -= count;
+        return count;
     }
 }

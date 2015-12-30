@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public interface IUnitState
+public interface IUnitAction
 {
     bool Process();
 }
@@ -16,7 +16,7 @@ public enum UnitVisualState
     Moving
 }
 
-public class MapUnit : MapObject, IPlayerPawn, IDisposable
+public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 {
     public override MapObjectType GetObjectType() { return MapObjectType.Monster; }
     protected override Type GetGameObjectType() { return typeof(MapViewUnit); }
@@ -62,7 +62,7 @@ public class MapUnit : MapObject, IPlayerPawn, IDisposable
         }
     }
 
-    public List<IUnitState> States = new List<IUnitState>();
+    public List<IUnitAction> Actions = new List<IUnitAction>();
     public UnitVisualState VState = UnitVisualState.Idle;
     public int IdleFrame = 0;
     public int IdleTime = 0;
@@ -75,6 +75,9 @@ public class MapUnit : MapObject, IPlayerPawn, IDisposable
     // for AI
     public int WalkX = -1;
     public int WalkY = -1;
+
+    //
+    public readonly ScanrangeCalc VisionCalc = new ScanrangeCalc();
 
     public MapUnit(int serverId)
     {
@@ -113,9 +116,10 @@ public class MapUnit : MapObject, IPlayerPawn, IDisposable
             Stats.Speed = 1;
         Stats.ScanRange = Template.ScanRange;
 
-        States.Add(new IdleState(this));
+        Actions.Add(new IdleAction(this));
         DoUpdateView = true;
         VState = UnitVisualState.Idle;
+        CalculateVision();
     }
 
     public override void Dispose()
@@ -132,19 +136,15 @@ public class MapUnit : MapObject, IPlayerPawn, IDisposable
 
         UpdateNetVisibility();
 
-        while (!States.Last().Process())
-            States.RemoveAt(States.Count - 1);
+        while (!Actions.Last().Process())
+            Actions.RemoveAt(Actions.Count - 1);
     }
 
     public override MapNodeFlags GetNodeLinkFlags(int x, int y)
     {
         if (Template == null)
             return 0;
-        if (Template.MovementType == 1 || Template.MovementType == 2)
-            return MapNodeFlags.BlockedGround;
-        if (Template.MovementType == 3)
-            return MapNodeFlags.BlockedAir;
-        return 0;
+        return (Template.IsFlying) ? MapNodeFlags.BlockedAir : MapNodeFlags.BlockedGround;
     }
 
     /// <summary>
@@ -250,11 +250,11 @@ public class MapUnit : MapObject, IPlayerPawn, IDisposable
                     continue; // if we are already on this cell, skip it as passible
                 uint tile = MapLogic.Instance.Nodes[lx, ly].Tile;
                 MapNodeFlags flags = MapLogic.Instance.Nodes[lx, ly].Flags;
-                if (Template.MovementType == 1 && (flags & MapNodeFlags.Unblocked) == 0 && (tile >= 0x1C0 && tile <= 0x2FF))
+                if (Template.IsWalking && (flags & MapNodeFlags.Unblocked) == 0 && (tile >= 0x1C0 && tile <= 0x2FF))
                     return false;
-                if (Template.MovementType == 3 &&
+                if (Template.IsFlying &&
                     (flags & MapNodeFlags.BlockedAir) != 0) return false;
-                else if (Template.MovementType != 3 && (flags & MapNodeFlags.BlockedGround) != 0)
+                else if (!Template.IsFlying && (flags & MapNodeFlags.BlockedGround) != 0)
                     return false;
             }
         }
@@ -281,14 +281,59 @@ public class MapUnit : MapObject, IPlayerPawn, IDisposable
         X = x;
         Y = y;
         LinkToWorld();
+        CalculateVision();
         DoUpdateView = true;
     }
 
-    public void AddStates(params IUnitState[] states)
+    public void CalculateVision()
+    {
+        VisionCalc.CalculateVision(X, Y, Stats.ScanRange);
+    }
+
+    public void AddActions(params IUnitAction[] states)
     {
         for (int i = 0; i < states.Length; i++)
-            States.Add(states[i]);
+            Actions.Add(states[i]);
         if (NetworkManager.IsServer)
-            Server.NotifyAddUnitStates(this, states);
+            Server.NotifyAddUnitActions(this, states);
+    }
+
+    public int TakeDamage(DamageFlags flags, MapUnit source, int damagecount)
+    {
+        if (damagecount < 0)
+            return 0;
+
+        bool sourceIgnoresArmor = source != null && source.Template.IsIgnoringArmor;
+        if ((flags & DamageFlags.PhysicalDamage) != 0 && !sourceIgnoresArmor)
+        {
+            int ownChance = Stats.Defence;
+            int hisChance = (source != null) ? 5+source.Stats.ToHit : ownChance;
+
+            if (ownChance > hisChance)
+            {
+                if (UnityEngine.Random.Range(0, ownChance) > hisChance)
+                    return 0;
+            }
+
+            damagecount -= Stats.Absorbtion;
+            if (damagecount <= 0)
+                return 0;
+        }
+
+        if ((flags & DamageFlags.Fire) != 0)
+            damagecount = damagecount * Stats.ProtectionFire / 100;
+        if ((flags & DamageFlags.Water) != 0)
+            damagecount = damagecount * Stats.ProtectionWater / 100;
+        if ((flags & DamageFlags.Air) != 0)
+            damagecount = damagecount * Stats.ProtectionAir / 100;
+        if ((flags & DamageFlags.Earth) != 0)
+            damagecount = damagecount * Stats.ProtectionEarth / 100;
+        if ((flags & DamageFlags.Astral) != 0)
+            damagecount = damagecount * Stats.ProtectionAstral / 100;
+
+        if (Stats.TrySetHealth(Stats.Health - damagecount))
+            return damagecount;
+
+        return 0;
     }
 }

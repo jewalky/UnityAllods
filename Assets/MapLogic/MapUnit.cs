@@ -281,6 +281,7 @@ public class MapUnit : MapObject, IPlayerPawn, IDisposable
         X = x;
         Y = y;
         LinkToWorld();
+        DoUpdateView = true;
     }
 
     public void AddState(IUnitState state)

@@ -225,6 +225,9 @@ public class Server
             {
                 ClientCommands.IdleUnit idleCmd;
                 idleCmd.Tag = unit.Tag;
+                idleCmd.X = unit.X;
+                idleCmd.Y = unit.Y;
+                idleCmd.Angle = unit.Angle;
                 client.SendCommand(idleCmd);
             }
         }

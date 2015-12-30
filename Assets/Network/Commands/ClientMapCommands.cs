@@ -241,15 +241,19 @@ namespace ClientCommands
             }
             else
             {
+                // we can't expect ideal sync here.
+                // for this reason we don't just "add" state.
+                // we put it either at end or before currently executed state.
+                int pPos = Math.Max(1, unit.States.Count - 1);
                 if (RotateState != null)
                 {
                     RotateState.Unit = unit;
-                    unit.AddState(RotateState);
+                    unit.States.Insert(pPos, RotateState);
                 }
                 if (MoveState != null)
                 {
                     MoveState.Unit = unit;
-                    unit.AddState(MoveState);
+                    unit.States.Insert(pPos, MoveState);
                 }
             }
 
@@ -263,6 +267,12 @@ namespace ClientCommands
     {
         [ProtoMember(1)]
         public int Tag;
+        [ProtoMember(2)]
+        public int X;
+        [ProtoMember(3)]
+        public int Y;
+        [ProtoMember(4)]
+        public int Angle;
 
         public bool Process()
         {
@@ -275,6 +285,8 @@ namespace ClientCommands
             }
             else
             {
+                unit.SetPosition(X, Y);
+                unit.Angle = Angle;
                 unit.States.RemoveRange(1, unit.States.Count - 1);
                 unit.VState = UnitVisualState.Idle;
                 unit.DoUpdateView = true;

@@ -220,17 +220,38 @@ namespace ClientCommands
     }
 
     [ProtoContract]
-    [NetworkPacketId(ClientIdentifiers.AddUnitState)]
-    public struct AddUnitState : IClientCommand
+    [NetworkPacketId(ClientIdentifiers.AddUnitStates)]
+    public struct AddUnitStates : IClientCommand
     {
+        [ProtoContract]
+        public class AddUnitState
+        {
+            [ProtoMember(1)]
+            public RotateState RotateState;
+            [ProtoMember(2)]
+            public MoveState MoveState;
+        }
+
+        public static AddUnitState GetAddUnitState(IUnitState state)
+        {
+            AddUnitState aus = new AddUnitState();
+            if (state.GetType() == typeof(RotateState))
+                aus.RotateState = (RotateState)state;
+            else aus.RotateState = null;
+            if (state.GetType() == typeof(MoveState))
+                aus.MoveState = (MoveState)state;
+            else aus.MoveState = null;
+            return aus;
+        }
+
         [ProtoMember(1)]
         public int Tag;
         [ProtoMember(2)]
         public int Position;
         [ProtoMember(3)]
-        public RotateState RotateState;
+        public AddUnitState State1;
         [ProtoMember(4)]
-        public MoveState MoveState;
+        public AddUnitState State2;
 
         public bool Process()
         {
@@ -247,15 +268,24 @@ namespace ClientCommands
                 // for this reason we don't just "add" state.
                 // we put it exactly where it was on server's side at the moment.
                 int pPos = Math.Min(Position, unit.States.Count);
-                if (RotateState != null)
+                // reverse iteration
+                AddUnitState[] States = new AddUnitState[2] { State1, State2 };
+                for (int i = States.Length - 1; i >= 0; i--)
                 {
-                    RotateState.Unit = unit;
-                    unit.States.Insert(pPos, RotateState);
-                }
-                if (MoveState != null)
-                {
-                    MoveState.Unit = unit;
-                    unit.States.Insert(pPos, MoveState);
+                    if (States[i] == null)
+                        continue;
+
+                    if (States[i].RotateState != null)
+                    {
+                        States[i].RotateState.Unit = unit;
+                        unit.States.Insert(pPos, States[i].RotateState);
+                    }
+
+                    if (States[i].MoveState != null)
+                    {
+                        States[i].MoveState.Unit = unit;
+                        unit.States.Insert(pPos, States[i].MoveState);
+                    }
                 }
             }
 

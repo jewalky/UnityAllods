@@ -149,8 +149,7 @@ public class Server
             unitCmd.FracY = unit.FracY;
             player.NetClient.SendCommand(unitCmd);
             // also notify of current unit state
-            for (int i = 1; i < unit.States.Count; i++)
-                NotifyAddUnitStateSingle(player.NetClient, unit, unit.States[i]);
+            NotifyAddUnitStatesSingle(player.NetClient, unit, unit.States.Skip(1).ToArray());
             //Debug.LogFormat("sending player {0} unit {1}", player.Name, unitCmd.Tag);
         }
     }
@@ -182,24 +181,23 @@ public class Server
         }
     }
 
-    public static void NotifyAddUnitStateSingle(ServerClient client, MapUnit unit, IUnitState state)
+    public static void NotifyAddUnitStatesSingle(ServerClient client, MapUnit unit, IUnitState[] states)
     {
-        ClientCommands.AddUnitState stateCmd;
-        stateCmd.Tag = unit.Tag;
-        stateCmd.Position = unit.States.Count - 1; // -1 because last state is this one
-
-        if (state.GetType() == typeof(RotateState))
-            stateCmd.RotateState = (RotateState)state;
-        else stateCmd.RotateState = null;
-
-        if (state.GetType() == typeof(MoveState))
-            stateCmd.MoveState = (MoveState)state;
-        else stateCmd.MoveState = null;
-
-        client.SendCommand(stateCmd);
+        ClientCommands.AddUnitStates statesCmd;
+        statesCmd.Tag = unit.Tag;
+        statesCmd.Position = unit.States.Count - states.Length;
+        // for some reason we can't send array of these objects even if properly configured.
+        // client will always receive NULL.
+        statesCmd.State1 = null;
+        statesCmd.State2 = null;
+        if (states.Length > 0)
+            statesCmd.State1 = ClientCommands.AddUnitStates.GetAddUnitState(states[0]);
+        if (states.Length > 1)
+            statesCmd.State2 = ClientCommands.AddUnitStates.GetAddUnitState(states[1]);
+        client.SendCommand(statesCmd);
     }
 
-    public static void NotifyAddUnitState(MapUnit unit, IUnitState state)
+    public static void NotifyAddUnitStates(MapUnit unit, IUnitState[] states)
     {
         foreach (ServerClient client in ServerManager.Clients)
         {
@@ -209,7 +207,7 @@ public class Server
             Player p = MapLogic.Instance.GetNetPlayer(client);
             if (unit.IsVisibleForNetPlayer(p))
             {
-                NotifyAddUnitStateSingle(client, unit, state);
+                NotifyAddUnitStatesSingle(client, unit, states);
             }
         }
     }

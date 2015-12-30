@@ -40,8 +40,7 @@ public class IdleState : IUnitState
 
                 // next path node found
                 // notify clients
-                Unit.AddState(new MoveState(Unit, path.x, path.y));
-                Unit.AddState(new RotateState(Unit, Unit.FaceCell(path.x, path.y)));
+                Unit.AddStates(new MoveState(Unit, path.x, path.y), new RotateState(Unit, Unit.FaceCell(path.x, path.y)));
                 return true;
             }
 

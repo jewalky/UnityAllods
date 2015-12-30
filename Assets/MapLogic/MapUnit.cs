@@ -284,10 +284,11 @@ public class MapUnit : MapObject, IPlayerPawn, IDisposable
         DoUpdateView = true;
     }
 
-    public void AddState(IUnitState state)
+    public void AddStates(params IUnitState[] states)
     {
-        States.Add(state);
+        for (int i = 0; i < states.Length; i++)
+            States.Add(states[i]);
         if (NetworkManager.IsServer)
-            Server.NotifyAddUnitState(this, state);
+            Server.NotifyAddUnitStates(this, states);
     }
 }

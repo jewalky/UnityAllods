@@ -40,7 +40,7 @@ public class IdleState : IUnitState
 
                 // next path node found
                 // notify clients
-                Unit.AddState(new MoveState(Unit, Unit.X, Unit.Y, path.x, path.y));
+                Unit.AddState(new MoveState(Unit, path.x, path.y));
                 Unit.AddState(new RotateState(Unit, Unit.FaceCell(path.x, path.y)));
                 return true;
             }
@@ -128,14 +128,10 @@ public class MoveState : IUnitState
 {
     public MapUnit Unit;
     [ProtoMember(1)]
-    public int SourceX;
-    [ProtoMember(2)]
-    public int SourceY;
-    [ProtoMember(3)]
     public int TargetX;
-    [ProtoMember(4)]
+    [ProtoMember(2)]
     public int TargetY;
-    [ProtoMember(5)]
+    [ProtoMember(3)]
     public float Frac;
 
     public MoveState()
@@ -143,11 +139,9 @@ public class MoveState : IUnitState
         Unit = null;
     }
 
-    public MoveState(MapUnit unit, int fromX, int fromY, int x, int y)
+    public MoveState(MapUnit unit, int x, int y)
     {
         Unit = unit;
-        SourceX = fromX;
-        SourceY = fromY;
         TargetX = x;
         TargetY = y;
         Frac = 0;
@@ -174,10 +168,7 @@ public class MoveState : IUnitState
         else
         {
             if (Frac == 0)
-            {
-                Unit.SetPosition(SourceX, SourceY);
                 Unit.LinkToWorld(TargetX, TargetY); // link to target coordinates. don't unlink from previous yet.
-            }
             Frac += 0.05f;
             Unit.FracX = Frac * (TargetX - Unit.X);
             Unit.FracY = Frac * (TargetY - Unit.Y);

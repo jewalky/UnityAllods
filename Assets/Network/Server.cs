@@ -186,6 +186,7 @@ public class Server
     {
         ClientCommands.AddUnitState stateCmd;
         stateCmd.Tag = unit.Tag;
+        stateCmd.Position = unit.States.Count - 1; // -1 because last state is this one
 
         if (state.GetType() == typeof(RotateState))
             stateCmd.RotateState = (RotateState)state;

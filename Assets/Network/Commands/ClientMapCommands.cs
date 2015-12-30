@@ -226,8 +226,10 @@ namespace ClientCommands
         [ProtoMember(1)]
         public int Tag;
         [ProtoMember(2)]
-        public RotateState RotateState;
+        public int Position;
         [ProtoMember(3)]
+        public RotateState RotateState;
+        [ProtoMember(4)]
         public MoveState MoveState;
 
         public bool Process()
@@ -243,8 +245,8 @@ namespace ClientCommands
             {
                 // we can't expect ideal sync here.
                 // for this reason we don't just "add" state.
-                // we put it either at end or before currently executed state.
-                int pPos = Math.Max(1, unit.States.Count - 1);
+                // we put it exactly where it was on server's side at the moment.
+                int pPos = Math.Min(Position, unit.States.Count);
                 if (RotateState != null)
                 {
                     RotateState.Unit = unit;

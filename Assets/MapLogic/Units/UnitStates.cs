@@ -19,7 +19,7 @@ public class IdleState : IUnitState
         {
             if (Unit.WalkX > 0 && Unit.WalkY > 0)
             {
-                Debug.LogFormat("idle state: walk to {0},{1}", Unit.WalkX, Unit.WalkY);
+                //Debug.LogFormat("idle state: walk to {0},{1}", Unit.WalkX, Unit.WalkY);
                 if (Unit.WalkX == Unit.X && Unit.WalkY == Unit.Y)
                 {
                     Unit.WalkX = -1;
@@ -31,7 +31,7 @@ public class IdleState : IUnitState
                 Vector2i path = Unit.DecideNextMove(Unit.WalkX, Unit.WalkY);
                 if (path == null)
                 {
-                    Debug.LogFormat("idle state: path to {0},{1} not found", Unit.WalkX, Unit.WalkY);
+                    //Debug.LogFormat("idle state: path to {0},{1} not found", Unit.WalkX, Unit.WalkY);
                     Unit.WalkX = -1;
                     Unit.WalkY = -1;
                     return true;
@@ -41,16 +41,19 @@ public class IdleState : IUnitState
                 // notify clients
                 if (NetworkManager.IsServer)
                     Server.NotifyMoveUnit(Unit, Unit.X, Unit.Y, path.x, path.y, Unit.Angle, Unit.FaceCell(path.x, path.y));
-                Unit.States.Add(new MoveState(Unit, path.x, path.y));
+                Unit.States.Add(new MoveState(Unit, Unit.X, Unit.Y, path.x, path.y));
                 Unit.States.Add(new RotateState(Unit, Unit.FaceCell(path.x, path.y)));
                 return true;
             }
-        }
 
-        if (Unit.VState != UnitVisualState.Idle)
-        {
-            Unit.VState = UnitVisualState.Idle; // set state to idle
-            Unit.DoUpdateView = true;
+            if (Unit.VState != UnitVisualState.Idle)
+            {
+                Unit.VState = UnitVisualState.Idle; // set state to idle
+                Unit.DoUpdateView = true;
+
+                if (NetworkManager.IsServer)
+                    Server.NotifyIdleUnit(Unit, Unit.X, Unit.Y, Unit.Angle);
+            }
         }
 
         // possibly animate
@@ -117,13 +120,17 @@ public class RotateState : IUnitState
 public class MoveState : IUnitState
 {
     private MapUnit Unit;
+    private int SourceX;
+    private int SourceY;
     private int TargetX;
     private int TargetY;
     private float Frac;
 
-    public MoveState(MapUnit unit, int x, int y)
+    public MoveState(MapUnit unit, int fromX, int fromY, int x, int y)
     {
         Unit = unit;
+        SourceX = fromX;
+        SourceY = fromY;
         TargetX = x;
         TargetY = y;
         Frac = 0;
@@ -131,9 +138,9 @@ public class MoveState : IUnitState
 
     public virtual bool Process()
     {
-        // check if it's possible to walk there (again)
-        if (!Unit.CheckWalkableForUnit(TargetX, TargetY))
-            return false; // stop this state. possibly try to pathfind again.
+        // check if it's possible to walk there (again). NOT on client.
+        if (!NetworkManager.IsClient && !Unit.CheckWalkableForUnit(TargetX, TargetY))
+            return false; // stop this state. possibly try to pathfind again. otherwise idle.
 
         //Debug.LogFormat("walk state: moving to {0},{1} ({2})", TargetX, TargetY, Frac);
         if (Frac >= 1)
@@ -150,7 +157,10 @@ public class MoveState : IUnitState
         else
         {
             if (Frac == 0)
+            {
+                Unit.SetPosition(SourceX, SourceY);
                 Unit.LinkToWorld(TargetX, TargetY); // link to target coordinates. don't unlink from previous yet.
+            }
             Frac += 0.05f;
             Unit.FracX = Frac * (TargetX - Unit.X);
             Unit.FracY = Frac * (TargetY - Unit.Y);

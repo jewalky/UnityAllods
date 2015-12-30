@@ -274,4 +274,12 @@ public class MapUnit : MapObject, IPlayerPawn, IDisposable
             sang += 360;
         return sang;
     }
+
+    public void SetPosition(int x, int y)
+    {
+        UnlinkFromWorld();
+        X = x;
+        Y = y;
+        LinkToWorld();
+    }
 }

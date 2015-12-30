@@ -232,7 +232,44 @@ namespace ClientCommands
             {
                 unit.Angle = StartAngle;
                 unit.States.Insert(1, new RotateState(unit, EndAngle));
-                unit.States.Insert(1, new MoveState(unit, X2, Y2)); // rotate still first.
+                unit.States.Insert(1, new MoveState(unit, X1, Y1, X2, Y2)); // rotate still first.
+            }
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.IdleUnit)]
+    public struct IdleUnit : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public int X;
+        [ProtoMember(3)]
+        public int Y;
+        [ProtoMember(4)]
+        public int Angle;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null)
+            {
+                Debug.LogFormat("Attempted to delete nonexistent unit {0}", Tag);
+            }
+            else
+            {
+                unit.SetPosition(X, Y);
+                unit.States.RemoveRange(1, unit.States.Count - 1);
+                unit.VState = UnitVisualState.Idle;
+                unit.FracX = 0;
+                unit.FracY = 0;
+                unit.Angle = Angle;
+                unit.DoUpdateView = true;
             }
 
             return true;

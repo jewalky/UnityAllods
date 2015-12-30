@@ -191,4 +191,24 @@ public class Server
             }
         }
     }
+
+    public static void NotifyIdleUnit(MapUnit unit, int x, int y, int angle)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            Player p = MapLogic.Instance.GetNetPlayer(client);
+            if (unit.IsVisibleForNetPlayer(p))
+            {
+                ClientCommands.IdleUnit idleCmd;
+                idleCmd.Tag = unit.Tag;
+                idleCmd.X = x;
+                idleCmd.Y = y;
+                idleCmd.Angle = angle;
+                client.SendCommand(idleCmd);
+            }
+        }
+    }
 }

@@ -203,6 +203,9 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
     private bool oldVisibility = false;
     public void OnUpdate()
     {
+        if (Renderer == null)
+            return;
+
         if (LogicStructure.GetVisibility() == 0)
         {
             oldVisibility = false;
@@ -211,7 +214,7 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
             if (ShadowRenderer != null) ShadowRenderer.enabled = false;
             return;
         }
-        else if (!oldVisibility)
+        else if (!oldVisibility && !LogicStructure.DoUpdateView)
         {
             Renderer.enabled = true;
             OverlayRenderer.enabled = true;
@@ -280,11 +283,11 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
 
     public void OnDestroy()
     {
-        if (Filter.mesh != null)
+        if (Filter != null && Filter.mesh != null)
             DestroyImmediate(Filter.mesh, true);
-        if (OverlayFilter.mesh != null)
+        if (OverlayFilter != null && OverlayFilter.mesh != null)
             DestroyImmediate(OverlayFilter.mesh, true);
-        if (ShadowFilter != null && ShadowFilter.mesh != null)
+        if (ShadowFilter != null && ShadowFilter != null && ShadowFilter.mesh != null)
             DestroyImmediate(ShadowFilter.mesh, true);
     }
 

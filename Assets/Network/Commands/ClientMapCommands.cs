@@ -152,7 +152,7 @@ namespace ClientCommands
 
         public bool Process()
         {
-            Debug.LogFormat("added unit {0}", Tag);
+            //Debug.LogFormat("added unit {0}", Tag);
             if (!MapLogic.Instance.IsLoaded)
                 return false;
             MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
@@ -175,10 +175,7 @@ namespace ClientCommands
             if (IsAvatar)
                 unit.Player.Avatar = unit;
             unit.States.RemoveRange(1, unit.States.Count - 1); // clear states.
-            unit.UnlinkFromWorld();
-            unit.X = X;
-            unit.Y = Y;
-            unit.LinkToWorld();
+            unit.SetPosition(X, Y);
             unit.Angle = Angle;
             unit.Stats = CurrentStats;
             unit.VState = VState;
@@ -223,23 +220,15 @@ namespace ClientCommands
     }
 
     [ProtoContract]
-    [NetworkPacketId(ClientIdentifiers.WalkUnit)]
-    public struct WalkUnit : IClientCommand
+    [NetworkPacketId(ClientIdentifiers.AddUnitState)]
+    public struct AddUnitState : IClientCommand
     {
         [ProtoMember(1)]
         public int Tag;
         [ProtoMember(2)]
-        public int StartAngle;
+        public RotateState RotateState;
         [ProtoMember(3)]
-        public int EndAngle;
-        [ProtoMember(4)]
-        public int X1;
-        [ProtoMember(5)]
-        public int Y1;
-        [ProtoMember(6)]
-        public int X2;
-        [ProtoMember(7)]
-        public int Y2;
+        public MoveState MoveState;
 
         public bool Process()
         {
@@ -248,13 +237,20 @@ namespace ClientCommands
             MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
             if (unit == null)
             {
-                Debug.LogFormat("Attempted to delete nonexistent unit {0}", Tag);
+                Debug.LogFormat("Attempted to add state for nonexistent unit {0}", Tag);
             }
             else
             {
-                unit.Angle = StartAngle;
-                unit.States.Insert(1, new RotateState(unit, EndAngle));
-                unit.States.Insert(1, new MoveState(unit, X1, Y1, X2, Y2)); // rotate still first.
+                if (RotateState != null)
+                {
+                    RotateState.Unit = unit;
+                    unit.AddState(RotateState);
+                }
+                if (MoveState != null)
+                {
+                    MoveState.Unit = unit;
+                    unit.AddState(MoveState);
+                }
             }
 
             return true;
@@ -267,12 +263,6 @@ namespace ClientCommands
     {
         [ProtoMember(1)]
         public int Tag;
-        [ProtoMember(2)]
-        public int X;
-        [ProtoMember(3)]
-        public int Y;
-        [ProtoMember(4)]
-        public int Angle;
 
         public bool Process()
         {
@@ -281,16 +271,12 @@ namespace ClientCommands
             MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
             if (unit == null)
             {
-                Debug.LogFormat("Attempted to delete nonexistent unit {0}", Tag);
+                Debug.LogFormat("Attempted to idle nonexistent unit {0}", Tag);
             }
             else
             {
-                unit.SetPosition(X, Y);
                 unit.States.RemoveRange(1, unit.States.Count - 1);
                 unit.VState = UnitVisualState.Idle;
-                unit.FracX = 0;
-                unit.FracY = 0;
-                unit.Angle = Angle;
                 unit.DoUpdateView = true;
             }
 

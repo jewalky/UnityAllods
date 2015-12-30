@@ -282,4 +282,11 @@ public class MapUnit : MapObject, IPlayerPawn, IDisposable
         Y = y;
         LinkToWorld();
     }
+
+    public void AddState(IUnitState state)
+    {
+        States.Add(state);
+        if (NetworkManager.IsServer)
+            Server.NotifyAddUnitState(this, state);
+    }
 }

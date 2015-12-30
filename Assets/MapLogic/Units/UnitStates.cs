@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using ProtoBuf;
 
 public class IdleState : IUnitState
 {
@@ -39,10 +40,8 @@ public class IdleState : IUnitState
 
                 // next path node found
                 // notify clients
-                if (NetworkManager.IsServer)
-                    Server.NotifyMoveUnit(Unit, Unit.X, Unit.Y, path.x, path.y, Unit.Angle, Unit.FaceCell(path.x, path.y));
-                Unit.States.Add(new MoveState(Unit, Unit.X, Unit.Y, path.x, path.y));
-                Unit.States.Add(new RotateState(Unit, Unit.FaceCell(path.x, path.y)));
+                Unit.AddState(new MoveState(Unit, Unit.X, Unit.Y, path.x, path.y));
+                Unit.AddState(new RotateState(Unit, Unit.FaceCell(path.x, path.y)));
                 return true;
             }
 
@@ -77,10 +76,17 @@ public class IdleState : IUnitState
     }
 }
 
+[ProtoContract]
 public class RotateState : IUnitState
 {
-    private MapUnit Unit;
-    private int TargetAngle;
+    public MapUnit Unit;
+    [ProtoMember(1)]
+    public int TargetAngle;
+
+    public RotateState()
+    {
+        Unit = null;
+    }
 
     public RotateState(MapUnit unit, int targetAngle)
     {
@@ -117,14 +123,25 @@ public class RotateState : IUnitState
     }
 }
 
+[ProtoContract]
 public class MoveState : IUnitState
 {
-    private MapUnit Unit;
-    private int SourceX;
-    private int SourceY;
-    private int TargetX;
-    private int TargetY;
-    private float Frac;
+    public MapUnit Unit;
+    [ProtoMember(1)]
+    public int SourceX;
+    [ProtoMember(2)]
+    public int SourceY;
+    [ProtoMember(3)]
+    public int TargetX;
+    [ProtoMember(4)]
+    public int TargetY;
+    [ProtoMember(5)]
+    public float Frac;
+
+    public MoveState()
+    {
+        Unit = null;
+    }
 
     public MoveState(MapUnit unit, int fromX, int fromY, int x, int y)
     {

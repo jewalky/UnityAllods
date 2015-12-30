@@ -129,6 +129,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
     private bool oldVisibility = false;
     public void OnUpdate()
     {
+        if (Renderer == null)
+            return;
+
         if (LogicUnit.GetVisibility() != 2)
         {
             oldVisibility = false;
@@ -275,9 +278,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
     void OnDestroy()
     {
-        if (Filter.mesh != null)
+        if (Filter != null && Filter.mesh != null)
             DestroyImmediate(Filter.mesh, true);
-        if (ShadowFilter.mesh != null)
+        if (ShadowFilter != null && ShadowFilter.mesh != null)
             DestroyImmediate(ShadowFilter.mesh, true);
     }
 

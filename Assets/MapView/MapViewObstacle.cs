@@ -147,9 +147,9 @@ public class MapViewObstacle : MapViewObject, IObjectManualUpdate
 
     void OnDestroy()
     {
-        if (Filter.mesh != null)
+        if (Filter != null && Filter.mesh != null)
             DestroyImmediate(Filter.mesh, true);
-        if (ShadowFilter.mesh != null)
+        if (ShadowFilter != null && ShadowFilter.mesh != null)
             DestroyImmediate(ShadowFilter.mesh, true);
     }
 }

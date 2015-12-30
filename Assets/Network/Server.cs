@@ -123,6 +123,9 @@ public class Server
 
     public static void ObjectBecameVisible(Player player, MapObject mobj)
     {
+        if (player.NetClient == null)
+            return;
+
         //Debug.LogFormat("visible = {0}->{1}", player.Name, mobj.GetObjectType().ToString());
         if (mobj.GetObjectType() == MapObjectType.Monster ||
             mobj.GetObjectType() == MapObjectType.Human)
@@ -145,7 +148,10 @@ public class Server
             unitCmd.FracX = unit.FracX;
             unitCmd.FracY = unit.FracY;
             player.NetClient.SendCommand(unitCmd);
-            Debug.LogFormat("sending player {0} unit {1}", player.Name, unitCmd.Tag);
+            // also notify of current unit state
+            for (int i = 1; i < unit.States.Count; i++)
+                NotifyAddUnitStateSingle(player.NetClient, unit, unit.States[i]);
+            //Debug.LogFormat("sending player {0} unit {1}", player.Name, unitCmd.Tag);
         }
     }
 
@@ -176,7 +182,23 @@ public class Server
         }
     }
 
-    public static void NotifyMoveUnit(MapUnit unit, int x1, int y1, int x2, int y2, int angle1, int angle2)
+    public static void NotifyAddUnitStateSingle(ServerClient client, MapUnit unit, IUnitState state)
+    {
+        ClientCommands.AddUnitState stateCmd;
+        stateCmd.Tag = unit.Tag;
+
+        if (state.GetType() == typeof(RotateState))
+            stateCmd.RotateState = (RotateState)state;
+        else stateCmd.RotateState = null;
+
+        if (state.GetType() == typeof(MoveState))
+            stateCmd.MoveState = (MoveState)state;
+        else stateCmd.MoveState = null;
+
+        client.SendCommand(stateCmd);
+    }
+
+    public static void NotifyAddUnitState(MapUnit unit, IUnitState state)
     {
         foreach (ServerClient client in ServerManager.Clients)
         {
@@ -186,15 +208,7 @@ public class Server
             Player p = MapLogic.Instance.GetNetPlayer(client);
             if (unit.IsVisibleForNetPlayer(p))
             {
-                ClientCommands.WalkUnit walkCmd;
-                walkCmd.Tag = unit.Tag;
-                walkCmd.X1 = x1;
-                walkCmd.X2 = x2;
-                walkCmd.Y1 = y1;
-                walkCmd.Y2 = y2;
-                walkCmd.StartAngle = angle1;
-                walkCmd.EndAngle = angle2;
-                client.SendCommand(walkCmd);
+                NotifyAddUnitStateSingle(client, unit, state);
             }
         }
     }
@@ -211,9 +225,6 @@ public class Server
             {
                 ClientCommands.IdleUnit idleCmd;
                 idleCmd.Tag = unit.Tag;
-                idleCmd.X = x;
-                idleCmd.Y = y;
-                idleCmd.Angle = angle;
                 client.SendCommand(idleCmd);
             }
         }

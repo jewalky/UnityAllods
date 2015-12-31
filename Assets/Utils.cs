@@ -193,7 +193,7 @@ public class ScriptBatch
         string path = "MacBuild";
         string[] levels = new string[] { "Assets/Allods.unity" };
         // Build player.
-        BuildPipeline.BuildPlayer(levels, path + "/Allods.app", BuildTarget.StandaloneOSXIntel64, BuildOptions.None);
+        BuildPipeline.BuildPlayer(levels, path + "/Allods.app", BuildTarget.StandaloneOSXIntel, BuildOptions.None);
         // copy libs
         const string sourceDir = @"DLLs";
         const string targetDir = @"MacBuild\Allods.app\Contents\Resources\Data\Managed";

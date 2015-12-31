@@ -321,6 +321,8 @@ namespace ClientCommands
                 unit.Angle = Angle;
                 unit.Actions.RemoveRange(1, unit.Actions.Count - 1);
                 unit.VState = UnitVisualState.Idle;
+                unit.FracX = 0;
+                unit.FracY = 0;
                 unit.DoUpdateView = true;
             }
 

@@ -47,9 +47,17 @@ public class IdleAction : IUnitAction
                         // one of nodes in statically found path (up to 32 nodes ahead) is non-walkable.
                         // here we try to build another path around it instead.
                         // if it's not found, we continue to walk along the old path.
-                        List<Vector2i> path2 = Unit.DecideNextMove(Unit.WalkX, Unit.WalkY, false);
+                        List<Vector2i> path2 = null;
+                        int pnum = path.Count - 1;
+                        while (path2 == null && pnum >= 0)
+                        {
+                            path2 = Unit.DecideNextMove(path[pnum].x, path[pnum].y, false);
+                            pnum--;
+                        }
+
                         if (path2 != null)
                             path = path2;
+
                         break;
                     }
                 }

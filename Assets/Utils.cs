@@ -90,7 +90,7 @@ public partial class Utils
             renderer.enabled = enabled;
     }
 
-    public static void PutQuadInMesh(Vector3[] qv, Vector2[] quv, Color[] qc, ref int pp, ref int ppt, ref int ppc, int x, int y, int w, int h, Rect texRect, Color color)
+    public static void PutQuadInMesh(Vector3[] qv, Vector2[] quv, Color[] qc, ref int pp, ref int ppt, ref int ppc, float x, float y, float w, float h, Rect texRect, Color color)
     {
         qv[pp++] = new Vector3(x, y, 0);
         qv[pp++] = new Vector3(x + w, y, 0);

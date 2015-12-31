@@ -23,6 +23,66 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
     private MeshFilter ShadowFilter;
     private Mesh ShadowMesh;
 
+    private static Texture2D HpBall = null;
+    private static Material HpMat1 = null;
+    private static Material HpMat2 = null;
+    private GameObject HpObject;
+    private MeshRenderer HpRenderer;
+    private MeshFilter HpFilter;
+    private Mesh HpMesh;
+
+    private void UpdateHpMesh()
+    {
+        if (HpBall == null) HpBall = Images.LoadImage("graphics/interface/ball.bmp", 0, Images.ImageType.AllodsBMP);
+        if (HpMat1 == null)
+        {
+            HpMat1 = new Material(MainCamera.MainShader);
+            HpMat1.mainTexture = HpBall;
+        }
+        if (HpMat2 == null) HpMat2 = new Material(MainCamera.MainShader);
+
+        if (HpObject == null)
+        {
+            HpObject = Utils.CreateObject();
+            HpObject.name = "Health";
+            HpRenderer = HpObject.AddComponent<MeshRenderer>();
+            HpFilter = HpObject.AddComponent<MeshFilter>();
+            HpMesh = new Mesh();
+            HpFilter.mesh = HpMesh;
+            HpObject.transform.parent = transform;
+            HpObject.transform.localPosition = new Vector3(0, 0, 0);
+            HpObject.transform.localScale = new Vector3(1, 1, 1);
+        }
+
+        HpMesh.Clear();
+        int vcnt = 4 * 2; // left, right, background, fullhp.
+        if (LogicUnit.Stats.ManaMax > 0)
+            vcnt += 4 * 4; // also add bar for mana
+
+        Vector3[] qv = new Vector3[vcnt];
+        Vector2[] quv = new Vector2[vcnt];
+        Color[] qc = new Color[vcnt];
+        int pp = 0, ppt = pp, ppc = pp;
+
+        float ballInc = 1f / 3;
+        float x = LogicUnit.Class.SelectionX1;
+        float y = LogicUnit.Class.SelectionY1;
+        float w = LogicUnit.Class.SelectionX2 - LogicUnit.Class.SelectionX1;
+
+        Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x, y, 3, 4, new Rect(0, 0, ballInc, 1), new Color(1, 1, 1, 1));
+        Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x+w-3, y, 3, 4, new Rect(1f - ballInc, 0, ballInc, 1), new Color(1, 1, 1, 1));
+        HpMesh.vertices = qv;
+        HpMesh.uv = quv;
+        HpMesh.colors = qc;
+
+        int[] qt = new int[vcnt];
+        for (int i = 0; i < qt.Length; i++)
+            qt[i] = i;
+
+        HpMesh.SetIndices(qt, MeshTopology.Quads, 0);
+        HpFilter.mesh = HpMesh;
+    }
+
     private Vector2 CurrentPoint;
     private bool DrawSelected = false;
 
@@ -265,6 +325,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             //Renderer.sprite = sprites.Sprites[actualFrame];
             ObstacleMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (ObstacleMesh == null), doFlip);
             ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null), doFlip); // 0.3 of sprite height
+            UpdateHpMesh();
 
             LogicUnit.DoUpdateView = false;
         }

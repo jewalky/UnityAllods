@@ -36,6 +36,8 @@ public class Config
         }
     }
 
+    public static string sv_avatar { get; set; }
+
     public static void Save()
     {
         // write file with current values

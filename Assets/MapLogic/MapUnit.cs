@@ -358,6 +358,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 return 0;
         }
 
+        // magic resists
         if ((flags & DamageFlags.Fire) != 0)
             damagecount -= damagecount * Stats.ProtectionFire / 100;
         if ((flags & DamageFlags.Water) != 0)
@@ -368,6 +369,18 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             damagecount -= damagecount * Stats.ProtectionEarth / 100;
         if ((flags & DamageFlags.Astral) != 0)
             damagecount -= damagecount * Stats.ProtectionAstral / 100;
+
+        // physical resists in monsters
+        if ((flags & DamageFlags.Blade) != 0)
+            damagecount -= damagecount * Stats.ProtectionBlade / 100;
+        if ((flags & DamageFlags.Axe) != 0)
+            damagecount -= damagecount * Stats.ProtectionAxe / 100;
+        if ((flags & DamageFlags.Bludgeon) != 0)
+            damagecount -= damagecount * Stats.ProtectionBludgeon / 100;
+        if ((flags & DamageFlags.Pike) != 0)
+            damagecount -= damagecount * Stats.ProtectionPike / 100;
+        if ((flags & DamageFlags.Shooting) != 0)
+            damagecount -= damagecount * Stats.ProtectionShooting / 100;
 
         if (Stats.TrySetHealth(Stats.Health - damagecount))
             return damagecount;

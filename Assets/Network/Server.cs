@@ -167,16 +167,13 @@ public class Server
                 continue;
 
             Player p = MapLogic.Instance.GetNetPlayer(client);
-            if (mobj.IsVisibleForNetPlayer(p))
+            if (mobj.GetObjectType() == MapObjectType.Monster ||
+                mobj.GetObjectType() == MapObjectType.Human)
             {
-                if (mobj.GetObjectType() == MapObjectType.Monster ||
-                    mobj.GetObjectType() == MapObjectType.Human)
-                {
-                    MapUnit unit = (MapUnit)mobj;
-                    ClientCommands.DelUnit dunitCmd;
-                    dunitCmd.Tag = unit.Tag;
-                    client.SendCommand(dunitCmd);
-                }
+                MapUnit unit = (MapUnit)mobj;
+                ClientCommands.DelUnit dunitCmd;
+                dunitCmd.Tag = unit.Tag;
+                client.SendCommand(dunitCmd);
             }
         }
     }

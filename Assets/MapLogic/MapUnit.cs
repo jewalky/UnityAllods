@@ -133,6 +133,13 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Stats.ProtectionEarth = (byte)Template.ProtectionEarth;
         Stats.ProtectionAstral = (byte)Template.ProtectionAstral;
 
+        // physical resists (custom)
+        Stats.ProtectionBlade = (byte)Template.ProtectionBlade;
+        Stats.ProtectionAxe = (byte)Template.ProtectionAxe;
+        Stats.ProtectionBludgeon = (byte)Template.ProtectionBludgeon;
+        Stats.ProtectionPike = (byte)Template.ProtectionPike;
+        Stats.ProtectionShooting = (byte)Template.ProtectionShooting;
+
         Stats.RotationSpeed = (byte)Template.RotationSpeed;
         if (Stats.RotationSpeed < 1)
             Stats.RotationSpeed = 1;

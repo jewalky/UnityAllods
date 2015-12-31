@@ -357,7 +357,11 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
     private static AllodsTextRenderer Info_Defense; // defense + absorbtion values
     private static AllodsTextRenderer Info_ResistCaptionMain; // magic resist caption
     private static AllodsTextRenderer Info_ResistCaption; // magic resist captions (individual)
-    private static AllodsTextRenderer Info_Resist; // magic resist captions
+    private static AllodsTextRenderer Info_Resist; // magic resist values
+    private static AllodsTextRenderer Info_SkillCaptionMain; // skill caption
+    private static AllodsTextRenderer Info_SkillCaption; // skill captions (individual)
+    private static AllodsTextRenderer Info_Skill; // skill values
+
     private static AllodsTextRenderer Info_ScanSpeedCaption; // scanrange + speed captions
     private static AllodsTextRenderer Info_ScanSpeed; // scanrange + speed values
 
@@ -396,6 +400,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 Info_ResistCaptionMain = DisplayInfoInit(Font.Align.Left, 75, 113, 65, 8, new Color32(0x94, 0x59, 0x00, 0xFF));
                 Info_ResistCaption = DisplayInfoInit(Font.Align.Left, 75, 123, 65, 48, colorCaption);
                 Info_Resist = DisplayInfoInit(Font.Align.Right, 75, 123, 65, 48, colorValue);
+                Info_SkillCaptionMain = DisplayInfoInit(Font.Align.Left, 7, 113, 63, 8, new Color32(0x94, 0x59, 0x00, 0xFF));
+                Info_SkillCaption = DisplayInfoInit(Font.Align.Left, 7, 123, 63, 48, colorCaption);
+                Info_Skill = DisplayInfoInit(Font.Align.Right, 7, 123, 63, 48, colorValue);
                 Info_ScanSpeedCaption = DisplayInfoInit(Font.Align.Left, 41, 201, 65, 18, colorCaption);
                 Info_ScanSpeed = DisplayInfoInit(Font.Align.Right, 41, 201, 65, 18, colorValue);
             }
@@ -434,6 +441,14 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                                                                         LogicUnit.Stats.ProtectionAir,
                                                                         LogicUnit.Stats.ProtectionEarth,
                                                                         LogicUnit.Stats.ProtectionAstral);
+
+            Info_SkillCaptionMain.Text = Locale.Main[28];
+            Info_SkillCaption.Text = string.Format("{0}\n{1}\n{2}\n{3}\n{4}", Locale.Main[30], Locale.Main[31], Locale.Main[32], Locale.Main[33], Locale.Main[34]);
+            Info_Skill.Text = string.Format("{0}\n{1}\n{2}\n{3}\n{4}", LogicUnit.Stats.ProtectionBlade,
+                                                                       LogicUnit.Stats.ProtectionAxe,
+                                                                       LogicUnit.Stats.ProtectionBludgeon,
+                                                                       LogicUnit.Stats.ProtectionPike,
+                                                                       LogicUnit.Stats.ProtectionShooting);
 
             Info_ScanSpeedCaption.Text = string.Format("{0}\n{1}", Locale.Main[21], Locale.Main[22]);
             Info_ScanSpeed.Text = string.Format("{0:F1}\n{1}", LogicUnit.Stats.ScanRange, LogicUnit.Stats.Speed);

@@ -99,6 +99,7 @@ public class ScanrangeCalc
     public void CalculateVision(int x, int y, float scanrangef)
     {
         // we need to make scanshifted scanrange from float.
+        Debug.LogFormat("calculating vision {0} {1} {2}", x, y, scanrangef);
         int scanrange = (int)scanrangef;
         scanrange = (scanrange << 8) | (int)((scanrangef - scanrange) * 255);
 

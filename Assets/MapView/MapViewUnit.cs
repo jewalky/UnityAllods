@@ -383,8 +383,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             {
                 for (int lx = 0; lx < LogicUnit.Width; lx++)
                 {
-                    Vector2 xPl = MapView.Instance.MapToScreenCoords(LogicUnit.X + (float)LogicUnit.Width / 2 + LogicUnit.FracX + lx,
-                                                                     LogicUnit.Y + (float)LogicUnit.Height / 2 + LogicUnit.FracY + ly,
+                    Vector2 xPl = MapView.Instance.MapToScreenCoords(LogicUnit.X + LogicUnit.FracX + lx,
+                                                                     LogicUnit.Y + LogicUnit.FracY + ly,
                                                                      1, 1);
                     xP += xPl;
                 }

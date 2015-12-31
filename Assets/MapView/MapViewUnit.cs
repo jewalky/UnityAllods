@@ -24,8 +24,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
     private Mesh ShadowMesh;
 
     private static Texture2D HpBall = null;
-    private static Material HpMat1 = null;
-    private static Material HpMat2 = null;
+    private Material HpMat1 = null;
+    private Material HpMat2 = null;
     private GameObject HpObject;
     private MeshRenderer HpRenderer;
     private MeshFilter HpFilter;
@@ -50,41 +50,94 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             HpMesh = new Mesh();
             HpFilter.mesh = HpMesh;
             HpObject.transform.parent = transform;
-            HpObject.transform.localPosition = new Vector3(0, 0, 0);
+            HpObject.transform.localPosition = new Vector3(0, 0, -64);
             HpObject.transform.localScale = new Vector3(1, 1, 1);
+            HpRenderer.materials = new Material[] { HpMat1, HpMat2 };
         }
 
         HpMesh.Clear();
-        int vcnt = 4 * 2; // left, right, background, fullhp.
+        int vcnt = 4 * 8; // 
         if (LogicUnit.Stats.ManaMax > 0)
-            vcnt += 4 * 4; // also add bar for mana
+            vcnt += 4 * 8; // 
 
         Vector3[] qv = new Vector3[vcnt];
         Vector2[] quv = new Vector2[vcnt];
         Color[] qc = new Color[vcnt];
         int pp = 0, ppt = pp, ppc = pp;
 
-        float ballInc = 1f / 3;
-        float x = LogicUnit.Class.SelectionX1;
-        float y = LogicUnit.Class.SelectionY1;
-        float w = LogicUnit.Class.SelectionX2 - LogicUnit.Class.SelectionX1;
+        int x = LogicUnit.Class.SelectionX1;
+        int y = LogicUnit.Class.SelectionY1;
+        int w = LogicUnit.Class.SelectionX2 - LogicUnit.Class.SelectionX1;
 
-        Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x, y, 3, 4, new Rect(0, 0, ballInc, 1), new Color(1, 1, 1, 1));
-        Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x+w-3, y, 3, 4, new Rect(1f - ballInc, 0, ballInc, 1), new Color(1, 1, 1, 1));
+        Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x, y, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
+        Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x + w - 4, y, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
+        if (LogicUnit.Stats.ManaMax > 0)
+        {
+            Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x, y + 4, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
+            Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x + w - 4, y + 4, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
+        }
+
+        for (int i = 0; i < vcnt; i += 4 * 8)
+        {
+            int lpp = i + vcnt / 4;
+            int lppc = i + vcnt / 4;
+
+            if (i >= 4 * 8) y += 4; // mana is +5px
+
+            qv[lpp++] = new Vector3(x + 4, y);
+            qv[lpp++] = new Vector3(x + w - 4, y);
+            qv[lpp++] = new Vector3(x + w - 4, y + 4);
+            qv[lpp++] = new Vector3(x + 4, y + 4);
+            qc[lppc++] = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+            qc[lppc++] = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+            qc[lppc++] = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+            qc[lppc++] = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+
+            float lcnt = (i >= 4 * 8) ? (float)LogicUnit.Stats.Mana / LogicUnit.Stats.ManaMax : (float)LogicUnit.Stats.Health / LogicUnit.Stats.HealthMax;
+            Color clBase = new Color(0, 1, 0, 1);
+            if (i >= 4 * 8) clBase = new Color(0, 0, 1, 1);
+            else if (lcnt < 0.33) clBase = new Color(1, 0, 0, 1);
+            else if (lcnt < 0.66) clBase = new Color(1, 1, 0, 1);
+            Color clDk1 = clBase / 2;
+            clDk1.a = 1;
+            Color clDk2 = clBase / 3;
+            clDk2.a = 1;
+            qv[lpp++] = new Vector3(x + 4, y);
+            qv[lpp++] = new Vector3(x + w * lcnt - 4, y);
+            qv[lpp++] = new Vector3(x + w * lcnt - 4, y + 4);
+            qv[lpp++] = new Vector3(x + 4, y + 4);
+            qc[lppc++] = clDk2;
+            qc[lppc++] = clDk2;
+            qc[lppc++] = clDk2;
+            qc[lppc++] = clDk2;
+            qv[lpp++] = new Vector3(x + 4, y + 1);
+            qv[lpp++] = new Vector3(x + w * lcnt - 4, y + 1);
+            qv[lpp++] = new Vector3(x + w * lcnt - 4, y + 3);
+            qv[lpp++] = new Vector3(x + 4, y + 3);
+            qc[lppc++] = clBase;
+            qc[lppc++] = clBase;
+            qc[lppc++] = clDk1;
+            qc[lppc++] = clDk1;
+        }
+
         HpMesh.vertices = qv;
         HpMesh.uv = quv;
         HpMesh.colors = qc;
 
-        int[] qt = new int[vcnt];
+        HpMesh.subMeshCount = 2;
+        int[] qt = new int[vcnt / 4];
         for (int i = 0; i < qt.Length; i++)
             qt[i] = i;
-
         HpMesh.SetIndices(qt, MeshTopology.Quads, 0);
+        int[] qt2 = new int[vcnt - qt.Length];
+        for (int i = 0; i < qt2.Length; i++)
+            qt2[i] = qt.Length + i;
+        HpMesh.SetIndices(qt2, MeshTopology.Quads, 1);
         HpFilter.mesh = HpMesh;
     }
 
     private Vector2 CurrentPoint;
-    private bool DrawSelected = false;
+    private bool DrawHilit = false;
 
     private Mesh UpdateMesh(Images.AllodsSpriteSeparate sprite, int frame, Mesh mesh, float shadowOffs, bool first, bool flip)
     {
@@ -134,6 +187,11 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             quv[2] = new Vector2(0, tMaxY);
             quv[3] = new Vector2(tMaxX, tMaxY);
         }
+
+        float cx = (float)sprite.Frames[frame].Width * LogicUnit.Class.CenterX;
+        float cy = (float)sprite.Frames[frame].Height * LogicUnit.Class.CenterY;
+        for (int i = 0; i < qv.Length; i++)
+            qv[i] -= new Vector3(cx, cy, 0);
 
         mesh.vertices = qv;
         mesh.uv = quv;
@@ -191,22 +249,28 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             oldVisibility = false;
             Renderer.enabled = false;
             ShadowRenderer.enabled = false;
+            if (HpRenderer != null) HpRenderer.enabled = false;
             return;
         }
         else if (!oldVisibility)
         {
             Renderer.enabled = true;
             ShadowRenderer.enabled = true;
+            if (HpRenderer != null) HpRenderer.enabled = true;
             oldVisibility = true;
             return;
         }
 
-        Renderer.material.SetFloat("_Lightness", DrawSelected ? 0.75f : 0.5f);
+        if (Renderer != null) Renderer.material.SetFloat("_Lightness", DrawHilit ? 0.75f : 0.5f);
+        bool selected = (MapView.Instance.SelectedObject == LogicUnit);
+        if (HpMat1 != null) HpMat1.color = new Color(1, 1, 1, selected ? 1f : 0.5f);
+        if (HpMat2 != null) HpMat2.color = new Color(1, 1, 1, selected ? 1f : 0.5f);
 
         if (LogicUnit.DoUpdateView)
         {
             Renderer.enabled = true;
             ShadowRenderer.enabled = true;
+            if (HpRenderer != null) HpRenderer.enabled = true;
 
             Images.AllodsSpriteSeparate sprites = LogicUnit.Class.File.File;
 
@@ -318,9 +382,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             float zInv = 0;
             if (LogicUnit.Template.IsFlying)
                 zInv = -128;
-            transform.localPosition = new Vector3(xP.x - (float)sprites.Frames[actualFrame].Width * LogicUnit.Class.CenterX,
-                                                    xP.y - (float)sprites.Frames[actualFrame].Height * LogicUnit.Class.CenterY,
-                                                    MakeZFromY(xP.y)+zInv); // order sprites by y coordinate basically
+            transform.localPosition = new Vector3(xP.x, xP.y, MakeZFromY(xP.y)+zInv); // order sprites by y coordinate basically
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicUnit.Class.CenterX));
             //Renderer.sprite = sprites.Sprites[actualFrame];
             ObstacleMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (ObstacleMesh == null), doFlip);
@@ -351,11 +413,11 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             cy > LogicUnit.Class.SelectionY1 &&
             cy < LogicUnit.Class.SelectionY2)
         {
-            DrawSelected = true;
+            DrawHilit = true;
             return true;
         }
 
-        DrawSelected = false;
+        DrawHilit = false;
         return false;
     }
 

@@ -321,15 +321,15 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         }
 
         if ((flags & DamageFlags.Fire) != 0)
-            damagecount = damagecount * Stats.ProtectionFire / 100;
+            damagecount -= damagecount * Stats.ProtectionFire / 100;
         if ((flags & DamageFlags.Water) != 0)
-            damagecount = damagecount * Stats.ProtectionWater / 100;
+            damagecount -= damagecount * Stats.ProtectionWater / 100;
         if ((flags & DamageFlags.Air) != 0)
-            damagecount = damagecount * Stats.ProtectionAir / 100;
+            damagecount -= damagecount * Stats.ProtectionAir / 100;
         if ((flags & DamageFlags.Earth) != 0)
-            damagecount = damagecount * Stats.ProtectionEarth / 100;
+            damagecount -= damagecount * Stats.ProtectionEarth / 100;
         if ((flags & DamageFlags.Astral) != 0)
-            damagecount = damagecount * Stats.ProtectionAstral / 100;
+            damagecount -= damagecount * Stats.ProtectionAstral / 100;
 
         if (Stats.TrySetHealth(Stats.Health - damagecount))
             return damagecount;

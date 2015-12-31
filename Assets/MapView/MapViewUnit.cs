@@ -340,12 +340,39 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         }
         else
         {
-            TexObject.SetActive(false);
+            if (TexObject != null)
+                TexObject.SetActive(false);
         }
     }
 
+    private static GameObject InfoObject;
+    private static AllodsTextRenderer Info_Name;
+
     public void DisplayInfo(bool on, Transform parent)
     {
+        if (on)
+        {
+            if (InfoObject == null)
+            {
+                int wd = 176;
+                InfoObject = Utils.CreateObject();
+                Info_Name = new AllodsTextRenderer(Fonts.Font2, Font.Align.Center, 70, 10, false);
+                GameObject Info_NameO = Info_Name.GetNewGameObject(0.01f, InfoObject.transform, 100, 0.2f);
+                Info_NameO.transform.localPosition = new Vector3(39, 19, 0);
+                Info_Name.Material.color = new Color32(0xBD, 0x9E, 0x4A, 0xFF);
+            }
 
+            InfoObject.transform.parent = parent;
+            InfoObject.transform.localPosition = new Vector3(0, 0, -0.2f);
+            InfoObject.transform.localScale = new Vector3(1, 1, 1);
+            InfoObject.SetActive(true);
+
+            Info_Name.Text = "\n" + Locale.UnitName[LogicUnit.Class.ID];
+        }
+        else
+        {
+            if (InfoObject != null)
+                InfoObject.SetActive(false);
+        }
     }
 }

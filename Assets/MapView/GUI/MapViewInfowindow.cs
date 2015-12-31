@@ -27,7 +27,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor
                 if (_Viewer != null)
                 {
                     _Viewer.DisplayPic(true, HBackRObject.transform);
-                    _Viewer.DisplayInfo(true, HBackRObject.transform);
+                    _Viewer.DisplayInfo((BHumanMode == null || !HumanMode), TBackRObject.transform);
                 }
             }
         }

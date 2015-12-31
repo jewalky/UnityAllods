@@ -142,8 +142,11 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor
         }
 
         // show extra
-        Utils.MakeTexturedQuad(out ExtraLObject, ExtraL);
-        Utils.MakeTexturedQuad(out ExtraRObject, ExtraR);
+        if (ExtraL != null && ExtraR != null)
+        {
+            Utils.MakeTexturedQuad(out ExtraLObject, ExtraL);
+            Utils.MakeTexturedQuad(out ExtraRObject, ExtraR);
+        }
 
         ExtraLObject.transform.parent = transform;
         ExtraLObject.transform.localScale = new Vector3(1, 1, 1);

@@ -9,7 +9,9 @@ public enum MapNodeFlags
     BlockedAir = 0x0002,
     Discovered = 0x0004, // the cell was visible
     Visible = 0x0008, // the cell is now visible (always Visible+Discovered means open cell, only Discovered means fog of war, neither means cell is black)
-    Unblocked = 0x0010 // walkable water / rocks
+    Unblocked = 0x0010, // walkable water / rocks
+    DynamicGround = 0x0020, // temporarily blocked ground (unit)
+    DynamicAir = 0x0040, // temporarily blocked air (unit)
 }
 
 public class MapNode

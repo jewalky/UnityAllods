@@ -29,7 +29,7 @@ public class IdleAction : IUnitAction
                 }
 
                 // try to pathfind
-                Vector2i path = Unit.DecideNextMove(Unit.WalkX, Unit.WalkY);
+                List<Vector2i> path = Unit.DecideNextMove(Unit.WalkX, Unit.WalkY, true);
                 if (path == null)
                 {
                     //Debug.LogFormat("idle state: path to {0},{1} not found", Unit.WalkX, Unit.WalkY);
@@ -38,10 +38,30 @@ public class IdleAction : IUnitAction
                     return true;
                 }
 
-                // next path node found
-                // notify clients
-                Unit.AddActions(new MoveAction(Unit, path.x, path.y), new RotateAction(Unit, Unit.FaceCell(path.x, path.y)));
-                return true;
+                int sbd = 32;
+                if (sbd > path.Count) sbd = path.Count;
+                for (int i = 0; i < sbd; i++)
+                {
+                    if (!Unit.CheckWalkableForUnit(path[i].x, path[i].y, false))
+                    {
+                        // one of nodes in statically found path (up to 32 nodes ahead) is non-walkable.
+                        // here we try to build another path around it instead.
+                        // if it's not found, we continue to walk along the old path.
+                        List<Vector2i> path2 = Unit.DecideNextMove(Unit.WalkX, Unit.WalkY, false);
+                        if (path2 != null)
+                            path = path2;
+                        break;
+                    }
+                }
+
+                // if NEXT node is not walkable, we drop into idle state.
+                if (Unit.CheckWalkableForUnit(path[0].x, path[0].y, false))
+                {
+                    // next path node found
+                    // notify clients
+                    Unit.AddActions(new MoveAction(Unit, path[0].x, path[0].y), new RotateAction(Unit, Unit.FaceCell(path[0].x, path[0].y)));
+                    return true;
+                }
             }
         }
 
@@ -155,7 +175,7 @@ public class MoveAction : IUnitAction
     public virtual bool Process()
     {
         // check if it's possible to walk there (again). NOT on client.
-        if (!NetworkManager.IsClient && !Unit.CheckWalkableForUnit(TargetX, TargetY))
+        if (!NetworkManager.IsClient && !Unit.CheckWalkableForUnit(TargetX, TargetY, false))
             return false; // stop this state. possibly try to pathfind again. otherwise idle.
 
         //Debug.LogFormat("walk state: moving to {0},{1} ({2})", TargetX, TargetY, Frac);

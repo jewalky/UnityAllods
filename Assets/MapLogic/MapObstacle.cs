@@ -56,6 +56,6 @@ public class MapObstacle : MapObject
 
     public override MapNodeFlags GetNodeLinkFlags(int x, int y)
     {
-        return MapNodeFlags.BlockedGround;
+        return MapNodeFlags.DynamicGround;
     }
 }

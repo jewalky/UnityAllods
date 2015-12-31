@@ -169,7 +169,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     {
         if (Template == null)
             return 0;
-        return (Template.IsFlying) ? MapNodeFlags.BlockedAir : MapNodeFlags.BlockedGround;
+        return (Template.IsFlying) ? MapNodeFlags.DynamicAir : MapNodeFlags.DynamicGround;
     }
 
     /// <summary>
@@ -179,6 +179,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     class AstarHelper : IShortestPath<Vector2i, Vector2i>
     {
         private MapUnit unit;
+        public bool StaticLookup = false;
 
         public AstarHelper(MapUnit unit)
         {
@@ -197,7 +198,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         {
             if (p.x < 8 || p.y < 8 ||
                 p.x >= MapLogic.Instance.Width - 8 || p.y >= MapLogic.Instance.Height - 8) return false;
-            return unit.CheckWalkableForUnit(p.x, p.y);
+            return unit.CheckWalkableForUnit(p.x, p.y, StaticLookup);
         }
 
         /**
@@ -236,22 +237,26 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     }
 
     private ShortestPathGraphSearch<Vector2i, Vector2i> AstarSearcher = null;
-    public Vector2i DecideNextMove(int targetX, int targetY)
+    private AstarHelper AstarSearcherH = null;
+    public List<Vector2i> DecideNextMove(int targetX, int targetY, bool staticOnly)
     {
         // if targetX,targetY is blocked, refuse to pathfind.
-        if (!CheckWalkableForUnit(targetX, targetY))
+        if (!CheckWalkableForUnit(targetX, targetY, staticOnly))
             return null;
 
+        if (AstarSearcherH == null)
+            AstarSearcherH = new AstarHelper(this);
         if (AstarSearcher == null)
-            AstarSearcher = new ShortestPathGraphSearch<Vector2i, Vector2i>(new AstarHelper(this));
+            AstarSearcher = new ShortestPathGraphSearch<Vector2i, Vector2i>(AstarSearcherH);
+        AstarSearcherH.StaticLookup = staticOnly;
+
         try
         {
             List<Vector2i> nodes = AstarSearcher.GetShortestPath(new Vector2i(X, Y), new Vector2i(targetX, targetY));
             if (nodes == null)
                 return null;
-            if (nodes.Count == 0)
-                return new Vector2i(targetX, targetY);
-            return new Vector2i(nodes[0].x, nodes[0].y);
+            nodes.Add(new Vector2i(targetX, targetY));
+            return nodes;
         }
         catch (Exception)
         {
@@ -264,7 +269,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     /// </summary>
 
     // returns true if cell is walkable for this unit
-    public bool CheckWalkableForUnit(int x, int y)
+    public bool CheckWalkableForUnit(int x, int y, bool staticOnly)
     {
         for (int ly = y; ly < y + Height; ly++)
         {
@@ -277,9 +282,10 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 MapNodeFlags flags = MapLogic.Instance.Nodes[lx, ly].Flags;
                 if (Template.IsWalking && (flags & MapNodeFlags.Unblocked) == 0 && (tile >= 0x1C0 && tile <= 0x2FF))
                     return false;
-                if (Template.IsFlying &&
-                    (flags & MapNodeFlags.BlockedAir) != 0) return false;
-                else if (!Template.IsFlying && (flags & MapNodeFlags.BlockedGround) != 0)
+                MapNodeFlags bAir = staticOnly ? MapNodeFlags.BlockedAir : MapNodeFlags.BlockedAir | MapNodeFlags.DynamicAir;
+                MapNodeFlags bGround = staticOnly ? MapNodeFlags.BlockedGround : MapNodeFlags.BlockedGround | MapNodeFlags.DynamicGround;
+                if (Template.IsFlying && (flags & bAir) != 0) return false;
+                else if (!Template.IsFlying && (flags & bGround) != 0)
                     return false;
             }
         }

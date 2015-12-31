@@ -203,7 +203,7 @@ public class MoveAction : IUnitAction
                 FracAdd = (float)Unit.Stats.Speed / 400; // otherwise can be written as speed / 20 / 20.
                 MoveSpeed = (float)Unit.Stats.Speed / 20; // move animation play speed.
             }
-            Frac += 0.05f;
+            Frac += FracAdd;
             Unit.FracX = Frac * (TargetX - Unit.X);
             Unit.FracY = Frac * (TargetY - Unit.Y);
             Unit.DoUpdateView = true;

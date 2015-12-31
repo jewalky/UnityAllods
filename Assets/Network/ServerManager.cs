@@ -50,7 +50,7 @@ public class ServerClient
 
     public void Disconnect()
     {
-        ServerManager.DisconnectClient(this);
+        DoDisconnectMe = true;
     }
 
     public void Update()
@@ -93,26 +93,26 @@ public class ServerClient
             Type objType = NetworkManager.FindTypeFromPacketId("ServerCommands", pid);
             if (objType == null)
             {
-                GameConsole.Instance.WriteLine("Unknown command ID={0:X2}.", pid);
-                ServerManager.DisconnectClient(this);
+                Debug.LogFormat("Unknown command ID={0:X2}.", pid);
+                DoDisconnectMe = true;
                 return;
             }
 
             object o = Serializer.Deserialize(objType, ms);
             if (!(o is IServerCommand))
             {
-                GameConsole.Instance.WriteLine("Server commands should implement IServerCommand.");
-                ServerManager.DisconnectClient(this);
+                Debug.LogFormat("Server commands should implement IServerCommand.");
+                DoDisconnectMe = true;
                 return;
             }
 
             if (!((IServerCommand)o).Process(this))
-                ServerManager.DisconnectClient(this);
+                DoDisconnectMe = true;
         }
         catch (Exception e)
         {
-            GameConsole.Instance.WriteLine("Error encountered during command processing.\n{0}", e.ToString());
-            ServerManager.DisconnectClient(this);
+            Debug.LogFormat("Error encountered during command processing.\n{0}", e.ToString());
+            DoDisconnectMe = true;
         }
         finally
         {
@@ -299,14 +299,14 @@ public class ServerManager
             }
 
             NewClients.Clear();
+        }
 
-            for (int i = 0; i < Clients.Count; i++)
+        for (int i = 0; i < Clients.Count; i++)
+        {
+            if (Clients[i].DoDisconnectMe)
             {
-                if (Clients[i].DoDisconnectMe)
-                {
-                    DisconnectClient(Clients[i]);
-                    i--;
-                }
+                DisconnectClient(Clients[i]);
+                i--;
             }
         }
 

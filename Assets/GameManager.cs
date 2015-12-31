@@ -68,8 +68,6 @@ public class GameManager : MonoBehaviour
     {
         GameConsole = Utils.CreateObjectWithScript<GameConsole>();
         GameConsole.transform.parent = UiManager.Instance.transform;
-        CheckServerConfig();
-        Config.Load();
     }
 
     void OnDestroy()
@@ -92,8 +90,14 @@ public class GameManager : MonoBehaviour
         StartCoroutine(DelegateCoroutine(del));
     }
 
+    private bool configDone = false;
     void Update()
     {
-
+        if (!configDone)
+        {
+            CheckServerConfig();
+            Config.Load();
+            configDone = true;
+        }
     }
 }

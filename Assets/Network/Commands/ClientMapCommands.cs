@@ -299,12 +299,6 @@ namespace ClientCommands
     {
         [ProtoMember(1)]
         public int Tag;
-        [ProtoMember(2)]
-        public int X;
-        [ProtoMember(3)]
-        public int Y;
-        [ProtoMember(4)]
-        public int Angle;
 
         public bool Process()
         {
@@ -317,13 +311,7 @@ namespace ClientCommands
             }
             else
             {
-                unit.SetPosition(X, Y);
-                unit.Angle = Angle;
-                unit.Actions.RemoveRange(1, unit.Actions.Count - 1);
-                unit.VState = UnitVisualState.Idle;
-                unit.FracX = 0;
-                unit.FracY = 0;
-                unit.DoUpdateView = true;
+                unit.AllowIdle = true;
             }
 
             return true;

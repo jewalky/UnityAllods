@@ -64,6 +64,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public List<IUnitAction> Actions = new List<IUnitAction>();
     public UnitVisualState VState = UnitVisualState.Idle;
+    public bool AllowIdle = false;
     public int IdleFrame = 0;
     public int IdleTime = 0;
     public int MoveFrame = 0;

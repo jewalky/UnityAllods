@@ -43,16 +43,18 @@ public class IdleAction : IUnitAction
                 Unit.AddActions(new MoveAction(Unit, path.x, path.y), new RotateAction(Unit, Unit.FaceCell(path.x, path.y)));
                 return true;
             }
-
-            if (Unit.VState != UnitVisualState.Idle)
-            {
-                Unit.VState = UnitVisualState.Idle; // set state to idle
-                Unit.DoUpdateView = true;
-
-                if (NetworkManager.IsServer)
-                    Server.NotifyIdleUnit(Unit, Unit.X, Unit.Y, Unit.Angle);
-            }
         }
+
+        if (Unit.VState != UnitVisualState.Idle && (!NetworkManager.IsClient || Unit.AllowIdle))
+        {
+            Unit.VState = UnitVisualState.Idle; // set state to idle
+            Unit.DoUpdateView = true;
+
+            if (NetworkManager.IsServer)
+                Server.NotifyIdleUnit(Unit, Unit.X, Unit.Y, Unit.Angle);
+            Unit.AllowIdle = false;
+        }
+
 
         // possibly animate
         if (Unit.Class.IdlePhases > 1)

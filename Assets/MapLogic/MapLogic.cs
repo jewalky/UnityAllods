@@ -580,7 +580,7 @@ class MapLogic
     // create main unit for player.
     public IPlayerPawn CreateAvatar(Player player)
     {
-        MapUnit unit = new MapUnit("Urd");
+        MapUnit unit = new MapUnit(Config.sv_avatar);
         unit.Player = player;
         unit.Tag = GetFreeUnitTag(); // this is also used as network ID.
         unit.SetPosition(16, 16);

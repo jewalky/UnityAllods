@@ -36,7 +36,20 @@ public class Config
         }
     }
 
-    public static string sv_avatar { get; set; }
+    private static string _sv_avatar = "Urd";
+    public static string sv_avatar
+    {
+        get
+        {
+            return _sv_avatar;
+        }
+
+        set
+        {
+            _sv_avatar = value;
+            Save();
+        }
+    }
 
     public static void Save()
     {

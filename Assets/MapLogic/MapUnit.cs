@@ -108,6 +108,30 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Stats = new UnitStats();
         Width = Template.TokenSize;
         Height = Template.TokenSize;
+
+        Stats.Health = Stats.HealthMax = Math.Max(Template.HealthMax, 0);
+        Stats.Mana = Stats.ManaMax = Math.Max(Template.ManaMax, 0); // they sometimes put -1 as mana counter for fighters
+
+        // BRMS
+        Stats.Body = (short)Template.Body;
+        Stats.Reaction = (short)Template.Reaction;
+        Stats.Mind = (short)Template.Mind;
+        Stats.Spirit = (short)Template.Spirit;
+
+        // physical damage and resists
+        Stats.DamageMin = (short)Template.PhysicalMin;
+        Stats.DamageMax = (short)Template.PhysicalMax;
+        Stats.ToHit = (short)Template.ToHit;
+        Stats.Absorbtion = (short)Template.Absorbtion;
+        Stats.Defence = (short)Template.Defense;
+
+        // magical resists
+        Stats.ProtectionFire = (byte)Template.ProtectionFire;
+        Stats.ProtectionWater = (byte)Template.ProtectionWater;
+        Stats.ProtectionAir = (byte)Template.ProtectionAir;
+        Stats.ProtectionEarth = (byte)Template.ProtectionEarth;
+        Stats.ProtectionAstral = (byte)Template.ProtectionAstral;
+
         Stats.RotationSpeed = (byte)Template.RotationSpeed;
         if (Stats.RotationSpeed < 1)
             Stats.RotationSpeed = 1;

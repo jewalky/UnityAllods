@@ -232,12 +232,12 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                     if (LogicUnit.Angle < 180)
                     {
                         int actualAngle = LogicUnit.Angle * 4 / 180;
-                        actualFrame = 8 + moveSize * actualAngle;
+                        actualFrame = 9 + moveSize * actualAngle;
                     }
                     else
                     {
                         int actualAngle = (180 - (LogicUnit.Angle - 180)) * 4 / 180;
-                        actualFrame = 8 + moveSize * actualAngle;
+                        actualFrame = 9 + moveSize * actualAngle;
                         doFlip = true;
                     }
                 }
@@ -333,7 +333,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             TexRenderer.material = TexMaterial;
             TexRenderer.material.mainTexture = pic;
             TexRenderer.transform.parent = parent;
-            TexRenderer.transform.localPosition = new Vector3((float)pic.width / 2 + 16,
+            TexRenderer.transform.localPosition = new Vector3((float)pic.width / 2,
                                                          (float)pic.height / 2 + 2, -0.01f);
             TexRenderer.transform.localScale = new Vector3(pic.width,
                                                            pic.height, 1);
@@ -347,6 +347,29 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
     private static GameObject InfoObject;
     private static AllodsTextRenderer Info_Name;
+    private static AllodsTextRenderer Info_LifeCaption; // life + mana captions
+    private static AllodsTextRenderer Info_Life; // life + mana values
+    private static AllodsTextRenderer Info_BRMSCaption; // BRMS (main stats) captions
+    private static AllodsTextRenderer Info_BRMS; // BRMS values
+    private static AllodsTextRenderer Info_DamageCaption; // damage + tohit captions
+    private static AllodsTextRenderer Info_Damage; // damage + tohit values
+    private static AllodsTextRenderer Info_DefenseCaption; // defense + absorbtion captions
+    private static AllodsTextRenderer Info_Defense; // defense + absorbtion values
+    private static AllodsTextRenderer Info_ResistCaptionMain; // magic resist caption
+    private static AllodsTextRenderer Info_ResistCaption; // magic resist captions (individual)
+    private static AllodsTextRenderer Info_Resist; // magic resist captions
+    private static AllodsTextRenderer Info_ScanSpeedCaption; // scanrange + speed captions
+    private static AllodsTextRenderer Info_ScanSpeed; // scanrange + speed values
+
+    private AllodsTextRenderer DisplayInfoInit(Font.Align align, int x, int y, int w, int h, Color color)
+    {
+        // 70 10 39 19
+        AllodsTextRenderer tr = new AllodsTextRenderer(Fonts.Font2, align, w, h, false);
+        GameObject trO = tr.GetNewGameObject(0.01f, InfoObject.transform, 100, 0.2f);
+        trO.transform.localPosition = new Vector3(x, y, 0);
+        tr.Material.color = color;
+        return tr;
+    }
 
     public void DisplayInfo(bool on, Transform parent)
     {
@@ -357,10 +380,24 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 int wd = 176;
                 InfoObject = Utils.CreateObject();
                 InfoObject.name = "MapViewUnit$InfoText";
-                Info_Name = new AllodsTextRenderer(Fonts.Font2, Font.Align.Center, 70, 10, false);
-                GameObject Info_NameO = Info_Name.GetNewGameObject(0.01f, InfoObject.transform, 100, 0.2f);
-                Info_NameO.transform.localPosition = new Vector3(39, 19, 0);
-                Info_Name.Material.color = new Color32(0xBD, 0x9E, 0x4A, 0xFF);
+
+                Color colorCaption = new Color32(0xBD, 0x9E, 0x4A, 0xFF);
+                Color colorValue = new Color32(0x6B, 0x9A, 0x7B, 0xFF);
+
+                Info_Name = DisplayInfoInit(Font.Align.Center, 39, 19, 70, 10, colorCaption);
+                Info_LifeCaption = DisplayInfoInit(Font.Align.Center, 85, 45, 58, 10, colorCaption);
+                Info_Life = DisplayInfoInit(Font.Align.Center, 85, 45, 58, 10, colorValue);
+                Info_BRMSCaption = DisplayInfoInit(Font.Align.Left, 7, 45, 73, 39, colorCaption);
+                Info_BRMS = DisplayInfoInit(Font.Align.Right, 7, 45, 73, 39, colorValue);
+                Info_DamageCaption = DisplayInfoInit(Font.Align.Left, 7, 89, 63, 18, colorCaption);
+                Info_Damage = DisplayInfoInit(Font.Align.Right, 7, 89, 63, 18, colorValue);
+                Info_DefenseCaption = DisplayInfoInit(Font.Align.Left, 75, 89, 65, 18, colorCaption);
+                Info_Defense = DisplayInfoInit(Font.Align.Right, 75, 89, 65, 18, colorValue);
+                Info_ResistCaptionMain = DisplayInfoInit(Font.Align.Left, 75, 113, 65, 8, new Color32(0x94, 0x59, 0x00, 0xFF));
+                Info_ResistCaption = DisplayInfoInit(Font.Align.Left, 75, 123, 65, 48, colorCaption);
+                Info_Resist = DisplayInfoInit(Font.Align.Right, 75, 123, 65, 48, colorValue);
+                Info_ScanSpeedCaption = DisplayInfoInit(Font.Align.Left, 41, 201, 65, 18, colorCaption);
+                Info_ScanSpeed = DisplayInfoInit(Font.Align.Right, 41, 201, 65, 18, colorValue);
             }
 
             InfoObject.transform.parent = parent;
@@ -369,6 +406,37 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             InfoObject.SetActive(true);
 
             Info_Name.Text = "\n" + Locale.UnitName[LogicUnit.Class.ID];
+
+            string lifeCaption = Locale.Main[19];
+            string lifeValue = string.Format("\n{0}/{1}", LogicUnit.Stats.Health, LogicUnit.Stats.HealthMax);
+            if (LogicUnit.Stats.ManaMax > 0)
+            {
+                lifeCaption += "\n\n" + Locale.Main[20];
+                lifeValue += string.Format("\n\n{0}/{1}", LogicUnit.Stats.Mana, LogicUnit.Stats.ManaMax);
+            }
+
+            Info_LifeCaption.Text = lifeCaption;
+            Info_Life.Text = lifeValue;
+
+            Info_BRMSCaption.Text = string.Format("{0}\n{1}\n{2}\n{3}", Locale.Main[15], Locale.Main[16], Locale.Main[17], Locale.Main[18]);
+            Info_BRMS.Text = string.Format("{0}\n{1}\n{2}\n{3}", LogicUnit.Stats.Body, LogicUnit.Stats.Reaction, LogicUnit.Stats.Mind, LogicUnit.Stats.Spirit);
+
+            Info_DamageCaption.Text = string.Format("{0}\n{1}", Locale.Main[23], Locale.Main[25]);
+            Info_Damage.Text = string.Format("{0}-{1}\n{2}", LogicUnit.Stats.DamageMin, LogicUnit.Stats.DamageMax, LogicUnit.Stats.ToHit);
+
+            Info_DefenseCaption.Text = string.Format("{0}\n{1}", Locale.Main[24], Locale.Main[26]);
+            Info_Defense.Text = string.Format("{0}\n{1}", LogicUnit.Stats.Absorbtion, LogicUnit.Stats.Defence);
+
+            Info_ResistCaptionMain.Text = Locale.Main[28];
+            Info_ResistCaption.Text = string.Format("{0}\n{1}\n{2}\n{3}\n{4}", Locale.Main[41], Locale.Main[42], Locale.Main[43], Locale.Main[44], Locale.Main[45]);
+            Info_Resist.Text = string.Format("{0}\n{1}\n{2}\n{3}\n{4}", LogicUnit.Stats.ProtectionFire,
+                                                                        LogicUnit.Stats.ProtectionWater,
+                                                                        LogicUnit.Stats.ProtectionAir,
+                                                                        LogicUnit.Stats.ProtectionEarth,
+                                                                        LogicUnit.Stats.ProtectionAstral);
+
+            Info_ScanSpeedCaption.Text = string.Format("{0}\n{1}", Locale.Main[21], Locale.Main[22]);
+            Info_ScanSpeed.Text = string.Format("{0:F1}\n{1}", LogicUnit.Stats.ScanRange, LogicUnit.Stats.Speed);
         }
         else
         {

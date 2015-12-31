@@ -132,6 +132,10 @@ public class MoveAction : IUnitAction
     public int TargetY;
     [ProtoMember(3)]
     public float Frac;
+    [ProtoMember(4)]
+    public float FracAdd;
+    [ProtoMember(5)]
+    public float MoveSpeed;
 
     public MoveAction()
     {
@@ -164,7 +168,11 @@ public class MoveAction : IUnitAction
         else
         {
             if (Frac == 0)
+            {
                 Unit.LinkToWorld(TargetX, TargetY); // link to target coordinates. don't unlink from previous yet.
+                FracAdd = (float)Unit.Stats.Speed / 400; // otherwise can be written as speed / 20 / 20.
+                MoveSpeed = (float)Unit.Stats.Speed / 20; // move animation play speed.
+            }
             Frac += 0.05f;
             Unit.FracX = Frac * (TargetX - Unit.X);
             Unit.FracY = Frac * (TargetY - Unit.Y);
@@ -173,7 +181,7 @@ public class MoveAction : IUnitAction
             if (Unit.Class.MovePhases > 1)
             {
                 Unit.MoveTime++;
-                if (Unit.MoveTime >= Unit.Class.MoveFrames[Unit.MoveFrame].Time)
+                if (MoveSpeed * Unit.MoveTime >= Unit.Class.MoveFrames[Unit.MoveFrame].Time)
                 {
                     Unit.MoveFrame = ++Unit.MoveFrame % Unit.Class.MovePhases;
                     Unit.MoveTime = 0;

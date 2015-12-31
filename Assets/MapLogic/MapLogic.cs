@@ -364,6 +364,10 @@ class MapLogic
                 unit.Y = (int)almunit.Y;
                 unit.Tag = almunit.ID;
                 unit.Player = GetPlayerByID(almunit.Player - 1);
+                if (almunit.HealthMax >= 0)
+                    unit.Stats.HealthMax = almunit.HealthMax;
+                if (almunit.Health >= 0)
+                    unit.Stats.TrySetHealth(almunit.Health);
 
                 unit.LinkToWorld();
                 Objects.Add(unit);
@@ -575,7 +579,7 @@ class MapLogic
     // create main unit for player.
     public IPlayerPawn CreateAvatar(Player player)
     {
-        MapUnit unit = new MapUnit("Goblin_Pike");
+        MapUnit unit = new MapUnit("Urd");
         unit.Player = player;
         unit.Tag = GetFreeUnitTag(); // this is also used as network ID.
         unit.SetPosition(16, 16);

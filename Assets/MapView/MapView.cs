@@ -61,10 +61,13 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         // create child objects
         MiniMap = Utils.CreateObjectWithScript<MapViewMiniMap>();
         MiniMap.transform.parent = UiManager.Instance.transform; // despite it being a part of minimap, it should be in UiManager since it doesn't move unlike the MapView
-        Chat = Utils.CreateObjectWithScript<MapViewChat>();
-        Chat.transform.parent = UiManager.Instance.transform;
+        MiniMap.gameObject.SetActive(false);
         Infowindow = Utils.CreateObjectWithScript<MapViewInfowindow>();
         Infowindow.transform.parent = UiManager.Instance.transform;
+        Infowindow.gameObject.SetActive(false);
+
+        Chat = Utils.CreateObjectWithScript<MapViewChat>();
+        Chat.transform.parent = UiManager.Instance.transform;
     }
 
     private Rect _VisibleRect = new Rect(0, 0, 0, 0);
@@ -513,18 +516,15 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     float scrollTimer = 0;
     void Update()
     {
+        MiniMap.gameObject.SetActive(MapLogic.Instance.IsLoaded);
+        Infowindow.gameObject.SetActive(MapLogic.Instance.IsLoaded);
+
         if (!MapLogic.Instance.IsLoaded)
-        {
-            Utils.SetRendererEnabledWithChildren(MiniMap.gameObject, false);
-            Utils.SetRendererEnabledWithChildren(Infowindow.gameObject, false);
             return;
-        }
 
         if (GridEnabled) GridMeshMaterial.color = new Color(1, 0, 0, 0.5f);
         else GridMeshMaterial.color = new Color(0, 0, 0, 0);
 
-        Utils.SetRendererEnabledWithChildren(MiniMap.gameObject, true);
-        Utils.SetRendererEnabledWithChildren(Infowindow.gameObject, true);
         // update lighting.
         Texture2D lightTex = MapLogic.Instance.CheckLightingTexture();
         if (lightTex != null)
@@ -626,7 +626,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                     return true;
             }
         }
-        else if (e.type == EventType.MouseMove)
+        else if (e.rawType == EventType.MouseMove)
         {
             UpdateInput();
         }

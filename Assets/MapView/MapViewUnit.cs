@@ -23,13 +23,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
     private MeshFilter ShadowFilter;
     private Mesh ShadowMesh;
 
-    // infowindow stuff
-    private GameObject TexObject;
-    private MeshRenderer TexRenderer;
-    private Material TexMaterial;
-
     private Vector2 CurrentPoint;
-
     private bool DrawSelected = false;
 
     private Mesh UpdateMesh(Images.AllodsSpriteSeparate sprite, int frame, Mesh mesh, float shadowOffs, bool first, bool flip)
@@ -286,6 +280,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
     public bool IsSelected(int x, int y)
     {
+        if (LogicUnit.GetVisibility() < 2)
+            return false;
+
         int cx = x - (int)CurrentPoint.x;
         int cy = y - (int)CurrentPoint.y;
         if (cx > LogicUnit.Class.SelectionX1 &&
@@ -311,6 +308,11 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         return false;
     }
 
+    // infowindow stuff
+    private static GameObject TexObject;
+    private static MeshRenderer TexRenderer;
+    private static Material TexMaterial;
+
     public void DisplayPic(bool on, Transform parent)
     {
         if (on)
@@ -320,11 +322,16 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             // init infowindow
             if (TexMaterial == null)
                 TexMaterial = new Material(MainCamera.MainShader);
-            TexObject = Utils.CreatePrimitive(PrimitiveType.Quad);
-            TexRenderer = TexObject.GetComponent<MeshRenderer>();
+            if (TexObject == null)
+            {
+                TexObject = Utils.CreatePrimitive(PrimitiveType.Quad);
+                TexRenderer = TexObject.GetComponent<MeshRenderer>();
+                TexRenderer.enabled = true;
+                TexObject.name = "MapViewUnit$InfoPic";
+            }
+            TexObject.SetActive(true);
             TexRenderer.material = TexMaterial;
             TexRenderer.material.mainTexture = pic;
-            TexRenderer.enabled = true;
             TexRenderer.transform.parent = parent;
             TexRenderer.transform.localPosition = new Vector3((float)pic.width / 2 + 16,
                                                          (float)pic.height / 2 + 2, -0.01f);
@@ -333,9 +340,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         }
         else
         {
-            Destroy(TexObject);
-            TexObject = null;
-            TexRenderer = null;
+            TexObject.SetActive(false);
         }
     }
 

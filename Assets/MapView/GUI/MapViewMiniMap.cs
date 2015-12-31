@@ -107,6 +107,9 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
 
     public void UpdateTexture(bool inplace)
     {
+        if (TexObject == null)
+            return;
+
         if (!MapLogic.Instance.IsLoaded && MapTexture != null)
         {
             Destroy(MapTexture);
@@ -195,15 +198,19 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
 
     public bool ProcessEvent(Event e)
     {
-        if (e.type == EventType.MouseDown ||
-            e.type == EventType.MouseUp ||
-            e.type == EventType.MouseMove)
+        if (e.rawType == EventType.MouseDown ||
+            e.rawType == EventType.MouseUp ||
+            e.rawType == EventType.MouseMove)
         {
             Vector2 mPos = Utils.GetMousePosition();
             if (mPos.x > transform.localPosition.x &&
                 mPos.y > transform.localPosition.y &&
                 mPos.x < transform.localPosition.x + 176 &&
-                mPos.y < transform.localPosition.y + 158) return true;
+                mPos.y < transform.localPosition.y + 158)
+            {
+                MouseCursor.SetCursor(MouseCursor.CurDefault);
+                return true;
+            }
         }
         return false;
     }

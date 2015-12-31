@@ -91,7 +91,7 @@ public class UiManager : MonoBehaviour
 
             // reverse iteration
             bool EventIsGlobal = (e.type == EventType.KeyUp ||
-                                  e.type == EventType.MouseUp);
+                                  e.rawType == EventType.MouseUp);
             for (int i = Processors.Count - 1; i >= 0; i--)
             {
                 // check if processor's renderer is enabled. implicitly don't give any events to invisible objects.

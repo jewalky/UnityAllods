@@ -295,6 +295,8 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
     {
         if (LogicStructure.Class.Flat || (LogicStructure.Class.Indestructible && !LogicStructure.Class.Usable))
             return false; // these can't be selected and don't have a picture
+        if (LogicStructure.GetVisibility() < 1)
+            return false;
         int cx = x - (int)transform.localPosition.x;
         int cy = y - (int)transform.localPosition.y;
         if (cx > LogicStructure.Class.SelectionX1 &&

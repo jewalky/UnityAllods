@@ -111,6 +111,46 @@ public partial class Utils
             qc[ppc++] = color;
         }
     }
+
+    public static void MakeQuad(out GameObject go, int w, int h, Color color)
+    {
+        go = CreateObject();
+        MeshFilter mf = go.AddComponent<MeshFilter>();
+        MeshRenderer mr = go.AddComponent<MeshRenderer>();
+        mr.material = new Material(MainCamera.MainShader);
+        mr.material.color = color;
+        Mesh mesh = new Mesh();
+        Vector3[] qv = new Vector3[4];
+        int[] qt = new int[4];
+        for (int i = 0; i < 4; i++)
+            qt[i] = i;
+        int pp = 0; int ppt = 0; int ppc = 0;
+        PutQuadInMesh(qv, null, null, ref pp, ref ppt, ref ppc, 0, 0, w, h, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
+        mesh.vertices = qv;
+        mesh.SetIndices(qt, MeshTopology.Quads, 0);
+        mf.mesh = mesh;
+    }
+
+    public static void MakeTexturedQuad(out GameObject go, Texture2D tex)
+    {
+        go = CreateObject();
+        MeshFilter mf = go.AddComponent<MeshFilter>();
+        MeshRenderer mr = go.AddComponent<MeshRenderer>();
+        mr.material = new Material(MainCamera.MainShader);
+        mr.material.mainTexture = tex;
+        Mesh mesh = new Mesh();
+        Vector3[] qv = new Vector3[4];
+        Vector2[] quv = new Vector2[4];
+        int[] qt = new int[4];
+        for (int i = 0; i < 4; i++)
+            qt[i] = i;
+        int pp = 0; int ppt = 0; int ppc = 0;
+        PutQuadInMesh(qv, quv, null, ref pp, ref ppt, ref ppc, 0, 0, tex.width, tex.height, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
+        mesh.vertices = qv;
+        mesh.uv = quv;
+        mesh.SetIndices(qt, MeshTopology.Quads, 0);
+        mf.mesh = mesh;
+    }
 }
 
 #if UNITY_EDITOR

@@ -356,6 +356,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             {
                 int wd = 176;
                 InfoObject = Utils.CreateObject();
+                InfoObject.name = "MapViewUnit$InfoText";
                 Info_Name = new AllodsTextRenderer(Fonts.Font2, Font.Align.Center, 70, 10, false);
                 GameObject Info_NameO = Info_Name.GetNewGameObject(0.01f, InfoObject.transform, 100, 0.2f);
                 Info_NameO.transform.localPosition = new Vector3(39, 19, 0);

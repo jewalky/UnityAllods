@@ -26,8 +26,8 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor
                 _Viewer = value;
                 if (_Viewer != null)
                 {
-                    _Viewer.DisplayPic(true, HBackRObject.transform);
-                    _Viewer.DisplayInfo((BHumanMode == null || !HumanMode), TBackRObject.transform);
+                    _Viewer.DisplayPic((BHumanModeObject == null || HumanMode), HBackRObject.transform);
+                    _Viewer.DisplayInfo((BHumanModeObject == null || !HumanMode), TBackRObject.transform);
                 }
             }
         }
@@ -78,6 +78,12 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor
                 TBackLObject.SetActive(!HumanMode);
                 BHumanModeObject.SetActive(!HumanMode);
                 BTextModeObject.SetActive(HumanMode);
+
+                if (_Viewer != null)
+                {
+                    _Viewer.DisplayPic(HumanMode, HBackRObject.transform);
+                    _Viewer.DisplayInfo(!HumanMode, TBackRObject.transform);
+                }
             }
         }
     }
@@ -146,14 +152,14 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor
         {
             Utils.MakeTexturedQuad(out ExtraLObject, ExtraL);
             Utils.MakeTexturedQuad(out ExtraRObject, ExtraR);
-        }
 
-        ExtraLObject.transform.parent = transform;
-        ExtraLObject.transform.localScale = new Vector3(1, 1, 1);
-        ExtraLObject.transform.localPosition = new Vector3(0, HBackR.height, 0);
-        ExtraRObject.transform.parent = transform;
-        ExtraRObject.transform.localScale = new Vector3(1, 1, 1);
-        ExtraRObject.transform.localPosition = new Vector3(TBackL.width, HBackR.height, 0);
+            ExtraLObject.transform.parent = transform;
+            ExtraLObject.transform.localScale = new Vector3(1, 1, 1);
+            ExtraLObject.transform.localPosition = new Vector3(0, HBackR.height, 0);
+            ExtraRObject.transform.parent = transform;
+            ExtraRObject.transform.localScale = new Vector3(1, 1, 1);
+            ExtraRObject.transform.localPosition = new Vector3(TBackL.width, HBackR.height, 0);
+        }
 
         if (Screen.height < 768)
         {

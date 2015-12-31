@@ -375,9 +375,22 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 actualFrame += LogicUnit.Class.MoveFrames[LogicUnit.MoveFrame].Frame;
             }
 
-            Vector2 xP = MapView.Instance.MapToScreenCoords(LogicUnit.X + (float)LogicUnit.Width / 2 + LogicUnit.FracX,
-                                                            LogicUnit.Y + (float)LogicUnit.Height / 2 + LogicUnit.FracY,
-                                                            LogicUnit.Width, LogicUnit.Height);
+            int cnt = LogicUnit.Width * LogicUnit.Height;
+            Vector2 xP;
+            xP.x = 0;
+            xP.y = 0;
+            for (int ly = 0; ly < LogicUnit.Height; ly++)
+            {
+                for (int lx = 0; lx < LogicUnit.Width; lx++)
+                {
+                    Vector2 xPl = MapView.Instance.MapToScreenCoords(LogicUnit.X + (float)LogicUnit.Width / 2 + LogicUnit.FracX + lx,
+                                                                     LogicUnit.Y + (float)LogicUnit.Height / 2 + LogicUnit.FracY + ly,
+                                                                     1, 1);
+                    xP += xPl;
+                }
+            }
+
+            xP /= cnt;
             CurrentPoint = xP;
             float zInv = 0;
             if (LogicUnit.Template.IsFlying)

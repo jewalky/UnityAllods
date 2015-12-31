@@ -21,7 +21,7 @@ public class ScanrangeCalc
     {
         Debug.LogFormat("d1");
         int vision_previous = pTablesVision[x + pTablesOffset[x, y, 0], y + pTablesOffset[x, y, 1]];
-        Debug.LogFormat("d2");
+        Debug.LogFormat("d2 {0}, {1}, {2}, {3}", x, y, pTablesCost.GetUpperBound(0), pTablesCost.GetUpperBound(1));
         int cost = pTablesCost[x, y];
         //if(bDiv2) cost -= 18;
         Debug.LogFormat("d3");

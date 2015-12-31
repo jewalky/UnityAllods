@@ -8,15 +8,12 @@ public class ScanrangeCalc
 {
     public ScanrangeCalc()
     {
-        pTablesOffset = new sbyte[41, 41, 2];
-        pTablesCost = new int[41, 41];
-        pTablesVision = new int[41, 41];
         InitializeTables();
     }
 
-    private sbyte[,,] pTablesOffset;
-    private int[,] pTablesCost;
-    public int[,] pTablesVision;
+    private sbyte[,,] pTablesOffset = new sbyte[41, 41, 2];
+    private int[,] pTablesCost = new int[41, 41];
+    public int[,] pTablesVision = new int[41, 41];
 
     public byte ScanShift = 7;
 
@@ -96,6 +93,8 @@ public class ScanrangeCalc
 
     private int GetHeight(int x, int y)
     {
+        if (x < 0 || y < 0 || x >= MapLogic.Instance.Width || y >= MapLogic.Instance.Height)
+            return 0;
         return MapLogic.Instance.Nodes[x, y].Height;
     }
 

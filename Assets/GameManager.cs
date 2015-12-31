@@ -61,7 +61,6 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        CheckServerConfig();
         Locale.InitLocale(); // load locale strings, like main.txt, patch.txt, etc
     }
 
@@ -69,6 +68,7 @@ public class GameManager : MonoBehaviour
     {
         GameConsole = Utils.CreateObjectWithScript<GameConsole>();
         GameConsole.transform.parent = UiManager.Instance.transform;
+        CheckServerConfig();
         Config.Load();
     }
 

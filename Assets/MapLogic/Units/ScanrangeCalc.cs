@@ -19,10 +19,14 @@ public class ScanrangeCalc
 
     private bool SetCell(int x, int y, int height_origin, int height_cell)
     {
+        Debug.LogFormat("d1");
         int vision_previous = pTablesVision[x + pTablesOffset[x, y, 0], y + pTablesOffset[x, y, 1]];
+        Debug.LogFormat("d2");
         int cost = pTablesCost[x, y];
         //if(bDiv2) cost -= 18;
+        Debug.LogFormat("d3");
         pTablesVision[x, y] = vision_previous - (height_cell - height_origin + cost);
+        Debug.LogFormat("d4");
         return (pTablesVision[x, y] >= 0);
     }
 
@@ -99,7 +103,6 @@ public class ScanrangeCalc
     public void CalculateVision(int x, int y, float scanrangef)
     {
         // we need to make scanshifted scanrange from float.
-        Debug.LogFormat("calculating vision {0} {1} {2}", x, y, scanrangef);
         int scanrange = (int)scanrangef;
         scanrange = (scanrange << 8) | (int)((scanrangef - scanrange) * 255);
 

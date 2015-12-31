@@ -8,25 +8,24 @@ public class ScanrangeCalc
 {
     public ScanrangeCalc()
     {
+        pTablesOffset = new sbyte[41, 41, 2];
+        pTablesCost = new int[41, 41];
+        pTablesVision = new int[41, 41];
         InitializeTables();
     }
 
-    private sbyte[,,] pTablesOffset = new sbyte[41, 41, 2];
-    private int[,] pTablesCost = new int[41, 41];
-    public int[,] pTablesVision = new int[41, 41];
+    private sbyte[,,] pTablesOffset;
+    private int[,] pTablesCost;
+    public int[,] pTablesVision;
 
     public byte ScanShift = 7;
 
     private bool SetCell(int x, int y, int height_origin, int height_cell)
     {
-        Debug.LogFormat("d1");
         int vision_previous = pTablesVision[x + pTablesOffset[x, y, 0], y + pTablesOffset[x, y, 1]];
-        Debug.LogFormat("d2 {0}, {1}, {2}, {3}", x, y, pTablesCost.GetUpperBound(0), pTablesCost.GetUpperBound(1));
         int cost = pTablesCost[x, y];
         //if(bDiv2) cost -= 18;
-        Debug.LogFormat("d3");
         pTablesVision[x, y] = vision_previous - (height_cell - height_origin + cost);
-        Debug.LogFormat("d4");
         return (pTablesVision[x, y] >= 0);
     }
 

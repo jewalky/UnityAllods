@@ -52,7 +52,6 @@ class MapLogic
     public List<Player> Players { get; private set; }
     public const int MaxPlayers = 64;
     public Player ConsolePlayer { get; set; } // the player that we're directly controlling.
-    public ScanrangeCalc VisionCalc = new ScanrangeCalc();
 
     public bool IsLoaded
     {

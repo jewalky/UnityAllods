@@ -21,7 +21,6 @@ public class ScanrangeCalc
     {
         int vision_previous = pTablesVision[x + pTablesOffset[x, y, 0], y + pTablesOffset[x, y, 1]];
         int cost = pTablesCost[x, y];
-        //if(bDiv2) cost -= 18;
         pTablesVision[x, y] = vision_previous - (height_cell - height_origin + cost);
         return (pTablesVision[x, y] >= 0);
     }

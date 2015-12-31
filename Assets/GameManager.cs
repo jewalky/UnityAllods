@@ -47,7 +47,7 @@ public class GameManager : MonoBehaviour
             if (!_IsHeadlessChecked)
             {
                 string[] args = Environment.GetCommandLineArgs();
-                if (args.Contains("-nographics") || args.Contains("-batchmode") || CheckServerConfig())
+                if (args.Contains("-nographics") || args.Contains("-batchmode"))
                     _IsHeadless = true;
                 _IsHeadlessChecked = true;
             }
@@ -61,6 +61,7 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
+        CheckServerConfig();
         Locale.InitLocale(); // load locale strings, like main.txt, patch.txt, etc
     }
 

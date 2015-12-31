@@ -19,11 +19,11 @@ public class ScanrangeCalc
 
     private bool SetCell(int x, int y, int height_origin, int height_cell)
     {
-        int vision_previous = pTablesVision[x + pTablesOffset[x, y, 0], y + pTablesOffset[x,y,1]];
-        int cost = pTablesCost[x,y];
+        int vision_previous = pTablesVision[x + pTablesOffset[x, y, 0], y + pTablesOffset[x, y, 1]];
+        int cost = pTablesCost[x, y];
         //if(bDiv2) cost -= 18;
-        pTablesVision[x,y] = vision_previous - (height_cell - height_origin + cost);
-        return (pTablesVision[x,y] >= 0);
+        pTablesVision[x, y] = vision_previous - (height_cell - height_origin + cost);
+        return (pTablesVision[x, y] >= 0);
     }
 
     public void InitializeTables()

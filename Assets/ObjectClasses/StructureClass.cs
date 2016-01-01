@@ -52,25 +52,11 @@ public class StructureFile
     {
         if (!Loaded)
         {
-            try
-            {
-                File = Images.Load256(FileName + ".256");
-                FileMaterial = new Material(MainCamera.MainShaderPaletted);
-                FileMaterial.mainTexture = File.Atlas;
-                FileMaterial.SetTexture("_Palette", File.OwnPalette);
-            }
-            catch (AllodsException)
-            {
-                File = null;
-            }
-            try
-            {
-                FileB = Images.Load256(FileName + "b.256");
-            }
-            catch (AllodsException)
-            {
-                FileB = null;
-            }
+            File = Images.Load256(FileName + ".256");
+            FileMaterial = new Material(MainCamera.MainShaderPaletted);
+            FileMaterial.mainTexture = File.Atlas;
+            FileMaterial.SetTexture("_Palette", File.OwnPalette);
+            FileB = Images.Load256(FileName + "b.256");
             Loaded = true;
         }
     }

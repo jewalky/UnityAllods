@@ -73,22 +73,8 @@ public class UnitFile
     {
         if (!Loaded)
         {
-            try
-            {
-                File = Images.Load256Separate(FileName + ".256");
-            }
-            catch (AllodsException)
-            {
-                File = null;
-            }
-            try
-            {
-                FileB = Images.Load256Separate(FileName + "b.256");
-            }
-            catch (AllodsException)
-            {
-                FileB = null;
-            }
+            File = Images.Load256Separate(FileName + ".256");
+            FileB = Images.Load256Separate(FileName + "b.256");
             Loaded = true;
         }
     }

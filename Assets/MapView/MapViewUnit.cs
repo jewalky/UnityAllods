@@ -137,7 +137,6 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
     }
 
     private Vector2 CurrentPoint;
-    private bool DrawHilit = false;
 
     private Mesh UpdateMesh(Images.AllodsSpriteSeparate sprite, int frame, Mesh mesh, float shadowOffs, bool first, bool flip)
     {
@@ -261,7 +260,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             return;
         }
 
-        if (Renderer != null) Renderer.material.SetFloat("_Lightness", DrawHilit ? 0.75f : 0.5f);
+        bool hovered = (MapView.Instance.HoveredObject == LogicUnit);
+        if (Renderer != null) Renderer.material.SetFloat("_Lightness", hovered ? 0.75f : 0.5f);
         bool selected = (MapView.Instance.SelectedObject == LogicUnit);
         if (HpMat1 != null) HpMat1.color = new Color(1, 1, 1, selected ? 1f : 0.5f);
         if (HpMat2 != null) HpMat2.color = new Color(1, 1, 1, selected ? 1f : 0.5f);
@@ -412,13 +412,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         if (cx > LogicUnit.Class.SelectionX1 &&
             cx < LogicUnit.Class.SelectionX2 &&
             cy > LogicUnit.Class.SelectionY1 &&
-            cy < LogicUnit.Class.SelectionY2)
-        {
-            DrawHilit = true;
-            return true;
-        }
+            cy < LogicUnit.Class.SelectionY2) return true;
 
-        DrawHilit = false;
         return false;
     }
 

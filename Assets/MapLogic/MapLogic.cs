@@ -245,16 +245,28 @@ class MapLogic
             UpdateVisibility();
     }
 
+    Utils.PerformanceTimer ptDispose = new Utils.PerformanceTimer();
+    Utils.PerformanceTimer ptUnload = new Utils.PerformanceTimer();
     public void Unload()
     {
+        MapObject.ptDestroy.Clear();
+        MapObject.ptUnlink.Clear();
+        ptDispose.Clear();
+        ptDispose.Clock();
         foreach (MapObject mo in Objects)
             mo.Dispose();
+        ptDispose.Unclock();
         Objects.Clear();
         Players.Clear();
         ConsolePlayer = null;
         FileName = null;
         MapStructure = null;
+        ptUnload.Clear();
+        ptUnload.Clock();
         MapView.Instance.Unload();
+        ptUnload.Unclock();
+        Debug.LogFormat("Map unloaded. Object disposal = {0}s (unlink: {1}s, gameobject: {2}s), View unload = {3}s",
+            ptDispose.Time, MapObject.ptUnlink.Time, MapObject.ptDestroy.Time, ptUnload.Time);
     }
 
     private void InitGeneric()

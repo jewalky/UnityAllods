@@ -91,6 +91,9 @@ public class MainCamera : MonoBehaviour {
             if (fps_enabled)
             {
                 string fpstr = string.Format("FPS: {0}\nMeshDebug: {1}", (int)fps_lastFramerate, m_fpsr.Height);
+                if (NetworkManager.IsClient || NetworkManager.IsServer)
+                    fpstr += string.Format("\nNet: {0}b in/{1}b out", NetworkManager.mLastIn, NetworkManager.mLastOut);
+
                 if (MapLogic.Instance.IsLoaded)
                 {
                     fpstr += string.Format("\nMouseCell: {0},{1}\nScroll: {2},{3}", MapView.Instance.MouseCellX, MapView.Instance.MouseCellY,

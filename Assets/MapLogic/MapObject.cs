@@ -85,19 +85,30 @@ public class MapObject : IDisposable
         GameScript = (MonoBehaviour)GameObject.GetComponent(GetGameObjectType());
     }
 
-    public virtual void Dispose()
+    public static Utils.PerformanceTimer ptUnlink = new Utils.PerformanceTimer();
+    public static Utils.PerformanceTimer ptDestroy = new Utils.PerformanceTimer();
+
+    public void DisposeNoUnlink()
     {
-        //UnlinkFromWorld();
+        ptUnlink.Clock();
+        UnlinkFromWorld();
+        ptUnlink.Unclock();
+
         if (NetworkManager.IsServer)
             Server.NotifyDelObject(this);
-        for (int y = 0; y < MapLogic.Instance.Height; y++)
-            for (int x = 0; x < MapLogic.Instance.Width; x++)
-                MapLogic.Instance.Nodes[x, y].Objects.Remove(this);
         if (GameObject != null)
         {
+            ptDestroy.Clock();
             GameObject.Destroy(GameObject);
+            ptDestroy.Unclock();
             GameObject = null;
         }
+    }
+
+    public virtual void Dispose()
+    {
+        UnlinkFromWorld();
+        DisposeNoUnlink();
     }
 
     public virtual void Update()
@@ -121,14 +132,18 @@ public class MapObject : IDisposable
         MapNode[,] nodes = MapLogic.Instance.Nodes;
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;
-        for (int ly = y; ly < y + Height; ly++)
+        for (int ly = y - 1; ly < y + Height + 1; ly++)
         {
-            for (int lx = x; lx < x + Width; lx++)
+            for (int lx = x - 1; lx < x + Width + 1; lx++)
             {
                 if (lx < 0 || lx >= mw || ly < 0 || ly >= mh)
                     continue;
-                nodes[lx, ly].Objects.Remove(this); // if any, obviously.
-                nodes[lx, ly].Flags &= ~GetNodeLinkFlags(lx-X, ly-Y);
+                MapNode node = nodes[lx, ly];
+                if (node.Objects.Contains(this))
+                {
+                    node.Objects.Remove(this); // if any, obviously.
+                    node.Flags &= ~GetNodeLinkFlags(lx - X, ly - Y);
+                }
             }
         }
     }

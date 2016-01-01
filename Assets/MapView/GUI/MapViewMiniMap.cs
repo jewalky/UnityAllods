@@ -49,10 +49,14 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
         }
     }
 
+    public void OnEnable()
+    {
+        StartCoroutine(DoUpdateTexture());
+    }
+
     public void Start()
     {
         UiManager.Instance.Subscribe(this);
-        StartCoroutine(DoUpdateTexture());
 
         if (CrystalL == null) CrystalL = Images.LoadImage("graphics/interface/crystall.bmp", 0, Images.ImageType.AllodsBMP);
         if (CrystalR == null) CrystalR = Images.LoadImage("graphics/interface/crystalr.bmp", Images.ImageType.AllodsBMP);

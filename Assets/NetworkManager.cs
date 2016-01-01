@@ -120,10 +120,26 @@ public class NetworkManager : MonoBehaviour {
         ClientManager.Shutdown(true);
     }
 
+    private static int mCurrentIn = 0;
+    private static int mCurrentOut = 0;
+    private static float mCurrentTime = 0;
+    public static int mLastIn = 0;
+    public static int mLastOut = 0;
+
     public void Update()
     {
         ServerManager.Update();
         ClientManager.Update();
+
+        mCurrentTime += Time.unscaledDeltaTime;
+        if (mCurrentTime >= 1)
+        {
+            mLastIn = mCurrentIn;
+            mLastOut = mCurrentOut;
+            mCurrentIn = 0;
+            mCurrentOut = 0;
+            mCurrentTime = 0;
+        }
     }
 
     private static byte[] DoReadDataFromStream(Socket sock, int size)
@@ -145,6 +161,7 @@ public class NetworkManager : MonoBehaviour {
                 int doneNow = sock.Receive(ovtmp);
                 ovtmp.Take(doneNow).ToArray().CopyTo(ov, done);
                 done += doneNow;
+                mCurrentIn += doneNow;
                 if (done == size)
                 {
                     /*using (FileStream fs = File.Open("recvDbg.bin", FileMode.Append, FileAccess.Write))
@@ -190,6 +207,7 @@ public class NetworkManager : MonoBehaviour {
                 byte[] ov = data.Skip(done).Take(1024).ToArray();
                 int doneNow = sock.Send(ov);
                 done += doneNow;
+                mCurrentOut += doneNow;
                 if (done == data.Length)
                     return true;
             }

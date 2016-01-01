@@ -151,6 +151,28 @@ public partial class Utils
         mesh.SetIndices(qt, MeshTopology.Quads, 0);
         mf.mesh = mesh;
     }
+
+    public class PerformanceTimer
+    {
+        public float Time { get; private set; }
+        private float TimeStart = 0;
+
+        public void Clear()
+        {
+            Time = 0;
+            TimeStart = 0;
+        }
+
+        public void Clock()
+        {
+            TimeStart = UnityEngine.Time.realtimeSinceStartup;
+        }
+
+        public void Unclock()
+        {
+            Time += UnityEngine.Time.realtimeSinceStartup - TimeStart;
+        }
+    }
 }
 
 #if UNITY_EDITOR

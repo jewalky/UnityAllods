@@ -154,12 +154,21 @@ public partial class Utils
 
     public class PerformanceTimer
     {
-        public float Time { get; private set; }
+        private float _Time = 0;
+        public float Time
+        {
+            get
+            {
+                if (_Time > 0.0001)
+                    return _Time;
+                return 0;
+            }
+        }
         private float TimeStart = 0;
 
         public void Clear()
         {
-            Time = 0;
+            _Time = 0;
             TimeStart = 0;
         }
 
@@ -170,7 +179,7 @@ public partial class Utils
 
         public void Unclock()
         {
-            Time += UnityEngine.Time.realtimeSinceStartup - TimeStart;
+            _Time += UnityEngine.Time.realtimeSinceStartup - TimeStart;
         }
     }
 }

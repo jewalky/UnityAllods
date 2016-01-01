@@ -560,6 +560,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor
 
     public bool ProcessEvent(Event e)
     {
+        if (!MapLogic.Instance.IsLoaded)
+            return false;
+
         if (e.type == EventType.KeyDown)
         {
             switch (e.keyCode)

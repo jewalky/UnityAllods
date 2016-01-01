@@ -105,6 +105,17 @@ public class GameManager : MonoBehaviour
             pDelegates.Add(del);
     }
 
+    private Thread ClassLoadThread = null;
+    private bool ClassLoadThreadDone = false;
+    private void ClassLoadThreadProc()
+    {
+        ObstacleClassLoader.InitClasses();
+        StructureClassLoader.InitClasses();
+        UnitClassLoader.InitClasses();
+        TemplateLoader.LoadTemplates();
+        ClassLoadThreadDone = true;
+    }
+
     private bool configDone = false;
     void Update()
     {
@@ -113,6 +124,29 @@ public class GameManager : MonoBehaviour
             CheckServerConfig();
             Config.Load();
             configDone = true;
+        }
+
+        // how start the game.
+        // initiate resource load.
+        if (!ClassLoadThreadDone)
+        {
+            GameConsole.ConsoleEnabled = false;
+            MapView.gameObject.SetActive(false);
+            MouseCursor.SetCursor(MouseCursor.CurWait);
+
+            if (ClassLoadThread == null)
+            {
+                ClassLoadThread = new Thread(new ThreadStart(ClassLoadThreadProc));
+                ClassLoadThread.Start();
+            }
+        }
+        else if (ClassLoadThreadDone && ClassLoadThread != null)
+        {
+            GameConsole.ConsoleEnabled = true;
+            MapView.gameObject.SetActive(true);
+            ClassLoadThread = null;
+
+            MouseCursor.SetCursor(MouseCursor.CurDefault);
         }
 
         lock (pDelegates)

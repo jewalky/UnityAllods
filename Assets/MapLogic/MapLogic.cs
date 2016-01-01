@@ -259,10 +259,6 @@ class MapLogic
 
     private void InitGeneric()
     {
-        ObstacleClassLoader.InitClasses();
-        StructureClassLoader.InitClasses();
-        UnitClassLoader.InitClasses();
-        TemplateLoader.LoadTemplates();
         MapLightingNeedsUpdate = true;
         MapFOWNeedsUpdate = true;
     }

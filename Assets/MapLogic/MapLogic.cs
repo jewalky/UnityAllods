@@ -481,7 +481,7 @@ class MapLogic
                         for (int lx = xOrigin; lx < xOrigin + 41; lx++)
                         {
                             if (lx < 8 || lx > Width) continue;
-                            if (unit.VisionCalc.pTablesVision[lx - xOrigin, ly - yOrigin] > 0)
+                            if (unit.Vision[lx - xOrigin, ly - yOrigin])
                                 Nodes[lx, ly].Flags |= MapNodeFlags.Visible | MapNodeFlags.Discovered;
                         }
                     }

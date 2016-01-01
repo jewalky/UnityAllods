@@ -78,7 +78,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public int WalkY = -1;
 
     //
-    public readonly ScanrangeCalc VisionCalc = new ScanrangeCalc();
+    public readonly bool[,] Vision = new bool[41, 41];
+    private ScanrangeCalc VisionCalc = new ScanrangeCalc();
 
     public MapUnit(int serverId)
     {
@@ -325,9 +326,27 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public void CalculateVision()
     {
-        VisionCalc.CalculateVision(X, Y, Stats.ScanRange);
+        // we have vision from multiple points (based on size)
+        for (int ly = 0; ly < 41; ly++)
+            for (int lx = 0; lx < 41; lx++)
+                Vision[lx, ly] = false;
+        for (int ly = 0; ly < Height; ly++)
+        {
+            for (int lx = 0; lx < Width; lx++)
+            {
+                VisionCalc.CalculateVision(X+lx, Y+ly, Stats.ScanRange);
+                for (int lly = 0; lly < 41; lly++)
+                {
+                    for (int llx = 0; llx < 41; llx++)
+                    {
+                        if (VisionCalc.pTablesVision[llx, lly] > 0 &&
+                            lx + llx < 41 && ly + lly < 41)
+                                Vision[lx + llx, ly + lly] = true;
+                    }
+                }
+            }
+        }
     }
-
     public void AddActions(params IUnitAction[] states)
     {
         for (int i = 0; i < states.Length; i++)

@@ -95,7 +95,9 @@ public class GameManager : MonoBehaviour
     {
         if (pMainThreadId == Thread.CurrentThread.ManagedThreadId)
         {
-            StartCoroutine(DelegateCoroutine(del));
+            bool dFirst = del();
+            if (dFirst)
+                StartCoroutine(DelegateCoroutine(del));
             return;
         }
 

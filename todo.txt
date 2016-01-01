@@ -1,7 +1,7 @@
 + fix: units can still be hovered while covered by other units (e.g. dragon)
 + fix: unloading maps causes huge delays
-- fix: minimap doesnt work after map switch
-- fix: disconnected player leaves terrain lock behind
++ fix: minimap doesnt work after map switch
++ fix: disconnected player leaves terrain lock behind
 - fix: CHECK FOR LEFT MOUSE CLICKS everywhere, not just mousedown
 
 + add: network stats under FPS meter

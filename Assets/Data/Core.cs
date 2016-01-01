@@ -2,17 +2,18 @@ using System;
 using System.Text;
 using System.Runtime.InteropServices;
 using System.IO;
-
-public class AllodsException : SystemException
-{
-    internal AllodsException(string text) : base(text) { /* stub */ }
-}
+using UnityEngine;
 
 public class Core
 {
     public static void Abort(string format, params object[] args)
     {
-        throw new AllodsException(String.Format(format, args));
+        //throw new AllodsException(String.Format(format, args));
+        string error = string.Format(format, args);
+        // now since we can't abort with exception, call quit manually (+ add stack trace)
+        string stack = new System.Diagnostics.StackTrace().ToString();
+        Debug.LogErrorFormat("Abort: {0}\nStack trace:{1}\n\n", error, stack);
+        Application.Quit();
     }
 
     public static string UnpackByteString(int encoding, byte[] bytes)

@@ -1,0 +1,17 @@
+- fix: minimap doesnt work after map switch
+- fix: disconnected player leaves terrain lock behind
+- fix: CHECK FOR LEFT MOUSE CLICKS everywhere, not just mousedown
+
+- add: unit AI based on states (action-like entity, only with more general approach)
+- add: multiple unit selection
+- add: command buttons (move, guard, stop, cast, etc)
+
+- add: item loading
+- add: physical attacks
+- add: sonic bat attack (shader driven)
+
+- add: spells
+- add: spellbook
+- add: basic spell effects
+
+- add: inventory, humans

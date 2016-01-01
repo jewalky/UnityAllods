@@ -465,8 +465,11 @@ public static class TemplateLoader
 
     public static void LoadTemplates()
     {
-        _Templates = new Templates();
-        _Templates.LoadFromFile("world/data/data.bin");
+        if (_Templates == null)
+        {
+            _Templates = new Templates();
+            _Templates.LoadFromFile("world/data/data.bin");
+        }
     }
 
     public static Templates.TplStructure GetStructureById(int typeId)

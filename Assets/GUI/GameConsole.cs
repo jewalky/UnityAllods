@@ -17,6 +17,7 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         }
     }
 
+    public bool ConsoleEnabled = true;
     // console contents
     bool ConsoleActive = false;
     int ConsoleHeight;
@@ -144,6 +145,8 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
 
     public void Update()
     {
+        if (!ConsoleEnabled)
+            ConsoleActive = false;
         Utils.SetRendererEnabledWithChildren(gameObject, ConsoleActive);
         // we do this in every frame because WriteLine needs to be multithreaded.
         TextRendererA.Text = string.Join("\n", ConsoleLines.ToArray());

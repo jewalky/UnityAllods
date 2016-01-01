@@ -81,27 +81,28 @@ public class MapObject : IDisposable
 
     public MapObject()
     {
-        GameObject = MapView.Instance.CreateObject(GetGameObjectType(), this);
-        GameScript = (MonoBehaviour)GameObject.GetComponent(GetGameObjectType());
+        GameManager.Instance.CallDelegateOnNextFrame(() =>
+        {
+            GameObject = MapView.Instance.CreateObject(GetGameObjectType(), this);
+            GameScript = (MonoBehaviour)GameObject.GetComponent(GetGameObjectType());
+            return false;
+        });
     }
-
-    public static Utils.PerformanceTimer ptUnlink = new Utils.PerformanceTimer();
-    public static Utils.PerformanceTimer ptDestroy = new Utils.PerformanceTimer();
 
     public void DisposeNoUnlink()
     {
-        ptUnlink.Clock();
         UnlinkFromWorld();
-        ptUnlink.Unclock();
 
         if (NetworkManager.IsServer)
             Server.NotifyDelObject(this);
         if (GameObject != null)
         {
-            ptDestroy.Clock();
-            GameObject.Destroy(GameObject);
-            ptDestroy.Unclock();
-            GameObject = null;
+            GameManager.Instance.CallDelegateOnNextFrame(() =>
+            {
+                GameObject.Destroy(GameObject);
+                GameObject = null;
+                return false;
+            });
         }
     }
 

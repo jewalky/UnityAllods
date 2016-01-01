@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using System.Collections;
+using System.Threading;
 using System.IO;
 
 public class GameManager : MonoBehaviour
@@ -61,6 +62,8 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
+        pMainThreadId = Thread.CurrentThread.ManagedThreadId;
+        _Instance = this; // force set. through this field, other threads will access mapview.
         Locale.InitLocale(); // load locale strings, like main.txt, patch.txt, etc
     }
 
@@ -85,9 +88,19 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private int pMainThreadId = -1;
+    private List<LoadCoroutine> pDelegates = new List<LoadCoroutine>();
+
     public void CallDelegateOnNextFrame(LoadCoroutine del)
     {
-        StartCoroutine(DelegateCoroutine(del));
+        if (pMainThreadId == Thread.CurrentThread.ManagedThreadId)
+        {
+            StartCoroutine(DelegateCoroutine(del));
+            return;
+        }
+
+        lock (pDelegates)
+            pDelegates.Add(del);
     }
 
     private bool configDone = false;
@@ -98,6 +111,13 @@ public class GameManager : MonoBehaviour
             CheckServerConfig();
             Config.Load();
             configDone = true;
+        }
+
+        lock (pDelegates)
+        {
+            for (int i = 0; i < pDelegates.Count; i++)
+                StartCoroutine(DelegateCoroutine(pDelegates[i]));
+            pDelegates.Clear();
         }
     }
 }

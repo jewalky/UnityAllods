@@ -245,28 +245,16 @@ class MapLogic
             UpdateVisibility();
     }
 
-    Utils.PerformanceTimer ptDispose = new Utils.PerformanceTimer();
-    Utils.PerformanceTimer ptUnload = new Utils.PerformanceTimer();
     public void Unload()
     {
-        MapObject.ptDestroy.Clear();
-        MapObject.ptUnlink.Clear();
-        ptDispose.Clear();
-        ptDispose.Clock();
         foreach (MapObject mo in Objects)
-            mo.Dispose();
-        ptDispose.Unclock();
+            mo.DisposeNoUnlink();
         Objects.Clear();
         Players.Clear();
         ConsolePlayer = null;
         FileName = null;
         MapStructure = null;
-        ptUnload.Clear();
-        ptUnload.Clock();
-        MapView.Instance.Unload();
-        ptUnload.Unclock();
-        Debug.LogFormat("Map unloaded. Object disposal = {0}s (unlink: {1}s, gameobject: {2}s), View unload = {3}s",
-            ptDispose.Time, MapObject.ptUnlink.Time, MapObject.ptDestroy.Time, ptUnload.Time);
+        GameManager.Instance.MapView.Unload();
     }
 
     private void InitGeneric()
@@ -317,7 +305,12 @@ class MapLogic
             //Debug.Log(string.Format("player ID={2} {0} (flags {1})", player.Name, player.Flags, player.ID));
         }
 
-        Speed = 5;
+        GameManager.Instance.CallDelegateOnNextFrame(() =>
+        {
+            Speed = 5;
+            return false;
+        });
+
         _TopObjectID = 0;
 
         // load obstacles
@@ -404,9 +397,13 @@ class MapLogic
             if (ConsolePlayer != null)
             {
                 ConsolePlayer.Diplomacy[ConsolePlayer.ID] = DiplomacyFlags.Ally | DiplomacyFlags.Vision;
-                ConsolePlayer.Avatar = CreateAvatar(ConsolePlayer);
-                // center view on avatar.
-                MapView.Instance.CenterOnObject((MapObject)ConsolePlayer.Avatar);
+                GameManager.Instance.CallDelegateOnNextFrame(() =>
+                {
+                    ConsolePlayer.Avatar = CreateAvatar(ConsolePlayer);
+                    // center view on avatar.
+                    MapView.Instance.CenterOnObject((MapObject)ConsolePlayer.Avatar);
+                    return false;
+                });
             }
         }
     }

@@ -87,23 +87,30 @@ public class MapView : MonoBehaviour, IUiEventProcessor
 
     public void Unload()
     {
-        for (int i = 0; i < MeshChunks.Length; i++)
+        GameObject[] dMeshChunks = MeshChunks;
+        GameObject[] dFOWMeshChunks = FOWMeshChunks;
+        GameObject[] dGridMeshChunks = GridMeshChunks;
+        GameManager.Instance.CallDelegateOnNextFrame(() =>
         {
-            Utils.DestroyObjectAndMesh(MeshChunks[i]);
-            Utils.DestroyObjectAndMesh(FOWMeshChunks[i]);
-            Utils.DestroyObjectAndMesh(GridMeshChunks[i]);
-        }
+            for (int i = 0; i < dMeshChunks.Length; i++)
+            {
+                Utils.DestroyObjectAndMesh(dMeshChunks[i]);
+                Utils.DestroyObjectAndMesh(dFOWMeshChunks[i]);
+                Utils.DestroyObjectAndMesh(dGridMeshChunks[i]);
+            }
+            // hide UI parts
+            Chat.Hide();
+            return false;
+        });
 
         MeshChunks = new GameObject[0];
         FOWMeshChunks = new GameObject[0];
         GridMeshChunks = new GameObject[0];
         MeshChunkRects = new Rect[0];
         MeshChunkMeshes = new Mesh[0];
-
-        // hide UI parts
-        Chat.Hide();
     }
 
+    // loading thread
     public Texture2D MapTiles = null;
     public Rect[] MapRects = null;
     public void InitFromFile(string filename)
@@ -128,14 +135,14 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         MapLogic.Instance.InitFromFile(filename);
         Debug.LogFormat("map = {0} ({1}x{2})", MapLogic.Instance.Title, MapLogic.Instance.Width - 16, MapLogic.Instance.Height - 16);
 
-        this.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
-
         InitMeshes();
         SetScroll(8, 8);
         MiniMap.UpdateTexture(true);
 
         // run generic load
         Load();
+
+        this.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
     }
 
     GameObject[] MeshChunks = new GameObject[0];

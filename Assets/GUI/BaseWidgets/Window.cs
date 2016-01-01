@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,11 @@ public class Window : MonoBehaviour, IUiEventProcessor
 
     public int Width = 0;
     public int Height = 0;
+
+    public void Awake()
+    {
+
+    }
 
     public void Start()
     {

@@ -107,7 +107,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor
         if (BHumanMode == null) BHumanMode = Images.LoadImage("graphics/interface/humanmode.bmp", 0, Images.ImageType.AllodsBMP);
 
         transform.localScale = new Vector3(1, 1, 0.01f);
-        transform.localPosition = new Vector3(Screen.width - 176, 214, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
+        transform.localPosition = new Vector3(Screen.width - 176, 238, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
 
         Utils.MakeTexturedQuad(out HBackLObject, HBackL);
         Utils.MakeTexturedQuad(out HBackRObject, HBackR);

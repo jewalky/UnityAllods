@@ -142,7 +142,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         // run generic load
         Load();
 
-        this.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
+        this.transform.localScale = new Vector3(1, 1, 0.01f);
     }
 
     GameObject[] MeshChunks = new GameObject[0];
@@ -508,7 +508,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
 
             float sx = _ScrollX;
             float sy = _ScrollY;
-            this.transform.position = new Vector3((-sx * 32) / 100, (-sy * 32) / 100, 0);
+            this.transform.position = new Vector3((-sx * 32), (-sy * 32), 0);
 
             MapLogic.Instance.CalculateDynLighting(); // this is needed due to the fact that we calculate dynlights based on viewrect
         }

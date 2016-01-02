@@ -81,7 +81,7 @@ public class MouseCursor : MonoBehaviour {
         CurWait = CreateCursor("graphics/cursors/wait/sprites.16a", 16, 16, 0.05f);
         SetCursor(CurDefault);
 
-        transform.localScale = new Vector3(1, 1);
+        transform.localScale = new Vector3(100, 100, 1);
         Renderer = GetComponent<SpriteRenderer>();
     }
 
@@ -122,9 +122,7 @@ public class MouseCursor : MonoBehaviour {
 
         Renderer.enabled = true;
         Vector3 mPos = Utils.GetMousePosition();
-        mPos.x /= 100;
-        mPos.y /= 100;
-        Instance.transform.position = new Vector3(mPos.x - (float)CurrentCursor.Xoffs / 100, mPos.y - (float)CurrentCursor.Yoffs / 100, MainCamera.MouseZ);
+        Instance.transform.position = new Vector3(mPos.x - CurrentCursor.Xoffs, mPos.y - CurrentCursor.Yoffs, MainCamera.MouseZ);
         Renderer.sprite = CurrentCursor.Sprites[CurrentCursorFrame];
         Renderer.material.shader = MainCamera.MainShaderPaletted;
         Renderer.material.SetTexture("_Palette", CurrentCursor.Sprite.OwnPalette);

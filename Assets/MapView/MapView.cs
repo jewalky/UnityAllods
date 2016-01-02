@@ -42,6 +42,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     }
 
     private MapViewMiniMap MiniMap;
+    private MapViewCommandbar Commandbar;
     private MapViewInfowindow Infowindow;
     private MapViewChat Chat;
 
@@ -65,6 +66,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         Infowindow = Utils.CreateObjectWithScript<MapViewInfowindow>();
         Infowindow.transform.parent = UiManager.Instance.transform;
         Infowindow.gameObject.SetActive(false);
+        Commandbar = Utils.CreateObjectWithScript<MapViewCommandbar>();
+        Commandbar.transform.parent = UiManager.Instance.transform;
+        Commandbar.gameObject.SetActive(false);
 
         Chat = Utils.CreateObjectWithScript<MapViewChat>();
         Chat.transform.parent = UiManager.Instance.transform;
@@ -524,6 +528,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     void Update()
     {
         MiniMap.gameObject.SetActive(MapLogic.Instance.IsLoaded);
+        Commandbar.gameObject.SetActive(MapLogic.Instance.IsLoaded);
         Infowindow.gameObject.SetActive(MapLogic.Instance.IsLoaded);
 
         if (!MapLogic.Instance.IsLoaded)

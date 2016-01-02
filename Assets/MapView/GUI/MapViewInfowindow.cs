@@ -203,7 +203,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor
             float takenHeight = HBackR.height;
 
             Vector2 mPos = Utils.GetMousePosition();
-            Vector2 mPosLocal = new Vector2(mPos.x - transform.localPosition.x, mPos.y - transform.localPosition.y);
+            Vector2 mPosLocal = new Vector2(mPos.x - transform.position.x, mPos.y - transform.position.y);
             // global check if mouse is inside any of child components
             if (!new Rect(0, 0, HBackR.width + HBackL.width, HBackR.height).Contains(mPosLocal) &&
                 !new Rect(0, TBackRObject.transform.localPosition.y, TBackR.width + TBackL.width, TBackR.height).Contains(mPosLocal) &&

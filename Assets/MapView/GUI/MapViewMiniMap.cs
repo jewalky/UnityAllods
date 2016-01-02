@@ -207,10 +207,10 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
             e.rawType == EventType.MouseMove)
         {
             Vector2 mPos = Utils.GetMousePosition();
-            if (mPos.x > transform.localPosition.x &&
-                mPos.y > transform.localPosition.y &&
-                mPos.x < transform.localPosition.x + 176 &&
-                mPos.y < transform.localPosition.y + 158)
+            if (mPos.x > transform.position.x &&
+                mPos.y > transform.position.y &&
+                mPos.x < transform.position.x + 176 &&
+                mPos.y < transform.position.y + 158)
             {
                 MouseCursor.SetCursor(MouseCursor.CurDefault);
                 return true;

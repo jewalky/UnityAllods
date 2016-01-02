@@ -52,7 +52,7 @@ public class MainCamera : MonoBehaviour {
         Debug.LogFormat("{0}x{1}", Screen.width, Screen.height);
 
         m_fpsr = new AllodsTextRenderer(Fonts.Font1, Font.Align.Right, Screen.width-176);
-        m_fpso = m_fpsr.GetNewGameObject(1, SceneRoot.Instance.transform, 100);
+        m_fpso = m_fpsr.GetNewGameObject(0.01f, SceneRoot.Instance.transform, 100);
         m_fpso.transform.position = new Vector3(0, 0, OverlayZ+0.99f);
     }
 

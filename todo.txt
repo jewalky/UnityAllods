@@ -9,7 +9,7 @@
 - add: multiple unit selection
 - add: command buttons (move, guard, stop, cast, etc)
 
-- add: item loading
++ add: item loading
 - add: physical attacks
 - add: sonic bat attack (shader driven)
 

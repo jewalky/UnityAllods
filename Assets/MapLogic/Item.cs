@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 // this enum duplicates MapLogicStats.
 // it does NOT need to be synced when you edit MapLogicStats,
@@ -69,16 +70,22 @@ public class ItemEffect
     }
 
 
-    Effects Type1 = Effects.NoneStat;
-    int Value1 = 0;
+    public Effects Type1 = Effects.NoneStat;
+    public int Value1 = 0;
 
     // only in castSpell
-    Effects Type2 = Effects.NoneStat;
-    int Value2 = 0;
+    public Effects Type2 = Effects.NoneStat;
+    public int Value2 = 0;
 
     public ItemEffect()
     {
         // wat
+    }
+
+    public ItemEffect(Effects effect, int value)
+    {
+        Type1 = effect;
+        Value1 = value;
     }
 
     public ItemEffect(string effect)
@@ -161,6 +168,21 @@ public class ItemEffect
         else value = Value1.ToString();
         return string.Format("{0}={1}", effect, value);
     }
+
+    public static List<ItemEffect> ParseEffectList(string spec_args)
+    {
+        List<ItemEffect> ov = new List<ItemEffect>();
+        string[] spec_args_split = spec_args.Split(',');
+        for (int i = 0; i < spec_args_split.Length; i++)
+        {
+            string spec_arg = spec_args_split[i].Trim();
+            if (spec_arg.Length <= 0)
+                continue;
+            ov.Add(new ItemEffect(spec_args_split[i]));
+        }
+
+        return ov;
+    }
 }
 
 public class Item
@@ -169,5 +191,195 @@ public class Item
     // power for castSpell is stored in paired mageSkill0.
     // so basically castSpell=Stone_Curse:10 translates into castSpell=21;mageSkill0=10
     // just in case, I have an local enum that translates to stat number.
+    public ItemClass Class = null;
+    public long Price = 2;
+    public List<ItemEffect> Effects = new List<ItemEffect>();
+    public List<ItemEffect> NativeEffects = new List<ItemEffect>();
+    public List<ItemEffect> MagicEffects = new List<ItemEffect>();
 
+    public Item(ushort id, List<ItemEffect> effects = null)
+    {
+        Class = ItemClassLoader.GetItemClassById(id);
+        if (Class == null)
+        {
+            Debug.LogFormat("Invalid item created (id={0})", id);
+            return;
+        }
+
+        InitItem();
+
+        if (effects != null)
+            MagicEffects = effects;
+    }
+
+    public Item(string specifier)
+    {
+        int spec_argStart = specifier.IndexOf('{');
+        int spec_argEnd = (spec_argStart >= 0) ? specifier.IndexOf('}', spec_argStart + 1) : 1;
+        string spec_args = "";
+        if (spec_argStart >= 0 && spec_argEnd >= 0)
+            spec_args = specifier.Substring(spec_argStart + 1, spec_argEnd - spec_argStart - 1);
+        if (spec_argStart >= 0)
+            specifier = specifier.Substring(0, spec_argStart).Trim();
+        Class = ItemClassLoader.GetItemClassBySpecifier(specifier);
+        if (Class == null)
+        {
+            Debug.LogFormat("Invalid item created (specifier={0})", specifier);
+            return;
+        }
+
+        InitItem();
+
+        // now go through effects
+        MagicEffects.AddRange(ItemEffect.ParseEffectList(spec_args));
+    }
+
+    private void InitItem()
+    {
+        if (Class.IsMagic)
+        {
+            // generate effect list for native effects.
+            Templates.TplMagicItem magicItem = TemplateLoader.GetMagicItemById(Class.MagicID);
+            if (magicItem != null)
+            {
+                NativeEffects.Add(new ItemEffect(ItemEffect.Effects.Price, magicItem.Price));
+                NativeEffects.AddRange(ItemEffect.ParseEffectList(magicItem.Effects));
+            }
+        }
+        else
+        {
+            bool hasDamageMinMax = false;
+            bool hasToHit = false;
+            bool hasDefense = false;
+            bool hasAbsorbtion = false;
+            for (int i = 0; i < Class.Effects.Count; i++)
+            {
+                ItemEffect eff = new ItemEffect();
+                ItemEffect sourceEff = Class.Effects[i];
+                int newValue = sourceEff.Value1;
+                if (sourceEff.Type1 == ItemEffect.Effects.Damage ||
+                    sourceEff.Type1 == ItemEffect.Effects.DamageMin ||
+                    sourceEff.Type1 == ItemEffect.Effects.DamageMax ||
+                    sourceEff.Type1 == ItemEffect.Effects.DamageBonus)
+                {
+                    hasDamageMinMax = true;
+                }
+                else if (sourceEff.Type1 == ItemEffect.Effects.ToHit)
+                {
+                    hasToHit = true;
+                }
+                else if (sourceEff.Type1 == ItemEffect.Effects.Defence)
+                {
+                    hasDefense = true;
+                }
+                else if (sourceEff.Type1 == ItemEffect.Effects.Absorbtion)
+                {
+                    hasAbsorbtion = true;
+                }
+
+                eff.Type1 = sourceEff.Type1;
+                eff.Value1 = newValue;
+                eff.Type2 = sourceEff.Type2;
+                eff.Value2 = sourceEff.Value2;
+                NativeEffects.Add(eff);
+            }
+
+            if (!hasDamageMinMax)
+            {
+                int damageMin = (int)(Class.Option.PhysicalMin * Class.Material.Damage * Class.Class.Damage);
+                int damageMax = (int)(Class.Option.PhysicalMax * Class.Material.Damage * Class.Class.Damage);
+                if (damageMin != 0 || damageMax != 0)
+                {
+                    NativeEffects.Add(new ItemEffect(ItemEffect.Effects.DamageMin, damageMin));
+                    NativeEffects.Add(new ItemEffect(ItemEffect.Effects.DamageMax, damageMax));
+                }
+            }
+
+            if (!hasToHit)
+            {
+                int toHit = (int)(Class.Option.ToHit * Class.Material.ToHit * Class.Class.ToHit);
+                if (toHit != 0)
+                    NativeEffects.Add(new ItemEffect(ItemEffect.Effects.ToHit, toHit));
+            }
+
+            if (!hasDefense)
+            {
+                int defense = (int)(Class.Option.Defense * Class.Material.Defense * Class.Class.Defense);
+                if (defense != 0)
+                    NativeEffects.Add(new ItemEffect(ItemEffect.Effects.Defence, defense));
+            }
+
+            if (!hasAbsorbtion)
+            {
+                int absorbtion = (int)(Class.Option.Absorbtion * Class.Material.Absorbtion * Class.Class.Absorbtion);
+                if (absorbtion != 0)
+                    NativeEffects.Add(new ItemEffect(ItemEffect.Effects.Absorbtion, absorbtion));
+            }
+        }
+
+        UpdateItem();
+    }
+
+    // calculate price. calculate effects based on native effects + magic effects.
+    public void UpdateItem()
+    {
+        // concat native and magic effects
+        Effects.Clear();
+        Effects.AddRange(NativeEffects);
+        Effects.AddRange(MagicEffects);
+
+        // base price.
+        Price = Class.Price;
+        Price = (int)(Price * Class.Class.Price);
+        Price = (int)(Price * Class.Material.Price);
+
+        int manaUsage = 0;
+        for (int i = 0; i < Effects.Count; i++)
+        {
+            Templates.TplModifier modifier = TemplateLoader.GetModifierById((int)Effects[i].Type1);
+            if (modifier == null)
+                continue; // wtf was that lol.
+            manaUsage += modifier.ManaCost;
+        }
+
+        Price = Math.Max(Price, (int)(Price * ((float)manaUsage / 10)));
+
+        // search for override price effect
+        for (int i = 0; i < Effects.Count; i++)
+        {
+            if (Effects[i].Type1 == ItemEffect.Effects.Price)
+                Price = Effects[i].Value1;
+        }
+
+        if (Price < 2)
+            Price = 2; // min price
+    }
+
+    public string ToStringWithEffects(bool ownEffects)
+    {
+        if (Class == null)
+            return "<INVALID>";
+
+        StringBuilder sb = new StringBuilder();
+        sb.Append(Class.ServerName);
+        List<ItemEffect> effts = (ownEffects ? Effects : MagicEffects);
+        if (effts.Count > 0)
+        {
+            sb.Append(" {");
+            for (int i = 0; i < effts.Count; i++)
+            {
+                sb.Append(effts[i].ToString());
+                if (i < effts.Count - 1)
+                    sb.Append(", ");
+            }
+            sb.Append("}");
+        }
+
+        return sb.ToString();
+    }
+
+    public override string ToString()
+    {
+        return ToStringWithEffects(false);
+    }
 }

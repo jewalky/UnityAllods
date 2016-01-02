@@ -102,10 +102,8 @@ public class UnitClassLoader
     public static UnitClass GetUnitClassById(int typeId)
     {
         foreach (UnitClass cls in Classes)
-        {
             if (cls.ID == typeId)
                 return cls;
-        }
 
         return null;
     }
@@ -114,10 +112,8 @@ public class UnitClassLoader
     {
         name = name.ToLower();
         foreach (UnitClass cls in Classes)
-        {
             if (cls.DescText.ToLower() == name)
                 return cls;
-        }
 
         return null;
     }

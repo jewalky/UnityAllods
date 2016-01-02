@@ -70,10 +70,8 @@ public class StructureClassLoader
     public static StructureClass GetStructureClassById(int typeId)
     {
         foreach (StructureClass cls in Classes)
-        {
             if (cls.ID == typeId)
                 return cls;
-        }
 
         return null;
     }
@@ -82,10 +80,8 @@ public class StructureClassLoader
     {
         name = name.ToLower();
         foreach (StructureClass cls in Classes)
-        {
             if (cls.DescText.ToLower() == name)
                 return cls;
-        }
 
         return null;
     }

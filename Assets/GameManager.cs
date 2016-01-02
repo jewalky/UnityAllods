@@ -109,11 +109,20 @@ public class GameManager : MonoBehaviour
     private bool ClassLoadThreadDone = false;
     private void ClassLoadThreadProc()
     {
-        ObstacleClassLoader.InitClasses();
-        StructureClassLoader.InitClasses();
-        UnitClassLoader.InitClasses();
-        TemplateLoader.LoadTemplates();
-        ClassLoadThreadDone = true;
+        try
+        {
+            TemplateLoader.LoadTemplates();
+            ObstacleClassLoader.InitClasses();
+            StructureClassLoader.InitClasses();
+            UnitClassLoader.InitClasses();
+            ItemClassLoader.InitClasses();
+            ClassLoadThreadDone = true;
+        }
+        catch (Exception e)
+        {
+            Debug.LogErrorFormat("Exception while loading classes.\n{0}", e.ToString());
+            ClassLoadThreadDone = true;
+        }
     }
 
     void Update()

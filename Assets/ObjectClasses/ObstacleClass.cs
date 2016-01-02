@@ -52,10 +52,8 @@ public class ObstacleClassLoader
     public static ObstacleClass GetObstacleClassById(int typeId)
     {
         foreach (ObstacleClass cls in Classes)
-        {
             if (cls.ID == typeId)
                 return cls;
-        }
 
         return null;
     }
@@ -64,10 +62,8 @@ public class ObstacleClassLoader
     {
         name = name.ToLower();
         foreach (ObstacleClass cls in Classes)
-        {
             if (cls.DescText.ToLower() == name)
                 return cls;
-        }
 
         return null;
     }

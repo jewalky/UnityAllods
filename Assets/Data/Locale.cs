@@ -9,6 +9,9 @@ public class Locale
     public static List<string> Building;
     public static List<string> UnitName;
 
+    public static List<string> ItemServ;
+    public static List<string> ItemName;
+
     public static List<string> Patch;
 
     public static void InitLocale()
@@ -16,6 +19,9 @@ public class Locale
         Main = new StringFile("main/text/main.txt").Strings;
         Building = new StringFile("main/text/building.txt").Strings;
         UnitName = new StringFile("main/text/unitname.txt").Strings;
+
+        ItemServ = new StringFile("main/text/itemserv.txt").Strings;
+        ItemName = new StringFile("main/text/itemname.txt").Strings;
 
         Patch = new StringFile("patch/patch.txt").Strings;
     }

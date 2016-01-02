@@ -116,17 +116,8 @@ public class GameManager : MonoBehaviour
         ClassLoadThreadDone = true;
     }
 
-    private bool configDone = false;
     void Update()
     {
-        if (!configDone)
-        {
-            CheckServerConfig();
-            Config.Load();
-            configDone = true;
-        }
-
-        // how start the game.
         // initiate resource load.
         if (!ClassLoadThreadDone)
         {
@@ -147,6 +138,8 @@ public class GameManager : MonoBehaviour
             ClassLoadThread = null;
 
             MouseCursor.SetCursor(MouseCursor.CurDefault);
+            Config.Load();
+            CheckServerConfig();
         }
 
         lock (pDelegates)

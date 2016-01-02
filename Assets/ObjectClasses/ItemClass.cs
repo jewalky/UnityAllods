@@ -15,6 +15,12 @@ public struct ItemFile
         FileName = fname;
         File = null;
     }
+
+    public void UpdateSprite()
+    {
+        if (File == null)
+            File = Images.LoadSprite(FileName);
+    }
 }
 
 public class ItemClass

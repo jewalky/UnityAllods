@@ -69,7 +69,7 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
             Utils.MakeTexturedQuad(out CommandBarUpObjects[i], CommandBarR, buttonRectTex);
             CommandBarUpObjects[i].transform.parent = CommandBarEmptyObject.transform;
             CommandBarUpObjects[i].transform.localScale = new Vector3(1, 1, 1);
-            CommandBarUpObjects[i].transform.localPosition = new Vector3(buttonRectRaw.x, buttonRectRaw.y, -0.04f);
+            CommandBarUpObjects[i].transform.localPosition = new Vector3(buttonRectRaw.x, buttonRectRaw.y, -0.02f);
             CommandBarUpObjects[i].SetActive(false);
 
             Utils.MakeTexturedQuad(out CommandBarDnObjects[i], CommandBarPressed, buttonRectTex);
@@ -127,7 +127,7 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
             Commands icmd = (Commands)(1 << i);
             if ((EnabledCommands & icmd) != 0)
             {
-                CommandBarDnObjects[i].SetActive(true);
+                CommandBarDnObjects[i].SetActive(CurrentCommand == icmd);
                 CommandBarUpObjects[i].SetActive(CurrentCommand != icmd);
             }
             else

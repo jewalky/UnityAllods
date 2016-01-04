@@ -91,6 +91,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
 
     public void Unload()
     {
+        Infowindow.Viewer = null;
+
         GameObject[] dMeshChunks = MeshChunks;
         GameObject[] dFOWMeshChunks = FOWMeshChunks;
         GameObject[] dGridMeshChunks = GridMeshChunks;

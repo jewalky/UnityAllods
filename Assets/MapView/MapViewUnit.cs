@@ -86,7 +86,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         int w = LogicUnit.Class.SelectionX2 - LogicUnit.Class.SelectionX1;
 
         if (PlayerNickObject != null && PlayerNick != null)
-            PlayerNickObject.transform.localPosition = new Vector3(x, y - PlayerNick.Height, -64);
+            PlayerNickObject.transform.localPosition = new Vector3(x, y - PlayerNick.Height - 4, -64);
 
         Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x, y, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
         Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x + w - 4, y, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));

@@ -133,9 +133,16 @@ public partial class Utils
 
     public static void MakeTexturedQuad(out GameObject go, Texture2D tex)
     {
+        MakeTexturedQuad(out go, tex, new Rect(0, 0, 1, 1));
+    }
+
+    public static void MakeTexturedQuad(out GameObject go, Texture2D tex, Rect texRect)
+    {
         go = CreateObject();
         MeshFilter mf = go.AddComponent<MeshFilter>();
         MeshRenderer mr = go.AddComponent<MeshRenderer>();
+        float acW = Mathf.Round(tex.width * texRect.width);
+        float acH = Mathf.Round(tex.height * texRect.height);
         mr.material = new Material(MainCamera.MainShader);
         mr.material.mainTexture = tex;
         Mesh mesh = new Mesh();
@@ -145,7 +152,7 @@ public partial class Utils
         for (int i = 0; i < 4; i++)
             qt[i] = i;
         int pp = 0; int ppt = 0; int ppc = 0;
-        PutQuadInMesh(qv, quv, null, ref pp, ref ppt, ref ppc, 0, 0, tex.width, tex.height, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
+        PutQuadInMesh(qv, quv, null, ref pp, ref ppt, ref ppc, 0, 0, acW, acH, texRect, new Color(1, 1, 1, 1));
         mesh.vertices = qv;
         mesh.uv = quv;
         mesh.SetIndices(qt, MeshTopology.Quads, 0);

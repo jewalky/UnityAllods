@@ -14,6 +14,25 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
     private GameObject CommandBarLObject;
     private GameObject CommandBarEmptyObject;
 
+    private GameObject[] CommandBarUpObjects = new GameObject[8];
+    private GameObject[] CommandBarDnObjects = new GameObject[8];
+
+    [Flags]
+    public enum Commands
+    {
+        Attack = 0x0001,
+        Move = 0x0002,
+        Stop = 0x0004,
+        Defend = 0x0008,
+        Cast = 0x0010,
+        MoveAttack = 0x0020,
+        HoldPosition = 0x0040,
+        Retreat = 0x0080
+    }
+
+    public Commands EnabledCommands = (Commands)0xFF;
+    public Commands CurrentCommand = 0;
+
     public void Start()
     {
         UiManager.Instance.Subscribe(this);
@@ -30,8 +49,35 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
         Utils.MakeTexturedQuad(out CommandBarEmptyObject, CommandBarEmpty);
         CommandBarLObject.transform.parent = transform;
         CommandBarLObject.transform.localPosition = new Vector3(0, 0, 0);
+        CommandBarLObject.transform.localScale = new Vector3(1, 1, 1);
         CommandBarEmptyObject.transform.parent = transform;
         CommandBarEmptyObject.transform.localPosition = new Vector3(CommandBarL.width, 0, 0);
+        CommandBarEmptyObject.transform.localScale = new Vector3(1, 1, 1);
+
+        for (int i = 0; i < 8; i++)
+        {
+            int bX = i % 4;
+            int bY = i / 4;
+            Rect buttonRectRaw = new Rect(8 + 34 * bX, 7 + 34 * bY, 34, 34);
+            Rect buttonRectTex = buttonRectRaw;
+            Vector2 buttonRectDiv = new Vector2(CommandBarPressed.width, CommandBarPressed.height);
+            buttonRectTex.x /= buttonRectDiv.x;
+            buttonRectTex.width /= buttonRectDiv.x;
+            buttonRectTex.y /= buttonRectDiv.y;
+            buttonRectTex.height /= buttonRectDiv.y;
+
+            Utils.MakeTexturedQuad(out CommandBarUpObjects[i], CommandBarR, buttonRectTex);
+            CommandBarUpObjects[i].transform.parent = CommandBarEmptyObject.transform;
+            CommandBarUpObjects[i].transform.localScale = new Vector3(1, 1, 1);
+            CommandBarUpObjects[i].transform.localPosition = new Vector3(buttonRectRaw.x, buttonRectRaw.y, -0.04f);
+            CommandBarUpObjects[i].SetActive(false);
+
+            Utils.MakeTexturedQuad(out CommandBarDnObjects[i], CommandBarPressed, buttonRectTex);
+            CommandBarDnObjects[i].transform.parent = CommandBarEmptyObject.transform;
+            CommandBarDnObjects[i].transform.localScale = new Vector3(1, 1, 1);
+            CommandBarDnObjects[i].transform.localPosition = new Vector3(buttonRectRaw.x, buttonRectRaw.y, -0.02f);
+            CommandBarDnObjects[i].SetActive(false);
+        }
     }
 
     public void OnDestroy()
@@ -49,6 +95,25 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
             if (!new Rect(transform.position.x, transform.position.y, CommandBarL.width + CommandBarR.width, CommandBarR.height).Contains(mPos))
                 return false;
 
+            mPos.x -= transform.position.x + 8 + CommandBarL.width;
+            mPos.y -= transform.position.y + 7;
+
+            if (e.rawType == EventType.MouseDown &&
+                e.button == 0)
+            {
+                int bX = (int)mPos.x / 34;
+                int bY = (int)mPos.y / 34;
+                if (bX >= 0 && bX < 4 &&
+                    bY >= 0 && bY < 2)
+                {
+                    Commands icmd = (Commands)(1 << (bY * 4 + bX));
+                    if ((EnabledCommands & icmd) != 0)
+                        CurrentCommand = icmd;
+                }
+            }
+
+            MouseCursor.SetCursor(MouseCursor.CurDefault);
+
             return true;
         }
 
@@ -57,6 +122,19 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
 
     public void Update()
     {
-
+        for (int i = 0; i < 8; i++)
+        {
+            Commands icmd = (Commands)(1 << i);
+            if ((EnabledCommands & icmd) != 0)
+            {
+                CommandBarDnObjects[i].SetActive(true);
+                CommandBarUpObjects[i].SetActive(CurrentCommand != icmd);
+            }
+            else
+            {
+                CommandBarDnObjects[i].SetActive(false);
+                CommandBarUpObjects[i].SetActive(false);
+            }
+        }
     }
 }

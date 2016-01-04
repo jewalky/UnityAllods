@@ -835,7 +835,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         }
 
         height /= count; // get average height
-        Vector2 ov = new Vector2(x * 32, y * 32 - height);
+        Vector2 ov = new Vector2(Mathf.Round(x * 32), Mathf.Round(y * 32 - height));
         return ov;
     }
 }

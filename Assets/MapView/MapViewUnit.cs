@@ -550,7 +550,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             InfoObject.transform.localScale = new Vector3(1, 1, 1);
             InfoObject.SetActive(true);
 
-            Info_Name.Text = "\n" + Locale.UnitName[LogicUnit.Class.ID];
+            if (LogicUnit.Player != null && LogicUnit.Player.Avatar == LogicUnit)
+                Info_Name.Text = LogicUnit.Player.Name;
+            else Info_Name.Text = "\n" + Locale.UnitName[LogicUnit.Class.ID];
 
             string lifeCaption = Locale.Main[19];
             string lifeValue = string.Format("\n{0}/{1}", LogicUnit.Stats.Health, LogicUnit.Stats.HealthMax);

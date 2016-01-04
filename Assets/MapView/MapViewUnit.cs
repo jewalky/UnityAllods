@@ -31,8 +31,24 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
     private MeshFilter HpFilter;
     private Mesh HpMesh;
 
+    private AllodsTextRenderer PlayerNick = null;
+    private GameObject PlayerNickObject = null;
+
     private void UpdateHpMesh()
     {
+        // put player nickname if this unit is an Avatar
+        if (LogicUnit.Player != null && LogicUnit.Player.Avatar == LogicUnit)
+        {
+            if (PlayerNick == null)
+            {
+                PlayerNick = new AllodsTextRenderer(Fonts.Font2, Font.Align.Center, LogicUnit.Class.SelectionX2 - LogicUnit.Class.SelectionX1, 0, false);
+                PlayerNickObject = PlayerNick.GetNewGameObject(0, transform, 100);
+            }
+
+            PlayerNick.Text = LogicUnit.Player.Name;
+            PlayerNick.Material.color = Player.AllColors[LogicUnit.Player.Color];
+        }
+
         if (HpBall == null) HpBall = Images.LoadImage("graphics/interface/ball.bmp", 0, Images.ImageType.AllodsBMP);
         if (HpMat1 == null)
         {
@@ -68,6 +84,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         int x = LogicUnit.Class.SelectionX1;
         int y = LogicUnit.Class.SelectionY1;
         int w = LogicUnit.Class.SelectionX2 - LogicUnit.Class.SelectionX1;
+
+        if (PlayerNickObject != null && PlayerNick != null)
+            PlayerNickObject.transform.localPosition = new Vector3(x, y - PlayerNick.Height, -64);
 
         Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x, y, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
         Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x + w - 4, y, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));

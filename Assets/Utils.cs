@@ -115,6 +115,7 @@ public partial class Utils
     public static void MakeQuad(out GameObject go, int w, int h, Color color)
     {
         go = CreateObject();
+        go.name = "Utils$Quad";
         MeshFilter mf = go.AddComponent<MeshFilter>();
         MeshRenderer mr = go.AddComponent<MeshRenderer>();
         mr.material = new Material(MainCamera.MainShader);
@@ -139,6 +140,7 @@ public partial class Utils
     public static void MakeTexturedQuad(out GameObject go, Texture2D tex, Rect texRect)
     {
         go = CreateObject();
+        go.name = "Utils$TexturedQuad";
         MeshFilter mf = go.AddComponent<MeshFilter>();
         MeshRenderer mr = go.AddComponent<MeshRenderer>();
         float acW = Mathf.Round(tex.width * texRect.width);

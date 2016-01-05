@@ -16,11 +16,15 @@ public class IdleAction : IUnitAction
 
     public virtual bool Process()
     {
+        int statesBefore = Unit.States.Count;
         if (!NetworkManager.IsClient)
         {
             while (Unit.States.Count > 0 && !Unit.States.Last().Process())
                 Unit.States.RemoveAt(Unit.States.Count - 1);
         }
+
+        if (Unit.States.Count != statesBefore)
+            return true;
 
         if (Unit.VState != UnitVisualState.Idle && (!NetworkManager.IsClient || Unit.AllowIdle))
         {
@@ -206,9 +210,11 @@ public class AttackAction : IUnitAction
 
     public bool Process()
     {
-        if (Unit.VState != UnitVisualState.Attacking)
+        if (Timer == 0)
         {
             Unit.VState = UnitVisualState.Attacking;
+            Unit.AttackFrame = 0;
+            Unit.AttackTime = 0;
             Unit.DoUpdateView = true;
         }
 

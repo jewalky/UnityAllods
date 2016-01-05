@@ -653,7 +653,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             // select unit if not selected yet
             if (HoveredObject != null &&
                 (SelectedObject == null || (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move &&
-                 !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))))
+                                            !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) || (Commandbar.CurrentCommand == 0)))
             {
                 SelectedObject = HoveredObject;
                 Commandbar.InitDefault(SelectedObject);
@@ -760,7 +760,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         else Infowindow.Viewer = null;
         HoveredObject = o;
 
-        if (!hoveringDarkness && HoveredObject != null && Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move)
+        if (!hoveringDarkness && HoveredObject != null && (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move || Commandbar.CurrentCommand == 0))
         {
             // hovered usable buildings have different cursor picture.
             if (HoveredObject.GetObjectType() == MapObjectType.Structure &&

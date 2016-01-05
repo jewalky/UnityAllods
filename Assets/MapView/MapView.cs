@@ -671,16 +671,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         }
         else if (e.rawType == EventType.MouseDown && e.button == 1)
         {
-            if (SelectedObject != null && 
-                Commandbar.CurrentCommand != MapViewCommandbar.Commands.Move)
-            {
-                Commandbar.InitDefault(SelectedObject);
-            }
-            else
-            {
-                SelectedObject = null; // deselect
-                Commandbar.EnabledCommands = 0;
-            }
+            SelectedObject = null; // deselect
+            Commandbar.EnabledCommands = 0;
         }
 
         return false;

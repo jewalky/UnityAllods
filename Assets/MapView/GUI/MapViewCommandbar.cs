@@ -182,6 +182,9 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
     public void InitDefault(MapObject pp)
     {
         EnabledCommands = 0;
+        if (pp == null)
+            return;
+
         if ((pp is IPlayerPawn && ((IPlayerPawn)pp).GetPlayer() == MapLogic.Instance.ConsolePlayer) &&
             (pp.GetObjectType() == MapObjectType.Monster ||
              pp.GetObjectType() == MapObjectType.Human))

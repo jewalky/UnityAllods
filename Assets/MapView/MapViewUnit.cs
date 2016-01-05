@@ -268,6 +268,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             Renderer.enabled = false;
             ShadowRenderer.enabled = false;
             if (HpRenderer != null) HpRenderer.enabled = false;
+            if (PlayerNickObject != null) PlayerNickObject.SetActive(false);
             return;
         }
         else if (!oldVisibility)
@@ -275,6 +276,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             Renderer.enabled = true;
             ShadowRenderer.enabled = true;
             if (HpRenderer != null) HpRenderer.enabled = true;
+            if (PlayerNickObject != null) PlayerNickObject.SetActive(true);
             oldVisibility = true;
             return;
         }
@@ -290,6 +292,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             Renderer.enabled = true;
             ShadowRenderer.enabled = true;
             if (HpRenderer != null) HpRenderer.enabled = true;
+            if (PlayerNickObject != null) PlayerNickObject.SetActive(true);
 
             Images.AllodsSpriteSeparate sprites = LogicUnit.Class.File.File;
 

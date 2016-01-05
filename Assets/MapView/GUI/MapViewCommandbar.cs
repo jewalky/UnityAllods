@@ -126,6 +126,7 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
 
     public void Update()
     {
+        CurrentCommandActual &= EnabledCommands;
         CurrentCommand = CurrentCommandActual;
 
         if (CurrentCommandActual == Commands.Move)

@@ -760,23 +760,20 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         else Infowindow.Viewer = null;
         HoveredObject = o;
 
-        if (!hoveringDarkness && HoveredObject != null)
+        if (!hoveringDarkness && HoveredObject != null && Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move)
         {
             // hovered usable buildings have different cursor picture.
             if (HoveredObject.GetObjectType() == MapObjectType.Structure &&
                 ((MapStructure)HoveredObject).Class.Usable) MouseCursor.SetCursor(MouseCursor.CurSelectStructure);
             else MouseCursor.SetCursor(MouseCursor.CurSelect);
         }
-
-        if (SelectedObject != null && SelectedObject is IPlayerPawn)
+        else if (SelectedObject != null && SelectedObject is IPlayerPawn)
         {
             Player sp = ((IPlayerPawn)SelectedObject).GetPlayer();
             if (sp == MapLogic.Instance.ConsolePlayer)
             {
                 if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move)
                 {
-                    if (HoveredObject != null)
-                        MouseCursor.SetCursor(MouseCursor.CurSelect);
                     MouseCursor.SetCursor(MouseCursor.CurMove);
                 }
                 else if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Attack)

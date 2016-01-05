@@ -371,8 +371,9 @@ namespace ClientCommands
             }
 
             // visible = whether to display flying hp
-            if (unit.Stats.TrySetHealth(unit.Stats.Health - Damage))
-                unit.DoUpdateView = true;
+            unit.Stats.TrySetHealth(unit.Stats.Health - Damage);
+            unit.DoUpdateInfo = true;
+            unit.DoUpdateView = true;
 
             if (Visible)
             {

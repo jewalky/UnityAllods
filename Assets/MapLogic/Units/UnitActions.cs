@@ -244,7 +244,10 @@ public class AttackAction : IUnitAction
             // do damage here!
             //
             if (TargetUnit.TakeDamage(DamageFlags, Unit, Damage) > 0)
+            {
+                TargetUnit.DoUpdateInfo = true;
                 TargetUnit.DoUpdateView = true;
+            }
             DamageDone = true;
         }
 

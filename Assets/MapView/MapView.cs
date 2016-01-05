@@ -651,7 +651,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         else if (e.rawType == EventType.MouseDown && e.button == 0)
         {
             // select unit if not selected yet
-            if (HoveredObject != null)
+            if (HoveredObject != null &&
+                Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move &&
+                !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))
             {
                 SelectedObject = HoveredObject;
                 Commandbar.InitDefault(SelectedObject);

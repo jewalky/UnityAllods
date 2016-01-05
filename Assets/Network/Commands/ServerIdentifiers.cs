@@ -13,5 +13,5 @@ public enum ServerIdentifiers
 
     // map
     ChatMessage,
-    WalkUnit
+    MoveUnit
 }

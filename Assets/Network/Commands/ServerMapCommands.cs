@@ -34,8 +34,8 @@ namespace ServerCommands
     }
 
     [ProtoContract]
-    [NetworkPacketId(ServerIdentifiers.WalkUnit)]
-    public struct WalkUnit : IServerCommand
+    [NetworkPacketId(ServerIdentifiers.MoveUnit)]
+    public struct MoveUnit : IServerCommand
     {
         [ProtoMember(1)]
         public int Tag;

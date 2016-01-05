@@ -662,10 +662,14 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             {
                 // todo: handle commands here
                 // try to walk.
-                if (SelectedObject.GetObjectType() == MapObjectType.Monster)
+                if (SelectedObject.GetObjectType() == MapObjectType.Monster ||
+                    SelectedObject.GetObjectType() == MapObjectType.Human)
                 {
                     MapUnit unit = (MapUnit)SelectedObject;
-                    Client.SendWalkUnit(unit, MouseCellX, MouseCellY);
+                    if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move)
+                    {
+                        Client.SendMoveUnit(unit, MouseCellX, MouseCellY);
+                    }
                 }
             }
         }

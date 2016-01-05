@@ -63,11 +63,11 @@ public class Client
         }
     }
 
-    public static void SendWalkUnit(MapUnit unit, int x, int y)
+    public static void SendMoveUnit(MapUnit unit, int x, int y)
     {
         if (NetworkManager.IsClient)
         {
-            ServerCommands.WalkUnit walkCmd;
+            ServerCommands.MoveUnit walkCmd;
             walkCmd.Tag = unit.Tag;
             walkCmd.X = x;
             walkCmd.Y = y;

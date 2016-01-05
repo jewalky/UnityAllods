@@ -471,6 +471,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     public void CenterOnObject(MapObject mobj)
     {
         CenterOnCell(mobj.X+mobj.Width/2, mobj.Y+mobj.Height/2);
+        if (mobj is IPlayerPawn) SelectedObject = mobj;
     }
 
     public void CenterOnCell(int x, int y)

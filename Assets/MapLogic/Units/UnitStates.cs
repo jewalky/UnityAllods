@@ -125,7 +125,7 @@ public class AttackState : IUnitState
         if (Unit.Stats.Health <= 0)
             return false;
 
-        if (TargetUnit == Unit || !TargetUnit.IsLinked || TargetUnit.Stats.Health < -10)
+        if (TargetUnit == Unit || !TargetUnit.IsAlive || !MapLogic.Instance.Objects.Contains(TargetUnit))
             return false;
 
         // assume melee attack right now

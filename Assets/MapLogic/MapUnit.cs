@@ -255,7 +255,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         {
             if (MapLogic.Instance.LevelTime % 40 == 0)
             {
-                Stats.TrySetHealth(Stats.Health - 1);
+                if (Stats.TrySetHealth(Stats.Health - 1))
+                    Server.NotifyDamageUnit(this, 1, false);
                 if (Stats.Health <= -10)
                 {
                     IsAlive = false;
@@ -545,6 +546,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Stats.Health = Stats.HealthMax;
         IsAlive = true;
         IsDying = false;
+        VState = UnitVisualState.Idle;
         LinkToWorld();
         if (NetworkManager.IsServer)
             Server.NotifyRespawn(this);

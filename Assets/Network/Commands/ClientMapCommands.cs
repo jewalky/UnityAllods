@@ -185,10 +185,7 @@ namespace ClientCommands
             {
                 unit.Player.Avatar = unit;
                 if (player == MapLogic.Instance.ConsolePlayer)
-                {
-                    MapView.Instance.SelectedObject = unit;
                     MapView.Instance.CenterOnObject(unit);
-                }
             }
             unit.Actions.RemoveRange(1, unit.Actions.Count - 1); // clear states.
             unit.Angle = Angle;

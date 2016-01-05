@@ -398,7 +398,6 @@ class MapLogic
                 {
                     ConsolePlayer.Avatar = CreateAvatar(ConsolePlayer);
                     // center view on avatar.
-                    MapView.Instance.SelectedObject = ConsolePlayer.Avatar;
                     MapView.Instance.CenterOnObject(ConsolePlayer.Avatar);
                     return false;
                 });

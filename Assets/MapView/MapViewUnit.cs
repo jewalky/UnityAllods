@@ -266,6 +266,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         if (Renderer == null)
             return;
 
+        bool bAlive = LogicUnit.IsAlive && !LogicUnit.IsDying;
+
         if (LogicUnit.GetVisibility() != 2)
         {
             oldVisibility = false;
@@ -278,9 +280,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         else if (!oldVisibility)
         {
             Renderer.enabled = true;
-            ShadowRenderer.enabled = true;
-            if (HpRenderer != null) HpRenderer.enabled = true;
-            if (PlayerNickObject != null) PlayerNickObject.SetActive(true);
+            ShadowRenderer.enabled = bAlive;
+            if (HpRenderer != null) HpRenderer.enabled = bAlive;
+            if (PlayerNickObject != null) PlayerNickObject.SetActive(bAlive);
             oldVisibility = true;
             return;
         }
@@ -294,7 +296,6 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         if (LogicUnit.DoUpdateView)
         {
             Renderer.enabled = true;
-            bool bAlive = LogicUnit.IsAlive && !LogicUnit.IsDying;
             ShadowRenderer.enabled = bAlive;
             if (HpRenderer != null) HpRenderer.enabled = bAlive;
             if (PlayerNickObject != null) PlayerNickObject.SetActive(bAlive);

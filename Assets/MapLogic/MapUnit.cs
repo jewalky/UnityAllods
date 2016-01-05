@@ -239,7 +239,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         // check DEATH
         if (Stats.Health <= 0 && !IsDying)
         {
-            AddActions(new DeathAction(this));
+            if (!NetworkManager.IsClient)
+                AddActions(new DeathAction(this));
             IsDying = true;
             UnlinkFromWorld();
         }

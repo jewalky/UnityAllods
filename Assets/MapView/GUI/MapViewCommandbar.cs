@@ -27,7 +27,9 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
         Cast = 0x0010,
         MoveAttack = 0x0020,
         HoldPosition = 0x0040,
-        Retreat = 0x0080
+        Retreat = 0x0080,
+
+        All = Attack|Move|Stop|Defend|Cast|MoveAttack|HoldPosition|Retreat
     }
 
     public Commands EnabledCommands = (Commands)0xFF;

@@ -92,6 +92,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     public void Unload()
     {
         Infowindow.Viewer = null;
+        Commandbar.EnabledCommands = 0;
 
         GameObject[] dMeshChunks = MeshChunks;
         GameObject[] dFOWMeshChunks = FOWMeshChunks;
@@ -647,12 +648,21 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         {
             UpdateInput();
         }
-        else if (e.rawType == EventType.MouseDown)
+        else if (e.rawType == EventType.MouseDown && e.button == 0)
         {
             // select unit if not selected yet
             if (HoveredObject != null)
             {
                 SelectedObject = HoveredObject;
+                Commandbar.EnabledCommands = 0;
+                if ((HoveredObject is IPlayerPawn && ((IPlayerPawn)HoveredObject).GetPlayer() == MapLogic.Instance.ConsolePlayer) &&
+                    (HoveredObject.GetObjectType() == MapObjectType.Monster ||
+                        HoveredObject.GetObjectType() == MapObjectType.Human))
+                {
+                    Commandbar.EnabledCommands = (MapViewCommandbar.Commands.All & ~MapViewCommandbar.Commands.Cast);
+                    // todo enable cast if object has spells or scrolls
+                    Commandbar.CurrentCommand = MapViewCommandbar.Commands.Move;
+                }
             }
             else if (SelectedObject != null)
             {
@@ -665,6 +675,18 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                         Client.SendWalkUnit(unit, MouseCellX, MouseCellY);
                     }
                 }
+            }
+        }
+        else if (e.rawType == EventType.MouseDown && e.button == 1)
+        {
+            if (Commandbar.CurrentCommand != MapViewCommandbar.Commands.Move)
+            {
+                Commandbar.CurrentCommand = MapViewCommandbar.Commands.Move;
+            }
+            else
+            {
+                SelectedObject = null; // deselect
+                Commandbar.EnabledCommands = 0;
             }
         }
 
@@ -757,7 +779,14 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         {
             Player sp = ((IPlayerPawn)SelectedObject).GetPlayer();
             if (sp == MapLogic.Instance.ConsolePlayer)
-                MouseCursor.SetCursor(MouseCursor.CurMove);
+            {
+                switch (Commandbar.CurrentCommand)
+                {
+                    case MapViewCommandbar.Commands.Move:
+                        MouseCursor.SetCursor(MouseCursor.CurMove);
+                        break;
+                }
+            }
         }
     }
 

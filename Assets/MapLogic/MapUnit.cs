@@ -147,8 +147,15 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Stats.Spirit = (short)Template.Spirit;
 
         // physical damage and resists
-        Stats.DamageMin = (short)Template.PhysicalMin;
-        Stats.DamageMax = (short)Template.PhysicalMax;
+        int templateMin = Math.Min(Template.PhysicalMin, Template.PhysicalMax);
+        int templateMax = Math.Max(Template.PhysicalMax, Template.PhysicalMin) - templateMin;
+        if ((templateMin & 0x80) != 0)
+        {
+            templateMin = (templateMin & 0x7F) * 15;
+            templateMax *= 15;
+        }
+        Stats.DamageMin = (short)templateMin;
+        Stats.DamageMax = (short)(templateMax + templateMin);
         Stats.ToHit = (short)Template.ToHit;
         Stats.Absorbtion = (short)Template.Absorbtion;
         Stats.Defence = (short)Template.Defense;

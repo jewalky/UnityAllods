@@ -186,12 +186,15 @@ public class AttackAction : IUnitAction
 {
     public MapUnit Unit;
     public MapUnit TargetUnit;
+    private bool DamageDone;
     [ProtoMember(1)]
     public int Timer;
     [ProtoMember(2)]
     public DamageFlags DamageFlags;
     [ProtoMember(3)]
     public int Damage;
+    [ProtoMember(4)]
+    public float Speed;
 
     public AttackAction()
     {
@@ -216,12 +219,13 @@ public class AttackAction : IUnitAction
             Unit.AttackFrame = 0;
             Unit.AttackTime = 0;
             Unit.DoUpdateView = true;
+            Speed = 0.5f * (float)Unit.Stats.Speed / 20;
         }
 
         if (Unit.Class.AttackPhases > 1)
         {
             Unit.AttackTime++;
-            if (Unit.AttackTime >= Unit.Class.AttackFrames[Unit.AttackFrame].Time)
+            if (Speed * Unit.AttackTime >= Unit.Class.AttackFrames[Unit.AttackFrame].Time)
             {
                 Unit.DoUpdateView = true;
                 Unit.AttackFrame = ++Unit.AttackFrame % Unit.Class.AttackPhases;
@@ -235,15 +239,16 @@ public class AttackAction : IUnitAction
             Unit.AttackTime = 0;
         }
 
-        if (Timer == Unit.Template.Charge && !NetworkManager.IsClient)
+        if (Speed * Timer >= Unit.Template.Charge && !NetworkManager.IsClient && !DamageDone)
         {
             // do damage here!
             //
             if (TargetUnit.TakeDamage(DamageFlags, Unit, Damage) > 0)
                 TargetUnit.DoUpdateView = true;
+            DamageDone = true;
         }
 
-        if (Timer == Unit.Template.Charge + Unit.Template.Relax)
+        if (Speed * Timer >= Unit.Template.Charge + Unit.Template.Relax)
             return false; // end of attack
 
         Timer++;

@@ -2,15 +2,17 @@
 + fix: unloading maps causes huge delays
 + fix: minimap doesnt work after map switch
 + fix: disconnected player leaves terrain lock behind
-- fix: CHECK FOR LEFT MOUSE CLICKS everywhere, not just mousedown
+~ fix: CHECK FOR LEFT MOUSE CLICKS everywhere, not just mousedown
+- fix: unit pathfinding
+- fix: respawn SelectedObject
 
 + add: network stats under FPS meter
-- add: unit AI based on states (action-like entity, only with more general approach)
++ add: unit AI based on states (action-like entity, only with more general approach)
 - add: multiple unit selection
-- add: command buttons (move, guard, stop, cast, etc)
++ add: command buttons (move, guard, stop, cast, etc)
 
 + add: item loading
-- add: physical attacks
++ add: physical attacks
 - add: sonic bat attack (shader driven)
 
 - add: spells

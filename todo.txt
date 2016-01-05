@@ -4,7 +4,7 @@
 + fix: disconnected player leaves terrain lock behind
 ~ fix: CHECK FOR LEFT MOUSE CLICKS everywhere, not just mousedown
 - fix: unit pathfinding
-- fix: respawn SelectedObject
++ fix: respawn SelectedObject
 + fix: dying unit should NOT be unlinked
 + fix: dead unit respawns with dead sprite
 

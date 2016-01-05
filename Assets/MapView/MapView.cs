@@ -46,7 +46,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     private MapViewInfowindow Infowindow;
     private MapViewChat Chat;
 
-    public MapObject SelectedObject { get; set; }
+    public MapObject SelectedObject { get; private set; }
     public MapObject HoveredObject { get; private set; }
 
     // Use this for initialization
@@ -471,7 +471,11 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     public void CenterOnObject(MapObject mobj)
     {
         CenterOnCell(mobj.X+mobj.Width/2, mobj.Y+mobj.Height/2);
-        if (mobj is IPlayerPawn) SelectedObject = mobj;
+        if (mobj is IPlayerPawn)
+        {
+            SelectedObject = mobj;
+            Commandbar.InitDefault(SelectedObject);
+        }
     }
 
     public void CenterOnCell(int x, int y)

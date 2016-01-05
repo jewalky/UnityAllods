@@ -14,5 +14,7 @@ public enum ServerIdentifiers
     // map
     ChatMessage,
     MoveUnit,
-    AttackUnit
+    AttackUnit,
+
+    RespawnAvatar
 }

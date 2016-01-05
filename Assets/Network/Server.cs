@@ -149,10 +149,12 @@ public class Server
             unitCmd.FracY = unit.FracY;
             unitCmd.AttackFrame = unit.AttackFrame;
             unitCmd.AttackTime = unit.AttackTime;
+            unitCmd.DeathFrame = unit.DeathFrame;
+            unitCmd.DeathTime = unit.DeathTime;
             player.NetClient.SendCommand(unitCmd);
             // also notify of current unit state
             NotifyAddUnitActionsSingle(player.NetClient, unit, unit.Actions.Skip(1).ToArray());
-            //Debug.LogFormat("sending player {0} unit {1}", player.Name, unitCmd.Tag);
+            //Debug.LogFormat("sending player {0} unit {1}", player.Name, unitCmd.Tag);            
         }
     }
 
@@ -243,6 +245,21 @@ public class Server
                 dmgCmd.Damage = damage;
                 dmgCmd.Visible = visible;
                 client.SendCommand(dmgCmd);
+            }
+        }
+    }
+
+    public static void NotifyRespawn(MapUnit unit)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            Player p = MapLogic.Instance.GetNetPlayer(client);
+            if (unit.IsVisibleForNetPlayer(p))
+            {
+                ObjectBecameVisible(p, unit);
             }
         }
     }

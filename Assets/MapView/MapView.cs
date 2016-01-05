@@ -46,7 +46,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     private MapViewInfowindow Infowindow;
     private MapViewChat Chat;
 
-    public MapObject SelectedObject { get; private set; }
+    public MapObject SelectedObject { get; set; }
     public MapObject HoveredObject { get; private set; }
 
     // Use this for initialization
@@ -548,6 +548,11 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         if (fowTex != null)
             UpdateFOW(fowTex);
 
+        if (HoveredObject != null && (HoveredObject.GetObjectType() == MapObjectType.Monster ||
+                                      HoveredObject.GetObjectType() == MapObjectType.Human) && !((MapUnit)HoveredObject).IsAlive) HoveredObject = null;
+        if (SelectedObject != null && (SelectedObject.GetObjectType() == MapObjectType.Monster ||
+                                       SelectedObject.GetObjectType() == MapObjectType.Human) && !((MapUnit)SelectedObject).IsAlive) SelectedObject = null;
+
         UpdateLogic();
 
         int waterAnimFrameNew = (MapLogic.Instance.LevelTime % 20) / 5;
@@ -619,6 +624,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                         Window wnd = Utils.CreateObjectWithScript<Window>();
                         Debug.LogFormat("created a window!");
                     }
+                    return true;
+                case KeyCode.Space:
+                    Client.SendRespawn();
                     return true;
             }
         }

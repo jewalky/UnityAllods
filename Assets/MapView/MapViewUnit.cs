@@ -294,9 +294,10 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         if (LogicUnit.DoUpdateView)
         {
             Renderer.enabled = true;
-            ShadowRenderer.enabled = true;
-            if (HpRenderer != null) HpRenderer.enabled = true;
-            if (PlayerNickObject != null) PlayerNickObject.SetActive(true);
+            bool bAlive = LogicUnit.IsAlive && !LogicUnit.IsDying;
+            ShadowRenderer.enabled = bAlive;
+            if (HpRenderer != null) HpRenderer.enabled = bAlive;
+            if (PlayerNickObject != null) PlayerNickObject.SetActive(bAlive);
 
             Images.AllodsSpriteSeparate sprites = LogicUnit.Class.File.File;
 
@@ -314,12 +315,22 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
             int actualFrame = LogicUnit.Class.Index; // draw frame 0 of each unit
 
+            UnitVisualState actualVState = LogicUnit.VState;
+            if (!bAlive && actualVState == UnitVisualState.Idle)
+            {
+                actualVState = UnitVisualState.Dying;
+                UnitClass dCls = LogicUnit.Class;
+                while (dCls.Dying != null && dCls.Dying != dCls)
+                    dCls = dCls.Dying;
+                LogicUnit.DeathFrame = dCls.DyingPhases - 1;
+            }
+
             // first (idle) state is 0..8 frames. frames 1 to 7 are flipped. frames 0 and 8 aren't.
             //  135 180 225
             //  90      270
             //  45   0  315
             bool doFlip = false;
-            if (LogicUnit.VState == UnitVisualState.Rotating || (LogicUnit.VState == UnitVisualState.Idle && LogicUnit.Class.IdlePhases == 1))
+            if (actualVState == UnitVisualState.Rotating || (actualVState == UnitVisualState.Idle && LogicUnit.Class.IdlePhases == 1))
             {
                 if (LogicUnit.Class.Flip)
                 {
@@ -341,7 +352,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                     actualFrame = actualAngle;
                 }
             }
-            else if (LogicUnit.VState == UnitVisualState.Idle)
+            else if (actualVState == UnitVisualState.Idle)
             {
                 if (LogicUnit.Class.IdlePhases > 1)
                 {
@@ -373,7 +384,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                     actualFrame += LogicUnit.Class.IdleFrames[LogicUnit.IdleFrame].Frame;
                 }
             }
-            else if (LogicUnit.VState == UnitVisualState.Moving)
+            else if (actualVState == UnitVisualState.Moving)
             {
                 int moveSize = LogicUnit.Class.MoveBeginPhases + LogicUnit.Class.MovePhases;
 
@@ -400,7 +411,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 actualFrame += LogicUnit.Class.MoveBeginPhases; // movebeginphases, we don't animate this yet
                 actualFrame += LogicUnit.Class.MoveFrames[LogicUnit.MoveFrame].Frame;
             }
-            else if (LogicUnit.VState == UnitVisualState.Attacking)
+            else if (actualVState == UnitVisualState.Attacking)
             {
                 int moveSize = LogicUnit.Class.MoveBeginPhases + LogicUnit.Class.MovePhases;
                 int attackSize = LogicUnit.Class.AttackPhases;
@@ -427,6 +438,38 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
                 actualFrame += LogicUnit.Class.AttackFrames[LogicUnit.AttackFrame].Frame;
             }
+            else if (actualVState == UnitVisualState.Dying)
+            {
+                UnitClass dCls = LogicUnit.Class;
+                while (dCls.Dying != null && dCls.Dying != dCls)
+                    dCls = dCls.Dying;
+
+                int moveSize = dCls.MoveBeginPhases + dCls.MovePhases;
+                int attackSize = dCls.AttackPhases;
+                int dyingSize = dCls.DyingPhases;
+
+                if (LogicUnit.Class.Flip)
+                {
+                    if (LogicUnit.Angle < 180)
+                    {
+                        int actualAngle = LogicUnit.Angle * 4 / 180;
+                        actualFrame = 9 + moveSize * 5 + attackSize * 5 + dyingSize * actualAngle;
+                    }
+                    else
+                    {
+                        int actualAngle = (180 - (LogicUnit.Angle - 180)) * 4 / 180;
+                        actualFrame = 9 + moveSize * 5 + attackSize * 5 + dyingSize * actualAngle;
+                        doFlip = true;
+                    }
+                }
+                else
+                {
+                    int actualAngle = LogicUnit.Angle * 8 / 360;
+                    actualFrame = 16 + moveSize * 8 + attackSize * 8 + dyingSize * actualAngle;
+                }
+
+                actualFrame += LogicUnit.DeathFrame;
+            }
 
             int cnt = LogicUnit.Width * LogicUnit.Height;
             Vector2 xP = MapView.Instance.MapToScreenCoords(LogicUnit.X + LogicUnit.FracX + (float)LogicUnit.Width / 2,
@@ -434,7 +477,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                                                             1, 1);
             CurrentPoint = xP;
             float zInv = 0;
-            if (LogicUnit.Template.IsFlying)
+            if (!bAlive)
+                zInv = 48;
+            else if (LogicUnit.Template.IsFlying)
                 zInv = -128;
             transform.localPosition = new Vector3(xP.x, xP.y, MakeZFromY(xP.y)+zInv); // order sprites by y coordinate basically
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicUnit.Class.CenterX));
@@ -458,6 +503,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
     public bool IsSelected(int x, int y)
     {
         if (LogicUnit.GetVisibility() < 2)
+            return false;
+
+        if (!LogicUnit.IsAlive)
             return false;
 
         int cx = x - (int)CurrentPoint.x;

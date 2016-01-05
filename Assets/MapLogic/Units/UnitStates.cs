@@ -15,6 +15,9 @@ public class IdleState : IUnitState
 
     public bool Process()
     {
+        if (Unit.Stats.Health <= 0)
+            return true;
+
         bool doFullAI = (Unit.Player.Flags & PlayerFlags.AI) != 0 &&
                         (Unit.Player.Flags & PlayerFlags.Dormant) == 0;
 
@@ -95,6 +98,9 @@ public class MoveState : IUnitState
 
     public bool Process()
     {
+        if (Unit.Stats.Health <= 0)
+            return false;
+
         if (Unit.X == WalkX && Unit.Y == WalkY)
             return false;
 
@@ -116,6 +122,9 @@ public class AttackState : IUnitState
 
     public bool Process()
     {
+        if (Unit.Stats.Health <= 0)
+            return false;
+
         if (TargetUnit == Unit || !TargetUnit.IsLinked || TargetUnit.Stats.Health < -10)
             return false;
 

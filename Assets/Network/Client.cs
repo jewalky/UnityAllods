@@ -99,4 +99,22 @@ public class Client
             }
         }
     }
+
+    public static void SendRespawn()
+    {
+        if (NetworkManager.IsClient)
+        {
+            ServerCommands.RespawnAvatar respCmd;
+            ClientManager.SendCommand(respCmd);
+        }
+        else
+        {
+            if (MapLogic.Instance.ConsolePlayer != null &&
+                MapLogic.Instance.ConsolePlayer.Avatar != null &&
+                !MapLogic.Instance.ConsolePlayer.Avatar.IsAlive)
+            {
+                MapLogic.Instance.ConsolePlayer.Avatar.Respawn(16, 16);
+            }
+        }
+    }
 }

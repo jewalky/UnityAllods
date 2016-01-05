@@ -219,7 +219,7 @@ public class AttackAction : IUnitAction
             Unit.AttackFrame = 0;
             Unit.AttackTime = 0;
             Unit.DoUpdateView = true;
-            Speed = 0.5f * (float)Unit.Stats.Speed / 20;
+            Speed = (float)Unit.Stats.Speed / 50;
         }
 
         if (Unit.Class.AttackPhases > 1)
@@ -255,6 +255,54 @@ public class AttackAction : IUnitAction
             return false; // end of attack
 
         Timer++;
+        return true;
+    }
+}
+
+[ProtoContract]
+public class DeathAction : IUnitAction
+{
+    public MapUnit Unit;
+    [ProtoMember(1)]
+    public int Timer;
+
+    public DeathAction()
+    {
+        Unit = null;
+    }
+
+    public DeathAction(MapUnit unit)
+    {
+        Unit = unit;
+        Timer = 0;
+    }
+
+    public bool Process()
+    {
+        if (Timer == 0)
+        {
+            Unit.VState = UnitVisualState.Dying;
+            Unit.DeathFrame = 0;
+            Unit.DeathTime = 0;
+            Unit.DoUpdateView = true;
+        }
+
+        Timer++;
+
+        UnitClass dCls = Unit.Class;
+        while (dCls.Dying != null && dCls.Dying != dCls)
+            dCls = dCls.Dying;
+
+        if (++Unit.DeathTime >= 2)
+        {
+            Unit.DeathFrame++;
+            Unit.DeathTime = 0;
+            Unit.DoUpdateView = true;
+        }
+
+        if (Unit.DeathFrame >= dCls.DyingPhases - 1)
+            return false;
+
         return true;
     }
 }

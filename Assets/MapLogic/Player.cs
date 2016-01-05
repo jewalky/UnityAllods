@@ -56,7 +56,7 @@ public class Player
     public string Name { get; set; }
     public Dictionary<int, DiplomacyFlags> Diplomacy { get; private set; }
     public List<MapObject> Objects { get; private set; }
-    public IPlayerPawn Avatar { get; set; }
+    public MapUnit Avatar { get; set; }
 
     // only for human players
     public ServerClient NetClient { get; private set; }

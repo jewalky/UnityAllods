@@ -153,6 +153,10 @@ namespace ClientCommands
         public int AttackFrame;
         [ProtoMember(17)]
         public int AttackTime;
+        [ProtoMember(18)]
+        public int DeathFrame;
+        [ProtoMember(19)]
+        public int DeathTime;
 
         public bool Process()
         {
@@ -176,10 +180,17 @@ namespace ClientCommands
                 return false;
             }
             unit.Player = player;
-            if (IsAvatar)
-                unit.Player.Avatar = unit;
-            unit.Actions.RemoveRange(1, unit.Actions.Count - 1); // clear states.
             unit.SetPosition(X, Y);
+            if (IsAvatar)
+            {
+                unit.Player.Avatar = unit;
+                if (player == MapLogic.Instance.ConsolePlayer)
+                {
+                    MapView.Instance.SelectedObject = unit;
+                    MapView.Instance.CenterOnObject(unit);
+                }
+            }
+            unit.Actions.RemoveRange(1, unit.Actions.Count - 1); // clear states.
             unit.Angle = Angle;
             unit.Stats = CurrentStats;
             unit.VState = VState;
@@ -191,6 +202,8 @@ namespace ClientCommands
             unit.FracY = FracY;
             unit.AttackFrame = AttackFrame;
             unit.AttackTime = AttackTime;
+            unit.DeathFrame = DeathFrame;
+            unit.DeathTime = DeathTime;
             if (newUnit)
                 MapLogic.Instance.Objects.Add(unit);
             else unit.DoUpdateView = true; // update view if unit already present on map (otherwise its automatically done)
@@ -240,6 +253,8 @@ namespace ClientCommands
             public AttackAction Attack;
             [ProtoMember(4)]
             public int TargetUnitTag;
+            [ProtoMember(5)]
+            public DeathAction Death;
         }
 
         public static AddUnitAction GetAddUnitAction(IUnitAction state)
@@ -258,6 +273,9 @@ namespace ClientCommands
                 aus.TargetUnitTag = aus.Attack.TargetUnit.Tag;
             }
             else aus.Attack = null;
+            if (state.GetType() == typeof(DeathAction))
+                aus.Death = (DeathAction)state;
+            else aus.Death = null;
             return aus;
         }
 
@@ -312,6 +330,12 @@ namespace ClientCommands
                             return false; // bad packet
                         States[i].Attack.TargetUnit = targetUnit;
                         unit.Actions.Insert(pPos, States[i].Attack);
+                    }
+
+                    if (States[i].Death != null)
+                    {
+                        States[i].Death.Unit = unit;
+                        unit.Actions.Insert(pPos, States[i].Death);
                     }
                 }
             }

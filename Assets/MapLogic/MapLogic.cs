@@ -392,12 +392,14 @@ class MapLogic
             else ConsolePlayer = Self;
             if (ConsolePlayer != null)
             {
+                ConsolePlayer.Flags = 0;
                 ConsolePlayer.Diplomacy[ConsolePlayer.ID] = DiplomacyFlags.Ally | DiplomacyFlags.Vision;
                 GameManager.Instance.CallDelegateOnNextFrame(() =>
                 {
                     ConsolePlayer.Avatar = CreateAvatar(ConsolePlayer);
                     // center view on avatar.
-                    MapView.Instance.CenterOnObject((MapObject)ConsolePlayer.Avatar);
+                    MapView.Instance.SelectedObject = ConsolePlayer.Avatar;
+                    MapView.Instance.CenterOnObject(ConsolePlayer.Avatar);
                     return false;
                 });
             }
@@ -463,12 +465,15 @@ class MapLogic
         {
             if ((player.Diplomacy[ConsolePlayer.ID] & DiplomacyFlags.Vision) != 0)
             {
-                foreach(MapObject mobj in player.Objects)
+                for (int i = 0; i < player.Objects.Count; i++)
                 {
+                    MapObject mobj = player.Objects[i];
                     // this mobj should add to the vision.
                     if (mobj.GetObjectType() != MapObjectType.Monster &&
                         mobj.GetObjectType() != MapObjectType.Human) continue;
                     MapUnit unit = (MapUnit)mobj;
+                    if (!unit.IsAlive)
+                        continue;
                     int xOrigin = unit.X - 20;
                     int yOrigin = unit.Y - 20;
                     for (int ly = yOrigin; ly < yOrigin + 41; ly++)
@@ -583,7 +588,7 @@ class MapLogic
     }
 
     // create main unit for player.
-    public IPlayerPawn CreateAvatar(Player player)
+    public MapUnit CreateAvatar(Player player)
     {
         MapUnit unit = new MapUnit(Config.sv_avatar);
         unit.Player = player;

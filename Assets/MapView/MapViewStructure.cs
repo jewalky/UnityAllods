@@ -257,7 +257,7 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
             Vector2 xP = MapView.Instance.MapToScreenCoords(LogicObject.X + 0.5f, LogicObject.Y + 0.5f, LogicStructure.Width, LogicStructure.Height);
             transform.localPosition = new Vector3(xP.x - 16,
                                                   xP.y - 16 - (cls.FullHeight - cls.TileHeight) * 32,
-                                                  MakeZFromY(xP.y));
+                                                  MakeZFromY(xP.y) + 32);
 
             if (LogicStructure.Class.VariableSize)
             {

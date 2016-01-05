@@ -98,4 +98,28 @@ namespace ServerCommands
             return true;
         }
     }
+
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.RespawnAvatar)]
+    public struct RespawnAvatar : IServerCommand
+    {
+        public bool Process(ServerClient client)
+        {
+            if (client.State != ClientState.Playing)
+                return false;
+
+            Player player = MapLogic.Instance.GetNetPlayer(client);
+            if (player == null)
+                return false; // huehue, same as "order error" in a2server.exe, except we just boot them
+
+            if (player.Avatar == null)
+                return false;
+
+            if (player.Avatar.IsAlive)
+                return true;
+
+            player.Avatar.Respawn(16, 16);
+            return true;
+        }
+    }
 }

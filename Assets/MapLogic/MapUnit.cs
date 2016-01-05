@@ -19,7 +19,8 @@ public enum UnitVisualState
     Idle,
     Rotating,
     Moving,
-    Attacking
+    Attacking,
+    Dying
 }
 
 public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
@@ -68,6 +69,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         }
     }
 
+    public bool IsAlive { get; private set; }
+    public bool IsDying { get; private set; }
     public List<IUnitAction> Actions = new List<IUnitAction>();
     public List<IUnitState> States = new List<IUnitState>();
     public UnitVisualState VState = UnitVisualState.Idle;
@@ -78,6 +81,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public int MoveTime = 0;
     public int AttackFrame = 0;
     public int AttackTime = 0;
+    public int DeathFrame = 0;
+    public int DeathTime = 0;
     // for visual state stuff
     public float FracX = 0;
     public float FracY = 0;
@@ -147,12 +152,17 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Stats.Spirit = (short)Template.Spirit;
 
         // physical damage and resists
-        int templateMin = Math.Min(Template.PhysicalMin, Template.PhysicalMax);
-        int templateMax = Math.Max(Template.PhysicalMax, Template.PhysicalMin) - templateMin;
-        if ((templateMin & 0x80) != 0)
+        int templateMin = Template.PhysicalMin;
+        int templateMax = Template.PhysicalMax - templateMin;
+        if (Template.IsIgnoringArmor && ((templateMin & 0x80) != 0))
         {
             templateMin = (templateMin & 0x7F) * 15;
             templateMax *= 15;
+        }
+        if (templateMax < 0)
+        {
+            templateMin = Template.PhysicalMax;
+            templateMax = (Template.PhysicalMin - Template.PhysicalMax) * 64;
         }
         Stats.DamageMin = (short)templateMin;
         Stats.DamageMax = (short)(templateMax + templateMin);
@@ -198,6 +208,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 PutItemToBody((BodySlot)item2.Class.Option.Slot, item2);
         }
 
+        Actions.Clear();
+        States.Clear();
+
         Actions.Add(new IdleAction(this));
         States.Add(new IdleState(this));
 
@@ -222,6 +235,39 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         while (!Actions.Last().Process())
             Actions.RemoveAt(Actions.Count - 1);
+
+        // check DEATH
+        if (Stats.Health <= 0 && !IsDying)
+        {
+            AddActions(new DeathAction(this));
+            IsDying = true;
+            UnlinkFromWorld();
+        }
+        else if (Stats.Health > 0)
+        {
+            IsDying = false;
+            IsAlive = true;
+            LinkToWorld();
+        }
+
+        if (IsAlive && IsDying)
+        {
+            if (MapLogic.Instance.LevelTime % 40 == 0)
+            {
+                Stats.TrySetHealth(Stats.Health - 1);
+                if (Stats.Health <= -10)
+                {
+                    IsAlive = false;
+                    if (Player == MapLogic.Instance.ConsolePlayer &&
+                        Player != null && Player.Avatar == this)
+                    {
+                        //
+                        MapViewChat.Instance.AddChatMessage(Player.AllColorsSystem, Locale.Patch[68]);
+                        MapViewChat.Instance.AddChatMessage(Player.AllColorsSystem, Locale.Patch[69]); // your character died. press space to continue
+                    }
+                }
+            }
+        }
     }
 
     public override MapNodeFlags GetNodeLinkFlags(int x, int y)
@@ -489,6 +535,19 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Vector2i clPoint = GetClosestPointTo(other);
         Vector2i clCenter = new Vector2i(X + Width / 2, Y + Height / 2);
         return (clCenter - clPoint).magnitude;
+    }
+
+    public void Respawn(int x, int y)
+    {
+        X = x;
+        Y = y;
+        Stats.Health = Stats.HealthMax;
+        IsAlive = true;
+        IsDying = false;
+        LinkToWorld();
+        if (NetworkManager.IsServer)
+            Server.NotifyRespawn(this);
+        DoUpdateView = true;
     }
 
     public int TakeDamage(DamageFlags flags, MapUnit source, int damagecount)

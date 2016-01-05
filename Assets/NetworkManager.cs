@@ -159,7 +159,7 @@ public class NetworkManager : MonoBehaviour {
                 if (sock.Available == 0)
                     return null; // disconnected
                 int doneNow = sock.Receive(ovtmp);
-                ovtmp.Take(doneNow).ToArray().CopyTo(ov, done);
+                ovtmp.Take(doneNow).ToArray().CopyTo(ov, doneNow);
                 done += doneNow;
                 mCurrentIn += doneNow;
                 if (done == size)

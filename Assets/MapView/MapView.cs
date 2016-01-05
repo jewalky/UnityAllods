@@ -670,6 +670,13 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                     {
                         Client.SendMoveUnit(unit, MouseCellX, MouseCellY);
                     }
+                    else if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Attack && 
+                             HoveredObject != null && 
+                             (HoveredObject.GetObjectType() == MapObjectType.Monster ||
+                              HoveredObject.GetObjectType() == MapObjectType.Human))
+                    {
+                        Client.SendAttackUnit(unit, (MapUnit)HoveredObject);
+                    }
                 }
             }
         }

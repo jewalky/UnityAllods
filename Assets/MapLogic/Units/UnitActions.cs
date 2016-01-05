@@ -176,3 +176,71 @@ public class MoveAction : IUnitAction
         }
     }
 }
+
+[ProtoContract]
+public class AttackAction : IUnitAction
+{
+    public MapUnit Unit;
+    public MapUnit TargetUnit;
+    [ProtoMember(1)]
+    public int Timer;
+    [ProtoMember(2)]
+    public DamageFlags DamageFlags;
+    [ProtoMember(3)]
+    public int Damage;
+
+    public AttackAction()
+    {
+        Unit = null;
+        TargetUnit = null;
+    }
+
+    public AttackAction(MapUnit unit, MapUnit targetUnit, DamageFlags damageFlags, int damage)
+    {
+        Unit = unit;
+        TargetUnit = targetUnit;
+        DamageFlags = damageFlags;
+        Damage = damage;
+        Timer = 0;
+    }
+
+    public bool Process()
+    {
+        if (Unit.VState != UnitVisualState.Attacking)
+        {
+            Unit.VState = UnitVisualState.Attacking;
+            Unit.DoUpdateView = true;
+        }
+
+        if (Unit.Class.AttackPhases > 1)
+        {
+            Unit.AttackTime++;
+            if (Unit.AttackTime >= Unit.Class.AttackFrames[Unit.AttackFrame].Time)
+            {
+                Unit.DoUpdateView = true;
+                Unit.AttackFrame = ++Unit.AttackFrame % Unit.Class.AttackPhases;
+                Unit.AttackTime = 0;
+                Unit.DoUpdateView = true;
+            }
+        }
+        else
+        {
+            Unit.AttackFrame = 0;
+            Unit.AttackTime = 0;
+        }
+
+        if (Timer == Unit.Template.Charge && !NetworkManager.IsClient)
+        {
+            // do damage here!
+            //
+            if (TargetUnit.TakeDamage(DamageFlags, Unit, Damage) > 0)
+                TargetUnit.DoUpdateView = true;
+        }
+
+        if (Timer == Unit.Template.Charge + Unit.Template.Relax)
+            return false; // end of attack
+
+        Timer++;
+        return true;
+    }
+}

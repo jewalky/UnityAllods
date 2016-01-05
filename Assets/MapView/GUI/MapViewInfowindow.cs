@@ -246,6 +246,10 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor
 
     public void Update()
     {
-        
+        if (Viewer != null && Viewer.GetObject().DoUpdateView)
+        {
+            Viewer.DisplayPic((BHumanModeObject == null || HumanMode), HBackRObject.transform);
+            Viewer.DisplayInfo((BHumanModeObject == null || !HumanMode), TBackRObject.transform);
+        }
     }
 }

@@ -18,7 +18,8 @@ public enum UnitVisualState
 {
     Idle,
     Rotating,
-    Moving
+    Moving,
+    Attacking
 }
 
 public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
@@ -75,9 +76,32 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public int IdleTime = 0;
     public int MoveFrame = 0;
     public int MoveTime = 0;
+    public int AttackFrame = 0;
+    public int AttackTime = 0;
     // for visual state stuff
     public float FracX = 0;
     public float FracY = 0;
+
+    public enum BodySlot
+    {
+        Special = 0,
+        Weapon = 1,
+        Shield = 2,
+        // slot 3 unused
+        Ring = 4,
+        Amulet = 5,
+        Hat = 6,
+        MailRobe = 7,
+        CuirassCloak = 8,
+        Bracers = 9,
+        Gloves = 10,
+        // slot 11 unused
+        Boots = 12,
+        // slots 13, 14 and 15 are unused
+    }
+
+    public Item[] ItemsBody = new Item[15];
+    public List<Item> ItemsPack = new List<Item>();
 
     //
     public readonly bool[,] Vision = new bool[41, 41];
@@ -143,6 +167,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Stats.ProtectionPike = (byte)Template.ProtectionPike;
         Stats.ProtectionShooting = (byte)Template.ProtectionShooting;
 
+        // speed and scanrange
         Stats.RotationSpeed = (byte)Template.RotationSpeed;
         if (Stats.RotationSpeed < 1)
             Stats.RotationSpeed = 1;
@@ -150,6 +175,21 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         if (Stats.Speed < 1)
             Stats.Speed = 1;
         Stats.ScanRange = Template.ScanRange;
+
+        // initial items
+        if (Template.EquipItem1.Length > 0)
+        {
+            Item item1 = new Item(Template.EquipItem1);
+            if (item1.IsValid)
+                PutItemToBody((BodySlot)item1.Class.Option.Slot, item1);
+        }
+
+        if (Template.EquipItem2.Length > 0)
+        {
+            Item item2 = new Item(Template.EquipItem2);
+            if (item2.IsValid)
+                PutItemToBody((BodySlot)item2.Class.Option.Slot, item2);
+        }
 
         Actions.Add(new IdleAction(this));
         States.Add(new IdleState(this));
@@ -366,9 +406,87 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         States.Add(state);
     }
 
+    // take item from pack
+    public Item GetItemFromPack(int position, int count)
+    {
+        if (position < 0 || position >= ItemsPack.Count)
+            return null;
+
+        Item sourceItem = ItemsPack[position];
+        if (count >= sourceItem.Count)
+        {
+            ItemsPack.RemoveAt(position);
+            return sourceItem;
+        }
+
+        Item newItem = new Item(sourceItem, count);
+        sourceItem.Count -= count;
+        return newItem;
+    }
+
+    // insert item into pack.
+    public void PutItemToPack(int position, Item item)
+    {
+        // check for already present count
+        for (int i = 0; i < ItemsPack.Count; i++)
+        {
+            if (ItemsPack[i].Class == item.Class &&
+                ItemsPack[i].MagicEffects.SequenceEqual(item.MagicEffects))
+            {
+                ItemsPack[i].Count += item.Count;
+                return;
+            }
+        }
+
+        position = Math.Min(ItemsPack.Count, Math.Max(0, position));
+        ItemsPack.Insert(position, new Item(item, item.Count));
+    }
+
+    public Item GetItemFromBody(BodySlot slot)
+    {
+        return ItemsBody[(int)slot];
+    }
+
+    public void PutItemToBody(BodySlot slot, Item item)
+    {
+        if (ItemsBody[(int)slot] != null)
+            PutItemToPack(ItemsPack.Count, ItemsBody[(int)slot]); // put current item to pack
+        ItemsBody[(int)slot] = item;
+    }
+
+    public Vector2i GetClosestPointTo(MapUnit other)
+    {
+        Vector2i cPt = new Vector2i(other.X, other.Y);
+        int cX = 256;
+        int cY = 256;
+        for (int ly = other.Y; ly < other.Y + other.Height; ly++)
+        {
+            for (int lx = other.X; lx < other.X + other.Width; lx++)
+            {
+                int xDist = Math.Abs(lx - X);
+                int yDist = Math.Abs(ly - Y);
+                if (xDist < cX || yDist < cY)
+                {
+                    cX = xDist;
+                    cY = yDist;
+                    cPt = new Vector2i(lx, ly);
+                }
+            }
+        }
+
+        return cPt;
+    }
+
+    public float GetClosestDistanceTo(MapUnit other)
+    {
+        Vector2i clPoint = GetClosestPointTo(other);
+        Vector2i clCenter = new Vector2i(X + Width / 2, Y + Height / 2);
+        return (clCenter - clPoint).magnitude;
+    }
+
     public int TakeDamage(DamageFlags flags, MapUnit source, int damagecount)
     {
-        if (damagecount < 0)
+        if (damagecount <= 0)
             return 0;
 
         bool sourceIgnoresArmor = source != null && source.Template.IsIgnoringArmor;
@@ -413,7 +531,11 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             damagecount -= damagecount * Stats.ProtectionShooting / 100;
 
         if (Stats.TrySetHealth(Stats.Health - damagecount))
+        {
+            if (NetworkManager.IsServer)
+                Server.NotifyDamageUnit(this, damagecount, (flags & DamageFlags.Astral) == 0);
             return damagecount;
+        }
 
         return 0;
     }

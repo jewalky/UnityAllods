@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 public class IdleState : IUnitState
 {
@@ -45,10 +46,11 @@ public class MoveState : IUnitState
         WalkY = y;
     }
 
-    public bool Process()
+    // made static because it's also used by other actions
+    public static bool TryWalkTo(MapUnit Unit, int WalkX, int WalkY)
     {
         if (WalkX == Unit.X && WalkY == Unit.Y)
-            return false;
+            return true;
 
         // try to pathfind
         List<Vector2i> path = Unit.DecideNextMove(WalkX, WalkY, true);
@@ -89,5 +91,59 @@ public class MoveState : IUnitState
         }
 
         return false;
+    }
+
+    public bool Process()
+    {
+        if (Unit.X == WalkX && Unit.Y == WalkY)
+            return false;
+
+        TryWalkTo(Unit, WalkX, WalkY);
+        return true;
+    }
+}
+
+public class AttackState : IUnitState
+{
+    private MapUnit Unit;
+    private MapUnit TargetUnit;
+
+    public AttackState(MapUnit unit, MapUnit targetUnit)
+    {
+        Unit = unit;
+        TargetUnit = targetUnit;
+    }
+
+    public bool Process()
+    {
+        if (TargetUnit == Unit || !TargetUnit.IsLinked || TargetUnit.Stats.Health < -10)
+            return false;
+
+        // assume melee attack right now
+        // check if in direct proximity
+        if (Unit.GetClosestDistanceTo(TargetUnit) <= 1.5)
+        {
+            // in direct proximity!
+            // 
+            Vector2i enemyCell = Unit.GetClosestPointTo(TargetUnit);
+            int angleNeeded = Unit.FaceCell(enemyCell.x, enemyCell.y);
+            if (Unit.Angle != angleNeeded)
+            {
+                Unit.AddActions(new RotateAction(Unit, angleNeeded));
+                return true;
+            }
+
+            //
+            //Debug.LogFormat("ATTACKING");
+            int damage = UnityEngine.Random.Range(Unit.Stats.DamageMin, Unit.Stats.DamageMax);
+            Unit.AddActions(new AttackAction(Unit, TargetUnit, DamageFlags.Raw, damage));
+        }
+        else
+        {
+            // make one step to the target.
+            MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y);
+        }
+
+        return true;
     }
 }

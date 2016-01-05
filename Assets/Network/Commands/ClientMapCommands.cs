@@ -149,6 +149,10 @@ namespace ClientCommands
         public float FracX;
         [ProtoMember(15)]
         public float FracY;
+        [ProtoMember(16)]
+        public int AttackFrame;
+        [ProtoMember(17)]
+        public int AttackTime;
 
         public bool Process()
         {
@@ -185,6 +189,8 @@ namespace ClientCommands
             unit.MoveTime = MoveTime;
             unit.FracX = FracX;
             unit.FracY = FracY;
+            unit.AttackFrame = AttackFrame;
+            unit.AttackTime = AttackTime;
             if (newUnit)
                 MapLogic.Instance.Objects.Add(unit);
             else unit.DoUpdateView = true; // update view if unit already present on map (otherwise its automatically done)
@@ -230,17 +236,28 @@ namespace ClientCommands
             public RotateAction Rotate;
             [ProtoMember(2)]
             public MoveAction Move;
+            [ProtoMember(3)]
+            public AttackAction Attack;
+            [ProtoMember(4)]
+            public int TargetUnitTag;
         }
 
         public static AddUnitAction GetAddUnitAction(IUnitAction state)
         {
             AddUnitAction aus = new AddUnitAction();
+            aus.TargetUnitTag = -1;
             if (state.GetType() == typeof(RotateAction))
                 aus.Rotate = (RotateAction)state;
             else aus.Rotate = null;
             if (state.GetType() == typeof(MoveAction))
                 aus.Move = (MoveAction)state;
             else aus.Move = null;
+            if (state.GetType() == typeof(AttackAction))
+            {
+                aus.Attack = (AttackAction)state;
+                aus.TargetUnitTag = aus.Attack.TargetUnit.Tag;
+            }
+            else aus.Attack = null;
             return aus;
         }
 
@@ -286,6 +303,16 @@ namespace ClientCommands
                         States[i].Move.Unit = unit;
                         unit.Actions.Insert(pPos, States[i].Move);
                     }
+
+                    if (States[i].Attack != null)
+                    {
+                        States[i].Attack.Unit = unit;
+                        MapUnit targetUnit = MapLogic.Instance.GetUnitByTag(States[i].TargetUnitTag);
+                        if (targetUnit == null)
+                            return false; // bad packet
+                        States[i].Attack.TargetUnit = targetUnit;
+                        unit.Actions.Insert(pPos, States[i].Attack);
+                    }
                 }
             }
 
@@ -317,4 +344,43 @@ namespace ClientCommands
             return true;
         }
     }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.DamageUnit)]
+    public struct DamageUnit : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public int Damage;
+        [ProtoMember(3)]
+        public bool Visible;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null)
+            {
+                Debug.LogFormat("Attempted to idle nonexistent unit {0}", Tag);
+            }
+            else
+            {
+                unit.AllowIdle = true;
+            }
+
+            // visible = whether to display flying hp
+            if (unit.Stats.TrySetHealth(unit.Stats.Health - Damage))
+                unit.DoUpdateView = true;
+
+            if (Visible)
+            {
+                // todo: display flying hp
+            }
+
+            return true;
+        }
+    }
+
 }

@@ -14,6 +14,8 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
         }
     }
 
+    public MapObject GetObject() { return LogicObject; }
+
     // base mesh (TileWidth * TileHeight)
     private MeshRenderer Renderer;
     private MeshFilter Filter;

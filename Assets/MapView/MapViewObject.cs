@@ -10,6 +10,7 @@ public interface IMapViewSelfie
     bool ProcessEventInfo(Event e);
     void DisplayPic(bool on, Transform parent);
     void DisplayInfo(bool on, Transform parent); // object displays it's info text at coordinates
+    MapObject GetObject();
 }
 
 public interface IMapViewSelectable

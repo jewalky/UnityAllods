@@ -81,4 +81,22 @@ public class Client
             }
         }
     }
+
+    public static void SendAttackUnit(MapUnit unit, MapUnit targetUnit)
+    {
+        if (NetworkManager.IsClient)
+        {
+            ServerCommands.AttackUnit atkCmd;
+            atkCmd.Tag = unit.Tag;
+            atkCmd.TargetTag = targetUnit.Tag;
+            ClientManager.SendCommand(atkCmd);
+        }
+        else
+        {
+            if (MapLogic.Instance.ConsolePlayer == unit.Player)
+            {
+                unit.SetState(new AttackState(unit, targetUnit));
+            }
+        }
+    }
 }

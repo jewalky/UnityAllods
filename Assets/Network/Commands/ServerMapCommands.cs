@@ -64,4 +64,38 @@ namespace ServerCommands
             return true;
         }
     }
+
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.AttackUnit)]
+    public struct AttackUnit : IServerCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public int TargetTag;
+
+        public bool Process(ServerClient client)
+        {
+            if (client.State != ClientState.Playing)
+                return false;
+
+            Player player = MapLogic.Instance.GetNetPlayer(client);
+            if (player == null)
+                return false; // huehue, same as "order error" in a2server.exe, except we just boot them
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null)
+                return false; // bad desync
+
+            if (unit.Player != player)
+                return true; // do nothing
+
+            MapUnit targetUnit = MapLogic.Instance.GetUnitByTag(TargetTag);
+            if (targetUnit == null)
+                return false;
+
+            unit.SetState(new AttackState(unit, targetUnit));
+            return true;
+        }
+    }
 }

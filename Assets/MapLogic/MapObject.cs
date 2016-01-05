@@ -40,7 +40,7 @@ public enum DamageFlags
     Shooting = 0x0400,
     Raw = 0x0800,
 
-    PhysicalDamage = Blade|Axe|Bludgeon|Pike|Shooting,
+    PhysicalDamage = Blade|Axe|Bludgeon|Pike|Shooting|Raw,
     MagicDamage = Fire|Air|Water|Earth|Astral
 }
 
@@ -59,6 +59,7 @@ public class MapObject : IDisposable
     public MonoBehaviour GameScript = null;
     public readonly int ID = MapLogic.Instance.TopObjectID;
     public bool DoUpdateView = false;
+    public bool IsLinked { get; private set; }
 
     public virtual MapObjectType GetObjectType() { return MapObjectType.Object; }
     protected virtual Type GetGameObjectType() { return typeof(MapViewObject); }
@@ -91,8 +92,6 @@ public class MapObject : IDisposable
 
     public void DisposeNoUnlink()
     {
-        UnlinkFromWorld();
-
         if (NetworkManager.IsServer)
             Server.NotifyDelObject(this);
         if (GameObject != null)
@@ -124,6 +123,8 @@ public class MapObject : IDisposable
 
     public virtual void UnlinkFromWorld(int x = -1, int y = -1)
     {
+        IsLinked = false;
+
         if (x < 0 || y < 0)
         {
             x = X;
@@ -151,6 +152,8 @@ public class MapObject : IDisposable
 
     public virtual void LinkToWorld(int x = -1, int y = -1)
     {
+        IsLinked = true;
+
         if (x < 0 || y < 0)
         {
             x = X;

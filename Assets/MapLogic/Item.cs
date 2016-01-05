@@ -191,11 +191,25 @@ public class Item
     // power for castSpell is stored in paired mageSkill0.
     // so basically castSpell=Stone_Curse:10 translates into castSpell=21;mageSkill0=10
     // just in case, I have an local enum that translates to stat number.
+    public bool IsValid { get { return (Class != null); } }
+
     public ItemClass Class = null;
     public long Price = 2;
+    public int Count = 1;
     public List<ItemEffect> Effects = new List<ItemEffect>();
     public List<ItemEffect> NativeEffects = new List<ItemEffect>();
     public List<ItemEffect> MagicEffects = new List<ItemEffect>();
+
+    public Item(Item original, int count)
+    {
+        Class = original.Class;
+        Price = original.Price;
+        Count = Math.Max(original.Count, count);
+
+        InitItem();
+        MagicEffects.AddRange(original.MagicEffects);
+        UpdateItem();
+    }
 
     public Item(ushort id, List<ItemEffect> effects = null)
     {
@@ -210,6 +224,8 @@ public class Item
 
         if (effects != null)
             MagicEffects = effects;
+
+        UpdateItem();
     }
 
     public Item(string specifier)
@@ -232,6 +248,8 @@ public class Item
 
         // now go through effects
         MagicEffects.AddRange(ItemEffect.ParseEffectList(spec_args));
+
+        UpdateItem();
     }
 
     private void InitItem()

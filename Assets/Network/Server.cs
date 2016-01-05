@@ -147,6 +147,8 @@ public class Server
             unitCmd.MoveTime = unit.MoveTime;
             unitCmd.FracX = unit.FracX;
             unitCmd.FracY = unit.FracY;
+            unitCmd.AttackFrame = unit.AttackFrame;
+            unitCmd.AttackTime = unit.AttackTime;
             player.NetClient.SendCommand(unitCmd);
             // also notify of current unit state
             NotifyAddUnitActionsSingle(player.NetClient, unit, unit.Actions.Skip(1).ToArray());
@@ -222,6 +224,25 @@ public class Server
                 ClientCommands.IdleUnit idleCmd;
                 idleCmd.Tag = unit.Tag;
                 client.SendCommand(idleCmd);
+            }
+        }
+    }
+
+    public static void NotifyDamageUnit(MapUnit unit, int damage, bool visible)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            Player p = MapLogic.Instance.GetNetPlayer(client);
+            if (unit.IsVisibleForNetPlayer(p))
+            {
+                ClientCommands.DamageUnit dmgCmd;
+                dmgCmd.Tag = unit.Tag;
+                dmgCmd.Damage = damage;
+                dmgCmd.Visible = visible;
+                client.SendCommand(dmgCmd);
             }
         }
     }

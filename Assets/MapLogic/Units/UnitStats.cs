@@ -14,14 +14,14 @@ public struct UnitStats
     public bool TrySetHealth(int nh)
     {
         int oh = Health;
-        Health = Math.Min(HealthMax, Math.Min(0, nh));
+        Health = Math.Min(HealthMax, Math.Max(-10, nh));
         return (oh != Health);
     }
 
     public bool TrySetMana(int nm)
     {
         int om = Mana;
-        Mana = Math.Min(HealthMax, Math.Min(0, nm));
+        Mana = Math.Min(HealthMax, Math.Max(0, nm));
         return (om != Mana);
     }
 

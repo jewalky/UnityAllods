@@ -14,6 +14,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         }
     }
 
+    public MapObject GetObject() { return LogicObject; }
+
     private MeshRenderer Renderer;
     private MeshFilter Filter;
     private Mesh ObstacleMesh;
@@ -84,6 +86,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         int x = LogicUnit.Class.SelectionX1;
         int y = LogicUnit.Class.SelectionY1;
         int w = LogicUnit.Class.SelectionX2 - LogicUnit.Class.SelectionX1;
+        int w2 = w - 8;
 
         if (PlayerNickObject != null && PlayerNick != null)
             PlayerNickObject.transform.localPosition = new Vector3(x, y - PlayerNick.Height - 1, -64);
@@ -113,6 +116,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             qc[lppc++] = new Color(0.3f, 0.3f, 0.3f, 0.5f);
 
             float lcnt = (i >= 4 * 8) ? (float)LogicUnit.Stats.Mana / LogicUnit.Stats.ManaMax : (float)LogicUnit.Stats.Health / LogicUnit.Stats.HealthMax;
+            if (lcnt < 0) lcnt = 0;
             Color clBase = new Color(0, 1, 0, 1);
             if (i >= 4 * 8) clBase = new Color(0, 0, 1, 1);
             else if (lcnt < 0.33) clBase = new Color(1, 0, 0, 1);
@@ -122,16 +126,16 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             Color clDk2 = clBase / 3;
             clDk2.a = 1;
             qv[lpp++] = new Vector3(x + 4, y);
-            qv[lpp++] = new Vector3(x + w * lcnt - 4, y);
-            qv[lpp++] = new Vector3(x + w * lcnt - 4, y + 4);
+            qv[lpp++] = new Vector3(x + 4 + w2 * lcnt, y);
+            qv[lpp++] = new Vector3(x + 4 + w2 * lcnt, y + 4);
             qv[lpp++] = new Vector3(x + 4, y + 4);
             qc[lppc++] = clDk2;
             qc[lppc++] = clDk2;
             qc[lppc++] = clDk2;
             qc[lppc++] = clDk2;
             qv[lpp++] = new Vector3(x + 4, y + 1);
-            qv[lpp++] = new Vector3(x + w * lcnt - 4, y + 1);
-            qv[lpp++] = new Vector3(x + w * lcnt - 4, y + 3);
+            qv[lpp++] = new Vector3(x + 4 + w2 * lcnt, y + 1);
+            qv[lpp++] = new Vector3(x + 4 + w2 * lcnt, y + 3);
             qv[lpp++] = new Vector3(x + 4, y + 3);
             qc[lppc++] = clBase;
             qc[lppc++] = clBase;
@@ -395,6 +399,33 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
                 actualFrame += LogicUnit.Class.MoveBeginPhases; // movebeginphases, we don't animate this yet
                 actualFrame += LogicUnit.Class.MoveFrames[LogicUnit.MoveFrame].Frame;
+            }
+            else if (LogicUnit.VState == UnitVisualState.Attacking)
+            {
+                int moveSize = LogicUnit.Class.MoveBeginPhases + LogicUnit.Class.MovePhases;
+                int attackSize = LogicUnit.Class.AttackPhases;
+
+                if (LogicUnit.Class.Flip)
+                {
+                    if (LogicUnit.Angle < 180)
+                    {
+                        int actualAngle = LogicUnit.Angle * 4 / 180;
+                        actualFrame = 9 + moveSize * 5 + attackSize * actualAngle;
+                    }
+                    else
+                    {
+                        int actualAngle = (180 - (LogicUnit.Angle - 180)) * 4 / 180;
+                        actualFrame = 9 + moveSize * 5 + attackSize * actualAngle;
+                        doFlip = true;
+                    }
+                }
+                else
+                {
+                    int actualAngle = LogicUnit.Angle * 8 / 360;
+                    actualFrame = 16 + moveSize * 8 + attackSize * actualAngle;
+                }
+
+                actualFrame += LogicUnit.Class.AttackFrames[LogicUnit.AttackFrame].Frame;
             }
 
             int cnt = LogicUnit.Width * LogicUnit.Height;

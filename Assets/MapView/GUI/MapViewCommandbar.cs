@@ -128,34 +128,37 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
     {
         CurrentCommand = CurrentCommandActual;
 
-        // check if ctrl is pressed.
-        // if alt is pressed, it's always Move overriding any other command.
-        bool bAlt = (Input.GetKey(KeyCode.RightAlt) ||
-                     Input.GetKey(KeyCode.LeftAlt));
-        bool bCtrl = (Input.GetKey(KeyCode.RightControl) ||
-                      Input.GetKey(KeyCode.LeftControl));
+        if (CurrentCommandActual == Commands.Move)
+        {
+            // check if ctrl is pressed.
+            // if alt is pressed, it's always Move overriding any other command.
+            bool bAlt = (Input.GetKey(KeyCode.RightAlt) ||
+                        Input.GetKey(KeyCode.LeftAlt));
+            bool bCtrl = (Input.GetKey(KeyCode.RightControl) ||
+                          Input.GetKey(KeyCode.LeftControl));
 
-        if (bAlt && !bCtrl)
-        {
-            CurrentCommand = Commands.Move;
-        }
-        else if (bCtrl && !bAlt)
-        {
-            CurrentCommand = (MapView.Instance.HoveredObject != null &&
-                              (MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Monster ||
-                               MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Human)) ? Commands.Attack : Commands.MoveAttack;
-        }
-        else
-        {
-            // get own player
-            Player ownPlayer = MapLogic.Instance.ConsolePlayer;
-            Player hisPlayer = (MapView.Instance.HoveredObject != null &&
-                                (MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Monster ||
-                                 MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Human)) ? ((IPlayerPawn)MapView.Instance.HoveredObject).GetPlayer() : null;
-            if (ownPlayer != null && hisPlayer != null)
+            if (bAlt && !bCtrl)
             {
-                if ((ownPlayer.Diplomacy[hisPlayer.ID] & DiplomacyFlags.Enemy) != 0)
-                    CurrentCommand = Commands.Attack;
+                CurrentCommand = Commands.Move;
+            }
+            else if (bCtrl && !bAlt)
+            {
+                CurrentCommand = (MapView.Instance.HoveredObject != null &&
+                                  (MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Monster ||
+                                   MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Human)) ? Commands.Attack : Commands.MoveAttack;
+            }
+            else
+            {
+                // get own player
+                Player ownPlayer = MapLogic.Instance.ConsolePlayer;
+                Player hisPlayer = (MapView.Instance.HoveredObject != null &&
+                                    (MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Monster ||
+                                     MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Human)) ? ((IPlayerPawn)MapView.Instance.HoveredObject).GetPlayer() : null;
+                if (ownPlayer != null && hisPlayer != null)
+                {
+                    if ((ownPlayer.Diplomacy[hisPlayer.ID] & DiplomacyFlags.Enemy) != 0)
+                        CurrentCommand = Commands.Attack;
+                }
             }
         }
 

@@ -654,15 +654,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             if (HoveredObject != null)
             {
                 SelectedObject = HoveredObject;
-                Commandbar.EnabledCommands = 0;
-                if ((HoveredObject is IPlayerPawn && ((IPlayerPawn)HoveredObject).GetPlayer() == MapLogic.Instance.ConsolePlayer) &&
-                    (HoveredObject.GetObjectType() == MapObjectType.Monster ||
-                        HoveredObject.GetObjectType() == MapObjectType.Human))
-                {
-                    Commandbar.EnabledCommands = (MapViewCommandbar.Commands.All & ~MapViewCommandbar.Commands.Cast);
-                    // todo enable cast if object has spells or scrolls
-                    Commandbar.CurrentCommand = MapViewCommandbar.Commands.Move;
-                }
+                Commandbar.InitDefault(SelectedObject);
             }
             else if (SelectedObject != null)
             {
@@ -679,9 +671,10 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         }
         else if (e.rawType == EventType.MouseDown && e.button == 1)
         {
-            if (Commandbar.CurrentCommand != MapViewCommandbar.Commands.Move)
+            if (SelectedObject != null && 
+                Commandbar.CurrentCommand != MapViewCommandbar.Commands.Move)
             {
-                Commandbar.CurrentCommand = MapViewCommandbar.Commands.Move;
+                Commandbar.InitDefault(SelectedObject);
             }
             else
             {
@@ -775,16 +768,24 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             else MouseCursor.SetCursor(MouseCursor.CurSelect);
         }
 
-        if (HoveredObject == null && SelectedObject is IPlayerPawn)
+        if (SelectedObject != null && SelectedObject is IPlayerPawn)
         {
             Player sp = ((IPlayerPawn)SelectedObject).GetPlayer();
             if (sp == MapLogic.Instance.ConsolePlayer)
             {
-                switch (Commandbar.CurrentCommand)
+                if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move)
                 {
-                    case MapViewCommandbar.Commands.Move:
-                        MouseCursor.SetCursor(MouseCursor.CurMove);
-                        break;
+                    if (HoveredObject != null)
+                        MouseCursor.SetCursor(MouseCursor.CurSelect);
+                    MouseCursor.SetCursor(MouseCursor.CurMove);
+                }
+                else if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Attack)
+                {
+                    MouseCursor.SetCursor(MouseCursor.CurAttack);
+                }
+                else if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.MoveAttack)
+                {
+                    MouseCursor.SetCursor(MouseCursor.CurMoveAttack);
                 }
             }
         }

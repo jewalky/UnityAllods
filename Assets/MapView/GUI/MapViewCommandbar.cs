@@ -33,7 +33,8 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
     }
 
     public Commands EnabledCommands = (Commands)0xFF;
-    public Commands CurrentCommand = 0;
+    private Commands CurrentCommandActual = 0;
+    public Commands CurrentCommand { get; private set; }
 
     public void Start()
     {
@@ -110,7 +111,7 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
                 {
                     Commands icmd = (Commands)(1 << (bY * 4 + bX));
                     if ((EnabledCommands & icmd) != 0)
-                        CurrentCommand = icmd;
+                        CurrentCommandActual = icmd;
                 }
             }
 
@@ -124,6 +125,40 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
 
     public void Update()
     {
+        CurrentCommand = CurrentCommandActual;
+
+        // check if ctrl is pressed.
+        // if alt is pressed, it's always Move overriding any other command.
+        bool bAlt = (Input.GetKey(KeyCode.RightAlt) ||
+                     Input.GetKey(KeyCode.LeftAlt));
+        bool bCtrl = (Input.GetKey(KeyCode.RightControl) ||
+                      Input.GetKey(KeyCode.LeftControl));
+
+        if (bAlt && !bCtrl)
+        {
+            CurrentCommand = Commands.Move;
+        }
+        else if (bCtrl && !bAlt)
+        {
+            CurrentCommand = (MapView.Instance.HoveredObject != null &&
+                              (MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Monster ||
+                               MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Human)) ? Commands.Attack : Commands.MoveAttack;
+        }
+        else
+        {
+            // get own player
+            Player ownPlayer = MapLogic.Instance.ConsolePlayer;
+            Player hisPlayer = (MapView.Instance.HoveredObject != null &&
+                                (MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Monster ||
+                                 MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Human)) ? ((IPlayerPawn)MapView.Instance.HoveredObject).GetPlayer() : null;
+            if (ownPlayer != null && hisPlayer != null)
+            {
+                if ((ownPlayer.Diplomacy[hisPlayer.ID] & DiplomacyFlags.Enemy) != 0)
+                    CurrentCommand = Commands.Attack;
+            }
+        }
+
+        // update visual button states
         for (int i = 0; i < 8; i++)
         {
             Commands icmd = (Commands)(1 << i);
@@ -137,6 +172,19 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
                 CommandBarDnObjects[i].SetActive(false);
                 CommandBarUpObjects[i].SetActive(false);
             }
+        }
+    }
+
+    public void InitDefault(MapObject pp)
+    {
+        EnabledCommands = 0;
+        if ((pp is IPlayerPawn && ((IPlayerPawn)pp).GetPlayer() == MapLogic.Instance.ConsolePlayer) &&
+            (pp.GetObjectType() == MapObjectType.Monster ||
+             pp.GetObjectType() == MapObjectType.Human))
+        {
+            EnabledCommands = (Commands.All & ~Commands.Cast);
+            // todo enable cast if object has spells or scrolls
+            CurrentCommandActual = Commands.Move;
         }
     }
 }

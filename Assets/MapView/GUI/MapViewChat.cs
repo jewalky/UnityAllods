@@ -75,7 +75,7 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
             switch (color)
             {
                 case Player.AllColorsSystem:
-                    color = 3;
+                    color = 2;
                     break;
                 default:
                     color = Player.AllColorsChat;

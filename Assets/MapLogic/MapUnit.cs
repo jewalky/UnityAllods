@@ -600,11 +600,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             damagecount -= damagecount * Stats.ProtectionShooting / 100;
 
         if (Stats.TrySetHealth(Stats.Health - damagecount))
-        {
-            if (NetworkManager.IsServer)
-                Server.NotifyDamageUnit(this, damagecount, (flags & DamageFlags.Astral) == 0);
             return damagecount;
-        }
 
         return 0;
     }

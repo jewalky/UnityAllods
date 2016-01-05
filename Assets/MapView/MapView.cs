@@ -658,16 +658,14 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                 SelectedObject = HoveredObject;
                 Commandbar.InitDefault(SelectedObject);
             }
-            else if (SelectedObject != null)
+            else if (SelectedObject != null && SelectedObject is IPlayerPawn && ((IPlayerPawn)SelectedObject).GetPlayer() == MapLogic.Instance.ConsolePlayer)
             {
-                if (SelectedObject is IPlayerPawn && ((IPlayerPawn)SelectedObject).GetPlayer() == MapLogic.Instance.ConsolePlayer)
+                // todo: handle commands here
+                // try to walk.
+                if (SelectedObject.GetObjectType() == MapObjectType.Monster)
                 {
-                    // try to walk.
-                    if (SelectedObject.GetObjectType() == MapObjectType.Monster)
-                    {
-                        MapUnit unit = (MapUnit)SelectedObject;
-                        Client.SendWalkUnit(unit, MouseCellX, MouseCellY);
-                    }
+                    MapUnit unit = (MapUnit)SelectedObject;
+                    Client.SendWalkUnit(unit, MouseCellX, MouseCellY);
                 }
             }
         }

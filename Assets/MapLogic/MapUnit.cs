@@ -9,6 +9,11 @@ public interface IUnitAction
     bool Process();
 }
 
+public interface IUnitState
+{
+    bool Process();
+}
+
 public enum UnitVisualState
 {
     Idle,
@@ -63,6 +68,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     }
 
     public List<IUnitAction> Actions = new List<IUnitAction>();
+    public List<IUnitState> States = new List<IUnitState>();
     public UnitVisualState VState = UnitVisualState.Idle;
     public bool AllowIdle = false;
     public int IdleFrame = 0;
@@ -72,10 +78,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     // for visual state stuff
     public float FracX = 0;
     public float FracY = 0;
-
-    // for AI
-    public int WalkX = -1;
-    public int WalkY = -1;
 
     //
     public readonly bool[,] Vision = new bool[41, 41];
@@ -150,6 +152,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Stats.ScanRange = Template.ScanRange;
 
         Actions.Add(new IdleAction(this));
+        States.Add(new IdleState(this));
+
         DoUpdateView = true;
         VState = UnitVisualState.Idle;
         CalculateVision();
@@ -347,12 +351,19 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             }
         }
     }
+
     public void AddActions(params IUnitAction[] states)
     {
         for (int i = 0; i < states.Length; i++)
             Actions.Add(states[i]);
         if (NetworkManager.IsServer)
             Server.NotifyAddUnitActions(this, states);
+    }
+
+    public void SetState(IUnitState state)
+    {
+        States.RemoveRange(1, States.Count - 1);
+        States.Add(state);
     }
 
     public int TakeDamage(DamageFlags flags, MapUnit source, int damagecount)

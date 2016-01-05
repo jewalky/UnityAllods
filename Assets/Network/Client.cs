@@ -77,8 +77,7 @@ public class Client
         {
             if (MapLogic.Instance.ConsolePlayer == unit.Player)
             {
-                unit.WalkX = x;
-                unit.WalkY = y;
+                unit.SetState(new MoveState(unit, x, y));
             }
         }
     }

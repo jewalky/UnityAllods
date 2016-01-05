@@ -60,8 +60,7 @@ namespace ServerCommands
             if (unit.Player != player)
                 return true; // do nothing
 
-            unit.WalkX = X;
-            unit.WalkY = Y;
+            unit.SetState(new MoveState(unit, X, Y));
             return true;
         }
     }

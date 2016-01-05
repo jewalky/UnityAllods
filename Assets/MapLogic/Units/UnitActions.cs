@@ -18,59 +18,8 @@ public class IdleAction : IUnitAction
     {
         if (!NetworkManager.IsClient)
         {
-            if (Unit.WalkX > 0 && Unit.WalkY > 0)
-            {
-                //Debug.LogFormat("idle state: walk to {0},{1}", Unit.WalkX, Unit.WalkY);
-                if (Unit.WalkX == Unit.X && Unit.WalkY == Unit.Y)
-                {
-                    Unit.WalkX = -1;
-                    Unit.WalkY = -1;
-                    return true;
-                }
-
-                // try to pathfind
-                List<Vector2i> path = Unit.DecideNextMove(Unit.WalkX, Unit.WalkY, true);
-                if (path == null)
-                {
-                    //Debug.LogFormat("idle state: path to {0},{1} not found", Unit.WalkX, Unit.WalkY);
-                    Unit.WalkX = -1;
-                    Unit.WalkY = -1;
-                    return true;
-                }
-
-                int sbd = 32;
-                if (sbd > path.Count) sbd = path.Count;
-                for (int i = 0; i < sbd; i++)
-                {
-                    if (!Unit.CheckWalkableForUnit(path[i].x, path[i].y, false))
-                    {
-                        // one of nodes in statically found path (up to 32 nodes ahead) is non-walkable.
-                        // here we try to build another path around it instead.
-                        // if it's not found, we continue to walk along the old path.
-                        List<Vector2i> path2 = null;
-                        int pnum = path.Count - 1;
-                        while (path2 == null && pnum >= 0)
-                        {
-                            path2 = Unit.DecideNextMove(path[pnum].x, path[pnum].y, false);
-                            pnum--;
-                        }
-
-                        if (path2 != null)
-                            path = path2;
-
-                        break;
-                    }
-                }
-
-                // if NEXT node is not walkable, we drop into idle state.
-                if (Unit.CheckWalkableForUnit(path[0].x, path[0].y, false))
-                {
-                    // next path node found
-                    // notify clients
-                    Unit.AddActions(new MoveAction(Unit, path[0].x, path[0].y), new RotateAction(Unit, Unit.FaceCell(path[0].x, path[0].y)));
-                    return true;
-                }
-            }
+            while (Unit.States.Count > 0 && !Unit.States.Last().Process())
+                Unit.States.RemoveAt(Unit.States.Count - 1);
         }
 
         if (Unit.VState != UnitVisualState.Idle && (!NetworkManager.IsClient || Unit.AllowIdle))

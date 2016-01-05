@@ -281,8 +281,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         {
             Renderer.enabled = true;
             ShadowRenderer.enabled = bAlive;
-            if (HpRenderer != null) HpRenderer.enabled = bAlive;
-            if (PlayerNickObject != null) PlayerNickObject.SetActive(bAlive);
+            if (HpRenderer != null) HpRenderer.enabled = LogicUnit.IsAlive;
+            if (PlayerNickObject != null) PlayerNickObject.SetActive(LogicUnit.IsAlive);
             oldVisibility = true;
             return;
         }
@@ -297,8 +297,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         {
             Renderer.enabled = true;
             ShadowRenderer.enabled = bAlive;
-            if (HpRenderer != null) HpRenderer.enabled = bAlive;
-            if (PlayerNickObject != null) PlayerNickObject.SetActive(bAlive);
+            if (HpRenderer != null) HpRenderer.enabled = LogicUnit.IsAlive;
+            if (PlayerNickObject != null) PlayerNickObject.SetActive(LogicUnit.IsAlive);
 
             Images.AllodsSpriteSeparate sprites = LogicUnit.Class.File.File;
 

@@ -242,9 +242,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             if (!NetworkManager.IsClient)
                 AddActions(new DeathAction(this));
             IsDying = true;
-            UnlinkFromWorld();
         }
-        else if (Stats.Health > 0)
+        else if (Stats.Health > 0 && (IsDying || !IsAlive))
         {
             IsDying = false;
             IsAlive = true;
@@ -255,18 +254,20 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         {
             if (MapLogic.Instance.LevelTime % 40 == 0)
             {
-                if (Stats.TrySetHealth(Stats.Health - 1))
+                if (Stats.TrySetHealth(Stats.Health - 1) && !NetworkManager.IsClient)
                     Server.NotifyDamageUnit(this, 1, false);
-                if (Stats.Health <= -10)
+            }
+
+            if (Stats.Health <= -10)
+            {
+                IsAlive = false;
+                UnlinkFromWorld();
+                if (Player == MapLogic.Instance.ConsolePlayer &&
+                    Player != null && Player.Avatar == this)
                 {
-                    IsAlive = false;
-                    if (Player == MapLogic.Instance.ConsolePlayer &&
-                        Player != null && Player.Avatar == this)
-                    {
-                        //
-                        MapViewChat.Instance.AddChatMessage(Player.AllColorsSystem, Locale.Patch[68]);
-                        MapViewChat.Instance.AddChatMessage(Player.AllColorsSystem, Locale.Patch[69]); // your character died. press space to continue
-                    }
+                    //
+                    MapViewChat.Instance.AddChatMessage(Player.AllColorsSystem, Locale.Patch[68]);
+                    MapViewChat.Instance.AddChatMessage(Player.AllColorsSystem, Locale.Patch[69]); // your character died. press space to continue
                 }
             }
         }

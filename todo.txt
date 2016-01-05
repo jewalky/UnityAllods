@@ -5,6 +5,8 @@
 ~ fix: CHECK FOR LEFT MOUSE CLICKS everywhere, not just mousedown
 - fix: unit pathfinding
 - fix: respawn SelectedObject
++ fix: dying unit should NOT be unlinked
++ fix: dead unit respawns with dead sprite
 
 + add: network stats under FPS meter
 + add: unit AI based on states (action-like entity, only with more general approach)

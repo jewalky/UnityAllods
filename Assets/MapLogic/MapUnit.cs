@@ -614,7 +614,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         bool sourceIgnoresArmor = source != null && source.Template.IsIgnoringArmor;
         if ((flags & DamageFlags.PhysicalDamage) != 0 && !sourceIgnoresArmor)
         {
-            int ownChance = Stats.Defence;
+            int ownChance = (int)(1.25f * Stats.Defence);
             int hisChance = (source != null) ? 5+source.Stats.ToHit : ownChance;
 
             if (ownChance > hisChance)

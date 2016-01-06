@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
-using Object = UnityEngine.Object;
 #if UNITY_EDITOR
 using UnityEditor;
 
@@ -45,16 +44,16 @@ public partial class Utils
         MeshFilter mf = o.GetComponent<MeshFilter>();
         if (mf != null)
         {
-            Object.DestroyImmediate(mf.mesh, true);
-            Object.DestroyImmediate(mf.sharedMesh, true);
+            GameObject.DestroyImmediate(mf.mesh, true);
+            GameObject.DestroyImmediate(mf.sharedMesh, true);
         }
         MeshRenderer mr = o.GetComponent<MeshRenderer>();
         if (mr != null)
         {
-            Object.DestroyImmediate(mr.material, true);
-            Object.DestroyImmediate(mr.sharedMaterial, true);
+            GameObject.DestroyImmediate(mr.material, true);
+            GameObject.DestroyImmediate(mr.sharedMaterial, true);
         }
-        Object.DestroyImmediate(o, true);
+        GameObject.DestroyImmediate(o, true);
     }
 
     public static T CreateObjectWithScript<T>() where T : Component

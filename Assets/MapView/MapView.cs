@@ -4,13 +4,13 @@ using System;
 
 public class MapView : MonoBehaviour, IUiEventProcessor
 {
-    private static MapView _instance = null;
+    private static MapView _Instance = null;
     public static MapView Instance
     {
         get
         {
-            if (_instance == null) _instance = GameManager.Instance.MapView;
-            return _instance;
+            if (_Instance == null) _Instance = GameManager.Instance.MapView;
+            return _Instance;
         }
     }
     

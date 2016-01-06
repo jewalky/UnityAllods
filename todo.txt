@@ -3,11 +3,11 @@
 + fix: minimap doesnt work after map switch
 + fix: disconnected player leaves terrain lock behind
 ~ fix: CHECK FOR LEFT MOUSE CLICKS everywhere, not just mousedown
-- fix: unit pathfinding
++ fix: unit pathfinding
 + fix: respawn SelectedObject
 + fix: dying unit should NOT be unlinked
 + fix: dead unit respawns with dead sprite
-- fix: ground units (any units with attack range of <= 1) shouldn't be able to attack air units
++ fix: ground units (any units with attack range of <= 1) shouldn't be able to attack air units
 
 + add: network stats under FPS meter
 + add: unit AI based on states (action-like entity, only with more general approach)

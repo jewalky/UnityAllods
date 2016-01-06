@@ -293,12 +293,6 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         if (HpMat1 != null) HpMat1.color = new Color(1, 1, 1, selected ? 1f : 0.5f);
         if (HpMat2 != null) HpMat2.color = new Color(1, 1, 1, selected ? 1f : 0.5f);
 
-        if (!LogicUnit.IsAlive)
-        {
-            if (HpRenderer != null) HpRenderer.enabled = false;
-            if (PlayerNickObject != null) PlayerNickObject.SetActive(false);
-        }
-
         if (LogicUnit.DoUpdateView)
         {
             Renderer.enabled = true;

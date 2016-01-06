@@ -229,7 +229,7 @@ public class AttackAction : IUnitAction
             if (Speed * Unit.AttackTime >= Unit.Class.AttackFrames[Unit.AttackFrame].Time)
             {
                 Unit.AttackFrame = ++Unit.AttackFrame;
-                if (Unit.AttackFrame > Unit.Class.AttackPhases)
+                if (Unit.AttackFrame >= Unit.Class.AttackPhases)
                     Unit.AttackFrame = Unit.Class.AttackPhases - 1;
                 Unit.AttackTime = 0;
                 Unit.DoUpdateView = true;

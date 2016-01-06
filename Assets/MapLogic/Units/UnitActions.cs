@@ -164,13 +164,14 @@ public class MoveAction : IUnitAction
             Unit.VState = UnitVisualState.Moving;
             if (Unit.Class.MovePhases > 1)
             {
-                Unit.MoveTime++;
                 if (MoveSpeed * Unit.MoveTime >= Unit.Class.MoveFrames[Unit.MoveFrame].Time)
                 {
                     Unit.MoveFrame = ++Unit.MoveFrame % Unit.Class.MovePhases;
                     Unit.MoveTime = 0;
                     Unit.DoUpdateView = true;
                 }
+
+                Unit.MoveTime++;
             }
             else
             {
@@ -225,15 +226,14 @@ public class AttackAction : IUnitAction
 
         if (Unit.Class.AttackPhases > 1)
         {
-            Unit.AttackTime++;
             if (Speed * Unit.AttackTime >= Unit.Class.AttackFrames[Unit.AttackFrame].Time)
             {
-                Unit.AttackFrame = ++Unit.AttackFrame;
-                if (Unit.AttackFrame >= Unit.Class.AttackPhases)
-                    Unit.AttackFrame = Unit.Class.AttackPhases - 1;
+                Unit.AttackFrame = ++Unit.AttackFrame % Unit.Class.AttackPhases;
                 Unit.AttackTime = 0;
                 Unit.DoUpdateView = true;
             }
+
+            Unit.AttackTime++;
         }
         else
         {

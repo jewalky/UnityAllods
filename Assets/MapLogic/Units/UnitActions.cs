@@ -219,7 +219,7 @@ public class AttackAction : IUnitAction
             Unit.AttackFrame = 0;
             Unit.AttackTime = 0;
             Unit.DoUpdateView = true;
-            Speed = (float)Unit.Stats.Speed / 50;
+            Speed = 1;
         }
 
         if (Unit.Class.AttackPhases > 1)

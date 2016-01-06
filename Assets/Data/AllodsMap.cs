@@ -19,9 +19,9 @@ public class TerrainLighting
         Result = new byte[w * h];
     }
 
-    public void Calculate(sbyte[] heights, double SolarAngle)
+    public void Calculate(sbyte[] heights, double solarAngle)
     {
-        double sunang = SolarAngle * (Math.PI / 180.0);
+        double sunang = solarAngle * (Math.PI / 180.0);
 
         double sunx = Math.Cos(sunang) * 1.0;
         double suny = Math.Sin(sunang) * 1.0;
@@ -40,17 +40,17 @@ public class TerrainLighting
                 }
 
                 // 
-                double p1x = (double)x * 32.0;
-                double p1y = (double)y * 32.0;
-                double p1z = (double)heights[y * Width + x];
+                double p1x = x * 32.0;
+                double p1y = y * 32.0;
+                double p1z = heights[y * Width + x];
 
-                double p2x = (double)x * 32.0 + 32.0;
-                double p2y = (double)y * 32.0;
-                double p2z = (double)heights[y * Width + (x + 1)];
+                double p2x = x * 32.0 + 32.0;
+                double p2y = y * 32.0;
+                double p2z = heights[y * Width + (x + 1)];
 
-                double p3x = (double)x * 32.0;
-                double p3y = (double)y * 32.0 + 32.0;
-                double p3z = (double)heights[(y + 1) * Width + x];
+                double p3x = x * 32.0;
+                double p3y = y * 32.0 + 32.0;
+                double p3z = heights[(y + 1) * Width + x];
 
                 //
                 double ux = p2x - p1x;

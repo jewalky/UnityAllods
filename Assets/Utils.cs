@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using Object = UnityEngine.Object;
 #if UNITY_EDITOR
 using UnityEditor;
-using System.Diagnostics;
+
 #endif
 
 public partial class Utils
@@ -47,19 +45,19 @@ public partial class Utils
         MeshFilter mf = o.GetComponent<MeshFilter>();
         if (mf != null)
         {
-            GameObject.DestroyImmediate(mf.mesh, true);
-            GameObject.DestroyImmediate(mf.sharedMesh, true);
+            Object.DestroyImmediate(mf.mesh, true);
+            Object.DestroyImmediate(mf.sharedMesh, true);
         }
         MeshRenderer mr = o.GetComponent<MeshRenderer>();
         if (mr != null)
         {
-            GameObject.DestroyImmediate(mr.material, true);
-            GameObject.DestroyImmediate(mr.sharedMaterial, true);
+            Object.DestroyImmediate(mr.material, true);
+            Object.DestroyImmediate(mr.sharedMaterial, true);
         }
-        GameObject.DestroyImmediate(o, true);
+        Object.DestroyImmediate(o, true);
     }
 
-    public static T CreateObjectWithScript<T>() where T : UnityEngine.Component
+    public static T CreateObjectWithScript<T>() where T : Component
     {
         GameObject go = CreateObject();
         go.name = typeof(T).Name+"$Object";
@@ -84,8 +82,7 @@ public partial class Utils
     {
         Renderer prenderer = parent.GetComponent<Renderer>();
         if (prenderer != null) prenderer.enabled = enabled;
-        Renderer[] renderers;
-        renderers = parent.GetComponentsInChildren<Renderer>();
+        Renderer[] renderers = parent.GetComponentsInChildren<Renderer>();
         foreach (Renderer renderer in renderers)
             renderer.enabled = enabled;
     }
@@ -201,7 +198,7 @@ public class ScriptBatch
     {
         // Get filename.
         string path = "ServerBuild";
-        string[] levels = new string[] { "Assets/Allods.unity" };
+        string[] levels = { "Assets/Allods.unity" };
         // Build player.
         BuildPipeline.BuildPlayer(levels, path + "/AllodsServer.x86", BuildTarget.StandaloneLinux, BuildOptions.EnableHeadlessMode);
         // copy libs
@@ -231,7 +228,7 @@ public class ScriptBatch
     {
         // Get filename.
         string path = "MacBuild";
-        string[] levels = new string[] { "Assets/Allods.unity" };
+        string[] levels = { "Assets/Allods.unity" };
         // Build player.
         BuildPipeline.BuildPlayer(levels, path + "/Allods.app", BuildTarget.StandaloneOSXIntel, BuildOptions.None);
         // copy libs
@@ -247,7 +244,7 @@ public class ScriptBatch
     {
         // Get filename.
         string path = "ClientBuild";
-        string[] levels = new string[] { "Assets/Allods.unity" };
+        string[] levels = { "Assets/Allods.unity" };
         // Build player.
         BuildPipeline.BuildPlayer(levels, path + "/Allods.exe", BuildTarget.StandaloneWindows, BuildOptions.None);
         // Then put some DLLs in it

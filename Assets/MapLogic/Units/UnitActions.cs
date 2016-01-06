@@ -81,9 +81,10 @@ public class RotateAction : IUnitAction
     private int CheckAngle(int a1, int a2)
     {
         int a = a2 - a1;
-        a = a += (a > 180) ? -360 : (a < -180) ? 360 : 0;
+        a = a + ((a > 180) ? -360 : (a < -180) ? 360 : 0);
         return a;
     }
+
 
     public virtual bool Process()
     {

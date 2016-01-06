@@ -1,18 +1,16 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
-using System.Threading;
-using System.Collections.Generic;
 
 public class MapView : MonoBehaviour, IUiEventProcessor
 {
-    private static MapView _Instance = null;
+    private static MapView _instance = null;
     public static MapView Instance
     {
         get
         {
-            if (_Instance == null) _Instance = GameManager.Instance.MapView;
-            return _Instance;
+            if (_instance == null) _instance = GameManager.Instance.MapView;
+            return _instance;
         }
     }
     
@@ -135,8 +133,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             }
             MapTiles.filterMode = FilterMode.Point;
             MapRects = MapTiles.PackTextures(tiles_tmp, 1);
-            for (int i = 0; i < tiles_tmp.Length; i++)
-                GameObject.DestroyImmediate(tiles_tmp[i]);
+            foreach (Texture2D tex in tiles_tmp)
+                DestroyImmediate(tex);
         }
 
         MapLogic.Instance.InitFromFile(filename);
@@ -263,7 +261,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                 short h1 = nodes[lx, ly].Height;
                 short h2 = (lx + 1 < mw) ? nodes[lx + 1, ly].Height : (short)0;
                 short h3 = (ly + 1 < mh) ? nodes[lx, ly + 1].Height : (short)0;
-                short h4 = (lx + 1 < mw && ly + 1 < mh) ? nodes[lx + 1, ly + 1].Height : (short)0;
+                //short h4 = (lx + 1 < mw && ly + 1 < mh) ? nodes[lx + 1, ly + 1].Height : (short)0;
                 gqv[gpp++] = new Vector3(lx * 32, ly * 32 - h1, 0);
                 gqv[gpp++] = new Vector3(lx * 32 + 33, ly * 32 - h2, 0);
                 gqv[gpp++] = new Vector3(lx * 32, ly * 32 + 32 - h3 + 1f, 0);
@@ -297,13 +295,6 @@ public class MapView : MonoBehaviour, IUiEventProcessor
 
     Mesh CreatePartialMesh(Rect rec, bool inverted)
     {
-        int x = (int)rec.x;
-        int y = (int)rec.y;
-        int w = (int)rec.width;
-        int h = (int)rec.height;
-        int mw = MapLogic.Instance.Width;
-        int mh = MapLogic.Instance.Height;
-
         // generate mesh
         Mesh mesh = new Mesh();
         UpdatePartialMesh(mesh, rec, inverted);
@@ -330,10 +321,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         MapNode[,] nodes = MapLogic.Instance.Nodes;
 
         Vector3[] qv = new Vector3[4 * w * h];
-        Color[] qc = new Color[4 * w * h];
 
         int pp = 0;
-        int ppc = 0;
         for (int ly = y; ly < y + h; ly++)
         {
             for (int lx = x; lx < x + w; lx++)
@@ -346,15 +335,10 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                 qv[pp++] = new Vector3(lx * 32 + 33, ly * 32 - h2, 0);
                 qv[pp++] = new Vector3(lx * 32 + 33, ly * 32 + 32 - h4 + 1f, 0);
                 qv[pp++] = new Vector3(lx * 32, ly * 32 + 32 - h3 + 1f, 0);
-                qc[ppc++] = new Color(1, 1, 1, 1);
-                qc[ppc++] = new Color(1, 1, 1, 1);
-                qc[ppc++] = new Color(1, 1, 1, 1);
-                qc[ppc++] = new Color(1, 1, 1, 1);
             }
         }
 
         mesh.vertices = qv;
-        mesh.colors = qc;
 
         int[] qt = new int[6 * w * h];
         if (!inverted)
@@ -414,8 +398,6 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         int y = (int)rec.y;
         int w = (int)rec.width;
         int h = (int)rec.height;
-        int mw = MapLogic.Instance.Width;
-        int mh = MapLogic.Instance.Height;
 
         Vector2[] quv = new Vector2[4 * w * h];
         int ppt = 0;
@@ -446,10 +428,11 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                 }
 
                 Rect tileBaseRect = MapRects[tilenum];
-                quv[ppt++] = new Vector2(tileBaseRect.xMin, tileBaseRect.yMin + unit32y * tilein);
-                quv[ppt++] = new Vector2(tileBaseRect.xMax, tileBaseRect.yMin + unit32y * tilein);
-                quv[ppt++] = new Vector2(tileBaseRect.xMax, tileBaseRect.yMin + unit32y * tilein + unit32y);
-                quv[ppt++] = new Vector2(tileBaseRect.xMin, tileBaseRect.yMin + unit32y * tilein + unit32y);
+                float tileY = tileBaseRect.yMin + unit32y * tilein;
+                quv[ppt++] = new Vector2(tileBaseRect.xMin, tileY);
+                quv[ppt++] = new Vector2(tileBaseRect.xMax, tileY);
+                quv[ppt++] = new Vector2(tileBaseRect.xMax, tileY + unit32y);
+                quv[ppt++] = new Vector2(tileBaseRect.xMin, tileY + unit32y);
             }
         }
 
@@ -520,7 +503,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
 
             float sx = _ScrollX;
             float sy = _ScrollY;
-            this.transform.position = new Vector3((-sx * 32), (-sy * 32), 0);
+            transform.position = new Vector3((-sx * 32), (-sy * 32), 0);
 
             MapLogic.Instance.CalculateDynLighting(); // this is needed due to the fact that we calculate dynlights based on viewrect
         }
@@ -528,11 +511,11 @@ public class MapView : MonoBehaviour, IUiEventProcessor
 
     public bool GridEnabled = false;
 
-    // Update is called once per frame
     int ScrollDeltaX = 0;
     int ScrollDeltaY = 0;
     int WaterAnimFrame = 0;
     float scrollTimer = 0;
+
     void Update()
     {
         MiniMap.gameObject.SetActive(MapLogic.Instance.IsLoaded);

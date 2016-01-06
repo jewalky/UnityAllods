@@ -162,8 +162,6 @@ public class Font
 
         string[] wrapped = Wrap(text2, width, wrapping);
 
-        int vx = 0;
-        realheight = 0;
         // count of quads in mesh == count of characters
         int mesh_quadcnt = 0;
         for (int i = 0; i < wrapped.Length; i++)

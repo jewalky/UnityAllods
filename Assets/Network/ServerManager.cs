@@ -284,7 +284,7 @@ public class ServerManager
         Listener = null;
     }
 
-    private static byte[] RecBuffer = new byte[4096];
+    
     public static void Update()
     {
         if (!NetworkManager.IsServer)

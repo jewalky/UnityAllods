@@ -148,7 +148,6 @@ public class MapStructure : MapObject, IDynlight, IPlayerPawn, IVulnerable, IDis
         if ((flags & DamageFlags.TerrainDamage) == 0)
             return 0;
 
-        int oldHealth = Health;
         Health -= count;
         return count;
     }

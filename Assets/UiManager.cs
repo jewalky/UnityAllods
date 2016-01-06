@@ -102,7 +102,7 @@ public class UiManager : MonoBehaviour
         }
 
         // also fake mouse event for each processor
-        Vector2 mPos = Utils.GetMousePosition();
+        //Vector2 mPos = Utils.GetMousePosition();
         /*if (mPos.x != lastMouseX ||
             mPos.y != lastMouseY)*/
         {
@@ -150,15 +150,7 @@ public class UiManager : MonoBehaviour
 
             // check if object has any visible parts
             List<Renderer> renderers = mb.gameObject.GetComponentsInChildren<Renderer>().Concat(mb.gameObject.GetComponents<Renderer>()).ToList();
-            bool isEnabled = false;
-            foreach (Renderer renderer in renderers)
-            {
-                if (renderer.enabled)
-                {
-                    isEnabled = true;
-                    break;
-                }
-            }
+            bool isEnabled = renderers.Any(render => render.enabled);
 
             ProcessorsEnabled.Add(isEnabled);
             if (isEnabled)

@@ -472,7 +472,6 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 actualFrame += LogicUnit.DeathFrame;
             }
 
-            int cnt = LogicUnit.Width * LogicUnit.Height;
             Vector2 xP = MapView.Instance.MapToScreenCoords(LogicUnit.X + LogicUnit.FracX + (float)LogicUnit.Width / 2,
                                                             LogicUnit.Y + LogicUnit.FracY + (float)LogicUnit.Height / 2,
                                                             1, 1);
@@ -602,7 +601,6 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         {
             if (InfoObject == null)
             {
-                int wd = 176;
                 InfoObject = Utils.CreateObject();
                 InfoObject.name = "MapViewUnit$InfoText";
 

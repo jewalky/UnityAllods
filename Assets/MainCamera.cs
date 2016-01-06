@@ -132,7 +132,7 @@ public class MainCamera : MonoBehaviour {
         {
             try
             {
-                DirectoryInfo info = Directory.CreateDirectory("screenshots");
+                Directory.CreateDirectory("screenshots");
             }
             catch (IOException)
             {

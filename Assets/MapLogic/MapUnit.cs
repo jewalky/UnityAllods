@@ -255,12 +255,17 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             if (MapLogic.Instance.LevelTime % 40 == 0)
             {
                 if (Stats.TrySetHealth(Stats.Health - 1) && !NetworkManager.IsClient)
+                {
                     Server.NotifyDamageUnit(this, 1, false);
+                    DoUpdateView = true;
+                    DoUpdateInfo = true;
+                }
             }
 
             if (Stats.Health <= -10)
             {
                 IsAlive = false;
+                DoUpdateView = true;
                 UnlinkFromWorld();
                 if (Player == MapLogic.Instance.ConsolePlayer &&
                     Player != null && Player.Avatar == this)
@@ -352,6 +357,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         if (!CheckWalkableForUnit(targetX, targetY, staticOnly))
             return null;
 
+        // init astar searcher
         if (AstarSearcherH == null)
             AstarSearcherH = new AstarHelper(this);
         if (AstarSearcher == null)
@@ -398,6 +404,18 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             }
         }
 
+        return true;
+    }
+
+    public float GetAttackRange()
+    {
+        return 1;
+    }
+
+    public bool CheckCanAttack(MapUnit unit)
+    {
+        if (unit.Template.IsFlying && !Template.IsFlying && GetAttackRange() == 1)
+            return false;
         return true;
     }
 
@@ -510,17 +528,17 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         ItemsBody[(int)slot] = item;
     }
 
-    public Vector2i GetClosestPointTo(MapUnit other)
+    public Vector2i GetClosestPointTo(int x, int y)
     {
-        Vector2i cPt = new Vector2i(other.X, other.Y);
+        Vector2i cPt = new Vector2i(x, y);
         int cX = 256;
         int cY = 256;
-        for (int ly = other.Y; ly < other.Y + other.Height; ly++)
+        for (int ly = Y; ly < Y + Height; ly++)
         {
-            for (int lx = other.X; lx < other.X + other.Width; lx++)
+            for (int lx = X; lx < X + Width; lx++)
             {
-                int xDist = Math.Abs(lx - X);
-                int yDist = Math.Abs(ly - Y);
+                int xDist = Math.Abs(x - lx);
+                int yDist = Math.Abs(y - ly);
                 if (xDist < cX || yDist < cY)
                 {
                     cX = xDist;
@@ -531,13 +549,47 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         }
 
         return cPt;
+
+    }
+
+    public Vector2i GetClosestPointTo(MapUnit other)
+    {
+        return GetClosestPointTo(other.X, other.Y);
     }
 
     public float GetClosestDistanceTo(MapUnit other)
     {
-        Vector2i clPoint = GetClosestPointTo(other);
-        Vector2i clCenter = new Vector2i(X + Width / 2, Y + Height / 2);
-        return (clCenter - clPoint).magnitude;
+        if (other == this)
+            return 0;
+
+        Vector2i cPt1 = new Vector2i(X, Y);
+        Vector2i cPt2 = new Vector2i(other.X, other.Y);
+        int cX = 256;
+        int cY = 256;
+        for (int ly = Y; ly < Y + Height; ly++)
+        {
+            for (int lx = X; lx < X + Width; lx++)
+            {
+                for (int lly = other.Y; lly < other.Y + other.Height; lly++)
+                {
+                    for (int llx = other.X; llx < other.X + other.Width; llx++)
+                    {
+                        int xDist = Math.Abs(llx - lx);
+                        int yDist = Math.Abs(lly - ly);
+
+                        if (xDist < cX || yDist < cY)
+                        {
+                            cPt1 = new Vector2i(lx, ly);
+                            cPt2 = new Vector2i(llx, lly);
+                            cX = xDist;
+                            cY = yDist;
+                        }
+                    }
+                }
+            }
+        }
+
+        return (cPt1 - cPt2).magnitude;
     }
 
     public void Respawn(int x, int y)

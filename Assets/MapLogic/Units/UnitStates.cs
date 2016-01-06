@@ -52,6 +52,35 @@ public class MoveState : IUnitState
     // made static because it's also used by other actions
     public static bool TryWalkTo(MapUnit Unit, int WalkX, int WalkY)
     {
+        // check if target is walkable for us (statically)
+        if (!Unit.CheckWalkableForUnit(WalkX, WalkY, false))
+        {
+            List<Vector2i> switchNodes = new List<Vector2i>();
+            for (int ly = WalkY - Unit.Height; ly < WalkY + Unit.Height; ly++)
+                for (int lx = WalkX - Unit.Width; lx < WalkX + Unit.Width; lx++)
+                    if (Unit.CheckWalkableForUnit(lx, ly, false))
+                        switchNodes.Add(new Vector2i(lx, ly));
+
+            switchNodes.Sort((a, b) => 
+            {
+                Vector2i own1 = Unit.GetClosestPointTo(a.x, a.y);
+                Vector2i own2 = Unit.GetClosestPointTo(b.x, b.y);
+                float d1 = (a - own1).magnitude;
+                float d2 = (b - own2).magnitude;
+                if (d1 > d2)
+                    return 1;
+                else if (d1 < d2)
+                    return -1;
+                return 0;
+            });
+
+            if (switchNodes.Count <= 0)
+                return false;
+
+            WalkX = switchNodes[0].x;
+            WalkY = switchNodes[0].y;
+        }
+
         if (WalkX == Unit.X && WalkY == Unit.Y)
             return true;
 
@@ -128,13 +157,16 @@ public class AttackState : IUnitState
         if (TargetUnit == Unit || !TargetUnit.IsAlive || !MapLogic.Instance.Objects.Contains(TargetUnit))
             return false;
 
+        if (!Unit.CheckCanAttack(TargetUnit))
+            return false;
+
         // assume melee attack right now
         // check if in direct proximity
         if (Unit.GetClosestDistanceTo(TargetUnit) <= 1.5)
         {
             // in direct proximity!
             // 
-            Vector2i enemyCell = Unit.GetClosestPointTo(TargetUnit);
+            Vector2i enemyCell = TargetUnit.GetClosestPointTo(Unit);
             int angleNeeded = Unit.FaceCell(enemyCell.x, enemyCell.y);
             if (Unit.Angle != angleNeeded)
             {

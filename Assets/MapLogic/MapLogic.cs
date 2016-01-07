@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using System;
 
@@ -517,14 +518,9 @@ class MapLogic
 
     public Player GetNetPlayer(ServerClient client)
     {
-        foreach (Player player in Players)
-        {
-            if (player.NetClient == client)
-                return player;
-        }
-
-        return null;
+        return Players.FirstOrDefault(player => player.NetClient == client);
     }
+
 
     public void AddNetPlayer(Player p, bool silent)
     {

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using System.Collections.Generic;
 
 public class IdleState : IUnitState
 {
@@ -21,15 +17,13 @@ public class IdleState : IUnitState
         bool doFullAI = (Unit.Player.Flags & PlayerFlags.AI) != 0 &&
                         (Unit.Player.Flags & PlayerFlags.Dormant) == 0;
 
-        if (doFullAI)
+        if (!doFullAI) return true;
+        // rotate randomly
+        if ((UnityEngine.Random.Range(0, 256) < 1) &&
+            Unit.Actions.Count == 1) // unit is idle and 1/256 chance returns true
         {
-            // rotate randomly
-            if ((UnityEngine.Random.Range(0, 256) < 1) &&
-                Unit.Actions.Count == 1) // unit is idle and 1/256 chance returns true
-            {
-                int angle = UnityEngine.Random.Range(0, 36) * 10;
-                Unit.AddActions(new RotateAction(Unit, angle));
-            }
+            int angle = UnityEngine.Random.Range(0, 36) * 10;
+            Unit.AddActions(new RotateAction(Unit, angle));
         }
 
         return true;
@@ -50,21 +44,21 @@ public class MoveState : IUnitState
     }
 
     // made static because it's also used by other actions
-    public static bool TryWalkTo(MapUnit Unit, int WalkX, int WalkY)
+    public static bool TryWalkTo(MapUnit unit, int walkX, int walkY)
     {
         // check if target is walkable for us (statically)
-        if (!Unit.CheckWalkableForUnit(WalkX, WalkY, false))
+        if (!unit.CheckWalkableForUnit(walkX, walkY, false))
         {
             List<Vector2i> switchNodes = new List<Vector2i>();
-            for (int ly = WalkY - Unit.Height; ly < WalkY + Unit.Height; ly++)
-                for (int lx = WalkX - Unit.Width; lx < WalkX + Unit.Width; lx++)
-                    if (Unit.CheckWalkableForUnit(lx, ly, false))
+            for (int ly = walkY - unit.Height; ly < walkY + unit.Height; ly++)
+                for (int lx = walkX - unit.Width; lx < walkX + unit.Width; lx++)
+                    if (unit.CheckWalkableForUnit(lx, ly, false))
                         switchNodes.Add(new Vector2i(lx, ly));
 
             switchNodes.Sort((a, b) => 
             {
-                Vector2i own1 = Unit.GetClosestPointTo(a.x, a.y);
-                Vector2i own2 = Unit.GetClosestPointTo(b.x, b.y);
+                Vector2i own1 = unit.GetClosestPointTo(a.x, a.y);
+                Vector2i own2 = unit.GetClosestPointTo(b.x, b.y);
                 float d1 = (a - own1).magnitude;
                 float d2 = (b - own2).magnitude;
                 if (d1 > d2)
@@ -77,15 +71,15 @@ public class MoveState : IUnitState
             if (switchNodes.Count <= 0)
                 return false;
 
-            WalkX = switchNodes[0].x;
-            WalkY = switchNodes[0].y;
+            walkX = switchNodes[0].x;
+            walkY = switchNodes[0].y;
         }
 
-        if (WalkX == Unit.X && WalkY == Unit.Y)
+        if (walkX == unit.X && walkY == unit.Y)
             return true;
 
         // try to pathfind
-        List<Vector2i> path = Unit.DecideNextMove(WalkX, WalkY, true);
+        List<Vector2i> path = unit.DecideNextMove(walkX, walkY, true);
         if (path == null)
             return false;
 
@@ -93,7 +87,7 @@ public class MoveState : IUnitState
         if (sbd > path.Count) sbd = path.Count;
         for (int i = 0; i < sbd; i++)
         {
-            if (!Unit.CheckWalkableForUnit(path[i].x, path[i].y, false))
+            if (!unit.CheckWalkableForUnit(path[i].x, path[i].y, false))
             {
                 // one of nodes in statically found path (up to 32 nodes ahead) is non-walkable.
                 // here we try to build another path around it instead.
@@ -102,7 +96,7 @@ public class MoveState : IUnitState
                 int pnum = path.Count - 1;
                 while (path2 == null && pnum >= 0)
                 {
-                    path2 = Unit.DecideNextMove(path[pnum].x, path[pnum].y, false);
+                    path2 = unit.DecideNextMove(path[pnum].x, path[pnum].y, false);
                     pnum--;
                 }
 
@@ -114,11 +108,11 @@ public class MoveState : IUnitState
         }
 
         // if NEXT node is not walkable, we drop into idle state.
-        if (Unit.CheckWalkableForUnit(path[0].x, path[0].y, false))
+        if (unit.CheckWalkableForUnit(path[0].x, path[0].y, false))
         {
             // next path node found
             // notify clients
-            Unit.AddActions(new MoveAction(Unit, path[0].x, path[0].y), new RotateAction(Unit, Unit.FaceCell(path[0].x, path[0].y)));
+            unit.AddActions(new MoveAction(unit, path[0].x, path[0].y), new RotateAction(unit, unit.FaceCell(path[0].x, path[0].y)));
             return true;
         }
 

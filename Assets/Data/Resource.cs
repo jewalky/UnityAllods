@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.IO;
 using System.Security.Cryptography;
 
@@ -25,17 +23,17 @@ public class ResourceManager
     //  helper methods
     // =================================
     // 
-    private static bool TreeTraverse(FileStream fs, BinaryReader fsb, ResourceNode node, uint offset, uint first, uint last)
+    private static bool TreeTraverse(FileStream fs, BinaryReader br, ResourceNode node, uint offset, uint first, uint last)
     {
         for (uint i = first; i < last; i++)
         {
             fs.Seek(offset + 0x20 * i, SeekOrigin.Begin);
 
-            uint r_junk = fsb.ReadUInt32();
-            uint r_offset = fsb.ReadUInt32();
-            uint r_size = fsb.ReadUInt32();
-            uint r_type = fsb.ReadUInt32();
-            string r_name = Core.UnpackByteString(866, fsb.ReadBytes(16));
+            br.BaseStream.Position += 4;  // uint r_junk = fsb.ReadUInt32();
+            uint r_offset = br.ReadUInt32();
+            uint r_size = br.ReadUInt32();
+            uint r_type = br.ReadUInt32();
+            string r_name = Core.UnpackByteString(866, br.ReadBytes(16));
 
             ResourceNode subnode = new ResourceNode();
             subnode.IsRoot = false;
@@ -48,7 +46,7 @@ public class ResourceManager
                 subnode.Offset = 0;
                 subnode.Size = 0;
                 subnode.Children = new ResourceNode[r_size];
-                if (!TreeTraverse(fs, fsb, subnode, offset, r_offset, r_offset + r_size))
+                if (!TreeTraverse(fs, br, subnode, offset, r_offset, r_offset + r_size))
                     return false;
             }
             else if (r_type == 0) // file
@@ -72,19 +70,19 @@ public class ResourceManager
         try
         {
             FileStream fs = File.OpenRead(filename);
-            BinaryReader fsb = new BinaryReader(fs);
+            BinaryReader br = new BinaryReader(fs);
 
-            if (fsb.ReadUInt32() != ResourceSignature)
+            if (br.ReadUInt32() != ResourceSignature)
             {
                 fs.Close();
                 return false;
             }
-
-            uint root_offset = fsb.ReadUInt32();
-            uint root_size = fsb.ReadUInt32();
-            uint res_flags = fsb.ReadUInt32();
-            uint fat_offset = fsb.ReadUInt32();
-            uint fat_size = fsb.ReadUInt32();
+            
+            uint root_offset = br.ReadUInt32();
+            uint root_size = br.ReadUInt32();
+            br.BaseStream.Position += 4;  // uint res_flags = br.ReadUInt32();
+            uint fat_offset = br.ReadUInt32();
+            br.BaseStream.Position += 4;  // uint fat_size = br.ReadUInt32();
 
             string resname = Path.GetFileNameWithoutExtension(filename);
 
@@ -94,7 +92,7 @@ public class ResourceManager
             node.IsDirectory = true;
             node.Source = filename;
             node.Children = new ResourceNode[root_size];
-            if (!TreeTraverse(fs, fsb, node, fat_offset, root_offset, root_offset + root_size))
+            if (!TreeTraverse(fs, br, node, fat_offset, root_offset, root_offset + root_size))
             {
                 fs.Close();
                 return false;

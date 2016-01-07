@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using UnityEngine;
+﻿using System.Linq;
 
 public interface IServerCommand
 {
@@ -169,8 +164,9 @@ public class Server
         {
             if (client.State != ClientState.Playing)
                 continue;
-
+            
             Player p = MapLogic.Instance.GetNetPlayer(client);
+            //todo object deleting
             if (mobj.GetObjectType() == MapObjectType.Monster ||
                 mobj.GetObjectType() == MapObjectType.Human)
             {

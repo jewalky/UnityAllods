@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using UnityEngine;
-
-public enum ClientState
+﻿public enum ClientState
 {
     Disconnected,
     ConnectWait,

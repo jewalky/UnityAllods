@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.IO;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 public class Font
@@ -21,23 +20,23 @@ public class Font
         string fnn = string.Join(".", fns, 0, fns.Length - 1);
 
         // first, load the data file.
-        MemoryStream ms_dat = ResourceManager.OpenRead(fnn + ".dat");
-        if (ms_dat == null)
+        MemoryStream ms = ResourceManager.OpenRead(fnn + ".dat");
+        if (ms == null)
         {
             Core.Abort("Couldn't load \"{0}\" as data file for \"{1}\"", fnn + ".dat", filename);
             return;
         }
 
-        int count = (int)ms_dat.Length / 4;
-        BinaryReader msb_dat = new BinaryReader(ms_dat);
+        int count = (int)ms.Length / 4;
+        BinaryReader br = new BinaryReader(ms);
         for (int i = 0; i < 224; i++)
         {
             if (i < count)
-                Widths[i] = msb_dat.ReadInt32();
+                Widths[i] = br.ReadInt32();
             else Widths[i] = 0;
         }
 
-        msb_dat.Close();
+        br.Close();
         Widths[0] = space_width;
 
         CombinedTexture = Images.LoadSprite(filename);
@@ -193,7 +192,7 @@ public class Font
                 int line_wd = 0;
                 int line_spccnt = 0;
 
-                float spc_width = (float)(Widths[0]);
+                float spc_width = Widths[0];
 
                 for (int j = 0; j < wrapped[i].Length; j++)
                 {
@@ -209,15 +208,13 @@ public class Font
                     spc_width = (float)(width - line_wd2) / line_spccnt;
 
                 if (align == Align.Right)
-                    x = (float)(width - line_wd);
+                    x = width - line_wd;
                 else if (align == Align.Center)
-                    x = (float)(width / 2 - line_wd / 2);
+                    x = width / 2 - line_wd / 2;
 
-                int rw = 0;
                 for (int j = 0; j < wrapped[i].Length; j++)
                 {
                     char c = wrapped[i][j];
-
                     bool is_invisible = (c >= CombinedTexture.Sprites.Length);
 
                     // c = index in sprite
@@ -244,13 +241,12 @@ public class Font
 
                     if (!is_invisible)
                     {
-                        rw = (int)(x + Width(c));
                         x += (c != 0) ? (float)Width(c) : spc_width;
                     }
                 }
             }
 
-            y += (float)LineHeight;
+            y += LineHeight;
         }
 
         realheight = (int)y;
@@ -290,18 +286,7 @@ public class Font
 
 public class AllodsTextRenderer
 {
-    private Font _Font;
-    public AllodsTextRenderer(Font font, Font.Align align = Font.Align.Left, int width = 0, int height = 0, bool wrapping = false)
-    {
-        _Font = font;
-        _Mesh = new Mesh();
-        _Material = GameObject.Instantiate<Material>(_Font.CombinedMaterial);
-        _Align = align;
-        _Width = width;
-        _Height = height;
-        _Wrapping = wrapping;
-    }
-
+    private readonly Font _Font;
     private string _Text = "";
     private int _Width;
     private int _Height;
@@ -310,6 +295,17 @@ public class AllodsTextRenderer
     private Mesh _Mesh;
     private Material _Material;
 
+    public AllodsTextRenderer(Font font, Font.Align align = Font.Align.Left, int width = 0, int height = 0, bool wrapping = false)
+    {
+        _Font = font;
+        _Mesh = new Mesh();
+        _Material = GameObject.Instantiate(_Font.CombinedMaterial);
+        _Align = align;
+        _Width = width;
+        _Height = height;
+        _Wrapping = wrapping;
+    }
+    
     private void UpdateMesh()
     {
         _Font.RenderToExistingMesh(_Mesh, _Text, _Align, _Width, _Height, _Wrapping, out _Height);
@@ -370,15 +366,14 @@ public class AllodsTextRenderer
         go.transform.parent = parent_transform;
         go.transform.localPosition = new Vector3(0, 0, 0);
         go.transform.localScale = new Vector3(scale, scale, 1);
-        if (shadowPos != 0)
-        {
-            GameObject shadow = GameObject.Instantiate(go);
-            shadow.name = "AllodsTextRenderer$GetNewGameObject$Shadow";
-            shadow.transform.parent = go.transform;
-            shadow.transform.localPosition = new Vector3(shadowPos, shadowPos, shadowZOffs);
-            shadow.transform.localScale = new Vector3(1, 1, 1);
-            shadow.GetComponent<MeshRenderer>().material.color = new Color(0, 0, 0, 1);
-        }
+        if (shadowPos == 0) return go;
+
+        GameObject shadow = GameObject.Instantiate(go);
+        shadow.name = "AllodsTextRenderer$GetNewGameObject$Shadow";
+        shadow.transform.parent = go.transform;
+        shadow.transform.localPosition = new Vector3(shadowPos, shadowPos, shadowZOffs);
+        shadow.transform.localScale = new Vector3(1, 1, 1);
+        shadow.GetComponent<MeshRenderer>().material.color = new Color(0, 0, 0, 1);
         return go;
     }
 

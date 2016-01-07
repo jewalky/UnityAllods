@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
 
 public interface IUiEventProcessor
@@ -69,8 +67,8 @@ public class UiManager : MonoBehaviour
     private List<bool> ProcessorsEnabled = new List<bool>();
 
 
-    private float lastMouseX = 0;
-    private float lastMouseY = 0;
+    //private float lastMouseX = 0;
+    //private float lastMouseY = 0;
     void Update()
     {
         GotProcessors = false;

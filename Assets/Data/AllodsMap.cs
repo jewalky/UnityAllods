@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
-
 using System.IO;
 
 public class TerrainLighting
@@ -126,32 +121,32 @@ public class AllodsMap
         public uint Junk2;
         public string Author;
 
-        public void LoadFromStream(BinaryReader reader)
+        public void LoadFromStream(BinaryReader br)
         {
-            Width = reader.ReadUInt32();
-            Height = reader.ReadUInt32();
-            SolarAngle = reader.ReadSingle();
-            TimeOfDay = reader.ReadUInt32();
-            Darkness = reader.ReadUInt32();
-            Contrast = reader.ReadUInt32();
-            UseTiles = reader.ReadUInt32();
-            CountPlayers = reader.ReadUInt32();
-            CountStructures = reader.ReadUInt32();
-            CountUnits = reader.ReadUInt32();
-            CountTriggers = reader.ReadUInt32();
-            CountSacks = reader.ReadUInt32();
-            CountGroups = reader.ReadUInt32();
-            CountInns = reader.ReadUInt32();
-            CountShops = reader.ReadUInt32();
-            CountPointers = reader.ReadUInt32();
-            CountMusic = reader.ReadUInt32();
-            Name = Core.UnpackByteString(1251, reader.ReadBytes(0x40));
-            RecPlayers = reader.ReadUInt32();
-            Level = reader.ReadUInt32();
-            Junk1 = reader.ReadUInt32();
-            Junk2 = reader.ReadUInt32();
+            Width = br.ReadUInt32();
+            Height = br.ReadUInt32();
+            SolarAngle = br.ReadSingle();
+            TimeOfDay = br.ReadUInt32();
+            Darkness = br.ReadUInt32();
+            Contrast = br.ReadUInt32();
+            UseTiles = br.ReadUInt32();
+            CountPlayers = br.ReadUInt32();
+            CountStructures = br.ReadUInt32();
+            CountUnits = br.ReadUInt32();
+            CountTriggers = br.ReadUInt32();
+            CountSacks = br.ReadUInt32();
+            CountGroups = br.ReadUInt32();
+            CountInns = br.ReadUInt32();
+            CountShops = br.ReadUInt32();
+            CountPointers = br.ReadUInt32();
+            CountMusic = br.ReadUInt32();
+            Name = Core.UnpackByteString(1251, br.ReadBytes(0x40));
+            RecPlayers = br.ReadUInt32();
+            Level = br.ReadUInt32();
+            Junk1 = br.ReadUInt32();
+            Junk2 = br.ReadUInt32();
             //Console.WriteLine("data junk1 = {0}, junk2 = {1}, light = {2}", Junk1, Junk2, Darkness);
-            Author = Core.UnpackByteString(1251, reader.ReadBytes(0x200));
+            Author = Core.UnpackByteString(1251, br.ReadBytes(0x200));
         }
     }
 
@@ -163,15 +158,15 @@ public class AllodsMap
         public string Name;
         public ushort[] Diplomacy;
 
-        public void LoadFromStream(BinaryReader reader)
+        public void LoadFromStream(BinaryReader br)
         {
-            Color = reader.ReadInt32();
-            Flags = reader.ReadUInt32();
-            Money = reader.ReadInt32();
-            Name = Core.UnpackByteString(1251, reader.ReadBytes(0x20));
+            Color = br.ReadInt32();
+            Flags = br.ReadUInt32();
+            Money = br.ReadInt32();
+            Name = Core.UnpackByteString(1251, br.ReadBytes(0x20));
             Diplomacy = new ushort[16];
             for (int i = 0; i < 16; i++)
-                Diplomacy[i] = reader.ReadUInt16();
+                Diplomacy[i] = br.ReadUInt16();
         }
     }
 
@@ -187,20 +182,20 @@ public class AllodsMap
         public int Width;
         public int Height;
 
-        public void LoadFromStream(BinaryReader reader)
+        public void LoadFromStream(BinaryReader br)
         {
-            int xRaw = reader.ReadInt32();
-            int yRaw = reader.ReadInt32();
+            int xRaw = br.ReadInt32();
+            int yRaw = br.ReadInt32();
             X = ((xRaw & 0x0000FF00) >> 8) + (float)(xRaw & 0x00FF) / 256; // 00 10 00 80 = 16.5
             Y = ((yRaw & 0x0000FF00) >> 8) + (float)(yRaw & 0x00FF) / 256;
-            TypeID = reader.ReadInt32();
-            Health = reader.ReadInt16();
-            Player = reader.ReadInt32();
-            ID = reader.ReadInt16();
+            TypeID = br.ReadInt32();
+            Health = br.ReadInt16();
+            Player = br.ReadInt32();
+            ID = br.ReadInt16();
             if ((TypeID & 0x01000000) != 0)
             {
-                Width = reader.ReadInt32();
-                Height = reader.ReadInt32();
+                Width = br.ReadInt32();
+                Height = br.ReadInt32();
                 IsBridge = true;
             }
             TypeID &= 0xFFFF;
@@ -224,24 +219,24 @@ public class AllodsMap
         public int ID;
         public int Group;
 
-        public void LoadFromStream(BinaryReader reader)
+        public void LoadFromStream(BinaryReader br)
         {
-            int xRaw = reader.ReadInt32();
-            int yRaw = reader.ReadInt32();
+            int xRaw = br.ReadInt32();
+            int yRaw = br.ReadInt32();
             X = ((xRaw & 0x0000FF00) >> 8) + (float)(xRaw & 0x00FF) / 256; // 00 10 00 80 = 16.5
             Y = ((yRaw & 0x0000FF00) >> 8) + (float)(yRaw & 0x00FF) / 256;
-            TypeID = reader.ReadUInt16();
-            Face = reader.ReadUInt16();
-            Flags = reader.ReadUInt32();
-            Flags2 = reader.ReadUInt32();
-            ServerID = reader.ReadInt32();
-            Player = reader.ReadInt32();
-            Sack = reader.ReadInt32();
-            Angle = reader.ReadInt32();
-            Health = reader.ReadInt16();
-            HealthMax = reader.ReadInt16();
-            ID = reader.ReadInt32() & 0xFFFF;
-            Group = reader.ReadInt32();
+            TypeID = br.ReadUInt16();
+            Face = br.ReadUInt16();
+            Flags = br.ReadUInt32();
+            Flags2 = br.ReadUInt32();
+            ServerID = br.ReadInt32();
+            Player = br.ReadInt32();
+            Sack = br.ReadInt32();
+            Angle = br.ReadInt32();
+            Health = br.ReadInt16();
+            HealthMax = br.ReadInt16();
+            ID = br.ReadInt32() & 0xFFFF;
+            Group = br.ReadInt32();
         }
     }
 
@@ -267,14 +262,14 @@ public class AllodsMap
         try
         {
             MemoryStream ms = ResourceManager.OpenRead(filename);
-            BinaryReader msb = new BinaryReader(ms);
+            BinaryReader br = new BinaryReader(ms);
 
             // first, read in the global header
-            uint alm_signature = msb.ReadUInt32();
-            uint alm_headersize = msb.ReadUInt32();
-            uint alm_offsetplayers = msb.ReadUInt32();
-            uint alm_sectioncount = msb.ReadUInt32();
-            uint alm_version = msb.ReadUInt32();
+            uint alm_signature = br.ReadUInt32();
+            uint alm_headersize = br.ReadUInt32();
+            br.BaseStream.Position += 4;  // uint alm_offsetplayers = msb.ReadUInt32();
+            uint alm_sectioncount = br.ReadUInt32();
+            br.BaseStream.Position += 4; // uint alm_version = msb.ReadUInt32();
 
             if ((alm_signature != 0x0052374D) ||
                 (alm_headersize != 0x14) ||
@@ -289,21 +284,20 @@ public class AllodsMap
             bool DataLoaded = false;
             bool TilesLoaded = false;
             bool HeightsLoaded = false;
-            bool ObjectsLoaded = false;
 
             for (uint i = 0; i < alm_sectioncount; i++)
             {
-                uint sec_junk1 = msb.ReadUInt32();
-                uint sec_headersize = msb.ReadUInt32();
-                uint sec_size = msb.ReadUInt32();
-                uint sec_id = msb.ReadUInt32();
-                uint sec_junk2 = msb.ReadUInt32();
+                br.BaseStream.Position += 4; // uint sec_junk1 = msb.ReadUInt32();
+                br.BaseStream.Position += 4; // uint sec_headersize = msb.ReadUInt32();
+                uint sec_size = br.ReadUInt32();
+                uint sec_id = br.ReadUInt32();
+                br.BaseStream.Position += 4; // uint sec_junk2 = msb.ReadUInt32();
 
                 //Debug.Log(string.Format("id = {0}, junk1 = {1}, junk2 = {2}", sec_id, sec_junk1, sec_junk2));
 
                 if (sec_id == 0) // data
                 {
-                    alm.Data.LoadFromStream(msb);
+                    alm.Data.LoadFromStream(br);
                     DataLoaded = true;
                 }
                 else if (sec_id == 1) // tiles
@@ -316,7 +310,7 @@ public class AllodsMap
 
                     alm.Tiles = new ushort[alm.Data.Width * alm.Data.Height];
                     for (uint j = 0; j < alm.Data.Width * alm.Data.Height; j++)
-                        alm.Tiles[j] = msb.ReadUInt16();
+                        alm.Tiles[j] = br.ReadUInt16();
                     TilesLoaded = true;
                 }
                 else if (sec_id == 2) // heights
@@ -329,7 +323,7 @@ public class AllodsMap
 
                     alm.Heights = new sbyte[alm.Data.Width * alm.Data.Height];
                     for (uint j = 0; j < alm.Data.Width * alm.Data.Height; j++)
-                        alm.Heights[j] = msb.ReadSByte();
+                        alm.Heights[j] = br.ReadSByte();
                     HeightsLoaded = true;
                 }
                 else if (sec_id == 3) // objects (obstacles)
@@ -342,8 +336,7 @@ public class AllodsMap
 
                     alm.Objects = new byte[alm.Data.Width * alm.Data.Height];
                     for (uint j = 0; j < alm.Data.Width * alm.Data.Height; j++)
-                        alm.Objects[j] = msb.ReadByte();
-                    ObjectsLoaded = true;
+                        alm.Objects[j] = br.ReadByte();
                 }
                 else if (sec_id == 5) // players
                 {
@@ -357,7 +350,7 @@ public class AllodsMap
                     for (uint j = 0; j < alm.Data.CountPlayers; j++)
                     {
                         alm.Players[j] = new AlmPlayer();
-                        alm.Players[j].LoadFromStream(msb);
+                        alm.Players[j].LoadFromStream(br);
                     }
                 }
                 else if (sec_id == 4) // structures
@@ -372,7 +365,7 @@ public class AllodsMap
                     for (uint j = 0; j < alm.Data.CountStructures; j++)
                     {
                         alm.Structures[j] = new AlmStructure();
-                        alm.Structures[j].LoadFromStream(msb);
+                        alm.Structures[j].LoadFromStream(br);
                     }
                 }
                 else if (sec_id == 6) // units
@@ -387,7 +380,7 @@ public class AllodsMap
                     for (uint j = 0; j < alm.Data.CountUnits; j++)
                     {
                         alm.Units[j] = new AlmUnit();
-                        alm.Units[j].LoadFromStream(msb);
+                        alm.Units[j].LoadFromStream(br);
                     }
                 }
                 else
@@ -398,7 +391,7 @@ public class AllodsMap
 
             return alm;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return null;
         }

@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.IO;
 
 public class Registry
@@ -33,17 +31,17 @@ public class Registry
     static private readonly int RegistrySignature = 0x31415926;
     internal RegistryNode Root;
 
-    private static bool TreeTraverse(MemoryStream ms, BinaryReader msb, RegistryNode node, uint first, uint last, uint data_origin)
+    private static bool TreeTraverse(MemoryStream ms, BinaryReader br, RegistryNode node, uint first, uint last, uint data_origin)
     {
         for (uint i = first; i < last; i++)
         {
             ms.Seek(0x18 + 0x20 * i, SeekOrigin.Begin);
 
-            uint e_unk1 = msb.ReadUInt32();
-            uint e_offset = msb.ReadUInt32(); // 0x1C
-            uint e_count = msb.ReadUInt32(); // 0x18
-            uint e_type = msb.ReadUInt32();// 0x14
-            string e_name = Core.UnpackByteString(866, msb.ReadBytes(16));
+            br.BaseStream.Position += 4; // uint e_unk1 = msb.ReadUInt32();
+            uint e_offset = br.ReadUInt32(); // 0x1C
+            uint e_count = br.ReadUInt32(); // 0x18
+            uint e_type = br.ReadUInt32();// 0x14
+            string e_name = Core.UnpackByteString(866, br.ReadBytes(16));
 
             RegistryNode subnode = new RegistryNode();
             node.Children[i - first] = subnode;
@@ -53,7 +51,7 @@ public class Registry
             {
                 subnode.Type = RegistryNodeType.String;
                 ms.Seek(data_origin + e_offset, SeekOrigin.Begin);
-                subnode.ValueS = Core.UnpackByteString(866, msb.ReadBytes((int)e_count));
+                subnode.ValueS = Core.UnpackByteString(866, br.ReadBytes((int)e_count));
             }
             else if (e_type == 2) // dword value
             {
@@ -66,7 +64,7 @@ public class Registry
                 // C-style union trickery won't work
                 subnode.Type = RegistryNodeType.Float;
                 ms.Seek(-0x1C, SeekOrigin.Current);
-                subnode.ValueF = msb.ReadDouble();
+                subnode.ValueF = br.ReadDouble();
             }
             else if (e_type == 6) // int array
             {
@@ -77,13 +75,13 @@ public class Registry
                 subnode.ValueA = new int[e_acount];
                 ms.Seek(data_origin + e_offset, SeekOrigin.Begin);
                 for (uint j = 0; j < e_acount; j++)
-                    subnode.ValueA[j] = msb.ReadInt32();
+                    subnode.ValueA[j] = br.ReadInt32();
             }
             else if (e_type == 1) // directory
             {
                 subnode.Type = RegistryNodeType.Directory;
                 subnode.Children = new RegistryNode[e_count];
-                if (!TreeTraverse(ms, msb, subnode, e_offset, e_offset + e_count, data_origin))
+                if (!TreeTraverse(ms, br, subnode, e_offset, e_offset + e_count, data_origin))
                     return false;
             }
         }
@@ -102,25 +100,25 @@ public class Registry
                 return;
             }
 
-            BinaryReader msb = new BinaryReader(ms);
-            if (msb.ReadUInt32() != RegistrySignature)
+            BinaryReader br = new BinaryReader(ms);
+            if (br.ReadUInt32() != RegistrySignature)
             {
                 ms.Close();
                 Core.Abort("Couldn't load \"{0}\" (not a registry file)", filename);
                 return;
             }
 
-            uint root_offset = msb.ReadUInt32();
-            uint root_size = msb.ReadUInt32();
-            uint reg_flags = msb.ReadUInt32();
-            uint reg_eatsize = msb.ReadUInt32();
-            uint reg_junk = msb.ReadUInt32();
+            uint root_offset = br.ReadUInt32();
+            uint root_size = br.ReadUInt32();
+            br.BaseStream.Position += 4; // uint reg_flags = br.ReadUInt32();
+            uint reg_eatsize = br.ReadUInt32();
+            br.BaseStream.Position += 4; // uint reg_junk = msb.ReadUInt32();
 
             Root = new RegistryNode();
             Root.Type = RegistryNodeType.Directory;
             Root.Name = "";
             Root.Children = new RegistryNode[root_size];
-            if (!TreeTraverse(ms, msb, Root, root_offset, root_offset + root_size, 0x1C + 0x20 * reg_eatsize))
+            if (!TreeTraverse(ms, br, Root, root_offset, root_offset + root_size, 0x1C + 0x20 * reg_eatsize))
             {
                 ms.Close();
                 Core.Abort("Couldn't load \"{0}\" (invalid registry file)", filename);

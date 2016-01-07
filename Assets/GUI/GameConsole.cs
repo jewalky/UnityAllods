@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Reflection;
 using UnityEngine;
 
@@ -272,7 +271,7 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
                             cmdFound = true;
                             break;
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             cmdFound = false;
                             break;

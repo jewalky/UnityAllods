@@ -401,10 +401,10 @@ public class MapView : MonoBehaviour, IUiEventProcessor
 
         Vector2[] quv = new Vector2[4 * w * h];
         int ppt = 0;
-        float unit32x = 1f / MapTiles.width * 32;
+        //float unit32x = 1f / MapTiles.width * 32;
         float unit32y = 1f / MapTiles.height * 32;
-        float unit32x1 = 1f / MapTiles.width;
-        float unit32y1 = 1f / MapTiles.height;
+        //float unit32x1 = 1f / MapTiles.width;
+        //float unit32y1 = 1f / MapTiles.height;
         for (int ly = y; ly < y + h; ly++)
         {
             for (int lx = x; lx < x + w; lx++)
@@ -470,8 +470,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor
 
     public void SetScroll(int x, int y)
     {
-        int minX = 8;
-        int minY = 8;
+        const int minX = 8;
+        const int minY = 8;
         int screenWB = (int)((float)Screen.width / 32 - 5); // 5 map cells are the right panels. these are always there.
         int screenHB = (int)((float)Screen.height / 32);
         int maxX = MapLogic.Instance.Width - screenWB - 8;

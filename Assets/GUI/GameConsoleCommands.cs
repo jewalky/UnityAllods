@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class GameConsoleCommands
 {
@@ -71,7 +67,7 @@ public class GameConsoleCommands
 
     public void rcon(params string[] args)
     {
-        string toSend = GameConsole.JoinArguments(args);
+        //string toSend = GameConsole.JoinArguments(args);
         //
     }
 }

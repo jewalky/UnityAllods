@@ -2,11 +2,7 @@
 /// By Morten Nobel-Jørgensen
 /// License lgpl 3.0 (http://www.gnu.org/licenses/lgpl-3.0.txt)
 
-
-using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-
 
 /// <summary>
 /// Based on http://blogs.msdn.com/b/ericlippert/archive/2007/10/08/path-finding-using-a-in-c-3-0-part-three.aspx

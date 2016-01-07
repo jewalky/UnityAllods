@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
+﻿using System.IO;
 using UnityEngine;
 using ProtoBuf;
 
@@ -112,7 +108,7 @@ namespace ClientCommands
                 {
                     try
                     {
-                        DirectoryInfo info = Directory.CreateDirectory("maps");
+                        Directory.CreateDirectory("maps");
                     }
                     catch (IOException)
                     {

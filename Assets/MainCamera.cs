@@ -1,9 +1,11 @@
-﻿using UnityEngine;
+﻿using System.Text;
+using UnityEngine;
 using System.Collections;
 using System.IO;
 using System;
 
-public class MainCamera : MonoBehaviour {
+public class MainCamera : MonoBehaviour
+{
     public const float OverlayZ = -83;
     public const float InterfaceZ = -84;
     public const float MouseZ = -95;
@@ -14,7 +16,7 @@ public class MainCamera : MonoBehaviour {
         get
         {
             if (_Instance == null)
-                _Instance = GameObject.FindObjectOfType<MainCamera>();
+                _Instance = FindObjectOfType<MainCamera>();
             return _Instance;
         }
     }
@@ -36,28 +38,28 @@ public class MainCamera : MonoBehaviour {
     public Images.AllodsSprite arrow;
     public Texture2D arrowTex;
 
-    void Start ()
+    void Start()
     {
         arrow = Images.Load256("graphics/projectiles/archer/arrow.256", false);
         arrowTex = arrow.Atlas;
 
         // set w/h to screen res
-        Camera camera = GetComponent<Camera>();
+        Camera cam = GetComponent<Camera>();
         //camera.transform.position = new Vector3(-0.5f, 0.5f);
-        camera.orthographicSize = Screen.height / 2;
+        cam.orthographicSize = Screen.height / 2;
         /*camera.transform.Translate((float)Screen.width / 2 / 100, (float)Screen.height / 2 / 100, 0, Space.World);
         camera.projectionMatrix *= Matrix4x4.Scale(new Vector3(100, -100, 1));*/
-        camera.transform.Translate((float)Screen.width / 2, (float)Screen.height / 2, 0, Space.World);
-        camera.projectionMatrix *= Matrix4x4.Scale(new Vector3(1, -1, 1));
+        cam.transform.Translate((float)Screen.width / 2, (float)Screen.height / 2, 0, Space.World);
+        cam.projectionMatrix *= Matrix4x4.Scale(new Vector3(1, -1, 1));
         Debug.LogFormat("{0}x{1}", Screen.width, Screen.height);
 
-        m_fpsr = new AllodsTextRenderer(Fonts.Font1, Font.Align.Right, Screen.width-176);
+        m_fpsr = new AllodsTextRenderer(Fonts.Font1, Font.Align.Right, Screen.width - 176);
         m_fpso = m_fpsr.GetNewGameObject(0.01f, SceneRoot.Instance.transform, 100);
-        m_fpso.transform.position = new Vector3(0, 0, OverlayZ+0.99f);
+        m_fpso.transform.position = new Vector3(0, 0, OverlayZ + 0.99f);
     }
 
     // Update is called once per frame
-    float fps_timer = 0;
+    //float fps_timer = 0;
     int fps_frameCounter = 0;
     float fps_timeCounter = 0.0f;
     float fps_lastFramerate = 0.0f;
@@ -65,7 +67,7 @@ public class MainCamera : MonoBehaviour {
     bool fps_enabled = true;
     float gc_timer = 0;
 
-    void Update ()
+    void Update()
     {
         gc_timer += Time.unscaledDeltaTime;
         if (gc_timer >= 5)
@@ -86,45 +88,48 @@ public class MainCamera : MonoBehaviour {
             fps_frameCounter = 0;
             fps_timeCounter = 0.0f;
         }
-
-        fps_timer += Time.unscaledDeltaTime;
-        //if (fps_timer >= 1) // display FPS string
-        {
-            if (fps_enabled)
-            {
-                string fpstr = string.Format("FPS: {0}\nMeshDebug: {1}", (int)fps_lastFramerate, m_fpsr.Height);
-                if (NetworkManager.IsClient || NetworkManager.IsServer)
-                    fpstr += string.Format("\nNet: {0}b in/{1}b out", NetworkManager.mLastIn, NetworkManager.mLastOut);
-
-                if (MapLogic.Instance.IsLoaded)
-                {
-                    fpstr += string.Format("\nMouseCell: {0},{1}\nScroll: {2},{3}", MapView.Instance.MouseCellX, MapView.Instance.MouseCellY,
-                                                                                    MapView.Instance.ScrollX, MapView.Instance.ScrollY);
-                    MapObject ho = MapView.Instance.HoveredObject;
-                    if (ho != null)
-                    {
-                        if (ho.GetObjectType() == MapObjectType.Structure)
-                            fpstr += string.Format("\nHoveredObject: {0}", ((MapStructure)ho).Class.DescText);
-                        else if (ho.GetObjectType() == MapObjectType.Monster)
-                            fpstr += string.Format("\nHoveredObject: {0}", ((MapUnit)ho).Template.Name);
-                    }
-                    else fpstr += "\nHoveredObject: <none>";
-
-                    MapObject so = MapView.Instance.SelectedObject;
-                    if (so != null)
-                    {
-                        if (so.GetObjectType() == MapObjectType.Structure)
-                            fpstr += string.Format("\nSelectedObject: {0}", ((MapStructure)so).Class.DescText);
-                        else if (so.GetObjectType() == MapObjectType.Monster)
-                            fpstr += string.Format("\nSelectedObject: {0}", ((MapUnit)so).Template.Name);
-                    }
-                    else fpstr += "\nSelectedObject: <none>";
-                }
-                m_fpsr.Text = fpstr;
-                //fps_timer = 0;
-            }
-        }
+        UpdateFpsCounter();
     }
+
+
+    private void UpdateFpsCounter()
+    {
+        //fps_timer += Time.unscaledDeltaTime;
+        //if (fps_timer >= 1) 
+        if (!fps_enabled) return;
+        var sb = new StringBuilder(string.Format("FPS: {0}\nMeshDebug: {1}", (int)fps_lastFramerate, m_fpsr.Height));
+
+        if (NetworkManager.IsClient || NetworkManager.IsServer)
+            sb.Append(string.Format("\nNet: {0}b in/{1}b out", NetworkManager.mLastIn, NetworkManager.mLastOut));
+
+        if (MapLogic.Instance.IsLoaded)
+        {
+            sb.Append(string.Format("\nMouseCell: {0},{1}\nScroll: {2},{3}", MapView.Instance.MouseCellX, MapView.Instance.MouseCellY,
+                MapView.Instance.ScrollX, MapView.Instance.ScrollY));
+            MapObject ho = MapView.Instance.HoveredObject;
+            if (ho != null)
+            {
+                if (ho.GetObjectType() == MapObjectType.Structure)
+                    sb.Append(string.Format("\nHoveredObject: {0}", ((MapStructure)ho).Class.DescText));
+                else if (ho.GetObjectType() == MapObjectType.Monster)
+                    sb.Append(string.Format("\nHoveredObject: {0}", ((MapUnit)ho).Template.Name));
+            }
+            else sb.Append("\nHoveredObject: <none>");
+
+            MapObject so = MapView.Instance.SelectedObject;
+            if (so != null)
+            {
+                if (so.GetObjectType() == MapObjectType.Structure)
+                    sb.Append(string.Format("\nSelectedObject: {0}", ((MapStructure)so).Class.DescText));
+                else if (so.GetObjectType() == MapObjectType.Monster)
+                    sb.Append(string.Format("\nSelectedObject: {0}", ((MapUnit)so).Template.Name));
+            }
+            else sb.Append("\nSelectedObject: <none>");
+        }
+        m_fpsr.Text = sb.ToString();
+        //fps_timer = 0;
+    }
+
 
     public string TakeScreenshot()
     {

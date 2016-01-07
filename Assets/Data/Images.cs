@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 using System.IO;
 
@@ -88,14 +85,14 @@ public class Images
 
                 int bi_width = br.ReadInt32();
                 int bi_height = br.ReadInt32();
-                short bi_planes = br.ReadInt16();
+                br.BaseStream.Position += 2; // short bi_planes = br.ReadInt16();
                 short bi_bitcount = br.ReadInt16();
-                uint bi_compression = br.ReadUInt32();
-                uint bi_sizeimage = br.ReadUInt32();
-                int bi_xpelspermeter = br.ReadInt32();
-                int bi_ypelspermeter = br.ReadInt32();
-                uint bi_clrused = br.ReadUInt32();
-                uint bi_clrimportant = br.ReadUInt32();
+                br.BaseStream.Position += 4; // uint bi_compression = br.ReadUInt32();
+                br.BaseStream.Position += 4; // uint bi_sizeimage = br.ReadUInt32();
+                br.BaseStream.Position += 4; // int bi_xpelspermeter = br.ReadInt32();
+                br.BaseStream.Position += 4; // int bi_ypelspermeter = br.ReadInt32();
+                br.BaseStream.Position += 4; // uint bi_clrused = br.ReadUInt32();
+                br.BaseStream.Position += 4; // uint bi_clrimportant = br.ReadUInt32();
 
                 //Debug.Log(String.Format("pixel data at {0}, {1}x{2}, bits: {3}", bfh_pixeldata, bi_width, bi_height, bi_bitcount));
                 texture = new Texture2D(bi_width, bi_height, TextureFormat.ARGB32, false);
@@ -104,7 +101,7 @@ public class Images
                 if (bi_bitcount == 24) // read RGB
                 {
                     int i = 0;
-                    for (int y = bi_height-1; y >= 0; y--)
+                    for (int y = bi_height - 1; y >= 0; y--)
                     {
                         ms.Position = bfh_pixeldata + bi_width * y * 3;
                         for (int x = 0; x < bi_width; x++)
@@ -127,7 +124,7 @@ public class Images
                             byte b = br.ReadByte();
                             byte g = br.ReadByte();
                             byte r = br.ReadByte();
-                            byte a = br.ReadByte(); // not used
+                            br.BaseStream.Position += 1; // byte a = br.ReadByte(); 
                             colors[i++] = new Color32(r, g, b, 255);
                         }
                     }
@@ -142,7 +139,7 @@ public class Images
                         byte b = br.ReadByte();
                         byte g = br.ReadByte();
                         byte r = br.ReadByte();
-                        byte a = br.ReadByte();
+                        br.BaseStream.Position += 1; // byte a = br.ReadByte();
                         colormap[i] = new Color32(r, g, b, 255); // ignore alpha value here, it doesn't make sense
                     }
 
@@ -195,7 +192,7 @@ public class Images
             byte b = br.ReadByte();
             byte g = br.ReadByte();
             byte r = br.ReadByte();
-            byte a = br.ReadByte();
+            br.BaseStream.Position += 1; // byte a = br.ReadByte();
             colors[i] = new Color32(r, g, b, 255);
         }
 
@@ -475,7 +472,7 @@ public class Images
                     {
                         byte ss = br.ReadByte();
                         //uint px = (ss << 16) | (ss << 8) | (ss) | 0xFF000000;
-                        colors[iy * w + ix] = new Color((float)ss/255f, 1, 0, 0);
+                        colors[iy * w + ix] = new Color((float)ss / 255f, 1, 0, 0);
                         SpriteAddIXIY(ref ix, ref iy, w, 1);
                     }
 
@@ -596,7 +593,7 @@ public class Images
                         uint idx = ((ss & 0xFF00) >> 1) + ((ss & 0x00FF) >> 1);
                         idx &= 0xFF;
                         alpha &= 0xFF;
-                        colors[iy * w + ix] = new Color((float)idx/255f, (float)alpha/255, 0, 0);
+                        colors[iy * w + ix] = new Color((float)idx / 255f, (float)alpha / 255, 0, 0);
                         SpriteAddIXIY(ref ix, ref iy, w, 1);
                     }
 

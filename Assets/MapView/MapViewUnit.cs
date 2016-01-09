@@ -1,4 +1,8 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using UnityEngine;
 
 public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IObjectManualUpdate
 {
@@ -322,6 +326,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 LogicUnit.DeathFrame = dCls.DyingPhases - 1;
             }
 
+            Renderer.material.SetTexture("_Palette", LogicUnit.Class.File.UpdatePalette(LogicUnit.Template.Face));
             // first (idle) state is 0..8 frames. frames 1 to 7 are flipped. frames 0 and 8 aren't.
             //  135 180 225
             //  90      270
@@ -440,6 +445,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 UnitClass dCls = LogicUnit.Class;
                 while (dCls.Dying != null && dCls.Dying != dCls)
                     dCls = dCls.Dying;
+                dCls.File.UpdateSprite();
+                sprites = dCls.File.File;
+                Renderer.material.SetTexture("_Palette", dCls.File.UpdatePalette(LogicUnit.Template.Face));
 
                 int moveSize = dCls.MoveBeginPhases + dCls.MovePhases;
                 int attackSize = dCls.AttackPhases;
@@ -477,7 +485,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 zInv = 48;
             else if (LogicUnit.Template.IsFlying)
                 zInv = -128;
-            transform.localPosition = new Vector3(xP.x, xP.y, MakeZFromY(xP.y)+zInv); // order sprites by y coordinate basically
+            transform.localPosition = new Vector3(xP.x, xP.y, MakeZFromY(xP.y) + zInv); // order sprites by y coordinate basically
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicUnit.Class.CenterX));
             //Renderer.sprite = sprites.Sprites[actualFrame];
             ObstacleMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (ObstacleMesh == null), doFlip);

@@ -18,7 +18,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
     private MeshRenderer Renderer;
     private MeshFilter Filter;
-    private Mesh ObstacleMesh;
+    private Mesh UnitMesh;
 
     private GameObject ShadowObject;
     private MeshRenderer ShadowRenderer;
@@ -488,7 +488,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             transform.localPosition = new Vector3(xP.x, xP.y, MakeZFromY(xP.y) + zInv); // order sprites by y coordinate basically
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicUnit.Class.CenterX));
             //Renderer.sprite = sprites.Sprites[actualFrame];
-            ObstacleMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (ObstacleMesh == null), doFlip);
+            UnitMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (UnitMesh == null), doFlip);
             ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null), doFlip); // 0.3 of sprite height
             UpdateHpMesh();
 

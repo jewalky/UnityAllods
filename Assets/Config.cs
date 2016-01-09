@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Reflection;
+﻿using System.Reflection;
 using System.IO;
 using UnityEngine;
 
@@ -60,7 +56,7 @@ public class Config
             PropertyInfo[] configFields = typeof(Config).GetProperties(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
             foreach (PropertyInfo field in configFields)
             {
-                string cmd = GameConsole.JoinArguments(new string[] { field.Name.ToLower(), field.GetValue(null, null).ToString() });
+                string cmd = GameConsole.JoinArguments(new[] { field.Name.ToLower(), field.GetValue(null, null).ToString() });
                 sw.WriteLine(cmd);
             }
 

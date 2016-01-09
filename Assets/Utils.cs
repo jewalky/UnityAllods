@@ -1,10 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using System.IO;
-#if UNITY_EDITOR
-using UnityEditor;
 
-#endif
 
 public partial class Utils
 {
@@ -12,13 +8,13 @@ public partial class Utils
     // without suffering from the cursor being out of screen bounds.
     // all code should refer to GetMousePosition instead of using Input.mousePosition directly.
 
-    private static float MouseX = 0;
-    private static float MouseY = 0;
+    private static float _MouseX = 0;
+    private static float _MouseY = 0;
 
     public static void SetMousePosition(float deltaX, float deltaY)
     {
-        MouseX = Mathf.Clamp(MouseX + deltaX, 0, Screen.width);
-        MouseY = Mathf.Clamp(MouseY + deltaY, 0, Screen.height);
+        _MouseX = Mathf.Clamp(_MouseX + deltaX, 0, Screen.width);
+        _MouseY = Mathf.Clamp(_MouseY + deltaY, 0, Screen.height);
     }
 
     public static Vector3 GetMousePosition()
@@ -169,88 +165,23 @@ public partial class Utils
                 return 0;
             }
         }
-        private float TimeStart = 0;
+
+        private float _TimeStart = 0;
 
         public void Clear()
         {
             _Time = 0;
-            TimeStart = 0;
+            _TimeStart = 0;
         }
 
         public void Clock()
         {
-            TimeStart = UnityEngine.Time.realtimeSinceStartup;
+            _TimeStart = UnityEngine.Time.realtimeSinceStartup;
         }
 
         public void Unclock()
         {
-            _Time += UnityEngine.Time.realtimeSinceStartup - TimeStart;
+            _Time += UnityEngine.Time.realtimeSinceStartup - _TimeStart;
         }
     }
 }
-
-#if UNITY_EDITOR
-public class ScriptBatch
-{
-    [MenuItem("MyTools/Linux dedicated server build")]
-    public static void BuildGame()
-    {
-        // Get filename.
-        string path = "ServerBuild";
-        string[] levels = { "Assets/Allods.unity" };
-        // Build player.
-        BuildPipeline.BuildPlayer(levels, path + "/AllodsServer.x86", BuildTarget.StandaloneLinux, BuildOptions.EnableHeadlessMode);
-        // copy libs
-        const string sourceDir = @"DLLs";
-        const string targetDir = @"ServerBuild\AllodsServer_Data\Managed";
-        foreach (var file in Directory.GetFiles(sourceDir))
-            File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
-    }
-
-    [MenuItem("MyTools/Linux client build")]
-    public static void BuildLinuxClient()
-    {
-        // Get filename.
-        string path = "LinuxClientBuild";
-        string[] levels = new string[] { "Assets/Allods.unity" };
-        // Build player.
-        BuildPipeline.BuildPlayer(levels, path + "/Allods.x86", BuildTarget.StandaloneLinux, BuildOptions.None);
-        // copy libs
-        const string sourceDir = @"DLLs";
-        const string targetDir = @"LinuxClientBuild\Allods_Data\Managed";
-        foreach (var file in Directory.GetFiles(sourceDir))
-            File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
-    }
-
-    [MenuItem("MyTools/OSX client build")]
-    public static void BuildMacClient()
-    {
-        // Get filename.
-        string path = "MacBuild";
-        string[] levels = { "Assets/Allods.unity" };
-        // Build player.
-        BuildPipeline.BuildPlayer(levels, path + "/Allods.app", BuildTarget.StandaloneOSXIntel, BuildOptions.None);
-        // copy libs
-        const string sourceDir = @"DLLs";
-        const string targetDir = @"MacBuild\Allods.app\Contents\Resources\Data\Managed";
-        foreach (var file in Directory.GetFiles(sourceDir))
-            File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
-    }
-
-
-    [MenuItem("MyTools/Windows build")]
-    public static void BuildGameWindows()
-    {
-        // Get filename.
-        string path = "ClientBuild";
-        string[] levels = { "Assets/Allods.unity" };
-        // Build player.
-        BuildPipeline.BuildPlayer(levels, path + "/Allods.exe", BuildTarget.StandaloneWindows, BuildOptions.None);
-        // Then put some DLLs in it
-        const string sourceDir = @"DLLs";
-        const string targetDir = @"ClientBuild\Allods_Data\Managed";
-        foreach (var file in Directory.GetFiles(sourceDir))
-            File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)), true);
-    }
-}
-#endif

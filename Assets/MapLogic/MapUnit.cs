@@ -253,11 +253,11 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             IsAlive = true;
         }
 
-        if (IsAlive && IsDying)
+        if (!NetworkManager.IsClient && IsAlive && IsDying)
         {
             if (MapLogic.Instance.LevelTime % 40 == 0)
             {
-                if (Stats.TrySetHealth(Stats.Health - 1) && !NetworkManager.IsClient)
+                if (Stats.TrySetHealth(Stats.Health - 1))
                 {
                     Server.NotifyDamageUnit(this, 1, false);
                     DoUpdateView = true;
@@ -271,6 +271,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             if (Stats.Health <= -10)
             {
                 IsAlive = false;
+                IsDying = false;
                 DoUpdateView = true;
                 UnlinkFromWorld();
                 if (Player == MapLogic.Instance.ConsolePlayer &&

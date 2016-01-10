@@ -45,6 +45,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             {
                 PlayerNick = new AllodsTextRenderer(Fonts.Font2, Font.Align.Center, LogicUnit.Class.SelectionX2 - LogicUnit.Class.SelectionX1, 0, false);
                 PlayerNickObject = PlayerNick.GetNewGameObject(0, transform, 100);
+                PlayerNickObject.SetActive(LogicUnit.IsAlive);
             }
 
             PlayerNick.Text = LogicUnit.Player.Name;
@@ -65,6 +66,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             HpObject.name = "Health";
             HpRenderer = HpObject.AddComponent<MeshRenderer>();
             HpFilter = HpObject.AddComponent<MeshFilter>();
+            HpRenderer.enabled = LogicUnit.IsAlive;
             HpMesh = new Mesh();
             HpFilter.mesh = HpMesh;
             HpObject.transform.parent = transform;
@@ -295,6 +297,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
         if (LogicUnit.DoUpdateView)
         {
+            Debug.LogFormat("unit {0} isalive = {1}", LogicUnit.Template.Name, LogicUnit.IsAlive);
             Renderer.enabled = true;
             ShadowRenderer.enabled = bAlive;
             if (HpRenderer != null) HpRenderer.enabled = LogicUnit.IsAlive;

@@ -146,6 +146,8 @@ public class Server
             unitCmd.AttackTime = unit.AttackTime;
             unitCmd.DeathFrame = unit.DeathFrame;
             unitCmd.DeathTime = unit.DeathTime;
+            unitCmd.IsAlive = unit.IsAlive;
+            unitCmd.IsDying = unit.IsDying;
             player.NetClient.SendCommand(unitCmd);
             // also notify of current unit state
             NotifyAddUnitActionsSingle(player.NetClient, unit, unit.Actions.Skip(1).ToArray());

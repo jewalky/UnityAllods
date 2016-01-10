@@ -157,6 +157,10 @@ namespace ClientCommands
         public int DeathFrame;
         [ProtoMember(19)]
         public int DeathTime;
+        [ProtoMember(20)]
+        public bool IsAlive;
+        [ProtoMember(21)]
+        public bool IsDying;
 
         public bool Process()
         {
@@ -201,6 +205,8 @@ namespace ClientCommands
             unit.AttackTime = AttackTime;
             unit.DeathFrame = DeathFrame;
             unit.DeathTime = DeathTime;
+            unit.IsAlive = IsAlive;
+            unit.IsDying = IsDying;
             if (newUnit)
                 MapLogic.Instance.Objects.Add(unit);
             else unit.DoUpdateView = true; // update view if unit already present on map (otherwise its automatically done)

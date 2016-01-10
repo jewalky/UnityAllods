@@ -68,8 +68,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         }
     }
 
-    public bool IsAlive { get; private set; }
-    public bool IsDying { get; private set; }
+    public bool IsAlive = false;
+    public bool IsDying = false;
     public List<IUnitAction> Actions = new List<IUnitAction>();
     public List<IUnitState> States = new List<IUnitState>();
     public UnitVisualState VState = UnitVisualState.Idle;
@@ -136,6 +136,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             Template = null;
             return;
         }
+
+        IsAlive = true;
+        IsDying = false;
 
         Stats = new UnitStats();
         Width = Template.TokenSize;
@@ -244,9 +247,10 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         }
         else if (Stats.Health > 0 && (IsDying || !IsAlive))
         {
+            if (!IsAlive)
+                LinkToWorld();
             IsDying = false;
             IsAlive = true;
-            LinkToWorld();
         }
 
         if (IsAlive && IsDying)
@@ -260,7 +264,10 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                     DoUpdateInfo = true;
                 }
             }
+        }
 
+        if (IsAlive)
+        {
             if (Stats.Health <= -10)
             {
                 IsAlive = false;

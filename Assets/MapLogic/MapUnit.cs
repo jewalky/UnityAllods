@@ -444,7 +444,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         UnlinkFromWorld();
         X = x;
         Y = y;
-        LinkToWorld();
+        if (IsAlive) LinkToWorld();
         CalculateVision();
         DoUpdateView = true;
     }

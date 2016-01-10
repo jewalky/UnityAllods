@@ -184,6 +184,8 @@ namespace ClientCommands
                 return false;
             }
             unit.Player = player;
+            unit.IsAlive = IsAlive;
+            unit.IsDying = IsDying;
             unit.SetPosition(X, Y);
             if (IsAvatar)
             {
@@ -205,8 +207,6 @@ namespace ClientCommands
             unit.AttackTime = AttackTime;
             unit.DeathFrame = DeathFrame;
             unit.DeathTime = DeathTime;
-            unit.IsAlive = IsAlive;
-            unit.IsDying = IsDying;
             if (newUnit)
                 MapLogic.Instance.Objects.Add(unit);
             else unit.DoUpdateView = true; // update view if unit already present on map (otherwise its automatically done)

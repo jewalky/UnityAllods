@@ -148,6 +148,7 @@ public class Server
             unitCmd.DeathTime = unit.DeathTime;
             unitCmd.IsAlive = unit.IsAlive;
             unitCmd.IsDying = unit.IsDying;
+            unitCmd.IsHuman = (unit.GetObjectType() == MapObjectType.Human);
             player.NetClient.SendCommand(unitCmd);
             // also notify of current unit state
             NotifyAddUnitActionsSingle(player.NetClient, unit, unit.Actions.Skip(1).ToArray());

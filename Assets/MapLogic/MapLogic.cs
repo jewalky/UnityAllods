@@ -600,6 +600,10 @@ class MapLogic
     public MapUnit CreateAvatar(Player player)
     {
         MapUnit unit = new MapUnit(Config.sv_avatar);
+        if (unit.Class == null)
+            unit = new MapHuman(Config.sv_avatar);
+        if (unit.Class == null)
+            return null;
         unit.Player = player;
         unit.Tag = GetFreeUnitTag(); // this is also used as network ID.
         unit.SetPosition(16, 16);

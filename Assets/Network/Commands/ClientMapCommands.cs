@@ -161,6 +161,8 @@ namespace ClientCommands
         public bool IsAlive;
         [ProtoMember(21)]
         public bool IsDying;
+        [ProtoMember(22)]
+        public bool IsHuman;
 
         public bool Process()
         {
@@ -171,7 +173,9 @@ namespace ClientCommands
             bool newUnit = false;
             if (unit == null)
             {
-                unit = new MapUnit(ServerID);
+                if (IsHuman)
+                    unit = new MapHuman(ServerID); 
+                else unit = new MapUnit(ServerID);
                 if (unit.Class == null)
                     return false; // invalid unit created
                 unit.Tag = Tag;

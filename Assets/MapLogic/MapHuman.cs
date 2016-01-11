@@ -111,8 +111,27 @@ public class MapHuman : MapUnit
     }
 
     // template stuff.
-    public override int Charge { get { return Template.Charge; } }
-    public override int Relax { get { return Template.Relax; } }
+    public override int Charge
+    {
+        get
+        {
+            Item weapon = GetItemFromBody(BodySlot.Weapon);
+            if (weapon != null)
+                return weapon.Class.Option.Charge;
+            return Class.AttackDelay;
+        }
+    }
+
+    public override int Relax
+    {
+        get
+        {
+            Item weapon = GetItemFromBody(BodySlot.Weapon);
+            if (weapon != null)
+                return weapon.Class.Option.Relax;
+            return 0;
+        }
+    }
 
     public override bool IsIgnoringArmor { get { return false; } }
 

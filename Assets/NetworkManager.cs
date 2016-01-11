@@ -158,11 +158,11 @@ public class NetworkManager : MonoBehaviour {
                 }
                 if (sock.Available == 0)
                     return null; // disconnected
-                int doneNow = Math.Max(0, sock.Receive(ovtmp));
+                int doneNow = Math.Max(0, sock.Receive(ovtmp, size - done, SocketFlags.None));
                 ovtmp.Take(doneNow).ToArray().CopyTo(ov, done);
                 done += doneNow;
                 mCurrentIn += doneNow;
-                if (done == size)
+                if (done >= size)
                 {
                     /*using (FileStream fs = File.Open("recvDbg.bin", FileMode.Append, FileAccess.Write))
                         fs.Write(ov, 0, ov.Length);*/

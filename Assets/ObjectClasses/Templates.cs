@@ -527,6 +527,29 @@ public static class TemplateLoader
         return null;
     }
 
+    public static Templates.TplHuman GetHumanById(int serverId)
+    {
+        foreach (Templates.TplHuman human in Templates.Humans)
+        {
+            if (human.ServerID == serverId)
+                return human;
+        }
+
+        return null;
+    }
+
+    public static Templates.TplHuman GetHumanByName(string name)
+    {
+        name = name.ToLower();
+        foreach (Templates.TplHuman human in Templates.Humans)
+        {
+            if (human.Name.ToLower() == name)
+                return human;
+        }
+
+        return null;
+    }
+
     public static Templates.TplMaterial GetMaterialById(int id)
     {
         if (id < 0 || id >= Templates.Materials.Count)

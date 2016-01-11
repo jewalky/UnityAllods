@@ -171,7 +171,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         float tMaxX = sW / sTex.width;
         float tMaxY = sH / sTex.height;
 
-        bool flying = LogicUnit.Template.IsFlying;
+        bool flying = LogicUnit.IsFlying;
 
         float shadowOffsReal = shadowOffs * sH;
         float shadowOffsXLeft = -shadowOffsReal * (1f - LogicUnit.Class.CenterY);
@@ -240,9 +240,10 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
     public void Start()
     {
+        string typeName = (LogicUnit.GetObjectType() == MapObjectType.Monster) ? "Monster" : "Human";
         if (LogicUnit.Class != null)
-            name = string.Format("Unit (ID={0}, Class={1})", LogicUnit.ID, LogicUnit.Template.Name);
-        else name = string.Format("Unit (ID={0}, Class=<INVALID>)", LogicUnit.ID);
+            name = string.Format("{0} (ID={1}, Class={2})", typeName, LogicUnit.ID, LogicUnit.TemplateName);
+        else name = string.Format("{0} (ID={1}, Class=<INVALID>)", typeName, LogicUnit.ID);
         // let's give ourselves a sprite renderer first.
         Renderer = gameObject.AddComponent<MeshRenderer>();
         Renderer.enabled = false;
@@ -259,6 +260,29 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         ShadowFilter.mesh = new Mesh();
         ShadowObject.transform.localScale = new Vector3(1, 1, 1);
         ShadowObject.transform.localPosition = new Vector3(0, 0, 16);
+    }
+
+    private static Texture2D[,] _HumanPalettes = null;
+    // type = 0 - heroes
+    // type = 1 - heroes_l
+    // type = 2 - humans
+    private Texture2D UpdateHumanPalette(int type = 2)
+    {
+        if (_HumanPalettes == null)
+        {
+            _HumanPalettes = new Texture2D[3, 17];
+            for (int i = 0; i < 3; i++)
+            {
+                string subdir = new string[]{ "heroes", "heroes_l", "humans" }[i];
+                // palettes 1 to 16 (#2 to #17, where 17 is stone curse) are in human.pal file.
+                // palette 0 (#1) is in palette.pal file.
+                for (int j = 0; j < 16; j++)
+                    _HumanPalettes[i, j + 1] = Images.LoadPalette(string.Format("graphics/units/{0}/human.pal", subdir), (uint)(j * 256 * 4));
+                _HumanPalettes[i, 0] = Images.LoadPalette(string.Format("graphics/units/{0}/palette.pal", subdir));
+            }
+        }
+
+        return _HumanPalettes[type, LogicUnit.Player.Color];
     }
 
     private bool spriteSet = false;
@@ -309,8 +333,6 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 LogicUnit.Class.File.UpdateSprite();
                 sprites = LogicUnit.Class.File.File;
                 Renderer.material = new Material(MainCamera.MainShaderPaletted);
-                //Renderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
-                Renderer.material.SetTexture("_Palette", LogicUnit.Class.File.UpdatePalette(LogicUnit.Template.Face));
                 ShadowRenderer.material = Renderer.material;
                 ShadowRenderer.material.color = new Color(0, 0, 0, 0.5f);
                 spriteSet = true;
@@ -328,7 +350,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 LogicUnit.DeathFrame = dCls.DyingPhases - 1;
             }
 
-            Renderer.material.SetTexture("_Palette", LogicUnit.Class.File.UpdatePalette(LogicUnit.Template.Face));
+            if (LogicUnit.GetObjectType() == MapObjectType.Monster)
+                Renderer.material.SetTexture("_Palette", LogicUnit.Class.File.UpdatePalette(LogicUnit.Face));
+            else Renderer.material.SetTexture("_Palette", UpdateHumanPalette()); // no palette swap for this one
             // first (idle) state is 0..8 frames. frames 1 to 7 are flipped. frames 0 and 8 aren't.
             //  135 180 225
             //  90      270
@@ -449,7 +473,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                     dCls = dCls.Dying;
                 dCls.File.UpdateSprite();
                 sprites = dCls.File.File;
-                Renderer.material.SetTexture("_Palette", dCls.File.UpdatePalette(LogicUnit.Template.Face));
+                Renderer.material.SetTexture("_Palette", dCls.File.UpdatePalette(LogicUnit.Face));
 
                 int moveSize = dCls.MoveBeginPhases + dCls.MovePhases;
                 int attackSize = dCls.AttackPhases;
@@ -485,7 +509,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             float zInv = 0;
             if (!bAlive)
                 zInv = 48;
-            else if (LogicUnit.Template.IsFlying)
+            else if (LogicUnit.IsFlying)
                 zInv = -128;
             transform.localPosition = new Vector3(xP.x, xP.y, MakeZFromY(xP.y) + zInv); // order sprites by y coordinate basically
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicUnit.Class.CenterX));
@@ -544,7 +568,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         if (on)
         {
             // load infowindow texture.
-            Texture2D pic = LogicUnit.Class.UpdateInfoPicture(LogicUnit.Template.Face);
+            Texture2D pic = LogicUnit.Class.UpdateInfoPicture(LogicUnit.Face);
             // init infowindow
             if (TexMaterial == null)
                 TexMaterial = new Material(MainCamera.MainShader);

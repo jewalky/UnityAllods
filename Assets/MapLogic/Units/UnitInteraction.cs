@@ -24,12 +24,12 @@ public class UnitInteraction
                     continue; // if we are already on this cell, skip it as passible
                 uint tile = MapLogic.Instance.Nodes[lx, ly].Tile;
                 MapNodeFlags flags = MapLogic.Instance.Nodes[lx, ly].Flags;
-                if (Unit.Template.IsWalking && (flags & MapNodeFlags.Unblocked) == 0 && (tile >= 0x1C0 && tile <= 0x2FF))
+                if (Unit.IsWalking && (flags & MapNodeFlags.Unblocked) == 0 && (tile >= 0x1C0 && tile <= 0x2FF))
                     return false;
                 MapNodeFlags bAir = staticOnly ? MapNodeFlags.BlockedAir : MapNodeFlags.BlockedAir | MapNodeFlags.DynamicAir;
                 MapNodeFlags bGround = staticOnly ? MapNodeFlags.BlockedGround : MapNodeFlags.BlockedGround | MapNodeFlags.DynamicGround;
-                if (Unit.Template.IsFlying && (flags & bAir) != 0) return false;
-                else if (!Unit.Template.IsFlying && (flags & bGround) != 0)
+                if (Unit.IsFlying && (flags & bAir) != 0) return false;
+                else if (!Unit.IsFlying && (flags & bGround) != 0)
                     return false;
             }
         }
@@ -44,7 +44,7 @@ public class UnitInteraction
 
     public bool CheckCanAttack(MapUnit other)
     {
-        if (other.Template.IsFlying && !Unit.Template.IsFlying && GetAttackRange() == 1)
+        if (other.IsFlying && !Unit.IsFlying && GetAttackRange() == 1)
             return false;
         return true;
     }

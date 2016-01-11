@@ -28,7 +28,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     protected override Type GetGameObjectType() { return typeof(MapViewUnit); }
 
     public UnitClass Class = null;
-    public Templates.TplMonster Template = null; // 
+    private Templates.TplMonster Template = null; // 
     public UnitStats Stats;
     private Player _Player;
 
@@ -112,26 +112,44 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public readonly ScanrangeCalc VisionCalc = new ScanrangeCalc();
     public readonly UnitInteraction Interaction = null;
 
-    public MapUnit(int serverId)
+    public MapUnit()
     {
         Interaction = new UnitInteraction(this);
+    }
+
+    public MapUnit(int serverId) : this()
+    {
         Template = TemplateLoader.GetMonsterById(serverId);
         if (Template == null)
             Debug.LogFormat("Invalid unit created (serverId={0})", serverId);
         else InitUnit();
     }
 
-    public MapUnit(string name)
+    public MapUnit(string name) : this()
     {
-        Interaction = new UnitInteraction(this);
         Template = TemplateLoader.GetMonsterByName(name);
         if (Template == null)
             Debug.LogFormat("Invalid unit created (name={0})", name);
         else InitUnit();
     }
 
+    protected void InitBaseUnit()
+    {
+        IsAlive = true;
+        IsDying = false;
+        Stats = new UnitStats();
+        Actions.Clear();
+        States.Clear();
+        Actions.Add(new IdleAction(this));
+        States.Add(new IdleState(this));
+        VState = UnitVisualState.Idle;
+        DoUpdateView = true;
+    }
+
     private void InitUnit()
     {
+        InitBaseUnit();
+
         Class = UnitClassLoader.GetUnitClassById(Template.TypeID);
         if (Class == null)
         {
@@ -140,12 +158,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             return;
         }
 
-        IsAlive = true;
-        IsDying = false;
-
-        Stats = new UnitStats();
         Width = Template.TokenSize;
-        Height = Template.TokenSize;
+        Height = Width;
 
         Stats.Health = Stats.HealthMax = Math.Max(Template.HealthMax, 0);
         Stats.Mana = Stats.ManaMax = Math.Max(Template.ManaMax, 0); // they sometimes put -1 as mana counter for fighters
@@ -159,7 +173,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         // physical damage and resists
         int templateMin = Template.PhysicalMin;
         int templateMax = Template.PhysicalMax - templateMin;
-        if (Template.IsIgnoringArmor && ((templateMin & 0x80) != 0))
+        if (IsIgnoringArmor && ((templateMin & 0x80) != 0))
         {
             templateMin = (templateMin & 0x7F) * 15;
             templateMax *= 15;
@@ -213,14 +227,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 PutItemToBody((BodySlot)item2.Class.Option.Slot, item2);
         }
 
-        Actions.Clear();
-        States.Clear();
-
-        Actions.Add(new IdleAction(this));
-        States.Add(new IdleState(this));
-
-        DoUpdateView = true;
-        VState = UnitVisualState.Idle;
         CalculateVision();
     }
 
@@ -416,7 +422,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         if (damagecount <= 0)
             return 0;
 
-        bool sourceIgnoresArmor = source != null && source.Template.IsIgnoringArmor;
+        bool sourceIgnoresArmor = source != null && source.IsIgnoringArmor;
         if ((flags & DamageFlags.PhysicalDamage) != 0 && !sourceIgnoresArmor)
         {
             int ownChance = (int)(1.25f * Stats.Defence);
@@ -466,4 +472,20 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         return 0;
     }
+
+    // template-related stuff
+    public virtual int Charge { get { return Template.Charge; } }
+    public virtual int Relax { get { return Template.Relax; } }
+
+    public virtual bool IsIgnoringArmor { get { return Template.IsIgnoringArmor; } }
+
+    public virtual bool IsFlying { get { return Template.IsFlying; } }
+    public virtual bool IsHovering { get { return Template.IsHovering; } }
+    public virtual bool IsWalking { get { return Template.IsWalking; } }
+
+    public virtual int ServerID { get { return Template.ServerID; } }
+    public virtual int TypeID { get { return Class.ID; } }
+    public virtual int Face { get { return Template.Face; } }
+
+    public virtual string TemplateName { get { return Template.Name; } }
 }

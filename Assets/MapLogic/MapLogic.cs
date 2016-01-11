@@ -359,21 +359,35 @@ class MapLogic
             foreach (AllodsMap.AlmUnit almunit in mapStructure.Units)
             {
                 if ((almunit.Flags & 0x10) != 0)
-                    continue; // skip humans for now
+                {
+                    MapHuman human = new MapHuman(almunit.ServerID);
+                    human.X = (int)almunit.X;
+                    human.Y = (int)almunit.Y;
+                    human.Tag = almunit.ID;
+                    human.Player = GetPlayerByID(almunit.Player - 1);
+                    if (almunit.HealthMax >= 0)
+                        human.Stats.HealthMax = almunit.HealthMax;
+                    if (almunit.Health >= 0)
+                        human.Stats.TrySetHealth(almunit.Health);
 
-                MapUnit unit;
-                unit = new MapUnit(almunit.ServerID);
-                unit.X = (int)almunit.X;
-                unit.Y = (int)almunit.Y;
-                unit.Tag = almunit.ID;
-                unit.Player = GetPlayerByID(almunit.Player - 1);
-                if (almunit.HealthMax >= 0)
-                    unit.Stats.HealthMax = almunit.HealthMax;
-                if (almunit.Health >= 0)
-                    unit.Stats.TrySetHealth(almunit.Health);
+                    human.LinkToWorld();
+                    Objects.Add(human);
+                }
+                else
+                {
+                    MapUnit unit = new MapUnit(almunit.ServerID);
+                    unit.X = (int)almunit.X;
+                    unit.Y = (int)almunit.Y;
+                    unit.Tag = almunit.ID;
+                    unit.Player = GetPlayerByID(almunit.Player - 1);
+                    if (almunit.HealthMax >= 0)
+                        unit.Stats.HealthMax = almunit.HealthMax;
+                    if (almunit.Health >= 0)
+                        unit.Stats.TrySetHealth(almunit.Health);
 
-                unit.LinkToWorld();
-                Objects.Add(unit);
+                    unit.LinkToWorld();
+                    Objects.Add(unit);
+                }
             }
         }
 

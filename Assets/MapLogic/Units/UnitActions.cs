@@ -239,7 +239,7 @@ public class AttackAction : IUnitAction
             Unit.AttackTime = 0;
         }
 
-        if (Speed * Timer >= Unit.Template.Charge && !NetworkManager.IsClient && !DamageDone)
+        if (Speed * Timer >= Unit.Charge && !NetworkManager.IsClient && !DamageDone)
         {
             // do damage here!
             //
@@ -251,7 +251,7 @@ public class AttackAction : IUnitAction
             DamageDone = true;
         }
 
-        if (Speed * Timer >= Unit.Template.Charge + Unit.Template.Relax)
+        if (Speed * Timer >= Unit.Charge + Unit.Relax)
             return false; // end of attack
 
         Timer++;

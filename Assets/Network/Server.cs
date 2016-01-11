@@ -132,7 +132,7 @@ public class Server
             unitCmd.Y = unit.Y;
             unitCmd.Angle = unit.Angle;
             unitCmd.Player = unit.Player.ID;
-            unitCmd.ServerID = unit.Template.ServerID;
+            unitCmd.ServerID = unit.ServerID;
             unitCmd.CurrentStats = unit.Stats;
             unitCmd.IsAvatar = (unit == unit.Player.Avatar);
             unitCmd.VState = unit.VState;

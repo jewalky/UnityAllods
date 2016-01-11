@@ -81,11 +81,14 @@ public class UnitFile
 
     public Texture2D UpdatePalette(int num)
     {
+        if (num < 0) num = -1;
+
         if (Palettes.ContainsKey(num))
             return Palettes[num];
 
         string filename = "palette.pal";
         if (num > 1) filename = string.Format("palette{0}.pal", num);
+        else if (num < 0) filename = "palette_.pal"; // stone curse palette
         string dirname = Path.GetDirectoryName(FileName);
         Texture2D palette = Images.LoadPalette(dirname + "/" + filename);
         Palettes[num] = palette;
@@ -282,9 +285,9 @@ public class UnitClassLoader
                 if (cls.SelectionY1 == UnitClass.MagicIntNull)
                     cls.SelectionY1 = clsp.SelectionY1;
                 if (cls.SelectionX2 == UnitClass.MagicIntNull)
-                    cls.SelectionX2 = clsp.SelectionX1;
+                    cls.SelectionX2 = clsp.SelectionX2;
                 if (cls.SelectionY2 == UnitClass.MagicIntNull)
-                    cls.SelectionY2 = clsp.SelectionY1;
+                    cls.SelectionY2 = clsp.SelectionY2;
                 if (cls.AttackFrames == null)
                     cls.AttackFrames = clsp.AttackFrames;
                 if (cls.MoveFrames == null)

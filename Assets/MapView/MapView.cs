@@ -606,10 +606,10 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                     }
                     return true;
                 case KeyCode.F3:
-                    if (NetworkManager.IsClient)
+                    //if (NetworkManager.IsClient)
                     {
-                        Window wnd = Utils.CreateObjectWithScript<Window>();
-                        Debug.LogFormat("created a window!");
+                        DiplomacyWindow wnd = Utils.CreateObjectWithScript<DiplomacyWindow>();
+                        //Debug.LogFormat("created a window!");
                     }
                     return true;
                 case KeyCode.Escape:

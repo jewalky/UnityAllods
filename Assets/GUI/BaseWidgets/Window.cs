@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class Window : MonoBehaviour, IUiEventProcessor
+public class Window : Widget, IUiEventProcessor
 {
     private static Images.AllodsSprite wnd_LM = null;
     private static Material wnd_LMMat = null;
@@ -13,10 +13,19 @@ public class Window : MonoBehaviour, IUiEventProcessor
     private Mesh BgMesh;
     private GameObject BgObject;
 
-    public int Width = 0;
-    public int Height = 0;
+    public GameObject WorkingArea { get; private set; }
+
+    public virtual void OnAwake()
+    {
+
+    }
 
     public void Awake()
+    {
+        OnAwake();
+    }
+
+    public virtual void OnStart()
     {
 
     }
@@ -47,8 +56,6 @@ public class Window : MonoBehaviour, IUiEventProcessor
         bgFilter.mesh = BgMesh;
         bgRenderer.material = wnd_LMMat;
 
-        Width = 3;
-        Height = 3;
         int vcnt = (8 * Height + 8 * Width + 4 * Width * Height + 4 * 4) // main part
                     + (4 * Width + 4 * Height + 4 * 3)
                     + 4; // shadow border
@@ -66,6 +73,10 @@ public class Window : MonoBehaviour, IUiEventProcessor
 
         int oScreenX = Screen.width / 2 - Width * 96 / 2;
         int oScreenY = Screen.height / 2 - Height * 64 / 2;
+
+        WorkingArea = Utils.CreateObject();
+        WorkingArea.transform.parent = transform;
+        WorkingArea.transform.localPosition = new Vector3(oScreenX, oScreenY, -0.025f);
 
         int shadowOffs = 8;
 
@@ -110,6 +121,8 @@ public class Window : MonoBehaviour, IUiEventProcessor
         BgMesh.uv = quv;
         BgMesh.colors = qc;
         BgMesh.SetIndices(qt, MeshTopology.Quads, 0);
+
+        OnStart();
     }
 
     public void OnDestroy()

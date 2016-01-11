@@ -22,7 +22,7 @@ public class UiManager : MonoBehaviour
     }
 
     // each Window occupies certain Z position in the interface layer. Interface layer is a 1..10 field, and a window occupies approximately 0.05 in this field.
-    // shadow is 0.00, background is 0.01, element shadows are 0.02, elements are 0.03, element overlays are 0.04.
+    // shadow/background is 0.00, element shadows are 0.02, elements are 0.03, element overlays are 0.04.
     // as such, there's a maximum of 200 windows at once.
     public float TopZ = MainCamera.InterfaceZ;
     private List<MonoBehaviour> Windows = new List<MonoBehaviour>();

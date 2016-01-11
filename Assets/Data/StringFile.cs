@@ -16,7 +16,7 @@ public class StringFile
             StreamReader tr = new StreamReader(ms, Encoding.GetEncoding(1251));
             while (!tr.EndOfStream)
             {
-                string line = tr.ReadLine().Trim();
+                string line = tr.ReadLine().Trim('\n', '\r');
                 Strings.Add(line);
             }
         }

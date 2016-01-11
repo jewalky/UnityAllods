@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class TextField : MonoBehaviour, IUiEventProcessor
+public class TextField : Widget, IUiEventProcessor
 {
     public delegate void ReturnHandler();
 
@@ -24,8 +24,6 @@ public class TextField : MonoBehaviour, IUiEventProcessor
 
     public Font Font;
     public ReturnHandler OnReturn;
-    public int Width;
-    public int Height;
     public string Prefix = "";
     public string _Value = "";
     public string Value

@@ -8,6 +8,7 @@
 + fix: dying unit should NOT be unlinked
 + fix: dead unit respawns with dead sprite
 + fix: ground units (any units with attack range of <= 1) shouldn't be able to attack air units
+- fix: buldings should have two layers of main mesh (underlay and normal)
 
 + add: network stats under FPS meter
 + add: unit AI based on states (action-like entity, only with more general approach)
@@ -22,4 +23,4 @@
 - add: spellbook
 - add: basic spell effects
 
-- add: inventory, humans
++ add: inventory, humans

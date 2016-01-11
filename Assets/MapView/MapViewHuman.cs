@@ -31,11 +31,22 @@ public class MapViewHuman : MapViewUnit
             for (int i = 0; i < 3; i++)
             {
                 string subdir = new string[] { "heroes", "heroes_l", "humans" }[i];
-                // palettes 1 to 16 (#2 to #17, where 17 is stone curse) are in human.pal file.
-                // palette 0 (#1) is in palette.pal file.
+                // palettes 0 to 15 (#1 to #16) are in human.pal file.
                 for (int j = 0; j < 16; j++)
-                    _HumanPalettes[i, j + 1] = Images.LoadPalette(string.Format("graphics/units/{0}/human.pal", subdir), (uint)(j * 256 * 4));
-                _HumanPalettes[i, 0] = Images.LoadPalette(string.Format("graphics/units/{0}/palette.pal", subdir));
+                    _HumanPalettes[i, j] = Images.LoadPalette(string.Format("graphics/units/{0}/human.pal", subdir), (uint)(j * 256 * 4));
+                // palette 16 (#17) should be generated manually.
+                Color[] pixels = _HumanPalettes[i, 0].GetPixels();
+                for (int j = 0; j < pixels.Length; j++)
+                {
+                    float avg = (pixels[j].r * 0.21f + pixels[j].g * 0.72f + pixels[j].b * 0.07f);
+                    pixels[j].r = avg;
+                    pixels[j].g = avg;
+                    pixels[j].b = avg;
+                }
+                _HumanPalettes[i, 16] = new Texture2D(pixels.Length, 1, TextureFormat.ARGB32, false);
+                _HumanPalettes[i, 16].filterMode = FilterMode.Point;
+                _HumanPalettes[i, 16].SetPixels(pixels);
+                _HumanPalettes[i, 16].Apply();
             }
         }
 

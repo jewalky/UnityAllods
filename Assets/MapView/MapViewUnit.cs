@@ -297,7 +297,6 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
         if (LogicUnit.DoUpdateView)
         {
-            Debug.LogFormat("unit {0} isalive = {1}", LogicUnit.Template.Name, LogicUnit.IsAlive);
             Renderer.enabled = true;
             ShadowRenderer.enabled = bAlive;
             if (HpRenderer != null) HpRenderer.enabled = LogicUnit.IsAlive;

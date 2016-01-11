@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfie, IObjectManualUpdate
 {
-    public MapStructure LogicStructure
+    private MapStructure LogicStructure
     {
         get
         {

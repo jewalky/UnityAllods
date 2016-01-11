@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class MapViewObstacle : MapViewObject, IObjectManualUpdate
 {
-    public MapObstacle LogicObstacle
+    private MapObstacle LogicObstacle
     {
         get
         {

@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class MapViewHuman : MapViewUnit
 {
-    public MapHuman LogicHuman
+    private MapHuman LogicHuman
     {
         get
         {
@@ -39,7 +39,7 @@ public class MapViewHuman : MapViewUnit
             }
         }
 
-        return _HumanPalettes[type, LogicUnit.Player.Color];
+        return _HumanPalettes[type, LogicHuman.Player.Color];
     }
 
     // humans have separate picture mechanism

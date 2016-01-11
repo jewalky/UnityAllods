@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IObjectManualUpdate
 {
-    public MapUnit LogicUnit
+    private MapUnit LogicUnit
     {
         get
         {

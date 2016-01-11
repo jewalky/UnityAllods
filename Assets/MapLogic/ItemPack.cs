@@ -16,6 +16,7 @@ public class ItemPack
     {
         for (int i = 0; i < other.ItemList.Count; i++)
             ItemList.Add(new Item(other.ItemList[i], other.ItemList[i].Count));
+        Money = other.Money;
     }
 
     public int Count
@@ -23,6 +24,20 @@ public class ItemPack
         get
         {
             return ItemList.Count;
+        }
+    }
+
+    public long Money = 0;
+
+    public long Price
+    {
+        get
+        {
+            long mOut = 0;
+            for (int i = 0; i < ItemList.Count; i++)
+                mOut += ItemList[i].Price;
+            mOut += Money;
+            return mOut;
         }
     }
 

@@ -47,10 +47,6 @@ public class Window : MonoBehaviour, IUiEventProcessor
         bgFilter.mesh = BgMesh;
         bgRenderer.material = wnd_LMMat;
 
-        // origin = Screen.width / 2 - Width * 96 / 2
-        //          Screen.height / 2 - Height * 64 / 2
-        // approximate vertex count: 4 * 4 (corners) + 8 * width (borders horizontal) + 8 * height (borders vertical) + 4 * width * height
-        //int vcnt = 4 * 4 + 8 * Width + 8 * Height + 4 * Width * Height;
         Width = 3;
         Height = 3;
         int vcnt = (8 * Height + 8 * Width + 4 * Width * Height + 4 * 4) // main part

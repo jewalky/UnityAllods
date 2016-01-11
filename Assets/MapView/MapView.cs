@@ -605,12 +605,16 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                             MapViewChat.Instance.AddChatMessage(Player.AllColorsSystem, Locale.Main[108 + MapLogic.Instance.Speed]);
                     }
                     return true;
-                case KeyCode.Escape:
-                    // open main menu!
-                    // well, just window for now.
+                case KeyCode.F3:
+                    if (NetworkManager.IsClient)
                     {
                         Window wnd = Utils.CreateObjectWithScript<Window>();
                         Debug.LogFormat("created a window!");
+                    }
+                    return true;
+                case KeyCode.Escape:
+                    {
+                        // todo: create main menu
                     }
                     return true;
                 case KeyCode.Space:

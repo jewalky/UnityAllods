@@ -12,6 +12,7 @@ public class MapHuman : MapUnit
     // this unit type has its own template
     private Templates.TplHuman Template;
 
+    [Flags]
     public enum GenderFlags
     {
         Fighter = 0x0001,

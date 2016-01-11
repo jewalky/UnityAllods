@@ -239,7 +239,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             Actions.RemoveAt(Actions.Count - 1);
 
         // check DEATH
-        if (Stats.Health <= 0 && !IsDying)
+        if (Stats.Health <= 0 && IsAlive && !IsDying)
         {
             if (!NetworkManager.IsClient)
                 AddActions(new DeathAction(this));

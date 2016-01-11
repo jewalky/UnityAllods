@@ -32,6 +32,7 @@ public class ItemClass
     public Templates.TplClass Class;
     public Templates.TplArmor Option;
     public bool IsMagic;
+    public bool IsSpecial;
     public int MagicID;
 
     public ushort ItemID;
@@ -79,7 +80,8 @@ public class ItemClassLoader
         string searchFor; // this is reused
         // first off, if last word is "shield", then we're looking for something in Templates.Shields
         int gSlot = -1;
-        int gOption = -1;
+        Templates.TplArmor gOption = null;
+        int gOptionId = -1;
         if (specSplit[specSplit.Length - 1] == "shield")
         {
             searchFor = "";
@@ -94,13 +96,14 @@ public class ItemClassLoader
                     Templates.TplArmor shieldKind = TemplateLoader.Templates.Shields[i];
                     if (shieldKind.Name.ToLower() == searchFor)
                     {
-                        gOption = i + 1;
+                        gOption = shieldKind;
+                        gOptionId = i;
                         gSlot = shieldKind.Slot;
                         break;
                     }
                 }
 
-                if (gOption >= 0)
+                if (gOption != null)
                 {
                     // remove the option specifier (leaving only class and material)
                     specSplit = specSplit.Take(specSplit.Length - (j + 2)).ToArray();
@@ -123,27 +126,29 @@ public class ItemClassLoader
                     Templates.TplArmor weaponKind = TemplateLoader.Templates.Weapons[i];
                     if (weaponKind.Name.ToLower() == searchFor)
                     {
-                        gOption = i;
+                        gOption = weaponKind;
+                        gOptionId = i;
                         gSlot = weaponKind.Slot;
                         break;
                     }
                 }
 
-                if (gOption < 0)
+                if (gOption == null)
                 {
                     for (int i = 0; i < TemplateLoader.Templates.Armor.Count; i++)
                     {
                         Templates.TplArmor armorKind = TemplateLoader.Templates.Armor[i];
                         if (armorKind.Name.ToLower() == searchFor)
                         {
-                            gOption = i;
+                            gOption = armorKind;
+                            gOptionId = i;
                             gSlot = armorKind.Slot;
                             break;
                         }
                     }
                 }
 
-                if (gOption >= 0)
+                if (gOption != null)
                 {
                     specSplit = specSplit.Take(specSplit.Length - (j + 1)).ToArray();
                     break;
@@ -152,7 +157,7 @@ public class ItemClassLoader
         }
 
         // here we either have gOption and gSlot or the item is not found.
-        if (gOption < 0 || gSlot < 0)
+        if (gOption == null || gSlot < 0)
             return null;
 
         // now find material
@@ -182,29 +187,29 @@ public class ItemClassLoader
         }
 
         if (gMaterial < 0)
-            return null;
+        {
+            // there are very special items like "Sonic Beam" that have ONLY option in them
+            ItemClass newCls = new ItemClass();
+            newCls.ServerName = gOption.Name;
+            newCls.VisualName = newCls.ServerName;
+            newCls.Option = gOption;
+            newCls.IsMagic = false;
+            newCls.IsSpecial = true;
+            newCls.ItemID = (ushort)gOptionId;
+            newCls.UsableMage = false;
+            newCls.UsableWarrior = false;
+            newCls.Price = 0;
+            return newCls;
+        }
 
         int gClass = -1; // common by default
-        searchFor = "";
-        for (int j = 0; j < 2; j++)
+        searchFor = string.Join(" ", specSplit);
+        for (int i = 0; i < TemplateLoader.Templates.Classes.Count; i++)
         {
-            if (specSplit.Length - 1 - j < 0)
-                break;
-
-            searchFor = (specSplit[specSplit.Length - 1 - j] + " " + searchFor).Trim(); // e.g. "very rare"
-            for (int i = 0; i < TemplateLoader.Templates.Classes.Count; i++)
+            Templates.TplClass fcls = TemplateLoader.Templates.Classes[i];
+            if (fcls.Name.ToLower() == searchFor)
             {
-                Templates.TplClass fcls = TemplateLoader.Templates.Classes[i];
-                if (fcls.Name.ToLower() == searchFor)
-                {
-                    gClass = i;
-                    break;
-                }
-            }
-
-            if (gClass >= 0)
-            {
-                specSplit = specSplit.Take(specSplit.Length - (j + 1)).ToArray();
+                gClass = i;
                 break;
             }
         }
@@ -219,18 +224,20 @@ public class ItemClassLoader
             return null;
 
         // do option remap for shields. nival did NOT write "soft helm" or "soft large shield". instead they just wrote "helm" and "large shield".
-        reqOption = TemplateLoader.GetOptionByIdAndSlot(gOption, gSlot); // small/large -> soft small/soft large
-        if (reqOption == null)
-            return null;
+        reqOption = gOption;
 
+        int oldOptionId = gOptionId;
         if (reqMaterial.Name.ToLower().Contains("wood") && !reqOption.IsAllowed(gClass, gMaterial))
-            gOption += 2; // small/large -> wooden small/wooden large
+            gOptionId += 2; // small/large -> wooden small/wooden large
         else if (reqMaterial.Name.ToLower().Contains("leather") && !reqOption.IsAllowed(gClass, gMaterial))
-            gOption += 1; // small/large -> soft small/soft large
+            gOptionId += 1; // small/large -> soft small/soft large
 
-        reqOption = TemplateLoader.GetOptionByIdAndSlot(gOption, gSlot); // small/large -> soft small/soft large
-        if (reqOption == null)
-            return null;
+        if (oldOptionId != gOptionId)
+        {
+            reqOption = TemplateLoader.GetOptionByIdAndSlot(gOptionId, gSlot);
+            if (reqOption == null)
+                return null;
+        }
 
         for (int i = 0; i < Classes.Count; i++)
         {
@@ -301,6 +308,8 @@ public class ItemClassLoader
                     cls.IsMagic = false;
                     cls.MagicID = -1;
                 }
+
+                cls.IsSpecial = false;
 
                 cls.Material = TemplateLoader.GetMaterialById(materialId);
                 cls.Class = TemplateLoader.GetClassById(classId);

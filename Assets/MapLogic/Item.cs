@@ -254,7 +254,12 @@ public class Item
 
     private void InitItem()
     {
-        if (Class.IsMagic)
+        if (Class.IsSpecial)
+        {
+            // do nothing.
+            // class has only option, no material or class.
+        }
+        else if (Class.IsMagic)
         {
             // generate effect list for native effects.
             Templates.TplMagicItem magicItem = TemplateLoader.GetMagicItemById(Class.MagicID);
@@ -348,8 +353,11 @@ public class Item
 
         // base price.
         Price = Class.Price;
-        Price = (int)(Price * Class.Class.Price);
-        Price = (int)(Price * Class.Material.Price);
+        if (!Class.IsSpecial)
+        {
+            Price = (int)(Price * Class.Class.Price);
+            Price = (int)(Price * Class.Material.Price);
+        }
 
         int manaUsage = 0;
         for (int i = 0; i < Effects.Count; i++)

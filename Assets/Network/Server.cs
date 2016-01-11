@@ -149,6 +149,17 @@ public class Server
             unitCmd.IsAlive = unit.IsAlive;
             unitCmd.IsDying = unit.IsDying;
             unitCmd.IsHuman = (unit.GetObjectType() == MapObjectType.Human);
+
+            if (unitCmd.IsHuman)
+            {
+                MapHuman human = (MapHuman)unit;
+                unitCmd.IsHero = human.IsHero;
+            }
+            else
+            {
+                unitCmd.IsHero = false;
+            }
+
             player.NetClient.SendCommand(unitCmd);
             // also notify of current unit state
             NotifyAddUnitActionsSingle(player.NetClient, unit, unit.Actions.Skip(1).ToArray());

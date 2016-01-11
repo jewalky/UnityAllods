@@ -63,14 +63,14 @@ public class MapViewHuman : MapViewUnit
             return _HumanPictures[dictKey];
 
         string subdir;
-        if ((LogicHuman.Gender & MapHuman.HGender.Male) != 0)
+        if ((LogicHuman.Gender & MapHuman.GenderFlags.Male) != 0)
             subdir = "m";
-        else if ((LogicHuman.Gender & MapHuman.HGender.Female) != 0)
+        else if ((LogicHuman.Gender & MapHuman.GenderFlags.Female) != 0)
             subdir = "f";
         else return null;
-        if ((LogicHuman.Gender & MapHuman.HGender.Fighter) != 0)
+        if ((LogicHuman.Gender & MapHuman.GenderFlags.Fighter) != 0)
             subdir += "fighter";
-        else if ((LogicHuman.Gender & MapHuman.HGender.Mage) != 0)
+        else if ((LogicHuman.Gender & MapHuman.GenderFlags.Mage) != 0)
             subdir += "mage";
         else return null;
 

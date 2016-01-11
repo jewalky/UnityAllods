@@ -15,6 +15,44 @@ public class UnitClass
         public int Frame;
     }
 
+    public UnitClass()
+    {
+
+    }
+
+    public UnitClass(UnitClass other)
+    {
+        DescText = other.DescText;
+        ID = other.ID;
+        ParentID = other.ParentID;
+        Parent = other.Parent;
+        File = other.File;
+        Index = other.Index;
+        IdlePhases = other.IdlePhases;
+        MovePhases = other.MovePhases;
+        MoveBeginPhases = other.MoveBeginPhases;
+        AttackPhases = other.AttackPhases;
+        DyingPhases = other.DyingPhases;
+        BonePhases = other.BonePhases;
+        CenterX = other.CenterX;
+        CenterY = other.CenterY;
+        SelectionX1 = other.SelectionX1;
+        SelectionX2 = other.SelectionX2;
+        SelectionY1 = other.SelectionY1;
+        SelectionY2 = other.SelectionY2;
+        AttackFrames = other.AttackFrames;
+        MoveFrames = other.MoveFrames;
+        IdleFrames = other.IdleFrames;
+        DyingID = other.DyingID;
+        Dying = other.Dying;
+        Palette = other.Palette;
+        AttackDelay = other.AttackDelay;
+        InfoPicture = other.InfoPicture;
+        TextureFile = other.TextureFile;
+        InMapEditor = other.InMapEditor;
+        Flip = other.Flip; // if sprite flip should be done
+    }
+
     public string DescText = null;
     public int ID = MagicIntNull;
     public int ParentID = MagicIntNull;
@@ -120,6 +158,40 @@ public class UnitClassLoader
 
         return null;
     }
+
+    private static UnitClass[] GetHeroClasses(UnitClass source, string spritename)
+    {
+        UnitClass cls1 = new UnitClass(source);
+        UnitFile file1 = new UnitFile();
+        file1.FileName = "graphics/units/heroes/" + spritename + "/sprites";
+        cls1.File = file1;
+
+        UnitClass cls2 = new UnitClass(source);
+        UnitFile file2 = new UnitFile();
+        file2.FileName = "graphics/units/heroes_l/" + spritename + "/sprites";
+        cls2.File = file2;
+
+        return new UnitClass[] { cls2, cls1 };
+    }
+
+    // human hero classes. populated at end of InitClasses()
+    public static UnitClass[] HeroUnarmed { get; private set; }
+    public static UnitClass[] HeroUnarmed_ { get; private set; }
+    public static UnitClass[] HeroSwordsman { get; private set; }
+    public static UnitClass[] HeroSwordsman_ { get; private set; }
+    public static UnitClass[] HeroSwordsman2h { get; private set; }
+    public static UnitClass[] HeroAxeman { get; private set; }
+    public static UnitClass[] HeroAxeman_ { get; private set; }
+    public static UnitClass[] HeroAxeman2h { get; private set; }
+    public static UnitClass[] HeroClubman { get; private set; }
+    public static UnitClass[] HeroClubman_ { get; private set; }
+    public static UnitClass[] HeroPikeman { get; private set; }
+    public static UnitClass[] HeroPikeman_ { get; private set; }
+    public static UnitClass[] HeroArcher { get; private set; }
+    public static UnitClass[] HeroCrossbowman { get; private set; }
+    public static UnitClass[] HeroMage { get; private set; }
+    public static UnitClass[] HeroMageSt { get; private set; }
+    public static int[] HeroMaterials = new int[16]; // 0 = heroes_l, 1 = heroes
 
     public static void InitClasses()
     {
@@ -353,6 +425,33 @@ public class UnitClassLoader
                 cls.InfoPicture = "beeh";
             cls.Dying = GetUnitClassById(cls.DyingID);
             cls.InfoPicture = "graphics/infowindow/" + cls.InfoPicture;
+        }
+
+        // init human hero classes
+        HeroUnarmed = GetHeroClasses(GetUnitClassById(1), "unarmed");
+        HeroUnarmed_ = GetHeroClasses(GetUnitClassById(2), "unarmed_");
+        HeroSwordsman = GetHeroClasses(GetUnitClassById(3), "swordsman");
+        HeroSwordsman_ = GetHeroClasses(GetUnitClassById(4), "swordsman_");
+        HeroSwordsman2h = GetHeroClasses(GetUnitClassById(5), "swordsman2h");
+        HeroAxeman = GetHeroClasses(GetUnitClassById(7), "axeman");
+        HeroAxeman_ = GetHeroClasses(GetUnitClassById(8), "axeman_");
+        HeroAxeman2h = GetHeroClasses(GetUnitClassById(9), "axeman2h");
+        HeroClubman = GetHeroClasses(GetUnitClassById(10), "clubman");
+        HeroClubman_ = GetHeroClasses(GetUnitClassById(11), "clubman_");
+        HeroPikeman = GetHeroClasses(GetUnitClassById(12), "pikeman");
+        HeroPikeman_ = GetHeroClasses(GetUnitClassById(13), "pikeman_");
+        HeroArcher = GetHeroClasses(GetUnitClassById(14), "archer");
+        HeroCrossbowman = GetHeroClasses(GetUnitClassById(15), "xbowman");
+        HeroMage = GetHeroClasses(GetUnitClassById(23), "mage");
+        HeroMageSt = GetHeroClasses(GetUnitClassById(24), "mage_st");
+
+        Registry materialReg = new Registry("graphics/units/material.reg");
+        for (int i = 0; i < 16; i++)
+        {
+            string matRaw = materialReg.GetString(string.Format("Material{0}", i), "Path", "heroes_l").ToLower();
+            if (matRaw == "heroes")
+                HeroMaterials[i] = 1;
+            else HeroMaterials[i] = 0;
         }
     }
 

@@ -35,6 +35,8 @@ public class ItemClass
     public bool IsSpecial;
     public int MagicID;
 
+    public int MaterialID { get { return TemplateLoader.Templates.Materials.IndexOf(Material); } }
+
     public ushort ItemID;
 
     public bool UsableWarrior;
@@ -188,18 +190,26 @@ public class ItemClassLoader
 
         if (gMaterial < 0)
         {
-            // there are very special items like "Sonic Beam" that have ONLY option in them
-            ItemClass newCls = new ItemClass();
-            newCls.ServerName = gOption.Name;
-            newCls.VisualName = newCls.ServerName;
-            newCls.Option = gOption;
-            newCls.IsMagic = false;
-            newCls.IsSpecial = true;
-            newCls.ItemID = (ushort)gOptionId;
-            newCls.UsableMage = false;
-            newCls.UsableWarrior = false;
-            newCls.Price = 0;
-            return newCls;
+            // check if option has "none" material allowed (aka 15)
+            if (gOption.IsAllowed(-1, 15))
+            {
+                gMaterial = 15;
+            }
+            else
+            {
+                // there are very special items like "Sonic Beam" that have ONLY option in them
+                ItemClass newCls = new ItemClass();
+                newCls.ServerName = gOption.Name;
+                newCls.VisualName = newCls.ServerName;
+                newCls.Option = gOption;
+                newCls.IsMagic = false;
+                newCls.IsSpecial = true;
+                newCls.ItemID = (ushort)gOptionId;
+                newCls.UsableMage = false;
+                newCls.UsableWarrior = false;
+                newCls.Price = 0;
+                return newCls;
+            }
         }
 
         int gClass = -1; // common by default

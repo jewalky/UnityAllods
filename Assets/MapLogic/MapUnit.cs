@@ -237,6 +237,12 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             _Player.Objects.Remove(this);
     }
 
+    // this is called when on-body items are modified
+    public virtual void UpdateItems()
+    {
+
+    }
+
     public override void Update()
     {
         if (Class == null)
@@ -393,6 +399,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     {
         Item item = ItemsBody[(int)slot];
         ItemsBody[(int)slot] = null;
+        UpdateItems();
         return item;
     }
 
@@ -403,9 +410,19 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public void PutItemToBody(BodySlot slot, Item item)
     {
+        // unequip existing item on specified slot
         if (ItemsBody[(int)slot] != null)
             ItemsPack.PutItem(ItemsPack.Count, ItemsBody[(int)slot]); // put current item to pack
+
+        if (item.Class.Option.TwoHanded == 2 && ItemsBody[(int)BodySlot.Shield] != null)
+        {
+            // unequip shield for two-handed weapon
+            ItemsPack.PutItem(ItemsPack.Count, ItemsBody[(int)BodySlot.Shield]);
+            ItemsBody[(int)BodySlot.Shield] = null;
+        }
+
         ItemsBody[(int)slot] = item;
+        UpdateItems();
     }
 
     public void Respawn(int x, int y)

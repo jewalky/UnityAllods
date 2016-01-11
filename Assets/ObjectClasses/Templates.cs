@@ -191,6 +191,14 @@ public class Templates
 
         public bool IsAllowed(int cls, int material)
         {
+            if (cls < 0)
+            {
+                for (int i = 0; i < 8; i++)
+                    if (IsAllowed(i, material))
+                        return true;
+                return false;
+            }
+
             return (ClassesAllowed[cls] & (1 << material)) != 0;
         }
     }

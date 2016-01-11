@@ -601,7 +601,7 @@ class MapLogic
     {
         MapUnit unit = new MapUnit(Config.sv_avatar);
         if (unit.Class == null)
-            unit = new MapHuman(Config.sv_avatar);
+            unit = new MapHuman(Config.sv_avatar, true);
         if (unit.Class == null)
             return null;
         unit.Player = player;

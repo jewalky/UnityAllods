@@ -12,7 +12,7 @@ public class MapHuman : MapUnit
     // this unit type has its own template
     private Templates.TplHuman Template;
 
-    public enum HGender
+    public enum GenderFlags
     {
         Fighter = 0x0001,
         Mage = 0x0002,
@@ -25,19 +25,21 @@ public class MapHuman : MapUnit
         FemaleMage = Female | Mage
     }
 
-    public HGender Gender { get; private set; }
+    public GenderFlags Gender { get; private set; }
+    public bool IsHero { get; private set; }
 
-
-    public MapHuman(int serverId)
+    public MapHuman(int serverId, bool hero = false)
     {
+        IsHero = hero;
         Template = TemplateLoader.GetHumanById(serverId);
         if (Template == null)
             Debug.LogFormat("Invalid human created (serverId={0})", serverId);
         else InitHuman();
     }
 
-    public MapHuman(string name)
+    public MapHuman(string name, bool hero = false)
     {
+        IsHero = hero;
         Template = TemplateLoader.GetHumanByName(name);
         if (Template == null)
             Debug.LogFormat("Invalid human created (name={0})", name);
@@ -77,6 +79,15 @@ public class MapHuman : MapUnit
             Stats.Speed = 1;
         Stats.ScanRange = Template.ScanRange;
 
+        // human specific
+        if (Template.Gender == 1)
+            Gender = GenderFlags.Female;
+        else Gender = GenderFlags.Male;
+        // guess class (mage/fighter) from type
+        if (Class.ID == 24 || Class.ID == 23) // unarmed mage, mage with staff
+            Gender |= GenderFlags.Mage;
+        else Gender |= GenderFlags.Fighter; // otherwise its a fighter.
+
         // initial items
         for (int i = 0; i < Template.EquipItems.Length; i++)
         {
@@ -90,22 +101,78 @@ public class MapHuman : MapUnit
             PutItemToBody((BodySlot)item.Class.Option.Slot, item);
         }
 
-        // human specific
-        if (Template.Gender == 1)
-            Gender = HGender.Female;
-        else Gender = HGender.Male;
-        // guess class (mage/fighter) from type
-        if (Class.ID == 24 || Class.ID == 23) // unarmed mage, mage with staff
-            Gender |= HGender.Mage;
-        else Gender |= HGender.Fighter; // otherwise its a fighter.
-
         CalculateVision();
+        UpdateItems();
+    }
+
+    public override void UpdateItems()
+    {
+        if (IsHero)
+        {
+            Item cuirass = GetItemFromBody(BodySlot.CuirassCloak);
+            Item weapon = GetItemFromBody(BodySlot.Weapon);
+            Item shield = GetItemFromBody(BodySlot.Shield);
+            int isLightArmored = 0;
+            if (cuirass != null)
+                isLightArmored = UnitClassLoader.HeroMaterials[cuirass.Class.MaterialID];
+            // now if we are a mage, then we either have armed or unarmed sprite.
+            // if we're a fighter, we should pick appropriate version of the sprite instead.
+            UnitClass newClass = null;
+            if ((Gender & GenderFlags.Mage) != 0)
+            {
+                newClass = (weapon != null) ? UnitClassLoader.HeroMageSt[1] : UnitClassLoader.HeroMage[1]; // always heroes. heroes_l mages don't exist!
+            }
+            else if (weapon == null)
+            {
+                newClass = UnitClassLoader.HeroUnarmed[isLightArmored];
+            }
+            else
+            {
+                Templates.TplArmor weaponKind = weapon.Class.Option;
+                switch (weaponKind.AttackType)
+                {
+                    case 1: // sword
+                        if (weaponKind.TwoHanded == 2)
+                            newClass = UnitClassLoader.HeroSwordsman2h[isLightArmored];
+                        else if (shield != null)
+                            newClass = UnitClassLoader.HeroSwordsman_[isLightArmored];
+                        else newClass = UnitClassLoader.HeroSwordsman[isLightArmored];
+                        break;
+
+                    case 2: // axe
+                        if (weaponKind.TwoHanded == 2)
+                            newClass = UnitClassLoader.HeroAxeman2h[isLightArmored];
+                        else if (shield != null)
+                            newClass = UnitClassLoader.HeroAxeman_[isLightArmored];
+                        else newClass = UnitClassLoader.HeroAxeman[isLightArmored];
+                        break;
+
+                    case 3: // club
+                        newClass = (shield != null) ? UnitClassLoader.HeroClubman_[isLightArmored] : UnitClassLoader.HeroClubman[isLightArmored];
+                        break;
+
+                    case 4: // pike
+                        newClass = (shield != null) ? UnitClassLoader.HeroPikeman_[isLightArmored] : UnitClassLoader.HeroPikeman[isLightArmored];
+                        break;
+
+                    case 5: // shooting (bow or crossbow)
+                        if (weaponKind.Name.ToLower().Contains("crossbow"))
+                            newClass = UnitClassLoader.HeroCrossbowman[isLightArmored];
+                        else newClass = UnitClassLoader.HeroArcher[isLightArmored];
+                        break;
+                }
+            }
+
+            if (newClass != Class)
+            {
+                Class = newClass;
+                DoUpdateView = true;
+            }
+        }
     }
 
     public override void Update()
     {
-        // update human specific stuff
-
         // update unit
         base.Update();
     }

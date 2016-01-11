@@ -47,18 +47,18 @@ public class MoveState : IUnitState
     public static bool TryWalkTo(MapUnit unit, int walkX, int walkY)
     {
         // check if target is walkable for us (statically)
-        if (!unit.CheckWalkableForUnit(walkX, walkY, false))
+        if (!unit.Interaction.CheckWalkableForUnit(walkX, walkY, false))
         {
             List<Vector2i> switchNodes = new List<Vector2i>();
             for (int ly = walkY - unit.Height; ly < walkY + unit.Height; ly++)
                 for (int lx = walkX - unit.Width; lx < walkX + unit.Width; lx++)
-                    if (unit.CheckWalkableForUnit(lx, ly, false))
+                    if (unit.Interaction.CheckWalkableForUnit(lx, ly, false))
                         switchNodes.Add(new Vector2i(lx, ly));
 
             switchNodes.Sort((a, b) => 
             {
-                Vector2i own1 = unit.GetClosestPointTo(a.x, a.y);
-                Vector2i own2 = unit.GetClosestPointTo(b.x, b.y);
+                Vector2i own1 = unit.Interaction.GetClosestPointTo(a.x, a.y);
+                Vector2i own2 = unit.Interaction.GetClosestPointTo(b.x, b.y);
                 float d1 = (a - own1).magnitude;
                 float d2 = (b - own2).magnitude;
                 if (d1 > d2)
@@ -87,7 +87,7 @@ public class MoveState : IUnitState
         if (sbd > path.Count) sbd = path.Count;
         for (int i = 0; i < sbd; i++)
         {
-            if (!unit.CheckWalkableForUnit(path[i].x, path[i].y, false))
+            if (!unit.Interaction.CheckWalkableForUnit(path[i].x, path[i].y, false))
             {
                 // one of nodes in statically found path (up to 32 nodes ahead) is non-walkable.
                 // here we try to build another path around it instead.
@@ -108,7 +108,7 @@ public class MoveState : IUnitState
         }
 
         // if NEXT node is not walkable, we drop into idle state.
-        if (unit.CheckWalkableForUnit(path[0].x, path[0].y, false))
+        if (unit.Interaction.CheckWalkableForUnit(path[0].x, path[0].y, false))
         {
             // next path node found
             // notify clients
@@ -151,16 +151,16 @@ public class AttackState : IUnitState
         if (TargetUnit == Unit || !TargetUnit.IsAlive || !MapLogic.Instance.Objects.Contains(TargetUnit))
             return false;
 
-        if (!Unit.CheckCanAttack(TargetUnit))
+        if (!Unit.Interaction.CheckCanAttack(TargetUnit))
             return false;
 
         // assume melee attack right now
         // check if in direct proximity
-        if (Unit.GetClosestDistanceTo(TargetUnit) <= 1.5)
+        if (Unit.Interaction.GetClosestDistanceTo(TargetUnit) <= 1.5)
         {
             // in direct proximity!
             // 
-            Vector2i enemyCell = TargetUnit.GetClosestPointTo(Unit);
+            Vector2i enemyCell = TargetUnit.Interaction.GetClosestPointTo(Unit);
             int angleNeeded = Unit.FaceCell(enemyCell.x, enemyCell.y);
             if (Unit.Angle != angleNeeded)
             {

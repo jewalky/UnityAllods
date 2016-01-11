@@ -135,7 +135,7 @@ public class MoveAction : IUnitAction
     public virtual bool Process()
     {
         // check if it's possible to walk there (again). NOT on client.
-        if (!NetworkManager.IsClient && !Unit.CheckWalkableForUnit(TargetX, TargetY, false))
+        if (!NetworkManager.IsClient && !Unit.Interaction.CheckWalkableForUnit(TargetX, TargetY, false))
             return false; // stop this state. possibly try to pathfind again. otherwise idle.
 
         //Debug.LogFormat("walk state: moving to {0},{1} ({2})", TargetX, TargetY, Frac);

@@ -105,14 +105,16 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     }
 
     public Item[] ItemsBody = new Item[15];
-    public List<Item> ItemsPack = new List<Item>();
+    public ItemPack ItemsPack = new ItemPack();
 
     //
     public readonly bool[,] Vision = new bool[41, 41];
-    private ScanrangeCalc VisionCalc = new ScanrangeCalc();
+    public readonly ScanrangeCalc VisionCalc = new ScanrangeCalc();
+    public readonly UnitInteraction Interaction = null;
 
     public MapUnit(int serverId)
     {
+        Interaction = new UnitInteraction(this);
         Template = TemplateLoader.GetMonsterById(serverId);
         if (Template == null)
             Debug.LogFormat("Invalid unit created (serverId={0})", serverId);
@@ -121,6 +123,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public MapUnit(string name)
     {
+        Interaction = new UnitInteraction(this);
         Template = TemplateLoader.GetMonsterByName(name);
         if (Template == null)
             Debug.LogFormat("Invalid unit created (name={0})", name);
@@ -292,81 +295,17 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         return (Template.IsFlying) ? MapNodeFlags.DynamicAir : MapNodeFlags.DynamicGround;
     }
 
-    /// <summary>
-    /// EVERYTHING BELOW IS ASTAR
-    /// </summary>
-
-    class AstarHelper : IShortestPath<Vector2i, Vector2i>
-    {
-        private MapUnit unit;
-        public bool StaticLookup = false;
-
-        public AstarHelper(MapUnit unit)
-        {
-            this.unit = unit;
-        }
-
-        /**
-         * Should return a estimate of shortest distance. The estimate must me admissible (never overestimate)
-         */
-        public float Heuristic(Vector2i fromLocation, Vector2i toLocation)
-        {
-            return (fromLocation - toLocation).magnitude; // return straight line distance
-        }
-
-        private bool CheckWalkable(Vector2i p)
-        {
-            if (p.x < 8 || p.y < 8 ||
-                p.x >= MapLogic.Instance.Width - 8 || p.y >= MapLogic.Instance.Height - 8) return false;
-            return unit.CheckWalkableForUnit(p.x, p.y, StaticLookup);
-        }
-
-        /**
-         * Return the legal moves from position
-         */
-        public List<Vector2i> Expand(Vector2i state)
-        {
-            List<Vector2i> res = new List<Vector2i>();
-            for (int x = -1; x <= 1; x++)
-            {
-                for (int y = -1; y <= 1; y++)
-                {
-                    if (x == 0 && y == 0) continue;
-                    Vector2i action = new Vector2i(x, y);
-                    action.x += state.x;
-                    action.y += state.y;
-                    if (CheckWalkable(action))
-                        res.Add(action);
-                }
-            }
-            return res;
-        }
-
-        /**
-         * Return the actual cost between two adjecent locations
-         */
-        public float ActualCost(Vector2i fromLocation, Vector2i toLocation)
-        {
-            return (fromLocation - toLocation).magnitude;
-        }
-
-        public Vector2i ApplyAction(Vector2i state, Vector2i action)
-        {
-            return action;
-        }
-    }
-
     private ShortestPathGraphSearch<Vector2i, Vector2i> AstarSearcher = null;
-    private AstarHelper AstarSearcherH = null;
+    private UnitAstarHelper AstarSearcherH = null;
     public List<Vector2i> DecideNextMove(int targetX, int targetY, bool staticOnly)
     {
         // if targetX,targetY is blocked, refuse to pathfind.
-        if (!CheckWalkableForUnit(targetX, targetY, staticOnly))
+        if (!Interaction.CheckWalkableForUnit(targetX, targetY, staticOnly))
             return null;
 
         // init astar searcher
         if (AstarSearcherH == null)
-            AstarSearcherH = new AstarHelper(this);
+            AstarSearcherH = new UnitAstarHelper(this);
         if (AstarSearcher == null)
             AstarSearcher = new ShortestPathGraphSearch<Vector2i, Vector2i>(AstarSearcherH);
         AstarSearcherH.StaticLookup = staticOnly;
@@ -383,47 +322,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         {
             return null;
         }
-    }
-
-    /// <summary>
-    /// EVERYTHING BELOW IS STATES
-    /// </summary>
-
-    // returns true if cell is walkable for this unit
-    public bool CheckWalkableForUnit(int x, int y, bool staticOnly)
-    {
-        for (int ly = y; ly < y + Height; ly++)
-        {
-            for (int lx = x; lx < x + Width; lx++)
-            {
-                // skip cells currently taken
-                if (MapLogic.Instance.Nodes[lx, ly].Objects.Contains(this))
-                    continue; // if we are already on this cell, skip it as passible
-                uint tile = MapLogic.Instance.Nodes[lx, ly].Tile;
-                MapNodeFlags flags = MapLogic.Instance.Nodes[lx, ly].Flags;
-                if (Template.IsWalking && (flags & MapNodeFlags.Unblocked) == 0 && (tile >= 0x1C0 && tile <= 0x2FF))
-                    return false;
-                MapNodeFlags bAir = staticOnly ? MapNodeFlags.BlockedAir : MapNodeFlags.BlockedAir | MapNodeFlags.DynamicAir;
-                MapNodeFlags bGround = staticOnly ? MapNodeFlags.BlockedGround : MapNodeFlags.BlockedGround | MapNodeFlags.DynamicGround;
-                if (Template.IsFlying && (flags & bAir) != 0) return false;
-                else if (!Template.IsFlying && (flags & bGround) != 0)
-                    return false;
-            }
-        }
-
-        return true;
-    }
-
-    public float GetAttackRange()
-    {
-        return 1;
-    }
-
-    public bool CheckCanAttack(MapUnit unit)
-    {
-        if (unit.Template.IsFlying && !Template.IsFlying && GetAttackRange() == 1)
-            return false;
-        return true;
     }
 
     public int FaceCell(int x, int y)
@@ -487,42 +385,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         States.Add(state);
     }
 
-    // take item from pack
-    public Item GetItemFromPack(int position, int count)
-    {
-        if (position < 0 || position >= ItemsPack.Count)
-            return null;
-
-        Item sourceItem = ItemsPack[position];
-        if (count >= sourceItem.Count)
-        {
-            ItemsPack.RemoveAt(position);
-            return sourceItem;
-        }
-
-        Item newItem = new Item(sourceItem, count);
-        sourceItem.Count -= count;
-        return newItem;
-    }
-
-    // insert item into pack.
-    public void PutItemToPack(int position, Item item)
-    {
-        // check for already present count
-        for (int i = 0; i < ItemsPack.Count; i++)
-        {
-            if (ItemsPack[i].Class == item.Class &&
-                ItemsPack[i].MagicEffects.SequenceEqual(item.MagicEffects))
-            {
-                ItemsPack[i].Count += item.Count;
-                return;
-            }
-        }
-
-        position = Math.Min(ItemsPack.Count, Math.Max(0, position));
-        ItemsPack.Insert(position, new Item(item, item.Count));
-    }
-
     public Item GetItemFromBody(BodySlot slot)
     {
         return ItemsBody[(int)slot];
@@ -531,72 +393,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public void PutItemToBody(BodySlot slot, Item item)
     {
         if (ItemsBody[(int)slot] != null)
-            PutItemToPack(ItemsPack.Count, ItemsBody[(int)slot]); // put current item to pack
+            ItemsPack.PutItem(ItemsPack.Count, ItemsBody[(int)slot]); // put current item to pack
         ItemsBody[(int)slot] = item;
-    }
-
-    public Vector2i GetClosestPointTo(int x, int y)
-    {
-        Vector2i cPt = new Vector2i(x, y);
-        int cX = 256;
-        int cY = 256;
-        for (int ly = Y; ly < Y + Height; ly++)
-        {
-            for (int lx = X; lx < X + Width; lx++)
-            {
-                int xDist = Math.Abs(x - lx);
-                int yDist = Math.Abs(y - ly);
-                if (xDist < cX || yDist < cY)
-                {
-                    cX = xDist;
-                    cY = yDist;
-                    cPt = new Vector2i(lx, ly);
-                }
-            }
-        }
-
-        return cPt;
-
-    }
-
-    public Vector2i GetClosestPointTo(MapUnit other)
-    {
-        return GetClosestPointTo(other.X, other.Y);
-    }
-
-    public float GetClosestDistanceTo(MapUnit other)
-    {
-        if (other == this)
-            return 0;
-
-        Vector2i cPt1 = new Vector2i(X, Y);
-        Vector2i cPt2 = new Vector2i(other.X, other.Y);
-        int cX = 256;
-        int cY = 256;
-        for (int ly = Y; ly < Y + Height; ly++)
-        {
-            for (int lx = X; lx < X + Width; lx++)
-            {
-                for (int lly = other.Y; lly < other.Y + other.Height; lly++)
-                {
-                    for (int llx = other.X; llx < other.X + other.Width; llx++)
-                    {
-                        int xDist = Math.Abs(llx - lx);
-                        int yDist = Math.Abs(lly - ly);
-
-                        if (xDist < cX || yDist < cY)
-                        {
-                            cPt1 = new Vector2i(lx, ly);
-                            cPt2 = new Vector2i(llx, lly);
-                            cX = xDist;
-                            cY = yDist;
-                        }
-                    }
-                }
-            }
-        }
-
-        return (cPt1 - cPt2).magnitude;
     }
 
     public void Respawn(int x, int y)

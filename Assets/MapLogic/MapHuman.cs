@@ -7,9 +7,26 @@ using UnityEngine;
 public class MapHuman : MapUnit
 {
     public override MapObjectType GetObjectType() { return MapObjectType.Human; }
+    protected override Type GetGameObjectType() { return typeof(MapViewHuman); }
 
     // this unit type has its own template
     private Templates.TplHuman Template;
+
+    public enum HGender
+    {
+        Fighter = 0x0001,
+        Mage = 0x0002,
+        Male = 0x0010,
+        Female = 0x0020,
+
+        MaleFighter = Male | Fighter,
+        FemaleFighter = Female | Fighter,
+        MaleMage = Male | Mage,
+        FemaleMage = Female | Mage
+    }
+
+    public HGender Gender { get; private set; }
+
 
     public MapHuman(int serverId)
     {
@@ -73,7 +90,24 @@ public class MapHuman : MapUnit
             PutItemToBody((BodySlot)item.Class.Option.Slot, item);
         }
 
+        // human specific
+        if (Template.Gender == 1)
+            Gender = HGender.Female;
+        else Gender = HGender.Male;
+        // guess class (mage/fighter) from type
+        if (Class.ID == 24 || Class.ID == 23) // unarmed mage, mage with staff
+            Gender |= HGender.Mage;
+        else Gender |= HGender.Fighter; // otherwise its a fighter.
+
         CalculateVision();
+    }
+
+    public override void Update()
+    {
+        // update human specific stuff
+
+        // update unit
+        base.Update();
     }
 
     // template stuff.

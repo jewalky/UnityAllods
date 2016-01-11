@@ -296,9 +296,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public override MapNodeFlags GetNodeLinkFlags(int x, int y)
     {
-        if (Template == null)
-            return 0;
-        return (Template.IsFlying) ? MapNodeFlags.DynamicAir : MapNodeFlags.DynamicGround;
+        return IsFlying ? MapNodeFlags.DynamicAir : MapNodeFlags.DynamicGround;
     }
 
     private ShortestPathGraphSearch<Vector2i, Vector2i> AstarSearcher = null;

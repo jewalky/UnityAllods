@@ -291,6 +291,23 @@ public class Images
                     return _Texture;
                 }
             }
+
+            public Texture2D TextureRaw
+            {
+                get
+                {
+                    if (_Texture == null)
+                    {
+                        // this is inefficient, but this is the ONLY way it works.
+                        _Texture = new Texture2D(Width, Height, TextureFormat.RGHalf, false);
+                        _Texture.SetPixels(0, 0, Width, Height, _Colors);
+                        _Texture.filterMode = FilterMode.Point;
+                        _Colors = null;
+                    }
+
+                    return _Texture;
+                }
+            }
         }
     }
 

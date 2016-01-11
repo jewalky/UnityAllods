@@ -262,27 +262,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         ShadowObject.transform.localPosition = new Vector3(0, 0, 16);
     }
 
-    private static Texture2D[,] _HumanPalettes = null;
-    // type = 0 - heroes
-    // type = 1 - heroes_l
-    // type = 2 - humans
-    private Texture2D UpdateHumanPalette(int type = 2)
+    protected virtual Texture2D GetPalette()
     {
-        if (_HumanPalettes == null)
-        {
-            _HumanPalettes = new Texture2D[3, 17];
-            for (int i = 0; i < 3; i++)
-            {
-                string subdir = new string[]{ "heroes", "heroes_l", "humans" }[i];
-                // palettes 1 to 16 (#2 to #17, where 17 is stone curse) are in human.pal file.
-                // palette 0 (#1) is in palette.pal file.
-                for (int j = 0; j < 16; j++)
-                    _HumanPalettes[i, j + 1] = Images.LoadPalette(string.Format("graphics/units/{0}/human.pal", subdir), (uint)(j * 256 * 4));
-                _HumanPalettes[i, 0] = Images.LoadPalette(string.Format("graphics/units/{0}/palette.pal", subdir));
-            }
-        }
-
-        return _HumanPalettes[type, LogicUnit.Player.Color];
+        return LogicUnit.Class.File.UpdatePalette(LogicUnit.Face);
     }
 
     private bool spriteSet = false;
@@ -350,9 +332,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 LogicUnit.DeathFrame = dCls.DyingPhases - 1;
             }
 
-            if (LogicUnit.GetObjectType() == MapObjectType.Monster)
-                Renderer.material.SetTexture("_Palette", LogicUnit.Class.File.UpdatePalette(LogicUnit.Face));
-            else Renderer.material.SetTexture("_Palette", UpdateHumanPalette()); // no palette swap for this one
+            Renderer.material.SetTexture("_Palette", GetPalette());
             // first (idle) state is 0..8 frames. frames 1 to 7 are flipped. frames 0 and 8 aren't.
             //  135 180 225
             //  90      270
@@ -563,12 +543,10 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
     private static MeshRenderer TexRenderer;
     private static Material TexMaterial;
 
-    public void DisplayPic(bool on, Transform parent)
+    public virtual void DisplayPic(bool on, Transform parent)
     {
         if (on)
         {
-            // load infowindow texture.
-            Texture2D pic = LogicUnit.Class.UpdateInfoPicture(LogicUnit.Face);
             // init infowindow
             if (TexMaterial == null)
                 TexMaterial = new Material(MainCamera.MainShader);
@@ -579,14 +557,18 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 TexRenderer.enabled = true;
                 TexObject.name = "MapViewUnit$InfoPic";
             }
+
             TexObject.SetActive(true);
+
+            TexRenderer.transform.parent = parent;
+            // load infowindow texture.
+            Texture2D pic = LogicUnit.Class.UpdateInfoPicture(LogicUnit.Face);
             TexRenderer.material = TexMaterial;
             TexRenderer.material.mainTexture = pic;
-            TexRenderer.transform.parent = parent;
             TexRenderer.transform.localPosition = new Vector3((float)pic.width / 2,
-                                                         (float)pic.height / 2 + 2, -0.01f);
+                                                            (float)pic.height / 2 + 2, -0.01f);
             TexRenderer.transform.localScale = new Vector3(pic.width,
-                                                           pic.height, 1);
+                                                            pic.height, 1);
         }
         else
         {

@@ -246,10 +246,10 @@ public class UnitClassLoader
                 if (s1x != UnitClass.MagicIntNull && s1y != UnitClass.MagicIntNull &&
                     s2x != UnitClass.MagicIntNull && s2y != UnitClass.MagicIntNull)
                 {
-                    cls.SelectionX1 = s1x - cx;
-                    cls.SelectionX2 = s2x - cx;
-                    cls.SelectionY1 = s1y - cy;
-                    cls.SelectionY2 = s2y - cy;
+                    cls.SelectionX1 = s1x - w / 2;
+                    cls.SelectionX2 = s2x - w / 2;
+                    cls.SelectionY1 = s1y - h / 2;
+                    cls.SelectionY2 = s2y - h / 2;
                     
                 }
             }

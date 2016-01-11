@@ -60,6 +60,10 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         }
         if (HpMat2 == null) HpMat2 = new Material(MainCamera.MainShader);
 
+        int hpHeight = 4;
+        if (LogicUnit.Stats.ManaMax > 0)
+            hpHeight += 4;
+
         if (HpObject == null)
         {
             HpObject = Utils.CreateObject();
@@ -70,10 +74,11 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             HpMesh = new Mesh();
             HpFilter.mesh = HpMesh;
             HpObject.transform.parent = transform;
-            HpObject.transform.localPosition = new Vector3(0, 0, -64);
             HpObject.transform.localScale = new Vector3(1, 1, 1);
             HpRenderer.materials = new Material[] { HpMat1, HpMat2 };
         }
+
+        HpObject.transform.localPosition = new Vector3(0, -hpHeight, -64);
 
         HpMesh.Clear();
         int vcnt = 4 * 8; // 
@@ -91,7 +96,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         int w2 = w - 8;
 
         if (PlayerNickObject != null && PlayerNick != null)
-            PlayerNickObject.transform.localPosition = new Vector3(x, y - PlayerNick.Height - 1, -64);
+            PlayerNickObject.transform.localPosition = new Vector3(x, y - PlayerNick.Height - 1 - hpHeight, -64);
 
         Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x, y, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
         Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x + w - 4, y, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));

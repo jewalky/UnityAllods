@@ -389,6 +389,13 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         States.Add(state);
     }
 
+    public Item TakeItemFromBody(BodySlot slot)
+    {
+        Item item = ItemsBody[(int)slot];
+        ItemsBody[(int)slot] = null;
+        return item;
+    }
+
     public Item GetItemFromBody(BodySlot slot)
     {
         return ItemsBody[(int)slot];

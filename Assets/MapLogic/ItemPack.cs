@@ -42,7 +42,7 @@ public class ItemPack
     }
 
     // take item from pack
-    public Item GetItem(int position, int count)
+    public Item TakeItem(int position, int count)
     {
         if (position < 0 || position >= ItemList.Count)
             return null;

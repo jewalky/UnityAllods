@@ -156,7 +156,7 @@ public class AttackState : IUnitState
 
         // assume melee attack right now
         // check if in direct proximity
-        if (Unit.Interaction.GetClosestDistanceTo(TargetUnit) <= 1.5)
+        if (Unit.Interaction.GetClosestDistanceTo(TargetUnit) <= Unit.Interaction.GetAttackRange() + 0.5f)
         {
             // in direct proximity!
             // 

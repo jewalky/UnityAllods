@@ -39,12 +39,15 @@ public class UnitInteraction
 
     public float GetAttackRange()
     {
+        Item weapon = Unit.GetItemFromBody(MapUnit.BodySlot.Weapon);
+        if (weapon != null)
+            return Math.Max(1, weapon.Class.Option.Range);
         return 1;
     }
 
     public bool CheckCanAttack(MapUnit other)
     {
-        if (other.IsFlying && !Unit.IsFlying && GetAttackRange() == 1)
+        if (other.IsFlying && !Unit.IsFlying && GetAttackRange() <= 1)
             return false;
         return true;
     }

@@ -361,7 +361,8 @@ public class MapViewHuman : MapViewUnit
                 (LogicHuman.Player.Diplomacy[MapLogic.Instance.ConsolePlayer.ID] & DiplomacyFlags.Vision) == 0) return false;
 
             Item item = GetHumanItemByPoint((int)mousex, (int)mousey);
-            UiManager.Instance.SetTooltip(item.Class.VisualName);
+            if (item != null)
+                UiManager.Instance.SetTooltip(item.Class.VisualName);
             return true;
         }
 

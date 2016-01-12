@@ -346,4 +346,9 @@ public partial class Utils
             NextVertex();
         }
     }
+
+    public static Rect DivRect(Rect inRec, Vector2 vec)
+    {
+        return new Rect(inRec.x / vec.x, inRec.y / vec.y, inRec.width / vec.x, inRec.height / vec.y);
+    }
 }

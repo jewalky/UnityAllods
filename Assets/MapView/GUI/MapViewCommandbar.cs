@@ -63,12 +63,7 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
             int bX = i % 4;
             int bY = i / 4;
             Rect buttonRectRaw = new Rect(8 + 34 * bX, 7 + 34 * bY, 34, 34);
-            Rect buttonRectTex = buttonRectRaw;
-            Vector2 buttonRectDiv = new Vector2(CommandBarPressed.width, CommandBarPressed.height);
-            buttonRectTex.x /= buttonRectDiv.x;
-            buttonRectTex.width /= buttonRectDiv.x;
-            buttonRectTex.y /= buttonRectDiv.y;
-            buttonRectTex.height /= buttonRectDiv.y;
+            Rect buttonRectTex = Utils.DivRect(buttonRectRaw, new Vector2(CommandBarPressed.width, CommandBarPressed.height));
 
             Utils.MakeTexturedQuad(out CommandBarUpObjects[i], CommandBarR, buttonRectTex);
             CommandBarUpObjects[i].transform.parent = CommandBarEmptyObject.transform;

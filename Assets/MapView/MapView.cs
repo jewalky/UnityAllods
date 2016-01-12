@@ -43,6 +43,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     private MapViewCommandbar Commandbar;
     private MapViewInfowindow Infowindow;
     private MapViewChat Chat;
+    private MapViewInventory Inventory;
 
     public MapObject SelectedObject { get; private set; }
     public MapObject HoveredObject { get; private set; }
@@ -67,6 +68,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         Commandbar = Utils.CreateObjectWithScript<MapViewCommandbar>();
         Commandbar.transform.parent = UiManager.Instance.transform;
         Commandbar.gameObject.SetActive(false);
+        Inventory = Utils.CreateObjectWithScript<MapViewInventory>();
+        Inventory.transform.parent = UiManager.Instance.transform;
+        Inventory.gameObject.SetActive(false);
 
         Chat = Utils.CreateObjectWithScript<MapViewChat>();
         Chat.transform.parent = UiManager.Instance.transform;
@@ -521,6 +525,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         MiniMap.gameObject.SetActive(MapLogic.Instance.IsLoaded);
         Commandbar.gameObject.SetActive(MapLogic.Instance.IsLoaded);
         Infowindow.gameObject.SetActive(MapLogic.Instance.IsLoaded);
+        Inventory.gameObject.SetActive(MapLogic.Instance.IsLoaded);
 
         if (!MapLogic.Instance.IsLoaded)
             return;

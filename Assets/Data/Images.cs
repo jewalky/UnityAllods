@@ -253,6 +253,9 @@ public class Images
 
         public class Frame
         {
+            private readonly AllodsSpriteSeparate _Sprite;
+            public Frame(AllodsSpriteSeparate sprite) { _Sprite = sprite; }
+
             public int Width { get; internal set; }
             public int Height { get; internal set; }
             internal Color[] _Colors;
@@ -272,6 +275,7 @@ public class Images
                 return 0;
             }
 
+            // retrieves texture resized to nearest POT size.
             public Texture2D Texture
             {
                 get
@@ -292,6 +296,7 @@ public class Images
                 }
             }
 
+            // retrieves raw texture without resize.
             public Texture2D TextureRaw
             {
                 get
@@ -302,6 +307,38 @@ public class Images
                         _Texture = new Texture2D(Width, Height, TextureFormat.RGHalf, false);
                         _Texture.SetPixels(0, 0, Width, Height, _Colors);
                         _Texture.filterMode = FilterMode.Point;
+                        _Texture.Apply();
+                        _Colors = null;
+                    }
+
+                    return _Texture;
+                }
+            }
+
+            // retrieves truecolor representation of the sprite.
+            public Texture2D TextureRawTruecolor
+            {
+                get
+                {
+                    if (_Sprite.OwnPalette == null)
+                        return null;
+
+                    if (_Texture == null)
+                    {
+                        // this is inefficient, but this is the ONLY way it works.
+                        _Texture = new Texture2D(Width, Height, TextureFormat.ARGB32, false);
+                        Color[] paletteColors = _Sprite.OwnPalette.GetPixels();
+                        for (int i = 0; i < _Colors.Length; i++)
+                        {
+                            int paletteIndex = (int)(_Colors[i].r * 255);
+                            _Colors[i] = new Color(paletteColors[paletteIndex].r,
+                                                   paletteColors[paletteIndex].g,
+                                                   paletteColors[paletteIndex].b,
+                                                   _Colors[i].g);
+                        }
+                        _Texture.SetPixels(0, 0, Width, Height, _Colors);
+                        _Texture.filterMode = FilterMode.Point;
+                        _Texture.Apply();
                         _Colors = null;
                     }
 
@@ -398,7 +435,7 @@ public class Images
             //texture.filterMode = FilterMode.Point;
             //texture.SetPixels(colors);
             //texture.Apply(false);
-            frames[i] = new AllodsSpriteSeparate.Frame();
+            frames[i] = new AllodsSpriteSeparate.Frame(sprite);
             frames[i].Width = (int)w;
             frames[i].Height = (int)h;
             frames[i]._Colors = colors;
@@ -413,6 +450,14 @@ public class Images
         sprite.Frames = frames;
 
         return sprite;
+    }
+
+    // read a .256 sprite to a texture.
+    // this is extensively used for rendering human picture.
+    public static Texture2D Load256AsTexture(string filename)
+    {
+        AllodsSpriteSeparate sep = Load256Separate(filename, true);
+        return sep.Frames[0].TextureRawTruecolor;
     }
 
     public static AllodsSprite Load256(string filename, bool hasOwnPalette = true)

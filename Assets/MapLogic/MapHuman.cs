@@ -96,7 +96,7 @@ public class MapHuman : MapUnit
                 continue;
 
             Item item = new Item(Template.EquipItems[i]);
-            if (!item.IsValid)
+            if (!item.IsValid || item.Class.IsSpecial)
                 continue;
 
             PutItemToBody((BodySlot)item.Class.Option.Slot, item);

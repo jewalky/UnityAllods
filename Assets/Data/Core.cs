@@ -11,7 +11,7 @@ public class Core
         //throw new AllodsException(String.Format(format, args));
         string error = string.Format(format, args);
         // now since we can't abort with exception, call quit manually (+ add stack trace)
-        string stack = new System.Diagnostics.StackTrace().ToString();
+        string stack = new Exception().ToString();
         Debug.LogErrorFormat("Abort: {0}\nStack trace:{1}\n\n", error, stack);
         Application.Quit();
     }

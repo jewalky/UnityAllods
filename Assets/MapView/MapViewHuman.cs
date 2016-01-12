@@ -55,8 +55,8 @@ public class MapViewHuman : MapViewUnit
 
     // humans have separate picture mechanism
     // 
-    private static Dictionary<int, Images.AllodsSprite> _HumanPictures = new Dictionary<int, Images.AllodsSprite>();
-    public Images.AllodsSprite UpdateHumanPic()
+    private static Dictionary<int, Texture2D> _HumanPictures = new Dictionary<int, Texture2D>();
+    public Texture2D UpdateHumanPic()
     {
         int dictKey = ((int)LogicHuman.Gender << 8) + LogicHuman.Face;
         if (_HumanPictures.ContainsKey(dictKey))
@@ -74,15 +74,252 @@ public class MapViewHuman : MapViewUnit
             subdir += "mage";
         else return null;
 
-        Images.AllodsSprite sprite = Images.Load256(string.Format("graphics/equipment/{0}/{1}.256", subdir, LogicHuman.Face));
-        _HumanPictures[dictKey] = sprite;
-        return sprite;
+        return _HumanPictures[dictKey] = Images.Load256AsTexture(string.Format("graphics/equipment/{0}/{1}.256", subdir, LogicHuman.Face));
     }
 
     // special handling for displaypic
     private static GameObject HumanTexObject;
     private static MeshRenderer HumanTexRenderer;
-    private static Material HumanTexMaterial;
+    private static MeshFilter HumanTexFilter;
+    private static Material[] HumanTexMaterials;
+
+    private static Texture2D[] HumanCloak = new Texture2D[2]; // male, female
+    private static Texture2D[] HumanSprites = new Texture2D[16];
+    private static Item[] HumanItems = new Item[16];
+
+    // the most epic perversion so far
+    private void UpdateItemPic()
+    {
+        for (int i = 0; i < 16; i++)
+        {
+            HumanSprites[i] = null;
+            HumanItems[i] = null;
+        }
+
+        HumanSprites[1] = UpdateHumanPic();
+        for (int i = 0; i < LogicHuman.ItemsBody.Length; i++)
+        {
+            Item item = LogicHuman.ItemsBody[i];
+            if (item == null)
+                continue;
+
+            int slot = item.Class.Option.Slot;
+            if (slot == 0 || slot == 3 || slot == 11 || (slot >= 13 && slot <= 15))
+                continue;
+
+            ItemFile file1;
+            ItemFile file2;
+
+            if ((LogicHuman.Gender & MapHuman.GenderFlags.Fighter) != 0) // fighter
+            {
+                // order of fighter equipment:
+                // cloak* -> FACE -> ring1 -> ring2 -> amulet -> boots -> mail -> bracers2 -> gauntlets2 -> cuirass
+                //        -> bracers1 -> gauntlets1 -> helm -> weapon -> shield
+
+                Debug.LogFormat("item = {0}, usable {1} {2}", item.Class.ServerName, item.Class.UsableFighter, item.Class.UsableMage);
+
+                if ((LogicHuman.Gender & MapHuman.GenderFlags.Male) != 0)
+                {
+                    file1 = item.Class.File_BodyMF1;
+                    file2 = item.Class.File_BodyMF2;
+                }
+                else
+                {
+                    file1 = item.Class.File_BodyFF1;
+                    file2 = item.Class.File_BodyFF2;
+                }
+
+                file1.UpdateSprite();
+
+                if (LogicHuman.IsHero)
+                {
+                    int fighter_cloak_num = ((LogicHuman.Gender & MapHuman.GenderFlags.Male) != 0) ? 0 : 1;
+                    if (HumanCloak[fighter_cloak_num] == null)
+                        HumanCloak[fighter_cloak_num] = Images.Load256AsTexture((fighter_cloak_num == 0) ? "graphics/interface/heroback/backm.256" : "graphics/interface/heroback/backf.256");
+                    HumanSprites[0] = HumanCloak[fighter_cloak_num];
+                }
+
+                switch (slot)
+                {
+                    case 9: // bracers
+                        file2.UpdateSprite();
+                        HumanSprites[7] = file1.File;
+                        HumanSprites[10] = file2.File;
+                        HumanItems[7] = HumanItems[10] = item;
+                        break;
+
+                    case 10: // gauntlets
+                        file2.UpdateSprite();
+                        HumanSprites[8] = file1.File;
+                        HumanSprites[11] = file2.File;
+                        HumanItems[8] = HumanItems[11] = item;
+                        break;
+
+                    case 4: // ring
+                        file2.UpdateSprite();
+                        HumanSprites[2] = file1.File;
+                        HumanSprites[3] = file2.File;
+                        HumanItems[2] = HumanItems[3] = item;
+                        break;
+
+                    case 5: // amulet
+                        HumanSprites[4] = file1.File;
+                        HumanItems[4] = item;
+                        break;
+
+                    case 6: // helm
+                        HumanSprites[12] = file1.File;
+                        HumanItems[12] = item;
+                        break;
+
+                    case 7: // mail
+                        HumanSprites[6] = file1.File;
+                        HumanItems[6] = item;
+                        break;
+
+                    case 8: // cuirass
+                        HumanSprites[9] = file1.File;
+                        HumanItems[9] = item;
+                        break;
+
+                    case 12: // boots
+                        HumanSprites[5] = file1.File;
+                        HumanItems[5] = item;
+                        break;
+
+                    case 1: // weapon
+                        HumanSprites[13] = file1.File;
+                        HumanItems[13] = item;
+                        break;
+
+                    case 2: // shield
+                        HumanSprites[14] = file1.File;
+                        HumanItems[14] = item;
+                        break;
+                }
+            }
+            else if ((LogicHuman.Gender & MapHuman.GenderFlags.Mage) != 0)
+            {
+                // order of mage equipment:
+                // cloak1 -> face -> ring1 -> ring2 -> boots ->
+                //   gloves1 -> robe -> amulet -> cloak2 -> gloves2 -> hat -> staff
+
+                if ((LogicHuman.Gender & MapHuman.GenderFlags.Male) != 0)
+                {
+                    file1 = item.Class.File_BodyMM1;
+                    file2 = item.Class.File_BodyMM2;
+                }
+                else
+                {
+                    file1 = item.Class.File_BodyFM1;
+                    file2 = item.Class.File_BodyFM2;
+                }
+
+                file1.UpdateSprite();
+
+                switch (slot)
+                {
+                    case 4: // ring
+                        file2.UpdateSprite();
+                        HumanSprites[2] = file1.File;
+                        HumanSprites[3] = file2.File;
+                        HumanItems[2] = HumanItems[3] = item;
+                        break;
+
+                    case 10: // gloves
+                        file2.UpdateSprite();
+                        HumanSprites[5] = file1.File;
+                        HumanSprites[9] = file2.File;
+                        HumanItems[5] = HumanItems[9] = item;
+                        break;
+
+                    case 8: // cloak
+                        file2.UpdateSprite();
+                        HumanSprites[0] = file1.File;
+                        HumanSprites[8] = file2.File;
+                        HumanItems[0] = HumanItems[8] = item;
+                        break;
+
+                    case 5: // amulet
+                        HumanSprites[7] = file1.File;
+                        HumanItems[7] = item;
+                        break;
+
+                    case 6: // hat
+                        HumanSprites[10] = file1.File;
+                        HumanItems[10] = item;
+                        break;
+
+                    case 7: // robe
+                        HumanSprites[6] = file1.File;
+                        HumanItems[6] = item;
+                        break;
+
+                    case 12: // shoes
+                        HumanSprites[4] = file1.File;
+                        HumanItems[4] = item;
+                        break;
+
+                    case 1: // staff
+                        HumanSprites[11] = file1.File;
+                        HumanItems[11] = item;
+                        break;
+                }
+            }
+        }
+
+        // generate supermesh of 16 materials
+        if (HumanTexMaterials == null)
+        {
+            HumanTexMaterials = new Material[16];
+            for (int i = 0; i < 16; i++)
+                HumanTexMaterials[i] = new Material(MainCamera.MainShader);
+        }
+
+        for (int i = 0; i < 16; i++)
+            HumanTexMaterials[i].mainTexture = HumanSprites[i];
+
+        // materials done. make mesh itself
+        if (HumanTexObject == null)
+        {
+            HumanTexObject = Utils.CreateObject();
+            HumanTexObject.name = "MapViewHuman$InfoPic";
+            HumanTexRenderer = HumanTexObject.AddComponent<MeshRenderer>();
+            HumanTexFilter = HumanTexObject.AddComponent<MeshFilter>();
+            Mesh mesh = new Mesh();
+            int pp = 0, ppc = 0, ppt = 0;
+
+            Vector3[] qv = new Vector3[4 * 16];
+            Vector2[] quv = new Vector2[4 * 16];
+
+            for (int i = 0; i < 16; i++)
+                Utils.PutQuadInMesh(qv, quv, null, ref pp, ref ppt, ref ppc, 0, 0, 160, 240, new Rect(0, 0, 1, 1), new Color());
+
+            mesh.vertices = qv;
+            mesh.uv = quv;
+
+            mesh.subMeshCount = 16;
+            for (int i = 0; i < 16; i++)
+            {
+                int[] qt = { i * 4, i * 4 + 1, i * 4 + 2, i * 4 + 3 };
+                mesh.SetIndices(qt, MeshTopology.Quads, i);
+            }
+
+            HumanTexFilter.mesh = mesh;
+            HumanTexRenderer.materials = HumanTexMaterials;
+        }
+
+        // update colors every time
+        Color[] qc = new Color[4 * 16];
+        for (int i = 0; i < 16; i++)
+        {
+            Color c = (HumanSprites[i] == null) ? new Color(0, 0, 0, 0) : new Color(1, 1, 1, 1);
+            for (int j = 0; j < 4; j++)
+                qc[i * 4 + j] = c;
+        }
+
+        HumanTexFilter.mesh.colors = qc;
+    }
 
     public override void DisplayPic(bool on, Transform parent)
     {
@@ -90,27 +327,12 @@ public class MapViewHuman : MapViewUnit
         if (on)
         {
             // load image
-            Images.AllodsSprite pic = UpdateHumanPic();
+            UpdateItemPic();
             // init infowindow
-            if (HumanTexMaterial == null)
-                HumanTexMaterial = new Material(MainCamera.MainShaderPaletted);
-            if (HumanTexObject == null)
-            {
-                Utils.MakeTexturedQuad(out HumanTexObject, pic.Atlas, pic.AtlasRects[0]);
-                HumanTexRenderer = HumanTexObject.GetComponent<MeshRenderer>();
-                HumanTexRenderer.enabled = true;
-                HumanTexObject.name = "MapViewHuman$InfoPic";
-            }
-
             HumanTexObject.SetActive(true);
 
             HumanTexRenderer.transform.parent = parent;
-            // load infowindow texture.
-            HumanTexRenderer.material = HumanTexMaterial;
-            HumanTexRenderer.material.mainTexture = pic.Atlas;
-            HumanTexRenderer.material.SetTexture("_Palette", pic.OwnPalette);
-            HumanTexRenderer.transform.localPosition = new Vector3(0,
-                                                                   2, -0.01f);
+            HumanTexRenderer.transform.localPosition = new Vector3(0, 2, -0.01f);
         }
         else
         {

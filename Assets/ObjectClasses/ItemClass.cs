@@ -5,10 +5,10 @@ using System.Text;
 using System.IO;
 using UnityEngine;
 
-public struct ItemFile
+public class ItemFile
 {
     public string FileName;
-    public Images.AllodsSprite File;
+    public Texture2D File;
 
     public ItemFile(string fname)
     {
@@ -19,7 +19,7 @@ public struct ItemFile
     public void UpdateSprite()
     {
         if (File == null)
-            File = Images.LoadSprite(FileName);
+            File = Images.Load256AsTexture(FileName);
     }
 }
 
@@ -39,7 +39,7 @@ public class ItemClass
 
     public ushort ItemID;
 
-    public bool UsableWarrior;
+    public bool UsableFighter;
     public bool UsableMage;
 
     public ItemFile File_BodyFF1; // primary/secondary for female/male fighter/mage
@@ -73,9 +73,13 @@ public class ItemClassLoader
     public static ItemClass GetItemClassBySpecifier(string specifier)
     {
         specifier = specifier.Trim().ToLower();
+        string commonspecifier = "common " + specifier;
         foreach (ItemClass cls in Classes)
-            if (cls.ServerName.ToLower() == specifier)
+        {
+            string sname = cls.ServerName.ToLower();
+            if (sname == specifier || sname == commonspecifier)
                 return cls;
+        }
 
         // try to guess based on specifier. this is used in world.res
         string[] specSplit = specifier.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -87,12 +91,12 @@ public class ItemClassLoader
         if (specSplit[specSplit.Length - 1] == "shield")
         {
             searchFor = "";
-            for (int j = 0; j < 2; j++)
+            for (int j = 1; j >= 0; j--)
             {
-                if (specSplit.Length - 2 - j < 0)
-                    break;
+                if (specSplit.Length - 1 - j < 0)
+                    continue;
 
-                searchFor = (specSplit[specSplit.Length - 2 - j] + " " + searchFor).Trim(); // e.g. "small" or "wooden small"
+                searchFor = string.Join(" ", specSplit.Skip(specSplit.Length - 1 - j).Take(j + 1).ToArray());
                 for (int i = 0; i < TemplateLoader.Templates.Shields.Count; i++)
                 {
                     Templates.TplArmor shieldKind = TemplateLoader.Templates.Shields[i];
@@ -117,12 +121,12 @@ public class ItemClassLoader
         else
         {
             searchFor = "";
-            for (int j = 0; j < 2; j++)
+            for (int j = 1; j >= 0; j--)
             {
                 if (specSplit.Length - 1 - j < 0)
-                    break;
+                    continue;
 
-                searchFor = (specSplit[specSplit.Length - 1 - j] + " " + searchFor).Trim(); // e.g. "pike" or "spiked club"
+                searchFor = string.Join(" ", specSplit.Skip(specSplit.Length - 1 - j).Take(j + 1).ToArray());
                 for (int i = 0; i < TemplateLoader.Templates.Weapons.Count; i++)
                 {
                     Templates.TplArmor weaponKind = TemplateLoader.Templates.Weapons[i];
@@ -165,12 +169,12 @@ public class ItemClassLoader
         // now find material
         int gMaterial = -1;
         searchFor = "";
-        for (int j = 0; j < 2; j++)
+        for (int j = 1; j >= 0; j--)
         {
             if (specSplit.Length - 1 - j < 0)
-                break;
+                continue;
 
-            searchFor = (specSplit[specSplit.Length - 1 - j] + " " + searchFor).Trim(); // e.g. "crystal"
+            searchFor = string.Join(" ", specSplit.Skip(specSplit.Length - 1 - j).Take(j + 1).ToArray());
             for (int i = 0; i < TemplateLoader.Templates.Materials.Count; i++)
             {
                 Templates.TplMaterial fmat = TemplateLoader.Templates.Materials[i];
@@ -206,7 +210,7 @@ public class ItemClassLoader
                 newCls.IsSpecial = true;
                 newCls.ItemID = (ushort)gOptionId;
                 newCls.UsableMage = false;
-                newCls.UsableWarrior = false;
+                newCls.UsableFighter = false;
                 newCls.Price = 0;
                 return newCls;
             }
@@ -285,11 +289,14 @@ public class ItemClassLoader
                 cls.ItemID = br.ReadUInt16();
                 cls.ServerName = Locale.ItemServ[(int)i];
                 cls.VisualName = Locale.ItemName[(int)i];
-                cls.UsableWarrior = br.ReadByte() != 0;
-                cls.UsableMage = br.ReadByte() != 0;
-                ms.Position++; // unknown byte
+                ms.Position += 2; // some unknown info (usually 0x01 0x00)
+                byte flags = br.ReadByte();
+                if (flags == 2 || flags == 6) // usablefighter
+                    cls.UsableFighter = true;
+                if (flags == 4 || flags == 6) // usablemage
+                    cls.UsableMage = true;
                 byte count_mods = br.ReadByte();
-                ms.Position += 2; // unknown short
+                ms.Position += 2; // size of modifier array in bytes (i.e. 0x0B) + id of price (0x01)
                 cls.Price = br.ReadUInt32();
                 count_mods--;
                 for (byte j = 0; j < count_mods; j++)
@@ -328,31 +335,20 @@ public class ItemClassLoader
                 string imageNameBase = string.Format("{0:D2}{1:D2}{2}{3:D2}", materialId, slotId, classId, optionId);
                 cls.File_Pack = new ItemFile("graphics/inventory/" + imageNameBase + ".16a");
 
-                bool hasSecondary = (optionId == 1 ||
-                                     optionId == 20 || optionId == 21 || optionId == 22 ||
-                                     optionId == 23 ||
-                                     optionId == 24 || optionId == 25 || optionId == 26);
-
-                if (cls.UsableWarrior)
+                if (cls.UsableFighter)
                 {
                     cls.File_BodyMF1 = new ItemFile("graphics/equipment/mfighter/primary/" + imageNameBase + ".256");
                     cls.File_BodyFF1 = new ItemFile("graphics/equipment/ffighter/primary/" + imageNameBase + ".256");
-                    if (hasSecondary)
-                    {
-                        cls.File_BodyMF2 = new ItemFile("graphics/equipment/mfighter/secondary/" + imageNameBase + ".256");
-                        cls.File_BodyFF2 = new ItemFile("graphics/equipment/ffighter/secondary/" + imageNameBase + ".256");
-                    }
+                    cls.File_BodyMF2 = new ItemFile("graphics/equipment/mfighter/secondary/" + imageNameBase + ".256");
+                    cls.File_BodyFF2 = new ItemFile("graphics/equipment/ffighter/secondary/" + imageNameBase + ".256");
                 }
 
                 if (cls.UsableMage)
                 {
                     cls.File_BodyMM1 = new ItemFile("graphics/equipment/mmage/primary/" + imageNameBase + ".256");
                     cls.File_BodyFM1 = new ItemFile("graphics/equipment/fmage/primary/" + imageNameBase + ".256");
-                    if (hasSecondary)
-                    {
-                        cls.File_BodyMM1 = new ItemFile("graphics/equipment/mmage/secondary/" + imageNameBase + ".256");
-                        cls.File_BodyFM1 = new ItemFile("graphics/equipment/fmage/secondary/" + imageNameBase + ".256");
-                    }
+                    cls.File_BodyMM2 = new ItemFile("graphics/equipment/mmage/secondary/" + imageNameBase + ".256");
+                    cls.File_BodyFM2 = new ItemFile("graphics/equipment/fmage/secondary/" + imageNameBase + ".256");
                 }
 
                 Classes.Add(cls);

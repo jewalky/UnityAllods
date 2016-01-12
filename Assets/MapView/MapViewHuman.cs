@@ -116,8 +116,6 @@ public class MapViewHuman : MapViewUnit
                 // cloak* -> FACE -> ring1 -> ring2 -> amulet -> boots -> mail -> bracers2 -> gauntlets2 -> cuirass
                 //        -> bracers1 -> gauntlets1 -> helm -> weapon -> shield
 
-                Debug.LogFormat("item = {0}, usable {1} {2}", item.Class.ServerName, item.Class.UsableFighter, item.Class.UsableMage);
-
                 if ((LogicHuman.Gender & MapHuman.GenderFlags.Male) != 0)
                 {
                     file1 = item.Class.File_BodyMF1;

@@ -210,7 +210,9 @@ public partial class Utils
             UV3.Add(new Vector2());
             UV4.Add(new Vector2());
             Colors.Add(new Color(1, 1, 1, 1));
-            Meshes.Add(TopMesh - 1);
+            if (Meshes.Count > 0)
+                Meshes.Add(Meshes[Meshes.Count - 1]);
+            else Meshes.Add(TopMesh - 1);
         }
 
         public void Reset()

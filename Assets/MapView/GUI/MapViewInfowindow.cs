@@ -194,8 +194,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor
     {
         if (e.rawType == EventType.MouseDown ||
             e.rawType == EventType.MouseUp ||
-            e.rawType == EventType.MouseMove ||
-            (e.rawType == EventType.ExecuteCommand && e.commandName == "tooltip"))
+            e.rawType == EventType.MouseMove)
         {
             Vector2 mPos = Utils.GetMousePosition();
             Vector2 mPosLocal = new Vector2(mPos.x - transform.position.x, mPos.y - transform.position.y);

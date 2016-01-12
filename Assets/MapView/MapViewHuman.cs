@@ -354,8 +354,12 @@ public class MapViewHuman : MapViewUnit
 
     public override bool ProcessEventPic(Event e, float mousex, float mousey)
     {
-        if (e.type == EventType.ExecuteCommand && e.commandName == "tooltip")
+        // don't show any tooltips and obviously don't allow item dragging if its not our unit
+        if (e.rawType == EventType.MouseMove && e.commandName == "tooltip")
         {
+            if (MapLogic.Instance.ConsolePlayer != null &&
+                (LogicHuman.Player.Diplomacy[MapLogic.Instance.ConsolePlayer.ID] & DiplomacyFlags.Vision) == 0) return false;
+
             Item item = GetHumanItemByPoint((int)mousex, (int)mousey);
             UiManager.Instance.SetTooltip(item.Class.VisualName);
             return true;

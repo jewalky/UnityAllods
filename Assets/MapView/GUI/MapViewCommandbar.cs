@@ -116,6 +116,20 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
                 }
             }
 
+            if (e.rawType == EventType.MouseMove &&
+                e.commandName == "tooltip")
+            {
+                int bX = (int)mPos.x / 34;
+                int bY = (int)mPos.y / 34;
+                if (bX >= 0 && bX < 4 &&
+                    bY >= 0 && bY < 2)
+                {
+                    Commands icmd = (Commands)(1 << (bY * 4 + bX));
+                    if ((EnabledCommands & icmd) != 0)
+                        UiManager.Instance.SetTooltip(Locale.Main[bY * 4 + bX]);
+                }
+            }
+
             MouseCursor.SetCursor(MouseCursor.CurDefault);
 
             return true;

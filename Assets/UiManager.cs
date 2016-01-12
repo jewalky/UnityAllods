@@ -110,6 +110,13 @@ public class UiManager : MonoBehaviour
         {
             Event ef = new Event();
             ef.type = EventType.MouseMove;
+
+            if (lastMouseChange > 0.5f)
+            {
+                ef.commandName = "tooltip";
+                lastMouseChange = -1;
+            }
+
             for (int i = Processors.Count - 1; i >= 0; i--)
             {
                 // check if processor's renderer is enabled. implicitly don't give any events to invisible objects.
@@ -126,25 +133,6 @@ public class UiManager : MonoBehaviour
                 lastMouseChange = 0;
                 UnsetTooltip();
             }
-        }
-
-        // send fake event if user held mouse at same position for certain time
-        if (lastMouseChange > 1) // 1 second = timeout for tooltip
-        {
-            // 
-            Event ef = new Event();
-            ef.type = EventType.ExecuteCommand;
-            ef.commandName = "tooltip";
-
-            for (int i = Processors.Count - 1; i >= 0; i--)
-            {
-                // check if processor's renderer is enabled. implicitly don't give any events to invisible objects.
-                if (!ProcessorsEnabled[i]) continue;
-                if (((IUiEventProcessor)Processors[i]).ProcessEvent(ef))
-                    break;
-            }
-
-            lastMouseChange = -1;
         }
     }
 

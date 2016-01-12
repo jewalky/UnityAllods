@@ -6,8 +6,8 @@ using UnityEngine;
 
 public interface IMapViewSelfie
 {
-    bool ProcessEventPic(Event e);
-    bool ProcessEventInfo(Event e);
+    bool ProcessEventPic(Event e, float mousex, float mousey);
+    bool ProcessEventInfo(Event e, float mousex, float mousey);
     void DisplayPic(bool on, Transform parent);
     void DisplayInfo(bool on, Transform parent); // object displays it's info text at coordinates
     MapObject GetObject();

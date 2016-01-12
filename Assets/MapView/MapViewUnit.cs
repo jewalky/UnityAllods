@@ -533,12 +533,12 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         return false;
     }
 
-    public bool ProcessEventPic(Event e)
+    public virtual bool ProcessEventPic(Event e, float mousex, float mousey)
     {
         return false;
     }
 
-    public bool ProcessEventInfo(Event e)
+    public virtual bool ProcessEventInfo(Event e, float mousex, float mousey)
     {
         return false;
     }

@@ -194,7 +194,8 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor
     {
         if (e.rawType == EventType.MouseDown ||
             e.rawType == EventType.MouseUp ||
-            e.rawType == EventType.MouseMove)
+            e.rawType == EventType.MouseMove ||
+            (e.rawType == EventType.ExecuteCommand && e.commandName == "tooltip"))
         {
             Vector2 mPos = Utils.GetMousePosition();
             Vector2 mPosLocal = new Vector2(mPos.x - transform.position.x, mPos.y - transform.position.y);
@@ -222,6 +223,18 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor
                         IsHumanMode = !IsHumanMode;
                     }
                 }
+            }
+
+            // check if event was inside view pic
+            if (new Rect(HBackL.width, 0, HBackR.width, HBackR.height).Contains(mPosLocal)) // right side of humanback
+            {
+                if (_Viewer != null)
+                    _Viewer.ProcessEventPic(e, mPosLocal.x - HBackL.width, mPosLocal.y);
+            }
+            else if (new Rect(TBackL.width, TBackRObject.transform.localPosition.y, TBackR.width, TBackR.height).Contains(mPosLocal))
+            {
+                if (_Viewer != null)
+                    _Viewer.ProcessEventPic(e, mPosLocal.x - TBackL.width, mPosLocal.y - TBackRObject.transform.localPosition.y);
             }
 
             return true;

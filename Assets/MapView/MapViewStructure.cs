@@ -308,12 +308,12 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
         return false;
     }
 
-    public bool ProcessEventPic(Event e)
+    public bool ProcessEventPic(Event e, float mousex, float mousey)
     {
         return false;
     }
 
-    public bool ProcessEventInfo(Event e)
+    public bool ProcessEventInfo(Event e, float mousex, float mousey)
     {
         return false;
     }

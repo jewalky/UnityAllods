@@ -338,4 +338,29 @@ public class MapViewHuman : MapViewUnit
                 HumanTexObject.SetActive(false);
         }
     }
+
+    private static Item GetHumanItemByPoint(int x, int y)
+    {
+        for (int i = 15; i >= 0; i--)
+        {
+            if (HumanSprites[i] == null)
+                continue;
+            if (HumanSprites[i].GetPixel(x, y).a > 0.5f)
+                return HumanItems[i];
+        }
+
+        return null;
+    }
+
+    public override bool ProcessEventPic(Event e, float mousex, float mousey)
+    {
+        if (e.type == EventType.ExecuteCommand && e.commandName == "tooltip")
+        {
+            Item item = GetHumanItemByPoint((int)mousex, (int)mousey);
+            UiManager.Instance.SetTooltip(item.Class.VisualName);
+            return true;
+        }
+
+        return false;
+    }
 }

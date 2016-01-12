@@ -152,7 +152,7 @@ public class Font
         return line_wd;
     }
 
-    internal void RenderToExistingMesh(Mesh mesh, string text, Align align, int width, int height, bool wrapping, out int realheight)
+    internal void RenderToExistingMesh(Mesh mesh, string text, Align align, int width, int height, bool wrapping, out int realwidth, out int realheight)
     {
         // todo: wrap text / output
         string text2 = "";
@@ -181,6 +181,7 @@ public class Font
         int ppc = 0;
         int ppt = 0;
 
+        realwidth = 0;
         float y = 0f;
         for (int i = 0; i < wrapped.Length; i++)
         {
@@ -244,6 +245,9 @@ public class Font
                         x += (c != 0) ? (float)Width(c) : spc_width;
                     }
                 }
+
+                if (x > realwidth)
+                    realwidth = (int)x;
             }
 
             y += LineHeight;
@@ -264,15 +268,15 @@ public class Font
     public GameObject Render(string text, Align align, int width, int height, bool wrapping)
     {
         int tmp;
-        return Render(text, align, width, height, wrapping, out tmp);
+        return Render(text, align, width, height, wrapping, out tmp, out tmp);
     }
 
-    public GameObject Render(string text, Align align, int width, int height, bool wrapping, out int realheight)
+    public GameObject Render(string text, Align align, int width, int height, bool wrapping, out int realwidth, out int realheight)
     {
         GameObject go = Utils.CreateObject();
 
         Mesh mesh = new Mesh();
-        RenderToExistingMesh(mesh, text, align, width, height, wrapping, out realheight);
+        RenderToExistingMesh(mesh, text, align, width, height, wrapping, out realwidth, out realheight);
 
         MeshFilter mf = go.AddComponent<MeshFilter>();
         MeshRenderer mr = go.AddComponent<MeshRenderer>();
@@ -289,6 +293,7 @@ public class AllodsTextRenderer
     private readonly Font _Font;
     private string _Text = "";
     private int _Width;
+    private int _ActualWidth;
     private int _Height;
     private Font.Align _Align;
     private bool _Wrapping;
@@ -301,6 +306,7 @@ public class AllodsTextRenderer
         _Mesh = new Mesh();
         _Material = GameObject.Instantiate(_Font.CombinedMaterial);
         _Align = align;
+        _ActualWidth = 0;
         _Width = width;
         _Height = height;
         _Wrapping = wrapping;
@@ -308,7 +314,7 @@ public class AllodsTextRenderer
     
     private void UpdateMesh()
     {
-        _Font.RenderToExistingMesh(_Mesh, _Text, _Align, _Width, _Height, _Wrapping, out _Height);
+        _Font.RenderToExistingMesh(_Mesh, _Text, _Align, _Width, _Height, _Wrapping, out _ActualWidth, out _Height);
     }
 
     public string Text
@@ -321,6 +327,11 @@ public class AllodsTextRenderer
     {
         get { return _Width; }
         set { if (_Width != value) { _Width = value; if (_Wrapping) UpdateMesh(); } }
+    }
+
+    public int ActualWidth
+    {
+        get { return _ActualWidth; }
     }
 
     public int Height

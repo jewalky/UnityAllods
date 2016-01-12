@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-
+using System;
 
 public partial class Utils
 {
@@ -182,6 +182,166 @@ public partial class Utils
         public void Unclock()
         {
             _Time += UnityEngine.Time.realtimeSinceStartup - _TimeStart;
+        }
+    }
+
+    public class MeshBuilder
+    {
+        private List<Vector3> Vertices = new List<Vector3>();
+        private List<Vector2> UV1 = new List<Vector2>();
+        private List<Vector2> UV2 = new List<Vector2>();
+        private List<Vector2> UV3 = new List<Vector2>();
+        private List<Vector2> UV4 = new List<Vector2>();
+        private List<Color> Colors = new List<Color>();
+        private List<int> Meshes = new List<int>();
+        private int VertexNum;
+        private int TopMesh;
+
+        public MeshBuilder()
+        {
+            Reset();
+        }
+
+        private void AllocVertex()
+        {
+            Vertices.Add(new Vector3());
+            UV1.Add(new Vector2());
+            UV2.Add(new Vector2());
+            UV3.Add(new Vector2());
+            UV4.Add(new Vector2());
+            Colors.Add(new Color(1, 1, 1, 1));
+            Meshes.Add(TopMesh - 1);
+        }
+
+        public void Reset()
+        {
+            Vertices.Clear();
+            UV1.Clear();
+            UV2.Clear();
+            UV3.Clear();
+            UV4.Clear();
+            Colors.Clear();
+            Meshes.Clear();
+            VertexNum = 0;
+            TopMesh = 1;
+            AllocVertex();
+        }
+
+        public void NextVertex()
+        {
+            AllocVertex();
+            VertexNum++;
+        }
+
+        public Vector3 CurrentPosition
+        {
+            get { return Vertices[VertexNum]; }
+            set { Vertices[VertexNum] = value; }
+        }
+
+        public Vector2 CurrentUV1
+        {
+            get { return UV1[VertexNum]; }
+            set { UV1[VertexNum] = value; }
+        }
+
+        public Vector2 CurrentUV2
+        {
+            get { return UV2[VertexNum]; }
+            set { UV2[VertexNum] = value; }
+        }
+
+        public Vector2 CurrentUV3
+        {
+            get { return UV3[VertexNum]; }
+            set { UV3[VertexNum] = value; }
+        }
+
+        public Vector2 CurrentUV4
+        {
+            get { return UV4[VertexNum]; }
+            set { UV4[VertexNum] = value; }
+        }
+
+        public Color CurrentColor
+        {
+            get { return Colors[VertexNum]; }
+            set { Colors[VertexNum] = value; }
+        }
+
+        public int CurrentMesh
+        {
+            get { return Meshes[VertexNum]; }
+            set { Meshes[VertexNum] = value; if (value + 1 > TopMesh) TopMesh = value + 1; }
+        }
+
+        public Mesh ToMesh(params MeshTopology[] submeshes)
+        {
+            Mesh mesh = new Mesh();
+            mesh.vertices = Vertices.ToArray();
+            mesh.uv = UV1.ToArray();
+            mesh.uv2 = UV2.ToArray();
+            mesh.uv3 = UV3.ToArray();
+            mesh.uv4 = UV4.ToArray();
+            mesh.colors = Colors.ToArray();
+            if (submeshes.Length != TopMesh)
+                throw new Exception(string.Format("Builder submesh count ({0}) doesn't correspond to submesh topology count ({1})", TopMesh, submeshes.Length));
+            mesh.subMeshCount = TopMesh;
+            for (int i = 0; i < TopMesh; i++)
+            {
+                List<int> indices = new List<int>();
+                for (int j = 0; j < Meshes.Count; j++)
+                {
+                    if (Meshes[j] == i)
+                        indices.Add(j);
+                }
+
+                mesh.SetIndices(indices.ToArray(), submeshes[i], i);
+            }
+
+            return mesh;
+        }
+
+        public void AddQuad(int submesh, float x, float y, float w, float h)
+        {
+            AddQuad(submesh, x, y, w, h, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
+        }
+
+        public void AddQuad(int submesh, float x, float y, float w, float h, Rect texRect)
+        {
+            AddQuad(submesh, x, y, w, h, texRect, new Color(1, 1, 1, 1));
+        }
+
+        public void AddQuad(int submesh, float x, float y, float w, float h, Color color)
+        {
+            AddQuad(submesh, x, y, w, h, new Rect(0, 0, 1, 1), color);
+        }
+
+        public void AddQuad(int submesh, float x, float y, float w, float h, Rect texRect, Color color)
+        {
+            CurrentPosition = new Vector3(x, y);
+            CurrentColor = color;
+            CurrentUV1 = new Vector2(texRect.xMin, texRect.yMin);
+            CurrentMesh = submesh;
+            NextVertex();
+
+            CurrentPosition = new Vector3(x + w, y);
+            CurrentColor = color;
+            CurrentUV1 = new Vector2(texRect.xMax, texRect.yMin);
+            CurrentMesh = submesh;
+            NextVertex();
+
+            CurrentPosition = new Vector3(x + w, y + h);
+            CurrentColor = color;
+            CurrentUV1 = new Vector2(texRect.xMax, texRect.yMax);
+            CurrentMesh = submesh;
+            NextVertex();
+
+            CurrentPosition = new Vector3(x, y + h);
+            CurrentColor = color;
+            CurrentUV1 = new Vector2(texRect.xMin, texRect.yMax);
+            CurrentMesh = submesh;
+            NextVertex();
         }
     }
 }

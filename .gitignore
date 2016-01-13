@@ -33,3 +33,7 @@ maps
 ClientBuild
 LinuxClientBuild
 #MacBuild
+
+# configs
+unityallods.cfg
+server.cfg

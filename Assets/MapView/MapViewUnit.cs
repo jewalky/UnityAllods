@@ -343,84 +343,45 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             //  90      270
             //  45   0  315
             bool doFlip = false;
-            if (actualVState == UnitVisualState.Rotating || (actualVState == UnitVisualState.Idle && LogicUnit.Class.IdlePhases == 1))
+            int actualAngle16 = 0;
+            int actualAngle8 = 0;
+            int countFull16 = (!LogicUnit.Class.Flip) ? 16 : 9;
+            int countFull8 = (!LogicUnit.Class.Flip) ? 8 : 5;
+
+            if (LogicUnit.Class.Flip)
             {
-                if (LogicUnit.Class.Flip)
+                if (LogicUnit.Angle < 180)
                 {
-                    if (LogicUnit.Angle < 180)
-                    {
-                        int actualAngle = LogicUnit.Angle * 8 / 180;
-                        actualFrame = actualAngle;
-                    }
-                    else
-                    {
-                        int actualAngle = (180 - (LogicUnit.Angle - 180)) * 8 / 180;
-                        actualFrame = actualAngle;
-                        doFlip = true;
-                    }
+                    actualAngle16 = LogicUnit.Angle * 8 / 180;
+                    actualAngle8 = LogicUnit.Angle * 4 / 180;
                 }
                 else
                 {
-                    int actualAngle = LogicUnit.Angle * 16 / 360;
-                    actualFrame = actualAngle;
+                    actualAngle16 = (180 - (LogicUnit.Angle - 180)) * 8 / 180;
+                    actualAngle8 = (180 - (LogicUnit.Angle - 180)) * 4 / 180;
+                    doFlip = true;
                 }
+            }
+            else
+            {
+                actualAngle16 = LogicUnit.Angle * 16 / 360;
+                actualAngle8 = LogicUnit.Angle * 8 / 360;
+            }
+
+            if (actualVState == UnitVisualState.Rotating || (actualVState == UnitVisualState.Idle && LogicUnit.Class.IdlePhases <= 1))
+            {
+                actualFrame = actualAngle16;
             }
             else if (actualVState == UnitVisualState.Idle)
             {
-                if (LogicUnit.Class.IdlePhases > 1)
-                {
-                    int idlePhasesCount;
-                    // 0..4 rotations if flipped. 0..8 if not.
-                    if (LogicUnit.Class.Flip)
-                    {
-                        if (LogicUnit.Angle < 180)
-                        {
-                            int actualAngle = LogicUnit.Angle * 4 / 180;
-                            actualFrame = LogicUnit.Class.IdlePhases * actualAngle;
-                        }
-                        else
-                        {
-                            int actualAngle = (180 - (LogicUnit.Angle - 180)) * 4 / 180;
-                            actualFrame = LogicUnit.Class.IdlePhases * actualAngle;
-                            doFlip = true;
-                        }
-                        idlePhasesCount = 5 * LogicUnit.Class.IdlePhases;
-                    }
-                    else
-                    {
-                        int actualAngle = LogicUnit.Angle * 8 / 360;
-                        actualFrame = LogicUnit.Class.IdlePhases * actualAngle;
-                        idlePhasesCount = 8 * LogicUnit.Class.IdlePhases;
-                    }
-
-                    actualFrame = sprites.Frames.Length - idlePhasesCount + actualFrame;
-                    actualFrame += LogicUnit.Class.IdleFrames[LogicUnit.IdleFrame].Frame;
-                }
+                actualFrame = sprites.Frames.Length - LogicUnit.Class.IdlePhases * countFull8 + LogicUnit.Class.IdlePhases * actualAngle8;
+                actualFrame += LogicUnit.Class.IdleFrames[LogicUnit.IdleFrame].Frame;
             }
             else if (actualVState == UnitVisualState.Moving)
             {
                 int moveSize = LogicUnit.Class.MoveBeginPhases + LogicUnit.Class.MovePhases;
 
-                if (LogicUnit.Class.Flip)
-                {
-                    if (LogicUnit.Angle < 180)
-                    {
-                        int actualAngle = LogicUnit.Angle * 4 / 180;
-                        actualFrame = 9 + moveSize * actualAngle;
-                    }
-                    else
-                    {
-                        int actualAngle = (180 - (LogicUnit.Angle - 180)) * 4 / 180;
-                        actualFrame = 9 + moveSize * actualAngle;
-                        doFlip = true;
-                    }
-                }
-                else
-                {
-                    int actualAngle = LogicUnit.Angle * 8 / 360;
-                    actualFrame = 16 + moveSize * actualAngle;
-                }
-
+                actualFrame = countFull16 + moveSize * actualAngle8;
                 actualFrame += LogicUnit.Class.MoveBeginPhases; // movebeginphases, we don't animate this yet
                 actualFrame += LogicUnit.Class.MoveFrames[LogicUnit.MoveFrame].Frame;
             }
@@ -429,26 +390,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 int moveSize = LogicUnit.Class.MoveBeginPhases + LogicUnit.Class.MovePhases;
                 int attackSize = LogicUnit.Class.AttackPhases;
 
-                if (LogicUnit.Class.Flip)
-                {
-                    if (LogicUnit.Angle < 180)
-                    {
-                        int actualAngle = LogicUnit.Angle * 4 / 180;
-                        actualFrame = 9 + moveSize * 5 + attackSize * actualAngle;
-                    }
-                    else
-                    {
-                        int actualAngle = (180 - (LogicUnit.Angle - 180)) * 4 / 180;
-                        actualFrame = 9 + moveSize * 5 + attackSize * actualAngle;
-                        doFlip = true;
-                    }
-                }
-                else
-                {
-                    int actualAngle = LogicUnit.Angle * 8 / 360;
-                    actualFrame = 16 + moveSize * 8 + attackSize * actualAngle;
-                }
-
+                actualFrame = countFull16 + moveSize * countFull8 + attackSize * actualAngle8;
                 actualFrame += LogicUnit.Class.AttackFrames[LogicUnit.AttackFrame].Frame;
             }
             else if (actualVState == UnitVisualState.Dying)
@@ -464,26 +406,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 int attackSize = dCls.AttackPhases;
                 int dyingSize = dCls.DyingPhases;
 
-                if (LogicUnit.Class.Flip)
-                {
-                    if (LogicUnit.Angle < 180)
-                    {
-                        int actualAngle = LogicUnit.Angle * 4 / 180;
-                        actualFrame = 9 + moveSize * 5 + attackSize * 5 + dyingSize * actualAngle;
-                    }
-                    else
-                    {
-                        int actualAngle = (180 - (LogicUnit.Angle - 180)) * 4 / 180;
-                        actualFrame = 9 + moveSize * 5 + attackSize * 5 + dyingSize * actualAngle;
-                        doFlip = true;
-                    }
-                }
-                else
-                {
-                    int actualAngle = LogicUnit.Angle * 8 / 360;
-                    actualFrame = 16 + moveSize * 8 + attackSize * 8 + dyingSize * actualAngle;
-                }
-
+                actualFrame = countFull16 + moveSize * countFull8 + attackSize * countFull8 + dyingSize * actualAngle8;
                 actualFrame += LogicUnit.DeathFrame;
             }
 

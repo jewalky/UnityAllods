@@ -50,6 +50,18 @@ public class MouseCursor : MonoBehaviour {
         CurrentCursorFrame = 0;
     }
 
+    public static void SetCursor(Images.AllodsSprite sprite)
+    {
+        CurItem.Sprite = sprite;
+        CurItem.Sprites = CurItem.Sprite.Sprites;
+        SetCursor(CurItem);
+    }
+
+    public static void UnsetCursor()
+    {
+        SetCursor((MapCursorSettings)null);
+    }
+
     //public MapCus
 
     //Images.AllodsSprite sprite;
@@ -62,6 +74,10 @@ public class MouseCursor : MonoBehaviour {
     public static MapCursorSettings CurAttack = null;
     public static MapCursorSettings CurMoveAttack = null;
     public static MapCursorSettings CurWait = null;
+    public static MapCursorSettings CurCantPut = null; // cursor for when item drag-drop is impossible
+
+    // pseudo-cursor for items
+    private static MapCursorSettings CurItem = null;
 
     private static SpriteRenderer Renderer = null;
     void Start ()
@@ -83,7 +99,15 @@ public class MouseCursor : MonoBehaviour {
         CurAttack = CreateCursor("graphics/cursors/attack/sprites.16a", 3, 3, 0.08f);
         CurMoveAttack = CreateCursor("graphics/cursors/swarm/sprites.16a", 3, 3, 0.08f);
         CurWait = CreateCursor("graphics/cursors/wait/sprites.16a", 16, 16, 0.05f);
+        CurCantPut = CreateCursor("graphics/cursors/cantput/sprites.16a", 40, 40, 0);
         SetCursor(CurDefault);
+
+        CurItem = new MapCursorSettings();
+        CurItem.Xoffs = 40;
+        CurItem.Yoffs = 40;
+        CurItem.Sprite = null;
+        CurItem.Sprites = null;
+        CurItem.Delay = 0;
 
         transform.localScale = new Vector3(100, 100, 1);
         Renderer = GetComponent<SpriteRenderer>();

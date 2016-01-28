@@ -23,6 +23,24 @@ public class ItemFile
     }
 }
 
+public class ItemPackFile
+{
+    public string FileName;
+    public Images.AllodsSprite File;
+
+    public ItemPackFile(string fname)
+    {
+        FileName = fname;
+        File = null;
+    }
+
+    public void UpdateSprite()
+    {
+        if (File == null)
+            File = Images.Load16A(FileName);
+    }
+}
+
 public class ItemClass
 {
     public string ServerName; // itemserv.txt
@@ -50,7 +68,7 @@ public class ItemClass
     public ItemFile File_BodyMF2;
     public ItemFile File_BodyFM2;
     public ItemFile File_BodyMM2;
-    public ItemFile File_Pack; // backpack image
+    public ItemPackFile File_Pack; // backpack image
 
     public long Price;
 
@@ -333,7 +351,7 @@ public class ItemClassLoader
                 cls.Option = TemplateLoader.GetOptionByIdAndSlot(optionId, slotId);
 
                 string imageNameBase = string.Format("{0:D2}{1:D2}{2}{3:D2}", materialId, slotId, classId, optionId);
-                cls.File_Pack = new ItemFile("graphics/inventory/" + imageNameBase + ".16a");
+                cls.File_Pack = new ItemPackFile("graphics/inventory/" + imageNameBase + ".16a");
 
                 if (cls.UsableFighter)
                 {

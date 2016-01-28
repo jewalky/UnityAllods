@@ -400,6 +400,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Item item = ItemsBody[(int)slot];
         ItemsBody[(int)slot] = null;
         UpdateItems();
+        DoUpdateInfo = true;
         return item;
     }
 
@@ -423,6 +424,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         ItemsBody[(int)slot] = item;
         UpdateItems();
+        DoUpdateInfo = true;
     }
 
     public void Respawn(int x, int y)

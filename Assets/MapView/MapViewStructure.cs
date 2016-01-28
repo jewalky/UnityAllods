@@ -351,5 +351,20 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
     {
         
     }
+
+    public bool ProcessStartDrag(float mousex, float mousey)
+    {
+        return false;
+    }
+
+    public bool ProcessDrag(Item item, float mousex, float mousey)
+    {
+        return false;
+    }
+
+    public bool ProcessDrop(Item item, float mousex, float mousey)
+    {
+        return false;
+    }
 }
  

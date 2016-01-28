@@ -315,10 +315,11 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
             Images.AllodsSpriteSeparate sprites = LogicUnit.Class.File.File;
 
+            LogicUnit.Class.File.UpdateSprite();
+            sprites = LogicUnit.Class.File.File;
+
             if (!spriteSet)
             {
-                LogicUnit.Class.File.UpdateSprite();
-                sprites = LogicUnit.Class.File.File;
                 Renderer.material = new Material(MainCamera.MainShaderPaletted);
                 ShadowRenderer.material = Renderer.material;
                 ShadowRenderer.material.color = new Color(0, 0, 0, 0.5f);
@@ -619,5 +620,20 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             if (InfoObject != null)
                 InfoObject.SetActive(false);
         }
+    }
+
+    public virtual bool ProcessStartDrag(float mousex, float mousey)
+    {
+        return false;
+    }
+
+    public virtual bool ProcessDrag(Item item, float mousex, float mousey)
+    {
+        return false;
+    }
+
+    public virtual bool ProcessDrop(Item item, float mousex, float mousey)
+    {
+        return false;
     }
 }

@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
-public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor
+public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragger
 {
     private IMapViewSelfie _Viewer = null;
     public IMapViewSelfie Viewer
@@ -233,7 +234,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor
             else if (new Rect(TBackL.width, TBackRObject.transform.localPosition.y, TBackR.width, TBackR.height).Contains(mPosLocal))
             {
                 if (_Viewer != null)
-                    _Viewer.ProcessEventPic(e, mPosLocal.x - TBackL.width, mPosLocal.y - TBackRObject.transform.localPosition.y);
+                    _Viewer.ProcessEventInfo(e, mPosLocal.x - TBackL.width, mPosLocal.y - TBackRObject.transform.localPosition.y);
             }
 
             return true;
@@ -258,5 +259,38 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor
             Viewer.DisplayInfo((BHumanModeObject == null || !HumanMode), TBackRObject.transform);
             Viewer.GetObject().DoUpdateInfo = false;
         }
+    }
+
+    public bool ProcessStartDrag(float x, float y)
+    {
+        Vector2 mPosLocal = new Vector2(x - transform.position.x, y - transform.position.y);
+        if (!new Rect(HBackL.width, 0, HBackR.width, HBackR.height).Contains(mPosLocal))
+            return false;
+
+        if (Viewer != null)
+            return Viewer.ProcessStartDrag(mPosLocal.x - HBackL.width, mPosLocal.y);
+        return false;
+    }
+
+    public bool ProcessDrag(Item item, float x, float y)
+    {
+        Vector2 mPosLocal = new Vector2(x - transform.position.x, y - transform.position.y);
+        if (!new Rect(HBackL.width, 0, HBackR.width, HBackR.height).Contains(mPosLocal))
+            return false;
+
+        if (Viewer != null)
+            return Viewer.ProcessDrag(item, mPosLocal.x - HBackL.width, mPosLocal.y);
+        return false;
+    }
+
+    public bool ProcessDrop(Item item, float x, float y)
+    {
+        Vector2 mPosLocal = new Vector2(x - transform.position.x, y - transform.position.y);
+        if (!new Rect(HBackL.width, 0, HBackR.width, HBackR.height).Contains(mPosLocal))
+            return false;
+
+        if (Viewer != null)
+            return Viewer.ProcessDrop(item, mPosLocal.x - HBackL.width, mPosLocal.y);
+        return false;
     }
 }

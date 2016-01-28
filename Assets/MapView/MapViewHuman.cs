@@ -368,4 +368,39 @@ public class MapViewHuman : MapViewUnit
 
         return false;
     }
+
+    // drag-drop of items in infowindow
+    public override bool ProcessStartDrag(float mousex, float mousey)
+    {
+        //Debug.LogFormat("tried to drag at {0}, {1}", mousex, mousey);
+        // can't drag if we don't own this player
+        if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
+            return false;
+        Item item = GetHumanItemByPoint((int)mousex, (int)mousey);
+        if (item == null)
+            return false;
+        LogicHuman.TakeItemFromBody((MapUnit.BodySlot)item.Class.Option.Slot);
+        UiManager.Instance.StartDrag(item, () =>
+        {
+            // put item back to body if cancelled
+            LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
+        });
+        return true;
+    }
+
+    public override bool ProcessDrag(Item item, float mousex, float mousey)
+    {
+        if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
+            return false;
+        return true; // allow drag if this unit belongs to console player
+    }
+
+    public override bool ProcessDrop(Item item, float mousex, float mousey)
+    {
+        if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
+            return false;
+        // put item to body
+        LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
+        return true;
+    }
 }

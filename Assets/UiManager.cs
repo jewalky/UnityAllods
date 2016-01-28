@@ -9,6 +9,18 @@ public interface IUiEventProcessor
 
 public interface IUiEventProcessorBackground { }
 
+public interface IUiItemDragger
+{
+    // should call UiManager.Instance.StartDrag and return true, if there was an item under specified global coordinates.
+    bool ProcessStartDrag(float x, float y);
+    // should return true if it's possible to drop an item over these coordinates.
+    bool ProcessDrag(Item item, float x, float y);
+    // should return true if drop was handled at these coordinates.
+    bool ProcessDrop(Item item, float x, float y);
+}
+
+public delegate void UiDragCallback();
+
 public class UiManager : MonoBehaviour
 {
     private static UiManager _Instance = null;
@@ -75,6 +87,8 @@ public class UiManager : MonoBehaviour
         if (lastMouseChange >= 0)
             lastMouseChange += Time.unscaledDeltaTime;
 
+        bool mouse1Clicked = Input.GetMouseButton(0);
+
         GotProcessors = false;
         EnumerateObjects();
         // get all events.
@@ -104,6 +118,9 @@ public class UiManager : MonoBehaviour
         }
 
         // also fake mouse event for each processor
+        bool doStartDrag = false;
+        float doStartDragX = lastMouseX;
+        float doStartDragY = lastMouseY;
         Vector2 mPos = Utils.GetMousePosition();
         /*if (mPos.x != lastMouseX ||
             mPos.y != lastMouseY)*/
@@ -130,8 +147,59 @@ public class UiManager : MonoBehaviour
             {
                 lastMouseX = mPos.x;
                 lastMouseY = mPos.y;
+                doStartDrag = (DragItem == null) ? mouse1Clicked : false;
                 lastMouseChange = 0;
                 UnsetTooltip();
+            }
+        }
+
+        // process drag-drop for items.
+        // first ask every element if they can process the drop.
+        bool dragProcessed = false;
+        for (int i = Processors.Count - 1; i >= 0; i--)
+        {
+            if (!ProcessorsEnabled[i]) continue;
+            if (!(Processors[i] is IUiItemDragger)) continue;
+            
+            // start dragging if coordinates changed with mouse button pressed.
+            // don't call doStartDrag further if one of the widgets has processed it.
+            if (doStartDrag && ((IUiItemDragger)Processors[i]).ProcessStartDrag(doStartDragX, doStartDragY))
+            {
+                doStartDrag = false;
+                break;
+            }
+            
+            // process already done dragging (if any)
+            if (DragItem != null && ((IUiItemDragger)Processors[i]).ProcessDrag(DragItem, mPos.x, mPos.y))
+            {
+                dragProcessed = true;
+                // check drop. if drop is done and processed, we should complete dragging.
+                if (!mouse1Clicked)
+                {
+                    if (((IUiItemDragger)Processors[i]).ProcessDrop(DragItem, mPos.x, mPos.y))
+                    {
+                        DragItem = null;
+                        _DragCallback = null;
+                    }
+                }
+            }
+        }
+
+        if (DragItem != null)
+        {
+            // cancel drop if we tried to drop on a bad place.
+            // DropItem != null && !mouse1Clicked means that it didnt process drop.
+            if (!mouse1Clicked)
+            {
+                CancelDrag();
+            }
+            else
+            {
+                DragItem.Class.File_Pack.UpdateSprite();
+
+                if (!dragProcessed) // set mouse cursor
+                    MouseCursor.SetCursor(MouseCursor.CurCantPut);
+                else MouseCursor.SetCursor(DragItem.Class.File_Pack.File);
             }
         }
     }
@@ -269,6 +337,26 @@ public class UiManager : MonoBehaviour
     public void UnsetTooltip()
     {
         if (Tooltip != null) Tooltip.SetActive(false);
+    }
+
+    // ITEM DRAGGING RELATED
+    public Item DragItem { get; private set; }
+    private UiDragCallback _DragCallback = null;
+
+    public void StartDrag(Item item, UiDragCallback onCancelDrag)
+    {
+        DragItem = item;
+        if (DragItem != null)
+            _DragCallback = onCancelDrag;
+        else _DragCallback = null;
+    }
+
+    public void CancelDrag()
+    {
+        if (_DragCallback != null)
+            _DragCallback();
+        _DragCallback = null;
+        DragItem = null;
     }
 
     public void Subscribe(IUiEventProcessor mb)

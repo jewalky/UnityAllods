@@ -155,7 +155,15 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
 
     public void SetPack(MapHuman human)
     {
-        View.Pack = human.ItemsPack;
-        View.AutoDropTarget = (IUiItemAutoDropper)human.GameScript;
+        if (human != null)
+        {
+            View.Pack = human.ItemsPack;
+            View.AutoDropTarget = (IUiItemAutoDropper)human.GameScript;
+        }
+        else
+        {
+            View.Pack = null;
+            View.AutoDropTarget = null;
+        }
     }
 }

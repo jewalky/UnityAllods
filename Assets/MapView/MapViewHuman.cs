@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class MapViewHuman : MapViewUnit
+public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
 {
     private MapHuman LogicHuman
     {
@@ -363,6 +363,21 @@ public class MapViewHuman : MapViewUnit
             Item item = GetHumanItemByPoint((int)mousex, (int)mousey);
             if (item != null)
                 UiManager.Instance.SetTooltip(item.ToVisualString());
+
+            return true;
+        }
+        else if (e.rawType == EventType.MouseDown && e.commandName == "double")
+        {
+            if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
+                return false;
+
+            Item item = GetHumanItemByPoint((int)mousex, (int)mousey);
+            if (item != null)
+            {
+                item = LogicHuman.TakeItemFromBody((MapUnit.BodySlot)item.Class.Option.Slot);
+                LogicHuman.ItemsPack.PutItem(LogicHuman.ItemsPack.Count, item);
+            }
+
             return true;
         }
 
@@ -379,7 +394,7 @@ public class MapViewHuman : MapViewUnit
         Item item = GetHumanItemByPoint((int)mousex, (int)mousey);
         if (item == null)
             return false;
-        LogicHuman.TakeItemFromBody((MapUnit.BodySlot)item.Class.Option.Slot);
+        item = LogicHuman.TakeItemFromBody((MapUnit.BodySlot)item.Class.Option.Slot);
         UiManager.Instance.StartDrag(item, () =>
         {
             // put item back to body if cancelled
@@ -396,6 +411,15 @@ public class MapViewHuman : MapViewUnit
     }
 
     public override bool ProcessDrop(Item item, float mousex, float mousey)
+    {
+        if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
+            return false;
+        // put item to body
+        LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
+        return true;
+    }
+
+    public bool ProcessAutoDrop(Item item)
     {
         if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
             return false;

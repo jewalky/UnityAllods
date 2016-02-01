@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class ItemView : Widget, IUiEventProcessor, IUiItemDragger
+public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDropper
 {
     private ItemPack _Pack = null;
     public ItemPack Pack
@@ -21,9 +21,12 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger
         }
     }
 
+    public IUiItemAutoDropper AutoDropTarget = null;
+
     private void ResetFromPack()
     {
         // todo: reset scrolling and possibly other values
+        Scroll = 0;
     }
 
     private class MGlowPart
@@ -298,6 +301,16 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger
             {
                 UiManager.Instance.SetTooltip(item.ToVisualString());
             }
+            else if (ev.rawType == EventType.MouseDown &&
+                ev.commandName == "double")
+            {
+                if (AutoDropTarget != null)
+                {
+                    Item newItem = Pack.TakeItem(itemHovered, 1);
+                    if (!AutoDropTarget.ProcessAutoDrop(newItem))
+                        Pack.PutItem(itemHovered, newItem);
+                }
+            }
 
             return true;
         }
@@ -308,6 +321,9 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger
     public bool ProcessStartDrag(float x, float y)
     {
         if (Pack == null)
+            return false;
+
+        if (!new Rect(transform.position.x, transform.position.y, Width, Height).Contains(new Vector2(x, y)))
             return false;
 
         Vector2 mPosLocal = new Vector2(x - transform.position.x,
@@ -338,14 +354,19 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger
     {
         if (Pack == null)
             return false;
+
         if (!new Rect(transform.position.x, transform.position.y, Width, Height).Contains(new Vector2(x, y)))
             return false;
+
         return true;
     }
 
     public bool ProcessDrop(Item item, float x, float y)
     {
         if (Pack == null)
+            return false;
+
+        if (!new Rect(transform.position.x, transform.position.y, Width, Height).Contains(new Vector2(x, y)))
             return false;
 
         Vector2 mPosLocal = new Vector2(x - transform.position.x,
@@ -364,6 +385,15 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger
             itemHovered = Pack.Count;
 
         Pack.PutItem(itemHovered, item);
+        return true;
+    }
+
+    public bool ProcessAutoDrop(Item item)
+    {
+        if (Pack == null)
+            return false;
+
+        Pack.PutItem(Pack.Count, item);
         return true;
     }
 }

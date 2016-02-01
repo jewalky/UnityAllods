@@ -19,6 +19,12 @@ public interface IUiItemDragger
     bool ProcessDrop(Item item, float x, float y);
 }
 
+public interface IUiItemAutoDropper
+{
+    //
+    bool ProcessAutoDrop(Item item);
+}
+
 public delegate void UiDragCallback();
 
 public class UiManager : MonoBehaviour
@@ -82,8 +88,10 @@ public class UiManager : MonoBehaviour
     private float lastMouseX = 0;
     private float lastMouseY = 0;
     private float lastMouseChange = -1;
+    private float lastMouseDown = 1;
     void Update()
     {
+        lastMouseDown += Time.unscaledDeltaTime;
         if (lastMouseChange >= 0)
             lastMouseChange += Time.unscaledDeltaTime;
 
@@ -103,6 +111,17 @@ public class UiManager : MonoBehaviour
             {
                 MainCamera.Instance.TakeScreenshot();
                 return;
+            }
+
+            if (e.rawType == EventType.MouseDown)
+            {
+                if (lastMouseDown > 0.25f)
+                    lastMouseDown = 0;
+                else
+                {
+                    e.commandName = "double";
+                    lastMouseDown = 1;
+                }
             }
 
             // reverse iteration
@@ -149,6 +168,7 @@ public class UiManager : MonoBehaviour
                 lastMouseY = mPos.y;
                 doStartDrag = (DragItem == null) ? mouse1Clicked : false;
                 lastMouseChange = 0;
+                lastMouseDown = 1; // disable doubleclick if drag started
                 UnsetTooltip();
             }
         }

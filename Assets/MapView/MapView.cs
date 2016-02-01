@@ -463,7 +463,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             if (mobj.GetObjectType() == MapObjectType.Human &&
                 ((MapHuman)mobj).IsHero)
             {
-                Inventory.SetPack(((MapHuman)mobj).ItemsPack);
+                Inventory.SetPack((MapHuman)mobj);
                 ///
             }
             else Inventory.SetPack(null);

@@ -277,9 +277,9 @@ public partial class Utils
             set { Meshes[VertexNum] = value; if (value + 1 > TopMesh) TopMesh = value + 1; }
         }
 
-        public Mesh ToMesh(params MeshTopology[] submeshes)
+        private Mesh ToMesh(Mesh mesh, params MeshTopology[] submeshes)
         {
-            Mesh mesh = new Mesh();
+            mesh.Clear();
             mesh.vertices = Vertices.ToArray();
             mesh.uv = UV1.ToArray();
             mesh.uv2 = UV2.ToArray();
@@ -301,6 +301,22 @@ public partial class Utils
                 mesh.SetIndices(indices.ToArray(), submeshes[i], i);
             }
 
+            return mesh;
+        }
+
+        private Mesh _LastMesh = null;
+        public Mesh ToMesh(params MeshTopology[] submeshes)
+        {
+            if (_LastMesh == null)
+                return ToNewMesh(submeshes);
+            return ToMesh(_LastMesh, submeshes);
+        }
+
+        public Mesh ToNewMesh(params MeshTopology[] submeshes)
+        {
+            Mesh mesh = new Mesh();
+            ToMesh(mesh, submeshes);
+            _LastMesh = mesh;
             return mesh;
         }
 

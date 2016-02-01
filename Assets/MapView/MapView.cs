@@ -455,13 +455,28 @@ public class MapView : MonoBehaviour, IUiEventProcessor
     public int ScrollX { get { return _ScrollX; } }
     public int ScrollY { get { return _ScrollY; } }
 
+    public void OnObjectSelected(MapObject mobj)
+    {
+        if (mobj is IPlayerPawn)
+        {
+            Commandbar.InitDefault(SelectedObject);
+            if (mobj.GetObjectType() == MapObjectType.Human &&
+                ((MapHuman)mobj).IsHero)
+            {
+                Inventory.SetPack(((MapHuman)mobj).ItemsPack);
+                ///
+            }
+            else Inventory.SetPack(null);
+        }
+    }
+
     public void CenterOnObject(MapObject mobj)
     {
         CenterOnCell(mobj.X+mobj.Width/2, mobj.Y+mobj.Height/2);
         if (mobj is IPlayerPawn)
         {
             SelectedObject = mobj;
-            Commandbar.InitDefault(SelectedObject);
+            OnObjectSelected(mobj);
         }
     }
 
@@ -661,7 +676,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                                             !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) || (Commandbar.CurrentCommand == 0)))
             {
                 SelectedObject = HoveredObject;
-                Commandbar.InitDefault(SelectedObject);
+                OnObjectSelected(SelectedObject);
             }
             else if (SelectedObject != null && SelectedObject is IPlayerPawn && ((IPlayerPawn)SelectedObject).GetPlayer() == MapLogic.Instance.ConsolePlayer)
             {

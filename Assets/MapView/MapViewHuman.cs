@@ -362,7 +362,7 @@ public class MapViewHuman : MapViewUnit
 
             Item item = GetHumanItemByPoint((int)mousex, (int)mousey);
             if (item != null)
-                UiManager.Instance.SetTooltip(item.Class.VisualName);
+                UiManager.Instance.SetTooltip(item.ToVisualString());
             return true;
         }
 

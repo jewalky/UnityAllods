@@ -408,4 +408,9 @@ public class Item
     {
         return ToStringWithEffects(false);
     }
+
+    public string ToVisualString()
+    {
+        return Class.VisualName;
+    }
 }

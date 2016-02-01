@@ -629,25 +629,25 @@ public class Images
             while (ids > 0)
             {
                 ushort ipx = br.ReadUInt16();
-                ipx &= 0xC03F;
+                ipx &= 0xC0FF;
                 ids -= 2;
 
                 if ((ipx & 0xC000) > 0)
                 {
                     if ((ipx & 0xC000) == 0x4000)
                     {
-                        ipx &= 0x3F;
+                        ipx &= 0xFF;
                         SpriteAddIXIY(ref ix, ref iy, w, ipx * w);
                     }
                     else
                     {
-                        ipx &= 0x3F;
+                        ipx &= 0xFF;
                         SpriteAddIXIY(ref ix, ref iy, w, ipx);
                     }
                 }
                 else
                 {
-                    ipx &= 0x3F;
+                    ipx &= 0xFF;
                     for (int j = 0; j < ipx; j++)
                     {
                         uint ss = br.ReadUInt16();

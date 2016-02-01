@@ -337,6 +337,9 @@ public class ItemClassLoader
                 {
                     cls.IsMagic = true;
                     cls.MagicID = (cls.ItemID & 0xFF) - 1;
+                    optionId = cls.MagicID + 1;
+                    classId = 0;
+                    materialId = 0;
                 }
                 else
                 {

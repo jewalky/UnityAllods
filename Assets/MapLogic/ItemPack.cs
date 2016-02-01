@@ -76,4 +76,12 @@ public class ItemPack
         position = Math.Min(ItemList.Count, Math.Max(0, position));
         ItemList.Insert(position, new Item(item, item.Count));
     }
+
+    public Item this[int index]
+    {
+        get
+        {
+            return ItemList[index];
+        }
+    }
 }

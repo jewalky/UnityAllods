@@ -19,7 +19,16 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
     private static Texture2D InvArrow3 = null;
     private static Texture2D InvArrow4 = null;
 
-    private int ItemCount = 0;
+    public void Awake()
+    {
+        int itemCount = (Screen.width - 176 - 64) / 80; // each arrow is 32 in width
+        View = Utils.CreateObjectWithScript<ItemView>();
+        View.transform.parent = transform;
+        View.transform.localScale = new Vector3(1, 1, 1);
+        View.transform.localPosition = new Vector3(32, 6, -1);
+        View.InvWidth = itemCount;
+        View.InvHeight = 1;
+    }
 
     public void Start()
     {
@@ -30,9 +39,6 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
         if (InvArrow2 == null) InvArrow2 = Images.LoadImage("graphics/interface/invarrow2.bmp", 0, Images.ImageType.AllodsBMP);
         if (InvArrow3 == null) InvArrow3 = Images.LoadImage("graphics/interface/invarrow3.bmp", 0, Images.ImageType.AllodsBMP);
         if (InvArrow4 == null) InvArrow4 = Images.LoadImage("graphics/interface/invarrow4.bmp", 0, Images.ImageType.AllodsBMP);
-
-        View = Utils.CreateObjectWithScript<ItemView>();
-        View.transform.parent = transform;
 
         //
         Renderer = gameObject.AddComponent<MeshRenderer>();
@@ -45,12 +51,11 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
         // generate mesh.
         Utils.MeshBuilder mb = new Utils.MeshBuilder();
         // 3 submeshes: left arrow, right arrow, and background. I'm NOT using the full original inventory view.
-        ItemCount = (Screen.width - 176 - 64) / 80; // each arrow is 32 in width
-        for (int i = 0; i < ItemCount; i++)
+        for (int i = 0; i < View.InvWidth; i++)
         {
             int internalPosition;
             if (i == 0) internalPosition = 0;
-            else if (i == ItemCount - 1) internalPosition = 4;
+            else if (i == View.InvWidth - 1) internalPosition = 4;
             else internalPosition = (i % 3) + 1;
             Rect internalRect = Utils.DivRect(new Rect(32 + internalPosition * 80, 0, 80, 90), new Vector2(InvFrame.width, InvFrame.height));
             mb.AddQuad(0, 32 + i * 80, 0, 80, 90, internalRect);
@@ -58,15 +63,15 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
 
         // add two quads for unpressed buttons
         mb.AddQuad(0, 0, 0, 32, 90, Utils.DivRect(new Rect(0, 0, 32, 90), new Vector2(InvFrame.width, InvFrame.height)));
-        mb.AddQuad(0, 32 + ItemCount * 80, 0, 32, 90, Utils.DivRect(new Rect(432, 0, 32, 90), new Vector2(InvFrame.width, InvFrame.height)));
+        mb.AddQuad(0, 32 + View.InvWidth * 80, 0, 32, 90, Utils.DivRect(new Rect(432, 0, 32, 90), new Vector2(InvFrame.width, InvFrame.height)));
 
         mb.AddQuad(1, 0, 2, 32, 88);
-        mb.AddQuad(2, 32 + ItemCount * 80, 2, 32, 88);
+        mb.AddQuad(2, 32 + View.InvWidth * 80, 2, 32, 88);
 
         Filter.mesh = mb.ToMesh(MeshTopology.Quads, MeshTopology.Quads, MeshTopology.Quads);
 
         transform.localScale = new Vector3(1, 1, 0.01f);
-        transform.localPosition = new Vector3((Screen.width - 176) / 2 - (ItemCount * 80 + 64) / 2, Screen.height - 90, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
+        transform.localPosition = new Vector3((Screen.width - 176) / 2 - (View.InvWidth * 80 + 64) / 2, Screen.height - 90, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
     }
 
     public void OnDestroy()
@@ -80,7 +85,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
             e.rawType == EventType.MouseUp ||
             e.rawType == EventType.MouseMove)
         {
-            int lw = 64 + ItemCount * 80;
+            int lw = 64 + View.InvWidth * 80;
             int lh = 90;
 
             Vector2 mPos = Utils.GetMousePosition();
@@ -146,5 +151,10 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
             Renderer.materials[2].color = new Color(1, 1, 1, 1);
         }
         else Renderer.materials[2].color = new Color(0, 0, 0, 0);
+    }
+
+    public void SetPack(ItemPack pack)
+    {
+        View.Pack = pack;
     }
 }

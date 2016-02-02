@@ -155,7 +155,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
 
     public void SetPack(MapHuman human)
     {
-        if (human != null)
+        if (human != null && human.Player == MapLogic.Instance.ConsolePlayer)
         {
             View.Pack = human.ItemsPack;
             View.AutoDropTarget = (IUiItemAutoDropper)human.GameScript;

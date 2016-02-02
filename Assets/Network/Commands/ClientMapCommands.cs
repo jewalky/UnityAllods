@@ -132,7 +132,7 @@ namespace ClientCommands
         [ProtoMember(6)]
         public int ServerID; // this also contains templates
         [ProtoMember(7)]
-        public UnitStats CurrentStats;
+        public global::UnitStats CurrentStats;
         [ProtoMember(8)]
         public bool IsAvatar;
         [ProtoMember(9)]
@@ -165,6 +165,10 @@ namespace ClientCommands
         public bool IsHuman;
         [ProtoMember(23)]
         public bool IsHero;
+        [ProtoMember(24)]
+        public List<NetItem> ItemsBody;
+        [ProtoMember(25)]
+        public List<NetItem> ItemsPack;
 
         public bool Process()
         {
@@ -213,9 +217,29 @@ namespace ClientCommands
             unit.AttackTime = AttackTime;
             unit.DeathFrame = DeathFrame;
             unit.DeathTime = DeathTime;
+
+            unit.ItemsBody.Clear();
+            if (ItemsBody != null)
+            {
+                for (int i = 0; i < ItemsBody.Count; i++)
+                    unit.ItemsBody.PutItem(unit.ItemsBody.Count, new Item(ItemsBody[i]));
+            }
+            unit.UpdateItems();
+
+            unit.ItemsPack.Clear();
+            if (ItemsPack != null)
+            {
+                for (int i = 0; i < ItemsPack.Count; i++)
+                    unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item(ItemsPack[i]));
+            }
+
             if (newUnit)
                 MapLogic.Instance.Objects.Add(unit);
-            else unit.DoUpdateView = true; // update view if unit already present on map (otherwise its automatically done)
+            else
+            {
+                unit.DoUpdateView = true; // update view if unit already present on map (otherwise its automatically done)
+                unit.DoUpdateInfo = true;
+            }
             unit.Update(); // set isalive/isdying
             return true;
         }
@@ -365,16 +389,15 @@ namespace ClientCommands
         {
             if (!MapLogic.Instance.IsLoaded)
                 return false;
+
             MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
             if (unit == null)
             {
                 Debug.LogFormat("Attempted to idle nonexistent unit {0}", Tag);
-            }
-            else
-            {
-                unit.AllowIdle = true;
+                return true;
             }
 
+            unit.AllowIdle = true;
             return true;
         }
     }
@@ -394,14 +417,12 @@ namespace ClientCommands
         {
             if (!MapLogic.Instance.IsLoaded)
                 return false;
+
             MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
             if (unit == null)
             {
-                Debug.LogFormat("Attempted to idle nonexistent unit {0}", Tag);
-            }
-            else
-            {
-                unit.AllowIdle = true;
+                Debug.LogFormat("Attempted to damage nonexistent unit {0}", Tag);
+                return true;
             }
 
             // visible = whether to display flying hp
@@ -418,4 +439,75 @@ namespace ClientCommands
         }
     }
 
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.UnitPack)]
+    public struct UnitPack : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public List<NetItem> Body;
+        [ProtoMember(3)]
+        public List<NetItem> Pack;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null)
+            {
+                Debug.LogFormat("Attempted to set pack for nonexistent unit {0}", Tag);
+                return true;
+            }
+
+            unit.ItemsBody.Clear();
+            if (Body != null)
+            {
+                for (int i = 0; i < Body.Count; i++)
+                    unit.ItemsBody.PutItem(unit.ItemsBody.Count, new Item(Body[i]));
+            }
+            unit.UpdateItems();
+
+            unit.ItemsPack.Clear();
+            if (Pack != null)
+            {
+                for (int i = 0; i < Pack.Count; i++)
+                    unit.ItemsPack.PutItem(unit.ItemsBody.Count, new Item(Pack[i]));
+            }
+
+            unit.DoUpdateInfo = true;
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.UnitStats)]
+    public struct UnitStats : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public global::UnitStats Stats;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null)
+            {
+                Debug.LogFormat("Attempted to set pack for nonexistent unit {0}", Tag);
+                return true;
+            }
+
+            unit.Stats = Stats;
+            unit.DoUpdateView = true;
+
+            return true;
+        }
+    }
 }

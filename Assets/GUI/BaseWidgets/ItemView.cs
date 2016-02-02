@@ -327,6 +327,10 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         if (!new Rect(transform.position.x, transform.position.y, Width, Height).Contains(new Vector2(x, y)))
             return false;
 
+        // if this pack belongs to the unit and consoleplayer doesn't control it
+        if (Pack.Parent != null &&
+            Pack.Parent.Player != MapLogic.Instance.ConsolePlayer) return false;
+
         Vector2 mPosLocal = new Vector2(x - transform.position.x,
                                         y - transform.position.y);
 
@@ -364,6 +368,39 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         return true;
     }
 
+    private void SendItemMoveCommand(Item item, int index)
+    {
+        // check if this pack is unit's pack.
+        if (Pack.Parent == null ||
+            Pack != Pack.Parent.ItemsPack) return;
+
+        // send command.
+        // first off, determine move source.
+        ServerCommands.ItemMoveLocation from;
+        int fromIndex = -1;
+        ServerCommands.ItemMoveLocation to;
+        int toIndex = -1;
+
+        MapUnit unit = Pack.Parent;
+
+        if (item.Parent == unit.ItemsBody)
+        {
+            from = ServerCommands.ItemMoveLocation.UnitBody;
+            fromIndex = item.Class.Option.Slot;
+        }
+        else if (item.Parent == unit.ItemsPack)
+        {
+            from = ServerCommands.ItemMoveLocation.UnitPack;
+            fromIndex = item.Index;
+        }
+        else from = ServerCommands.ItemMoveLocation.Ground;
+
+        to = ServerCommands.ItemMoveLocation.UnitPack;
+        toIndex = index;
+
+        Client.SendItemMove(from, to, fromIndex, toIndex, item.Count, unit, MapView.Instance.MouseCellX, MapView.Instance.MouseCellY);
+    }
+
     public bool ProcessDrop(Item item, float x, float y)
     {
         if (Pack == null)
@@ -387,6 +424,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         else if (itemHovered > Pack.Count)
             itemHovered = Pack.Count;
 
+        SendItemMoveCommand(item, itemHovered);
         Pack.PutItem(itemHovered, item);
         return true;
     }
@@ -414,7 +452,8 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         if (Pack == null)
             return false;
 
-        Pack.PutItem(Pack.Count, item);
+        SendItemMoveCommand(item, Pack.Count);
+        Pack.PutItem(Pack.Count, new Item(item, 1));
         return true;
     }
 }

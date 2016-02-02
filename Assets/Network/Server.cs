@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 public interface IServerCommand
 {
@@ -160,6 +161,15 @@ public class Server
                 unitCmd.IsHero = false;
             }
 
+            unitCmd.ItemsBody = new List<NetItem>();
+            for (int i = 0; i < unit.ItemsBody.Count; i++)
+                unitCmd.ItemsBody.Add(new NetItem(unit.ItemsBody[i]));
+
+            unitCmd.ItemsPack = new List<NetItem>();
+            if (unit.Player == player)
+                for (int i = 0; i < unit.ItemsPack.Count; i++)
+                    unitCmd.ItemsPack.Add(new NetItem(unit.ItemsPack[i]));
+
             player.NetClient.SendCommand(unitCmd);
             // also notify of current unit state
             NotifyAddUnitActionsSingle(player.NetClient, unit, unit.Actions.Skip(1).ToArray());
@@ -270,6 +280,48 @@ public class Server
             if (unit.IsVisibleForNetPlayer(p))
             {
                 ObjectBecameVisible(p, unit);
+            }
+        }
+    }
+
+    public static void NotifyUnitPack(MapUnit unit)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            Player p = MapLogic.Instance.GetNetPlayer(client);
+            if (unit.IsVisibleForNetPlayer(p))
+            {
+                ClientCommands.UnitPack packCmd;
+                packCmd.Tag = unit.Tag;
+                packCmd.Body = new List<NetItem>();
+                for (int i = 0; i < unit.ItemsBody.Count; i++)
+                    packCmd.Body.Add(new NetItem(unit.ItemsBody[i]));
+                packCmd.Pack = new List<NetItem>();
+                if (unit.Player == p)
+                    for (int i = 0; i < unit.ItemsPack.Count; i++)
+                        packCmd.Pack.Add(new NetItem(unit.ItemsPack[i]));
+                client.SendCommand(packCmd);
+            }
+        }
+    }
+
+    public static void NotifyUnitStats(MapUnit unit)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            Player p = MapLogic.Instance.GetNetPlayer(client);
+            if (unit.IsVisibleForNetPlayer(p))
+            {
+                ClientCommands.UnitStats statsCmd;
+                statsCmd.Tag = unit.Tag;
+                statsCmd.Stats = unit.Stats;
+                client.SendCommand(statsCmd);
             }
         }
     }

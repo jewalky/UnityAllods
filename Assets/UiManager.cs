@@ -211,6 +211,7 @@ public class UiManager : MonoBehaviour
                 {
                     // if parent has changed, then it probably doesn't belong to the original pack anymore and thus can't be moved.
                     Item newItem = _DragDragger.ProcessVerifyEndDrag();
+
                     if (newItem == null)
                     {
                         CancelDrag();

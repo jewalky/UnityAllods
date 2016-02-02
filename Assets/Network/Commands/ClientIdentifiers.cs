@@ -21,5 +21,8 @@ public enum ClientIdentifiers
     DelUnit,
     AddUnitActions,
     IdleUnit,
-    DamageUnit
+    DamageUnit,
+
+    UnitPack,
+    UnitStats
 }

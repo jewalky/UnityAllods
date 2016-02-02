@@ -16,5 +16,7 @@ public enum ServerIdentifiers
     MoveUnit,
     AttackUnit,
 
-    RespawnAvatar
+    RespawnAvatar,
+
+    ItemMove
 }

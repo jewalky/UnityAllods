@@ -1,4 +1,6 @@
-﻿public enum ClientState
+﻿using UnityEngine;
+
+public enum ClientState
 {
     Disconnected,
     ConnectWait,
@@ -108,6 +110,28 @@ public class Client
             {
                 MapLogic.Instance.ConsolePlayer.Avatar.Respawn(16, 16);
             }
+        }
+    }
+
+    public static void SendItemMove(ServerCommands.ItemMoveLocation from, ServerCommands.ItemMoveLocation to,
+                                    int fromIndex, int toIndex, int count,
+                                    MapUnit currentUnit,
+                                    int cellX, int cellY)
+    {
+        if (NetworkManager.IsClient)
+        {
+            Debug.LogFormat("from = {0}, to = {1}, fromIndex = {2}, toIndex = {3}, count = {4}",
+                from, to, fromIndex, toIndex, count);
+            ServerCommands.ItemMove imvCmd;
+            imvCmd.Source = from;
+            imvCmd.SourceIndex = fromIndex;
+            imvCmd.Destination = to;
+            imvCmd.DestinationIndex = toIndex;
+            imvCmd.Count = count;
+            imvCmd.UnitTag = (currentUnit != null) ? (currentUnit.Tag) : -1;
+            imvCmd.CellX = cellX;
+            imvCmd.CellY = cellY;
+            ClientManager.SendCommand(imvCmd);
         }
     }
 }

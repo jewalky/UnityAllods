@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using ProtoBuf;
 
 // this enum duplicates MapLogicStats.
 // it does NOT need to be synced when you edit MapLogicStats,
 // but it should be synced with locale/stats.txt or item stats won't be displayed correctly.
+[ProtoContract]
 public class ItemEffect
 {
     public enum Effects
@@ -69,12 +71,15 @@ public class ItemEffect
         ProtectionShooting
     }
 
-
+    [ProtoMember(1)]
     public Effects Type1 = Effects.NoneStat;
+    [ProtoMember(2)]
     public int Value1 = 0;
 
     // only in castSpell
+    [ProtoMember(3)]
     public Effects Type2 = Effects.NoneStat;
+    [ProtoMember(4)]
     public int Value2 = 0;
 
     public ItemEffect()
@@ -196,6 +201,50 @@ public class ItemEffect
                 o.Value1 == Value1 &&
                 o.Value2 == Value2);
     }
+
+    public override int GetHashCode()
+    {
+        uint u = 0;
+        u |= (byte)Type1;
+        u <<= 8;
+        u |= (byte)Type2;
+        u <<= 8;
+        u |= (byte)Value1;
+        u <<= 8;
+        u |= (byte)Value2;
+        return (int)u;
+    }
+}
+
+[ProtoContract]
+public class NetItem
+{
+    [ProtoMember(1)]
+    public ushort ClassID;
+    [ProtoMember(2)]
+    public List<ItemEffect> MagicEffects = new List<ItemEffect>();
+    [ProtoMember(3)]
+    public uint UID;
+    [ProtoMember(4)]
+    public List<uint> ParentUIDs = new List<uint>();
+    [ProtoMember(5)]
+    public int Count;
+
+    public NetItem()
+    {
+
+    }
+
+    public NetItem(Item item)
+    {
+        ClassID = item.Class.ItemID;
+        for (int i = 0; i < item.MagicEffects.Count; i++)
+            MagicEffects.Add(item.MagicEffects[i]);
+        UID = item.UID;
+        for (int i = 0; i < item.ParentUIDs.Count; i++)
+            ParentUIDs.Add(item.ParentUIDs[i]);
+        Count = item.Count;
+    }
 }
 
 public class Item
@@ -209,6 +258,7 @@ public class Item
     public readonly List<uint> ParentUIDs = new List<uint>();
 
     public ItemPack Parent = null;
+    public int Index = 0;
 
     public bool IsValid { get { return (Class != null); } }
 
@@ -218,6 +268,27 @@ public class Item
     public List<ItemEffect> Effects = new List<ItemEffect>();
     public List<ItemEffect> NativeEffects = new List<ItemEffect>();
     public List<ItemEffect> MagicEffects = new List<ItemEffect>();
+
+    public Item(NetItem netitem)
+    {
+        UID = netitem.UID;
+        ParentUIDs = netitem.ParentUIDs;
+
+        Class = ItemClassLoader.GetItemClassById(netitem.ClassID);
+        if (Class == null)
+        {
+            Debug.LogFormat("Invalid item created (id={0})", netitem.ClassID);
+            return;
+        }
+
+        Count = netitem.Count;
+
+        InitItem();
+
+        MagicEffects = netitem.MagicEffects;
+
+        UpdateItem();
+    }
 
     public Item(Item original, int count)
     {
@@ -238,6 +309,9 @@ public class Item
         Class = original.Class;
         Price = original.Price;
         Count = Math.Max(original.Count, count);
+
+        Parent = original.Parent;
+        Index = original.Index;
 
         InitItem();
         MagicEffects.AddRange(original.MagicEffects);

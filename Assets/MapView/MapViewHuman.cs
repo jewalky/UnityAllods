@@ -308,6 +308,7 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         Color[] qc = new Color[4 * 16];
         for (int i = 0; i < 16; i++)
         {
+            //Debug.LogFormat("up: {0} item {1}, dragitem = {2}", i, HumanItems[i], UiManager.Instance.DragItem);
             Color c = (HumanSprites[i] == null) ? new Color(0, 0, 0, 0) : new Color(1, 1, 1, (HumanItems[i] != null && HumanItems[i] == UiManager.Instance.DragItem) ? 0.5f : 1);
             for (int j = 0; j < 4; j++)
                 qc[i * 4 + j] = c;
@@ -371,6 +372,7 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
             Item item = GetHumanItemByPoint((int)mousex, (int)mousey);
             if (item != null)
             {
+                SendItemMoveCommand(item, ServerCommands.ItemMoveLocation.UnitPack, LogicHuman.ItemsPack.Count);
                 item = LogicHuman.TakeItemFromBody((MapUnit.BodySlot)item.Class.Option.Slot);
                 LogicHuman.ItemsPack.PutItem(LogicHuman.ItemsPack.Count, item);
             }
@@ -409,10 +411,35 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         return true; // allow drag if this unit belongs to console player
     }
 
+    private void SendItemMoveCommand(Item item, ServerCommands.ItemMoveLocation to = ServerCommands.ItemMoveLocation.UnitBody, int toIndex = -1)
+    {
+        // send command.
+        // first off, determine move source.
+        ServerCommands.ItemMoveLocation from;
+        int fromIndex = -1;
+
+        if (item.Parent == LogicHuman.ItemsBody)
+        {
+            from = ServerCommands.ItemMoveLocation.UnitBody;
+            fromIndex = item.Class.Option.Slot;
+        }
+        else if (item.Parent == LogicHuman.ItemsPack)
+        {
+            from = ServerCommands.ItemMoveLocation.UnitPack;
+            fromIndex = item.Index;
+        }
+        else from = ServerCommands.ItemMoveLocation.Ground;
+
+        if (toIndex < 0) toIndex = item.Class.Option.Slot;
+
+        Client.SendItemMove(from, to, fromIndex, toIndex, item.Count, LogicHuman, MapView.Instance.MouseCellX, MapView.Instance.MouseCellY);
+    }
+
     public override bool ProcessDrop(Item item, float mousex, float mousey)
     {
         if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
             return false;
+        SendItemMoveCommand(item);
         // put item to body
         LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
         return true;
@@ -438,8 +465,9 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
     {
         if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
             return false;
+        SendItemMoveCommand(item);
         // put item to body
-        LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
+        LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, new Item(item, 1));
         return true;
     }
 }

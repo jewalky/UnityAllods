@@ -557,9 +557,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor
             UpdateFOW(fowTex);
 
         if (HoveredObject != null && (HoveredObject.GetObjectType() == MapObjectType.Monster ||
-                                      HoveredObject.GetObjectType() == MapObjectType.Human) && !((MapUnit)HoveredObject).IsAlive) HoveredObject = null;
+                                      HoveredObject.GetObjectType() == MapObjectType.Human) && !(((MapUnit)HoveredObject).IsAlive || !MapLogic.Instance.Objects.Contains(HoveredObject))) HoveredObject = null;
         if (SelectedObject != null && (SelectedObject.GetObjectType() == MapObjectType.Monster ||
-                                       SelectedObject.GetObjectType() == MapObjectType.Human) && !((MapUnit)SelectedObject).IsAlive) SelectedObject = null;
+                                       SelectedObject.GetObjectType() == MapObjectType.Human) && !(((MapUnit)SelectedObject).IsAlive || !MapLogic.Instance.Objects.Contains(SelectedObject))) SelectedObject = null;
 
         UpdateLogic();
 

@@ -46,6 +46,21 @@ public class ItemPack
         }
     }
 
+    public void Clear()
+    {
+        ItemList.Clear();
+    }
+
+    public bool Contains(Item item)
+    {
+        return ItemList.Contains(item);
+    }
+
+    public int IndexOf(Item item)
+    {
+        return ItemList.IndexOf(item);
+    }
+
     public Item FindItemBySlot(MapUnit.BodySlot slot)
     {
         for (int i = 0; i < ItemList.Count; i++)
@@ -80,13 +95,13 @@ public class ItemPack
     }
 
     // insert item into pack.
-    public void PutItem(int position, Item item)
+    public Item PutItem(int position, Item item)
     {
         if (!Passive)
             item.Parent = this;
 
         if (item.Count <= 0)
-            return; // don't put anything if item count is zero. this can happen if item was removed from pack after drag started.
+            return null; // don't put anything if item count is zero. this can happen if item was removed from pack after drag started.
 
         // check for already present count
         for (int i = 0; i < ItemList.Count; i++)
@@ -95,18 +110,28 @@ public class ItemPack
                 ItemList[i].MagicEffects.SequenceEqual(item.MagicEffects))
             {
                 ItemList[i].Count += item.Count;
-                return;
+                if (!Passive)
+                    ItemList[i].Index = i;
+                return ItemList[i];
             }
         }
 
         position = Math.Min(ItemList.Count, Math.Max(0, position));
-        ItemList.Insert(position, new Item(item, item.Count));
+        Item newItem = new Item(item, item.Count);
+        ItemList.Insert(position, newItem);
+
+        if (!Passive)
+            newItem.Index = position;
+
+        return newItem;
     }
 
     public Item this[int index]
     {
         get
         {
+            if (index < 0 || index >= ItemList.Count)
+                return null;
             return ItemList[index];
         }
     }

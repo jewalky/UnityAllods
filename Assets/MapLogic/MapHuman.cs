@@ -106,10 +106,13 @@ public class MapHuman : MapUnit
         UpdateItems();
 
         // add item for testing
-        ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Ring {body=4}"));
-        ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Amulet {body=4}"));
-        ItemsPack.PutItem(ItemsPack.Count, new Item("Potion Body"));
-        ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Plate Cuirass {body=4}"));
+        if (!NetworkManager.IsClient)
+        {
+            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Ring {body=4}"));
+            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Amulet {body=4}"));
+            ItemsPack.PutItem(ItemsPack.Count, new Item("Potion Body"));
+            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Plate Cuirass {body=4}"));
+        }
     }
 
     public override void UpdateItems()
@@ -175,6 +178,12 @@ public class MapHuman : MapUnit
                 Class = newClass;
                 DoUpdateView = true;
             }
+        }
+
+        // if not client, recalc stats
+        if (!NetworkManager.IsClient)
+        {
+
         }
     }
 

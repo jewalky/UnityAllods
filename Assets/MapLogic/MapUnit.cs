@@ -68,7 +68,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         }
     }
 
-    public bool IsAlive = false;
+    public bool IsAlive = true;
     public bool IsDying = false;
     public List<IUnitAction> Actions = new List<IUnitAction>();
     public List<IUnitState> States = new List<IUnitState>();

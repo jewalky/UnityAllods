@@ -388,6 +388,16 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         return true;
     }
 
+    public void ProcessEndDrag()
+    {
+
+    }
+
+    public void ProcessFailDrag()
+    {
+
+    }
+
     public bool ProcessAutoDrop(Item item)
     {
         if (Pack == null)

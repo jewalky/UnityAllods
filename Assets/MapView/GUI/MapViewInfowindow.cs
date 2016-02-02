@@ -293,4 +293,16 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
             return Viewer.ProcessDrop(item, mPosLocal.x - HBackL.width, mPosLocal.y);
         return false;
     }
+
+    public void ProcessEndDrag()
+    {
+        if (Viewer != null)
+            Viewer.ProcessEndDrag();
+    }
+
+    public void ProcessFailDrag()
+    {
+        if (Viewer != null)
+            Viewer.ProcessFailDrag();
+    }
 }

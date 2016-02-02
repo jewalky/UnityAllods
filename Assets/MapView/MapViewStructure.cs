@@ -366,5 +366,15 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
     {
         return false;
     }
+
+    public void ProcessEndDrag()
+    {
+
+    }
+
+    public void ProcessFailDrag()
+    {
+
+    }
 }
  

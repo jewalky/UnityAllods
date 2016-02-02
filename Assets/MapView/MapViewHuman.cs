@@ -419,6 +419,16 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         return true;
     }
 
+    public override void ProcessEndDrag()
+    {
+        
+    }
+
+    public override void ProcessFailDrag()
+    {
+        
+    }
+
     public bool ProcessAutoDrop(Item item)
     {
         if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)

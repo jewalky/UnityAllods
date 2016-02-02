@@ -191,6 +191,10 @@ public class Item
     // power for castSpell is stored in paired mageSkill0.
     // so basically castSpell=Stone_Curse:10 translates into castSpell=21;mageSkill0=10
     // just in case, I have an local enum that translates to stat number.
+    private static uint LocalTopUID = 0xC0000000;
+    public readonly uint UID;
+    public readonly List<uint> ParentUIDs = new List<uint>();
+
     public bool IsValid { get { return (Class != null); } }
 
     public ItemClass Class = null;
@@ -202,6 +206,20 @@ public class Item
 
     public Item(Item original, int count)
     {
+        for (int i = 0; i < original.ParentUIDs.Count; i++)
+            ParentUIDs.Add(original.ParentUIDs[i]);
+
+        // generate UID (or duplicate old)
+        if (count >= original.Count)
+        {
+            UID = original.UID; // moved old item
+        }
+        else
+        {
+            UID = LocalTopUID++; // new item
+            ParentUIDs.Add(original.UID);
+        }
+
         Class = original.Class;
         Price = original.Price;
         Count = Math.Max(original.Count, count);
@@ -213,6 +231,8 @@ public class Item
 
     public Item(ushort id, List<ItemEffect> effects = null)
     {
+        UID = LocalTopUID++;
+
         Class = ItemClassLoader.GetItemClassById(id);
         if (Class == null)
         {
@@ -230,6 +250,8 @@ public class Item
 
     public Item(string specifier)
     {
+        UID = LocalTopUID++;
+
         int spec_argStart = specifier.IndexOf('{');
         int spec_argEnd = (spec_argStart >= 0) ? specifier.IndexOf('}', spec_argStart + 1) : 1;
         string spec_args = "";

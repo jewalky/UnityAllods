@@ -97,9 +97,9 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         }
 
         HumanSprites[1] = UpdateHumanPic();
-        for (int i = 0; i < LogicHuman.ItemsBody.Length; i++)
+        for (int i = 0; i < (int)MapUnit.BodySlot.TopSlot; i++)
         {
-            Item item = LogicHuman.ItemsBody[i];
+            Item item = LogicHuman.GetItemFromBody((MapUnit.BodySlot)i);
             if (item == null)
                 continue;
 

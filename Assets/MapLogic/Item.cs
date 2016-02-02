@@ -183,6 +183,19 @@ public class ItemEffect
 
         return ov;
     }
+
+    // for sequenceequal in itempack
+    public override bool Equals(object obj)
+    {
+        if (obj.GetType() != typeof(ItemEffect))
+            return false;
+
+        ItemEffect o = (ItemEffect)obj;
+        return (o.Type1 == Type1 &&
+                o.Type2 == Type2 &&
+                o.Value1 == Value1 &&
+                o.Value2 == Value2);
+    }
 }
 
 public class Item
@@ -194,6 +207,8 @@ public class Item
     private static uint LocalTopUID = 0xC0000000;
     public readonly uint UID;
     public readonly List<uint> ParentUIDs = new List<uint>();
+
+    public ItemPack Parent = null;
 
     public bool IsValid { get { return (Class != null); } }
 

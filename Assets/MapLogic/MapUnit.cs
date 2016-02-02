@@ -102,10 +102,11 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         // slot 11 unused
         Boots = 12,
         // slots 13, 14 and 15 are unused
+        TopSlot = 16
     }
 
-    public Item[] ItemsBody = new Item[15];
-    public ItemPack ItemsPack = new ItemPack();
+    public ItemPack ItemsBody;
+    public ItemPack ItemsPack;
 
     //
     public readonly bool[,] Vision = new bool[41, 41];
@@ -144,6 +145,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         States.Add(new IdleState(this));
         VState = UnitVisualState.Idle;
         DoUpdateView = true;
+        ItemsBody = new ItemPack(false, this);
+        ItemsPack = new ItemPack(false, this);
     }
 
     private void InitUnit()
@@ -397,8 +400,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public Item TakeItemFromBody(BodySlot slot)
     {
-        Item item = ItemsBody[(int)slot];
-        ItemsBody[(int)slot] = null;
+        Item item = ItemsBody.TakeItem(ItemsBody.FindItemBySlot(slot), 1);
         UpdateItems();
         DoUpdateInfo = true;
         return item;
@@ -406,23 +408,25 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public Item GetItemFromBody(BodySlot slot)
     {
-        return ItemsBody[(int)slot];
+        return ItemsBody.FindItemBySlot(slot);
     }
 
     public void PutItemToBody(BodySlot slot, Item item)
     {
         // unequip existing item on specified slot
-        if (ItemsBody[(int)slot] != null)
-            ItemsPack.PutItem(ItemsPack.Count, ItemsBody[(int)slot]); // put current item to pack
+        Item currentItem = GetItemFromBody(slot);
+        if (currentItem != null)
+            ItemsPack.PutItem(ItemsPack.Count, ItemsBody.TakeItem(currentItem, 1));
 
-        if (item.Class.Option.TwoHanded == 2 && ItemsBody[(int)BodySlot.Shield] != null)
+        if (item.Class.Option.TwoHanded == 2)
         {
-            // unequip shield for two-handed weapon
-            ItemsPack.PutItem(ItemsPack.Count, ItemsBody[(int)BodySlot.Shield]);
-            ItemsBody[(int)BodySlot.Shield] = null;
+            // unequip shield for 2-handed weapon
+            Item shield = GetItemFromBody(BodySlot.Shield);
+            if (shield != null)
+                ItemsPack.PutItem(ItemsPack.Count, ItemsBody.TakeItem(shield, 1));
         }
 
-        ItemsBody[(int)slot] = item;
+        ItemsBody.PutItem(ItemsBody.Count, item);
         UpdateItems();
         DoUpdateInfo = true;
     }

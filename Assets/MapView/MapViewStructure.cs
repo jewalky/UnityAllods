@@ -376,5 +376,10 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
     {
 
     }
+
+    public Item ProcessVerifyEndDrag()
+    {
+        return null;
+    }
 }
  

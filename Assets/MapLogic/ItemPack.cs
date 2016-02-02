@@ -85,6 +85,9 @@ public class ItemPack
         if (!Passive)
             item.Parent = this;
 
+        if (item.Count <= 0)
+            return; // don't put anything if item count is zero. this can happen if item was removed from pack after drag started.
+
         // check for already present count
         for (int i = 0; i < ItemList.Count; i++)
         {

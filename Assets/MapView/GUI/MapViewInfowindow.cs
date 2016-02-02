@@ -305,4 +305,11 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         if (Viewer != null)
             Viewer.ProcessFailDrag();
     }
+
+    public Item ProcessVerifyEndDrag()
+    {
+        if (Viewer != null)
+            return Viewer.ProcessVerifyEndDrag();
+        return null;
+    }
 }

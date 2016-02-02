@@ -107,8 +107,11 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
             if (slot == 0 || slot == 3 || slot == 11 || (slot >= 13 && slot <= 15))
                 continue;
 
-            ItemFile file1;
-            ItemFile file2;
+            ItemFile file1 = null;
+            ItemFile file2 = null;
+
+            int idx1 = -1;
+            int idx2 = -1;
 
             if ((LogicHuman.Gender & MapHuman.GenderFlags.Fighter) != 0) // fighter
             {
@@ -141,58 +144,48 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
                 {
                     case 9: // bracers
                         file2.UpdateSprite();
-                        HumanSprites[7] = file1.File;
-                        HumanSprites[10] = file2.File;
-                        HumanItems[7] = HumanItems[10] = item;
+                        idx1 = 7;
+                        idx2 = 10;
                         break;
 
                     case 10: // gauntlets
                         file2.UpdateSprite();
-                        HumanSprites[8] = file1.File;
-                        HumanSprites[11] = file2.File;
-                        HumanItems[8] = HumanItems[11] = item;
+                        idx1 = 8;
+                        idx2 = 11;
                         break;
 
                     case 4: // ring
                         file2.UpdateSprite();
-                        HumanSprites[2] = file1.File;
-                        HumanSprites[3] = file2.File;
-                        HumanItems[2] = HumanItems[3] = item;
+                        idx1 = 2;
+                        idx2 = 3;
                         break;
 
                     case 5: // amulet
-                        HumanSprites[4] = file1.File;
-                        HumanItems[4] = item;
+                        idx1 = 4;
                         break;
 
                     case 6: // helm
-                        HumanSprites[12] = file1.File;
-                        HumanItems[12] = item;
+                        idx1 = 12;
                         break;
 
                     case 7: // mail
-                        HumanSprites[6] = file1.File;
-                        HumanItems[6] = item;
+                        idx1 = 6;
                         break;
 
                     case 8: // cuirass
-                        HumanSprites[9] = file1.File;
-                        HumanItems[9] = item;
+                        idx1 = 9;
                         break;
 
                     case 12: // boots
-                        HumanSprites[5] = file1.File;
-                        HumanItems[5] = item;
+                        idx1 = 5;
                         break;
 
                     case 1: // weapon
-                        HumanSprites[13] = file1.File;
-                        HumanItems[13] = item;
+                        idx1 = 13;
                         break;
 
                     case 2: // shield
-                        HumanSprites[14] = file1.File;
-                        HumanItems[14] = item;
+                        idx1 = 14;
                         break;
                 }
             }
@@ -219,50 +212,54 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
                 {
                     case 4: // ring
                         file2.UpdateSprite();
-                        HumanSprites[2] = file1.File;
-                        HumanSprites[3] = file2.File;
-                        HumanItems[2] = HumanItems[3] = item;
+                        idx1 = 2;
+                        idx2 = 3;
                         break;
 
                     case 10: // gloves
                         file2.UpdateSprite();
-                        HumanSprites[5] = file1.File;
-                        HumanSprites[9] = file2.File;
-                        HumanItems[5] = HumanItems[9] = item;
+                        idx1 = 5;
+                        idx2 = 9;
                         break;
 
                     case 8: // cloak
                         file2.UpdateSprite();
-                        HumanSprites[0] = file1.File;
-                        HumanSprites[8] = file2.File;
-                        HumanItems[0] = HumanItems[8] = item;
+                        idx1 = 0;
+                        idx2 = 8;
                         break;
 
                     case 5: // amulet
-                        HumanSprites[7] = file1.File;
-                        HumanItems[7] = item;
+                        idx1 = 7;
                         break;
 
                     case 6: // hat
-                        HumanSprites[10] = file1.File;
-                        HumanItems[10] = item;
+                        idx1 = 10;
                         break;
 
                     case 7: // robe
-                        HumanSprites[6] = file1.File;
-                        HumanItems[6] = item;
+                        idx1 = 6;
                         break;
 
                     case 12: // shoes
-                        HumanSprites[4] = file1.File;
-                        HumanItems[4] = item;
+                        idx1 = 4;
                         break;
 
                     case 1: // staff
-                        HumanSprites[11] = file1.File;
-                        HumanItems[11] = item;
+                        idx1 = 11;
                         break;
                 }
+            }
+
+            if (idx1 >= 0)
+            {
+                HumanSprites[idx1] = file1.File;
+                HumanItems[idx1] = item;
+            }
+
+            if (idx2 >= 0)
+            {
+                HumanSprites[idx2] = file2.File;
+                HumanItems[idx2] = item;
             }
         }
 
@@ -311,7 +308,7 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         Color[] qc = new Color[4 * 16];
         for (int i = 0; i < 16; i++)
         {
-            Color c = (HumanSprites[i] == null) ? new Color(0, 0, 0, 0) : new Color(1, 1, 1, 1);
+            Color c = (HumanSprites[i] == null) ? new Color(0, 0, 0, 0) : new Color(1, 1, 1, (HumanItems[i] != null && HumanItems[i] == UiManager.Instance.DragItem) ? 0.5f : 1);
             for (int j = 0; j < 4; j++)
                 qc[i * 4 + j] = c;
         }
@@ -394,11 +391,13 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         Item item = GetHumanItemByPoint((int)mousex, (int)mousey);
         if (item == null)
             return false;
-        item = LogicHuman.TakeItemFromBody((MapUnit.BodySlot)item.Class.Option.Slot);
-        UiManager.Instance.StartDrag(item, () =>
+        //item = LogicHuman.TakeItemFromBody((MapUnit.BodySlot)item.Class.Option.Slot);
+        LogicHuman.DoUpdateInfo = true;
+        UiManager.Instance.StartDrag(item, 1, () =>
         {
             // put item back to body if cancelled
-            LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
+            //LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
+            LogicHuman.DoUpdateInfo = true;
         });
         return true;
     }
@@ -421,12 +420,18 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
 
     public override void ProcessEndDrag()
     {
-        
+        LogicHuman.DoUpdateInfo = true;
     }
 
     public override void ProcessFailDrag()
     {
         
+    }
+
+    public override Item ProcessVerifyEndDrag()
+    {
+        // take item from body
+        return LogicHuman.TakeItemFromBody((MapUnit.BodySlot)UiManager.Instance.DragItem.Class.Option.Slot);
     }
 
     public bool ProcessAutoDrop(Item item)

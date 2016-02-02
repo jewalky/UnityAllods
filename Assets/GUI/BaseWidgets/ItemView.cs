@@ -244,7 +244,8 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
             // for now, just put generic background
             Renderer.materials[InvWidth * InvHeight + y * InvWidth + x].mainTexture = item.Class.File_Pack.File.Atlas;
             Renderer.materials[InvWidth * InvHeight + y * InvWidth + x].SetTexture("_Palette", item.Class.File_Pack.File.OwnPalette);
-            Builder.AddQuad(InvWidth * InvHeight + y * InvWidth + x, x * 80, y * 80, 80, 80, item.Class.File_Pack.File.AtlasRects[0]);
+            Color color = new Color(1, 1, 1, (item == UiManager.Instance.DragItem) ? 0.25f : 1); // draw dragged items half transparent
+            Builder.AddQuad(InvWidth * InvHeight + y * InvWidth + x, x * 80, y * 80, 80, 80, item.Class.File_Pack.File.AtlasRects[0], color);
 
             x++;
             if (x >= InvWidth)
@@ -340,11 +341,13 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
             return false;
 
         ItemPack cPack = Pack;
-        Item item = Pack.TakeItem(itemHovered, 1);
+        Item item = Pack[itemHovered];
+        int count = 1;
 
-        UiManager.Instance.StartDrag(item, () =>
+        UiManager.Instance.StartDrag(item, count, () =>
         {
-            cPack.PutItem(Math.Min(itemHovered, cPack.Count), item);
+            // 
+            //cPack.PutItem(Math.Min(itemHovered, cPack.Count), item);
         });
 
         return true;
@@ -396,6 +399,14 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
     public void ProcessFailDrag()
     {
 
+    }
+
+    public Item ProcessVerifyEndDrag()
+    {
+        // check if item still exists in pack in sufficient count (> 0)
+        if (Pack == null)
+            return null;
+        return Pack.TakeItem(UiManager.Instance.DragItem, UiManager.Instance.DragItemCount);
     }
 
     public bool ProcessAutoDrop(Item item)

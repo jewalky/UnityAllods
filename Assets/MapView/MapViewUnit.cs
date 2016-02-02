@@ -646,4 +646,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
     {
 
     }
+
+    public virtual Item ProcessVerifyEndDrag()
+    {
+        return null;
+    }
 }

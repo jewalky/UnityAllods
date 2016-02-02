@@ -12,7 +12,8 @@ public interface IMapViewSelfie
     bool ProcessDrag(Item item, float mousex, float mousey);
     bool ProcessDrop(Item item, float mousex, float mousey);
     void ProcessEndDrag();
-    void ProcessFailDrag();    
+    void ProcessFailDrag();
+    Item ProcessVerifyEndDrag();
     void DisplayPic(bool on, Transform parent);
     void DisplayInfo(bool on, Transform parent); // object displays it's info text at coordinates
     MapObject GetObject();

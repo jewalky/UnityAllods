@@ -21,6 +21,8 @@ public interface IUiItemDragger
     void ProcessEndDrag();
     // this is called when dropping failed on target (or cancelled)
     void ProcessFailDrag();
+    // this is called to make sure that source pack still has this item.
+    Item ProcessVerifyEndDrag();
 }
 
 public interface IUiItemAutoDropper
@@ -151,7 +153,7 @@ public class UiManager : MonoBehaviour
             Event ef = new Event();
             ef.type = EventType.MouseMove;
 
-            if (lastMouseChange > 0.5f)
+            if (lastMouseChange > 0.5f && !Input.GetMouseButton(0) && !Input.GetMouseButton(1) && !Input.GetMouseButton(2))
             {
                 ef.commandName = "tooltip";
                 lastMouseChange = -1;
@@ -203,12 +205,23 @@ public class UiManager : MonoBehaviour
             {
                 dragProcessed = true;
                 // check drop. if drop is done and processed, we should complete dragging.
+                // make new item.
+                // it's the duty of _DragDragger to delete the old item based on drag count.
                 if (!mouse1Clicked)
                 {
-                    if (((IUiItemDragger)Processors[i]).ProcessDrop(DragItem, mPos.x, mPos.y))
+                    // if parent has changed, then it probably doesn't belong to the original pack anymore and thus can't be moved.
+                    Item newItem = _DragDragger.ProcessVerifyEndDrag();
+                    if (newItem == null)
+                    {
+                        CancelDrag();
+                        continue;
+                    }
+
+                    if (((IUiItemDragger)Processors[i]).ProcessDrop(newItem, mPos.x, mPos.y))
                     {
                         _DragDragger.ProcessEndDrag();
                         DragItem = null;
+                        DragItemCount = 0;
                         _DragCallback = null;
                         _DragDragger = null;
                     }
@@ -374,17 +387,17 @@ public class UiManager : MonoBehaviour
     private IUiItemDragger _CurrentDragDragger = null;
     private IUiItemDragger _DragDragger = null;
     public Item DragItem { get; private set; }
+    public int DragItemCount { get; private set; }
     private UiDragCallback _DragCallback = null;
 
-    public void StartDrag(Item item, UiDragCallback onCancelDrag)
+    public void StartDrag(Item item, int count, UiDragCallback onCancelDrag)
     {
         if (_CurrentDragDragger == null)
             return; // don't allow drag start if not in callback.
         _DragDragger = _CurrentDragDragger;
         DragItem = item;
-        if (DragItem != null)
-            _DragCallback = onCancelDrag;
-        else _DragCallback = null;
+        DragItemCount = count;
+        _DragCallback = onCancelDrag;
     }
 
     public void CancelDrag()
@@ -396,6 +409,7 @@ public class UiManager : MonoBehaviour
         _DragDragger.ProcessFailDrag();
         _DragCallback = null;
         DragItem = null;
+        DragItemCount = 0;
         _DragDragger = null;
     }
 

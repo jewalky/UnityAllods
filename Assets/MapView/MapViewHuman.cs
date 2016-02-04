@@ -161,7 +161,7 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
                         break;
 
                     case 5: // amulet
-                        idx1 = 4;
+                        idx1 = 6;
                         break;
 
                     case 6: // helm
@@ -169,7 +169,7 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
                         break;
 
                     case 7: // mail
-                        idx1 = 6;
+                        idx1 = 4;
                         break;
 
                     case 8: // cuirass

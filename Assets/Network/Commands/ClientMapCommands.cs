@@ -548,7 +548,7 @@ namespace ClientCommands
                 ItemClass cls = ItemClassLoader.GetItemClassById((ushort)ItemID);
                 msg = string.Format("{0} {1}", Locale.Main[85], (cls != null ? cls.VisualName : "(null)")); // you picked up: ...
                 if (ItemCount > 1) // (now got NNN)
-                    msg += string.Format("({0} {1} {2})", Locale.Main[86], ItemCount, Locale.Main[87]);
+                    msg += string.Format(" ({0} {1} {2})", Locale.Main[86], ItemCount, Locale.Main[87]);
             }
             else
             {

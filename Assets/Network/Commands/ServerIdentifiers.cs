@@ -18,5 +18,7 @@ public enum ServerIdentifiers
 
     RespawnAvatar,
 
-    ItemMove
+    ItemMove,
+
+    UnitPickup
 }

@@ -449,6 +449,8 @@ namespace ClientCommands
         public List<NetItem> Body;
         [ProtoMember(3)]
         public List<NetItem> Pack;
+        [ProtoMember(4)]
+        public long Money;
 
         public bool Process()
         {
@@ -477,6 +479,7 @@ namespace ClientCommands
                     unit.ItemsPack.PutItem(unit.ItemsBody.Count, new Item(Pack[i]));
             }
 
+            unit.ItemsPack.Money = Money;
             unit.DoUpdateInfo = true;
 
             return true;
@@ -507,6 +510,94 @@ namespace ClientCommands
             unit.Stats = Stats;
             unit.DoUpdateView = true;
 
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.UnitItemPickup)]
+    public struct UnitItemPickup : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public int ItemID;
+        [ProtoMember(3)]
+        public long ItemCount;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null)
+            {
+                Debug.LogFormat("Attempted to set pick up with nonexistent unit {0}", Tag);
+                return true;
+            }
+
+            // print message if this unit is console
+            if (unit.Player != MapLogic.Instance.ConsolePlayer)
+                return true;
+
+            string msg;
+            if (ItemID >= 0)
+            {
+                // itemcount is resultant count
+                ItemClass cls = ItemClassLoader.GetItemClassById((ushort)ItemID);
+                msg = string.Format("{0} {1}", Locale.Main[85], (cls != null ? cls.VisualName : "(null)")); // you picked up: ...
+                if (ItemCount > 1) // (now got NNN)
+                    msg += string.Format("({0} {1} {2})", Locale.Main[86], ItemCount, Locale.Main[87]);
+            }
+            else
+            {
+                msg = string.Format("{0} {1} {2}", Locale.Main[88], ItemCount, Locale.Main[89]); // you picked up NNN gold
+            }
+
+            MapViewChat.Instance.AddChatMessage(Player.AllColorsPickup, msg);
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.SackAt)]
+    public struct SackAt : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int X;
+        [ProtoMember(2)]
+        public int Y;
+        [ProtoMember(3)]
+        public long Price;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            ItemPack pack = new ItemPack();
+            pack.Money = Price;
+            MapLogic.Instance.PutSackAt(X, Y, pack, true);
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.NoSackAt)]
+    public struct NoSackAt : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int X;
+        [ProtoMember(2)]
+        public int Y;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapLogic.Instance.RemoveSackAt(X, Y);
             return true;
         }
     }

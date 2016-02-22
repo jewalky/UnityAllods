@@ -78,7 +78,6 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
                     color = 2;
                     break;
                 default:
-                    color = Player.AllColorsChat;
                     break;
             }
         }

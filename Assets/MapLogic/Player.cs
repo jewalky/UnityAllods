@@ -44,10 +44,12 @@ public class Player
           new Color32(0x00, 0x00, 0x10, 0xFF),
           new Color32(0xFF, 0xFF, 0xFF, 0xFF), // system color
           new Color32(0xFF, 0xFF, 0x42, 0xFF), // chat color (alternate)
+          new Color32(0x9C, 0x9E, 0x9C, 0xFF),
     };
 
     public const int AllColorsSystem = 17; // FFFFFF
     public const int AllColorsChat = 18; // FFFF42
+    public const int AllColorsPickup = 19; // 6B6D6B
 
     public int ID { get; set; }
     public int Color { get; set; }

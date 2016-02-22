@@ -29,6 +29,9 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
         HoldPosition = 0x0040,
         Retreat = 0x0080,
 
+        // invisible commands
+        Pickup = 0x0100, // this command won't be displayed on the commandbar, instead looking as if there was no command.
+
         //All = Attack|Move|Stop|Defend|Cast|MoveAttack|HoldPosition|Retreat
         All = Attack|Move|MoveAttack // todo: add more commands when done
     }
@@ -168,6 +171,23 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
                 {
                     if ((ownPlayer.Diplomacy[hisPlayer.ID] & DiplomacyFlags.Enemy) != 0)
                         CurrentCommand = Commands.Attack;
+                }
+
+                // check pickup
+                // if selected unit == hovered unit
+                // AND selected unit belongs to us
+                // AND we are hovering a pack
+                if (CurrentCommand == Commands.Move)
+                {
+                    MapSack sack = MapLogic.Instance.GetSackAt(MapView.Instance.MouseCellX, MapView.Instance.MouseCellY);
+                    if (sack != null &&
+                        (MapView.Instance.HoveredObject == MapView.Instance.SelectedObject || MapView.Instance.HoveredObject == null) &&
+                        MapView.Instance.SelectedObject != null &&
+                        MapView.Instance.SelectedObject is IPlayerPawn &&
+                        ((IPlayerPawn)MapView.Instance.SelectedObject).GetPlayer() == ownPlayer)
+                    {
+                        CurrentCommand = Commands.Pickup;
+                    }
                 }
             }
         }

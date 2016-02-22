@@ -182,3 +182,60 @@ public class AttackState : IUnitState
         return true;
     }
 }
+
+public class PickupState : IUnitState
+{
+    private MapUnit Unit;
+    private int TargetX;
+    private int TargetY;
+
+    public PickupState(MapUnit unit, int x, int y)
+    {
+        Unit = unit;
+        TargetX = x;
+        TargetY = y;
+    }
+
+    public bool Process()
+    {
+        if (Unit.Stats.Health <= 0)
+            return false;
+
+        // check if sack still exists
+        MapSack targetsack = MapLogic.Instance.GetSackAt(TargetX, TargetY);
+        if (targetsack == null)
+            return false;
+
+        // if unit is on target cell, just pick up
+        if (Unit.X <= TargetX && Unit.Y <= TargetY &&
+            Unit.X+Unit.Width > TargetX && Unit.Y+Unit.Height > TargetY)
+        {
+            // pick the target sack up.
+            // add money
+            for (int i = 0; i < targetsack.Pack.Count; i++)
+            {
+                Item newItem = Unit.ItemsPack.PutItem(Unit.ItemsPack.Count, new Item(targetsack.Pack[i], targetsack.Pack[i].Count));
+                // display "you have picked up ..."
+                Server.NotifyItemPickup(Unit, targetsack.Pack[i].Class.ItemID, newItem.Count);
+            }
+
+            if (targetsack.Pack.Money > 0)
+            {
+                Unit.ItemsPack.Money += targetsack.Pack.Money;
+                Server.NotifyItemPickup(Unit, -1, targetsack.Pack.Money);
+            }
+
+            MapLogic.Instance.RemoveSackAt(TargetX, TargetY);
+
+            if (NetworkManager.IsServer)
+                Server.NotifyUnitPack(Unit);
+
+            return false; // done
+        }
+        else
+        {
+            MoveState.TryWalkTo(Unit, TargetX, TargetY);
+            return true;
+        }
+    }
+}

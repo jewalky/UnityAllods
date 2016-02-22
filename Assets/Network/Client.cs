@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public enum ClientState
 {
@@ -95,6 +96,25 @@ public class Client
         }
     }
 
+    public static void SendPickupUnit(MapUnit unit, int x, int y)
+    {
+        if (NetworkManager.IsClient)
+        {
+            ServerCommands.UnitPickup pkpCmd;
+            pkpCmd.Tag = unit.Tag;
+            pkpCmd.X = x;
+            pkpCmd.Y = y;
+            ClientManager.SendCommand(pkpCmd);
+        }
+        else
+        {
+            if (MapLogic.Instance.ConsolePlayer == unit.Player)
+            {
+                unit.SetState(new PickupState(unit, x, y));
+            }
+        }
+    }
+
     public static void SendRespawn()
     {
         if (NetworkManager.IsClient)
@@ -132,6 +152,40 @@ public class Client
             imvCmd.CellX = cellX;
             imvCmd.CellY = cellY;
             ClientManager.SendCommand(imvCmd);
+        }
+    }
+
+    public static void DropItem(MapHuman human, Item item, int x, int y)
+    {
+        if (NetworkManager.IsClient)
+        {
+            // check what this item is.
+            if (item.Parent == human.ItemsBody)
+            {
+                SendItemMove(ServerCommands.ItemMoveLocation.UnitBody,
+                    ServerCommands.ItemMoveLocation.Ground,
+                    item.Class.Option.Slot, -1, item.Count, human, x, y);
+            }
+            else if (item.Parent == human.ItemsPack)
+            {
+                SendItemMove(ServerCommands.ItemMoveLocation.UnitPack,
+                    ServerCommands.ItemMoveLocation.Ground,
+                    item.Index, -1, item.Count, human, x, y);
+            }
+        }
+        else
+        {
+            // check coordinates
+            if (Math.Abs(human.X - x) > 2 ||
+                Math.Abs(human.Y - y) > 2)
+            {
+                x = human.X;
+                y = human.Y;
+            }
+
+            ItemPack pack = new ItemPack();
+            pack.PutItem(0, new Item(item, item.Count));
+            MapLogic.Instance.PutSackAt(x, y, pack, false);
         }
     }
 }

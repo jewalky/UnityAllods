@@ -418,6 +418,15 @@ class MapLogic
                 });
             }
         }
+
+        if (!NetworkManager.IsClient)
+        {
+            // testing
+            /*
+            ItemPack testpack = new ItemPack();
+            testpack.PutItem(0, new Item("Very Rare Crystal Ring"));
+            PutSackAt(16, 16, testpack, false);*/
+        }
     }
 
     public int GetFreePlayerID(bool ai)
@@ -637,5 +646,89 @@ class MapLogic
         }
 
         return null;
+    }
+
+    // sack related
+    public MapSack GetSackByTag(int tag)
+    {
+        foreach (MapObject mobj in Objects)
+        {
+            if (mobj.GetObjectType() != MapObjectType.Sack) continue;
+            MapSack sack = (MapSack)mobj;
+            if (sack.Tag == tag)
+                return sack;
         }
+
+        return null;
+    }
+
+    // get sack at x,y
+    public MapSack GetSackAt(int x, int y)
+    {
+        if (x < 0 || y < 0 || x >= Width || y >= Height)
+            return null;
+
+        foreach (MapObject mobj in Nodes[x,y].Objects)
+        {
+            if (mobj.GetObjectType() != MapObjectType.Sack) continue;
+            MapSack sack = (MapSack)mobj;
+            return sack;
+        }
+
+        return null;
+    }
+
+    public void RemoveSackAt(int x, int y)
+    {
+        if (x < 0 || y < 0 || x >= Width || y >= Height)
+            return;
+
+        MapNode node = Nodes[x, y];
+        for (int i = 0; i < node.Objects.Count; i++)
+        {
+            MapObject mobj = node.Objects[i];
+            if (mobj.GetObjectType() != MapObjectType.Sack) continue;
+            mobj.Dispose();
+            Objects.Remove(mobj); // remove from the list
+            i--;
+        }
+
+        if (NetworkManager.IsServer)
+            Server.NotifyNoSack(x, y);
+    }
+
+    // put sack at x,y
+    private static int TopSackTag = 1;
+    public MapSack PutSackAt(int x, int y, ItemPack pack, bool alwayscreate)
+    {
+        if (x < 0 || y < 0 || x >= Width || y >= Height)
+            return null;
+
+        MapSack existingsack = null;
+        if (alwayscreate) RemoveSackAt(x, y);
+        else existingsack = GetSackAt(x, y);
+        
+        if (existingsack == null)
+        {
+            existingsack = new MapSack(pack);
+            existingsack.X = x;
+            existingsack.Y = y;
+            existingsack.Tag = TopSackTag++;
+            existingsack.LinkToWorld();
+            Objects.Add(existingsack);
+            existingsack.UpdateNetVisibility();
+        }
+        else
+        {
+            for (int i = 0; i < pack.Count; i++)
+                existingsack.Pack.PutItem(existingsack.Pack.Count, new Item(pack[i], pack[i].Count));
+            existingsack.Pack.Money += pack.Money;
+            existingsack.DoUpdateView = true;
+
+            if (NetworkManager.IsServer)
+                Server.NotifySack(x, y, existingsack.Pack.Price);
+        }
+
+        return existingsack;
+    }
 }

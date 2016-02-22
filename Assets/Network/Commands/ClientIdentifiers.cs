@@ -24,5 +24,9 @@ public enum ClientIdentifiers
     DamageUnit,
 
     UnitPack,
-    UnitStats
+    UnitStats,
+
+    UnitItemPickup,
+    SackAt,
+    NoSackAt
 }

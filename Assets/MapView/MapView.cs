@@ -2,7 +2,7 @@
 using System.Collections;
 using System;
 
-public class MapView : MonoBehaviour, IUiEventProcessor
+public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
 {
     private static MapView _Instance = null;
     public static MapView Instance
@@ -697,6 +697,11 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                     {
                         Client.SendAttackUnit(unit, (MapUnit)HoveredObject);
                     }
+                    else if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Pickup &&
+                             MapLogic.Instance.GetSackAt(MouseCellX, MouseCellY) != null)
+                    {
+                        Client.SendPickupUnit(unit, MouseCellX, MouseCellY); // issue sack pickup command by current unit at target coordinates
+                    }
                 }
             }
         }
@@ -807,6 +812,10 @@ public class MapView : MonoBehaviour, IUiEventProcessor
                 {
                     MouseCursor.SetCursor(MouseCursor.CurMoveAttack);
                 }
+                else if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Pickup)
+                {
+                    MouseCursor.SetCursor(MouseCursor.CurPickup);
+                }
             }
         }
     }
@@ -887,5 +896,46 @@ public class MapView : MonoBehaviour, IUiEventProcessor
         height /= count; // get average height
         Vector2 ov = new Vector2(Mathf.Round(x * 32), Mathf.Round(y * 32 - height));
         return ov;
+    }
+
+    public bool ProcessStartDrag(float x, float y)
+    {
+        return false; // drag from map is not supported.
+    }
+
+    public bool ProcessDrag(Item item, float x, float y)
+    {
+        return MapLogic.Instance.IsLoaded &&
+            SelectedObject != null &&
+            SelectedObject is IPlayerPawn &&
+            ((IPlayerPawn)SelectedObject).GetPlayer() == MapLogic.Instance.ConsolePlayer &&
+            SelectedObject.GetObjectType() == MapObjectType.Human &&
+            ((MapHuman)SelectedObject).IsHero;
+    }
+
+    public bool ProcessDrop(Item item, float x, float y)
+    {
+        //
+        //throw new NotImplementedException();
+        // disregard x/y, as we got MouseCellX/MouseCellY.
+        MapHuman human = (MapHuman)SelectedObject;
+        Client.DropItem(human, item, MouseCellX, MouseCellY);
+        return true;
+    }
+
+    public void ProcessEndDrag()
+    {
+        // this is the function that's called after item FROM this has succeeded dragging.
+    }
+
+    public void ProcessFailDrag()
+    {
+        // same as above except with error.
+    }
+
+    public Item ProcessVerifyEndDrag()
+    {
+        // same as above, used in dragging.
+        return null;
     }
 }

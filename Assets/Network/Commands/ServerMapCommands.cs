@@ -202,10 +202,55 @@ namespace ServerCommands
                     if (item == null) return true;
                     unit.ItemsPack.PutItem(DestinationIndex, item);
                     break;
+
+                case ItemMoveLocation.Ground:
+                    if (unit == null) return true;
+                    item = TakeItem(unit);
+                    if (item == null) return true;
+                    if (Math.Abs(CellX - unit.X) > 2 ||
+                        Math.Abs(CellY - unit.Y) > 2)
+                    {
+                        CellX = unit.X;
+                        CellY = unit.Y;
+                    }
+                    ItemPack pack = new ItemPack();
+                    pack.PutItem(0, new Item(item, item.Count));
+                    MapLogic.Instance.PutSackAt(CellX, CellY, pack, false);
+                    break;
             }
 
             Server.NotifyUnitPack(unit);
 
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.UnitPickup)]
+    public struct UnitPickup : IServerCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public int X;
+        [ProtoMember(3)]
+        public int Y;
+
+        public bool Process(ServerClient client)
+        {
+            if (client.State != ClientState.Playing)
+                return false;
+
+            Player player = MapLogic.Instance.GetNetPlayer(client);
+            if (player == null)
+                return false; // huehue, same as "order error" in a2server.exe, except we just boot them
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            // we can't do anything with units that don't belong to our player.
+            if (unit.Player != player)
+                return true;
+
+            unit.SetState(new PickupState(unit, X, Y));
             return true;
         }
     }

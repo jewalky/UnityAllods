@@ -175,6 +175,11 @@ public class Server
             NotifyAddUnitActionsSingle(player.NetClient, unit, unit.Actions.Skip(1).ToArray());
             //Debug.LogFormat("sending player {0} unit {1}", player.Name, unitCmd.Tag);            
         }
+        else if (mobj.GetObjectType() == MapObjectType.Sack)
+        {
+            MapSack sack = (MapSack)mobj;
+            NotifySack(sack.X, sack.Y, sack.Pack.Price);
+        }
     }
 
     public static void ObjectBecameInvisible(Player player, MapObject mobj)
@@ -188,7 +193,7 @@ public class Server
         {
             if (client.State != ClientState.Playing)
                 continue;
-            
+
             Player p = MapLogic.Instance.GetNetPlayer(client);
             //todo object deleting
             if (mobj.GetObjectType() == MapObjectType.Monster ||
@@ -300,9 +305,13 @@ public class Server
                 for (int i = 0; i < unit.ItemsBody.Count; i++)
                     packCmd.Body.Add(new NetItem(unit.ItemsBody[i]));
                 packCmd.Pack = new List<NetItem>();
+                packCmd.Money = 0;
                 if (unit.Player == p)
+                {
                     for (int i = 0; i < unit.ItemsPack.Count; i++)
                         packCmd.Pack.Add(new NetItem(unit.ItemsPack[i]));
+                    packCmd.Money = unit.ItemsPack.Money;
+                }
                 client.SendCommand(packCmd);
             }
         }
@@ -323,6 +332,70 @@ public class Server
                 statsCmd.Stats = unit.Stats;
                 client.SendCommand(statsCmd);
             }
+        }
+    }
+
+    public static void NotifyItemPickup(MapUnit unit, int itemid, long count)
+    {
+        // if item is >=0, print language string for this item
+        // if item is <0, print "gold"
+        // send message to unit's owner
+        ClientCommands.UnitItemPickup pkpCmd;
+        pkpCmd.Tag = unit.Tag;
+        pkpCmd.ItemID = itemid;
+        pkpCmd.ItemCount = count;
+
+        if (NetworkManager.IsServer)
+        {
+            ServerClient client = unit.Player.NetClient;
+            if (client == null)
+                return;
+
+            client.SendCommand(pkpCmd);
+        }
+        else if (!NetworkManager.IsClient)
+        {
+            pkpCmd.Process(); // local play. process as-is.
+        }
+    }
+
+    public static void NotifySack(int x, int y, long price)
+    {
+        MapSack sack = MapLogic.Instance.GetSackAt(x, y);
+        if (sack == null)
+        {
+            NotifyNoSack(x, y);
+            return;
+        }
+
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            Player p = MapLogic.Instance.GetNetPlayer(client);
+            if (sack.IsVisibleForNetPlayer(p))
+            {
+                ClientCommands.SackAt sckCmd;
+                sckCmd.X = x;
+                sckCmd.Y = y;
+                sckCmd.Price = price;
+                client.SendCommand(sckCmd);
+            }
+        }
+    }
+
+    public static void NotifyNoSack(int x, int y)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            ClientCommands.NoSackAt nosckCmd;
+            nosckCmd.X = x;
+            nosckCmd.Y = y;
+            client.SendCommand(nosckCmd);
         }
     }
 }

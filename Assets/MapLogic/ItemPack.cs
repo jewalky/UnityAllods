@@ -9,6 +9,12 @@ public class ItemPack
     public bool Passive { get; private set; }
     public MapUnit Parent { get; private set; }
 
+    public ItemPack()
+    {
+        Passive = false;
+        Parent = null;
+    }
+
     public ItemPack(bool passive, MapUnit parent)
     {
         Passive = passive;
@@ -40,7 +46,7 @@ public class ItemPack
         {
             long mOut = 0;
             for (int i = 0; i < ItemList.Count; i++)
-                mOut += ItemList[i].Price;
+                mOut += ItemList[i].Price * ItemList[i].Count;
             mOut += Money;
             return mOut;
         }

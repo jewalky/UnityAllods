@@ -11,7 +11,8 @@ public enum MapObjectType
     Structure,
     Monster,
     Human,
-    Effect
+    Effect,
+    Sack
 }
 
 public interface IDynlight

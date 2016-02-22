@@ -464,11 +464,14 @@ public class Item
 
         // base price.
         Price = Class.Price;
+
+        /*
         if (!Class.IsSpecial)
         {
             Price = (int)(Price * Class.Class.Price);
             Price = (int)(Price * Class.Material.Price);
         }
+        */
 
         int manaUsage = 0;
         for (int i = 0; i < Effects.Count; i++)

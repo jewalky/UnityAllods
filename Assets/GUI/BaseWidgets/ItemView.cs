@@ -113,6 +113,9 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         set { if (_InvHeight == 0) _InvHeight = value; }
     }
 
+    private List<GameObject> TextObjects = new List<GameObject>();
+    private List<AllodsTextRenderer> TextRenderers = new List<AllodsTextRenderer>();
+
     public void OnDestroy()
     {
         UiManager.Instance.Unsubscribe(this);
@@ -146,6 +149,31 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
 
     public void Update()
     {
+        // update text
+        if (TextObjects.Count != InvWidth * InvHeight ||
+            TextRenderers.Count != InvWidth * InvHeight)
+        {
+            for (int i = 0; i < TextRenderers.Count; i++)
+                TextRenderers[i].DestroyImmediate();
+            TextObjects.Clear();
+            TextRenderers.Clear();
+
+            for (int ly = 0; ly < InvHeight; ly++)
+            {
+                for (int lx = 0; lx < InvWidth; lx++)
+                {
+                    AllodsTextRenderer atr = new AllodsTextRenderer(Fonts.Font2);
+                    atr.Text = "meow";
+                    atr.Material.color = new Color32(0xBD, 0x9E, 0x4A, 0xFF);
+                    GameObject go = atr.GetNewGameObject(0.01f, transform, 100, 0.01f);
+                    TextObjects.Add(go);
+                    TextRenderers.Add(atr);
+
+                    go.transform.localPosition = new Vector3(lx * 80, ly * 80 + 80 - atr.Height - 1, -0.2f);
+                }
+            }
+        }
+
         // first submesh = quads, item background
         // second submesh = lines, item magic glow
         // third submesh = quads, item pictures
@@ -176,6 +204,9 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
                 y++;
             }
         }
+
+        for (int i = 0; i < TextObjects.Count; i++)
+            TextObjects[i].SetActive(false);
 
         // now add magic glow where it should be
         x = 0;
@@ -223,6 +254,12 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
                     Builder.CurrentColor = new Color32(64, 0, 64, 255);
                     Builder.NextVertex();
                 }
+            }
+
+            if (item.Count > 1)
+            {
+                TextRenderers[i].Text = item.Count.ToString();
+                TextObjects[i].SetActive(true);
             }
 
             x++;

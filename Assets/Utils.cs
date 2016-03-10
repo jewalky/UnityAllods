@@ -361,6 +361,28 @@ public partial class Utils
             CurrentMesh = submesh;
             NextVertex();
         }
+
+        public void AddMesh(Mesh mesh)
+        {
+            for (int i = 0; i < mesh.subMeshCount; i++)
+            {
+                //
+                int localSub = TopMesh++;
+                CurrentMesh = localSub;
+
+                int[] indices = mesh.GetIndices(i);
+                for (int j = 0; j < indices.Length; j++)
+                {
+                    CurrentPosition = mesh.vertices[j];
+                    CurrentColor = mesh.colors[j];
+                    CurrentUV1 = mesh.uv[j];
+                    CurrentUV2 = mesh.uv2[j];
+                    CurrentUV3 = mesh.uv3[j];
+                    CurrentUV4 = mesh.uv4[j];
+                    NextVertex();
+                }
+            }
+        }
     }
 
     public static Rect DivRect(Rect inRec, Vector2 vec)

@@ -140,8 +140,8 @@ public class Client
     {
         if (NetworkManager.IsClient)
         {
-            Debug.LogFormat("from = {0}, to = {1}, fromIndex = {2}, toIndex = {3}, count = {4}",
-                from, to, fromIndex, toIndex, count);
+            /*Debug.LogFormat("from = {0}, to = {1}, fromIndex = {2}, toIndex = {3}, count = {4}",
+                from, to, fromIndex, toIndex, count);*/
             ServerCommands.ItemMove imvCmd;
             imvCmd.Source = from;
             imvCmd.SourceIndex = fromIndex;

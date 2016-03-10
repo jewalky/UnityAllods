@@ -918,6 +918,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         //
         //throw new NotImplementedException();
         // disregard x/y, as we got MouseCellX/MouseCellY.
+        //Debug.LogFormat("dropping {0} of {1}", item.Count, item.ToString());
         MapHuman human = (MapHuman)SelectedObject;
         Client.DropItem(human, item, MouseCellX, MouseCellY);
         return true;

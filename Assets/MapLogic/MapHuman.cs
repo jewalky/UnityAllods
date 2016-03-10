@@ -112,6 +112,7 @@ public class MapHuman : MapUnit
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Amulet {body=4}"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Potion Body"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Plate Cuirass {body=4}"));
+            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Plate Cuirass {body=4}"));
         }
     }
 

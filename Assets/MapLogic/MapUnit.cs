@@ -414,6 +414,16 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public void PutItemToBody(BodySlot slot, Item item)
     {
         // unequip existing item on specified slot
+        // if item count is too large
+        if (item.Count > 1)
+        {
+            // put excessive items back to pack
+            Item newitem = new Item(item, 1);
+            item.Count--;
+            ItemsPack.PutItem(ItemsPack.Count, item);
+            item = newitem;
+        }
+
         Item currentItem = GetItemFromBody(slot);
         if (currentItem != null)
             ItemsPack.PutItem(ItemsPack.Count, ItemsBody.TakeItem(currentItem, 1));

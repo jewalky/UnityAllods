@@ -308,8 +308,8 @@ public class Item
 
         Class = original.Class;
         Price = original.Price;
-        Count = Math.Max(original.Count, count);
-
+        Count = Math.Min(original.Count, count);
+  
         Parent = original.Parent;
         Index = original.Index;
 

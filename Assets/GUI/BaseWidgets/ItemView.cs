@@ -385,6 +385,17 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         Item item = Pack[itemHovered];
         int count = 1;
 
+        // alt = 100
+        // ctrl = 1000
+        // ctrl+alt = 100000
+        // shift = all
+        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
+            Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)) count *= 1000;
+        if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) count *= 100;
+        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) count = item.Count;
+
+        if (count > item.Count) count = item.Count;
+             
         UiManager.Instance.StartDrag(item, count, () =>
         {
             // 

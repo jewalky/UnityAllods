@@ -100,7 +100,12 @@ public class MapProjectile : MapObject, IDynlight
             Vector2 dir = new Vector2(targetCenter.x - ProjectileX, targetCenter.y - ProjectileY);
             dir.Normalize();
             dir /= 5;
-            SetPosition(ProjectileX + dir.x, ProjectileY + dir.y, ProjectileZ);
+            Vector2 newPos = new Vector2(ProjectileX + dir.x, ProjectileY + dir.y);
+            if (Math.Sign(targetCenter.x - newPos.x) != Math.Sign(targetCenter.x - ProjectileX))
+                newPos.x = targetCenter.x;
+            if (Math.Sign(targetCenter.y - newPos.y) != Math.Sign(targetCenter.y - ProjectileY))
+                newPos.y = targetCenter.y;
+            SetPosition(newPos.x, newPos.y, ProjectileZ);
         }
 
         //Debug.LogFormat("update at {0},{1}", ProjectileX, ProjectileY);

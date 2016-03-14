@@ -256,9 +256,13 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
                 }
             }
 
-            if (item.Count > 1)
+            int dcount = item.Count;
+            if (UiManager.Instance.DragItem == item)
+                dcount -= UiManager.Instance.DragItemCount;
+
+            if (dcount > 1)
             {
-                TextRenderers[i].Text = item.Count.ToString();
+                TextRenderers[i].Text = dcount.ToString();
                 TextObjects[i].SetActive(true);
             }
 

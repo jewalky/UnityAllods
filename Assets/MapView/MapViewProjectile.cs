@@ -4,19 +4,19 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class MapViewSack : MapViewObject, IObjectManualUpdate
+public class MapViewProjectile : MapViewObject, IObjectManualUpdate
 {
-    private MapSack LogicSack
+    private MapProjectile LogicProjectile
     {
         get
         {
-            return (MapSack)LogicObject;
+            return (MapProjectile)LogicObject;
         }
     }
 
     private MeshRenderer Renderer;
     private MeshFilter Filter;
-    private Mesh SackMesh;
+    private Mesh ProjectileMesh;
 
     private GameObject ShadowObject;
     private MeshRenderer ShadowRenderer;
@@ -74,7 +74,10 @@ public class MapViewSack : MapViewObject, IObjectManualUpdate
 
     public void Start()
     {
-        name = string.Format("Sack (ID={0}, Price={1})", LogicSack.ID, LogicSack.Pack.Price);
+        if (LogicProjectile.Class != null)
+            name = string.Format("Projectile (ID={0}, ClassID={1})", LogicProjectile.ID, LogicProjectile.Class.ID);
+        else name = string.Format("Projectile (ID={0}, ClassID=<INVALID>)", LogicProjectile.ID);
+
         // let's give ourselves a sprite renderer first.
         Renderer = gameObject.AddComponent<MeshRenderer>();
         Renderer.enabled = false;
@@ -93,7 +96,15 @@ public class MapViewSack : MapViewObject, IObjectManualUpdate
         ShadowObject.transform.localPosition = new Vector3(0, 0, 16);
     }
 
-    private static Images.AllodsSprite _SackSprite = null;
+    public bool HasShadow
+    {
+        get
+        {
+            return false;
+        }
+    }
+
+    private Texture2D _BasePalette = null;
     private bool spriteSet = false;
     private bool oldVisibility = false;
     public void OnUpdate()
@@ -101,7 +112,7 @@ public class MapViewSack : MapViewObject, IObjectManualUpdate
         if (Renderer == null)
             return;
 
-        if (LogicSack.GetVisibility() < 2)
+        if (LogicProjectile.GetVisibility() < 2)
         {
             oldVisibility = false;
             Renderer.enabled = false;
@@ -111,53 +122,49 @@ public class MapViewSack : MapViewObject, IObjectManualUpdate
         else if (!oldVisibility)
         {
             Renderer.enabled = true;
-            ShadowRenderer.enabled = true;
+            ShadowRenderer.enabled = HasShadow;
             oldVisibility = true;
             return;
         }
 
-        if (LogicSack.DoUpdateView)
+        if (LogicProjectile.DoUpdateView)
         {
             Renderer.enabled = true;
-            ShadowRenderer.enabled = true;
+            ShadowRenderer.enabled = HasShadow;
 
-            if (_SackSprite == null)
-                _SackSprite = Images.Load256("graphics/backpack/sprites.256");
+            /*if (_ProjectileSprite == null)
+                _ProjectileSprite = Images.Load256("graphics/backpack/sprites.256");*/
+            LogicProjectile.Class.UpdateSprite();
 
-            Images.AllodsSprite sprites = _SackSprite;
+            Images.AllodsSprite sprites = LogicProjectile.Class.File;
 
             if (!spriteSet)
             {
                 Renderer.material = new Material(MainCamera.MainShaderPaletted);
-                Renderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
+                if (LogicProjectile.Class.HasPalette)
+                    Renderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
+                else
+                {
+                    if (_BasePalette == null) _BasePalette = Images.LoadPalette("graphics/projectiles/projectiles.pal");
+                    Renderer.material.SetTexture("_Palette", _BasePalette);
+                }
                 ShadowRenderer.material = Renderer.material;
                 ShadowRenderer.material.color = new Color(0, 0, 0, 0.5f);
                 spriteSet = true;
             }
 
-            // http://archive.allods2.eu/homeunix/article_sacks.php.htm
             int actualFrame = 0;
-            if (LogicSack.Pack.Price >= 100000)
-                actualFrame = 5;
-            else if (LogicSack.Pack.Price >= 10000)
-                actualFrame = 4;
-            else if (LogicSack.Pack.Price >= 1000)
-                actualFrame = 3;
-            else if (LogicSack.Pack.Price >= 100)
-                actualFrame = 2;
-            else if (LogicSack.Pack.Price >= 10)
-                actualFrame = 1;
             // always centered
-            Vector2 xP = MapView.Instance.MapToScreenCoords(LogicObject.X + 0.5f, LogicObject.Y + 0.5f, 1, 1);
-            transform.localPosition = new Vector3(xP.x - (float)sprites.Sprites[actualFrame].rect.width * 0.5f,
-                                                    xP.y - (float)sprites.Sprites[actualFrame].rect.height * 0.5f,
-                                                    MakeZFromY(xP.y) + 32); // order sprites by y coordinate basically
+            Vector2 xP = MapView.Instance.MapToScreenCoords(LogicProjectile.ProjectileX, LogicProjectile.ProjectileY - LogicProjectile.ProjectileZ, 1, 1);
+            transform.localPosition = new Vector3(xP.x - sprites.Sprites[actualFrame].rect.width * 0.5f,
+                                                  xP.y - sprites.Sprites[actualFrame].rect.height * 0.5f,
+                                                  MakeZFromY(xP.y) - 8); // order sprites by y coordinate basically
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicObstacle.Class.CenterX));
             //Renderer.sprite = sprites.Sprites[actualFrame];
-            SackMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (SackMesh == null));
+            ProjectileMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (ProjectileMesh == null));
             ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null)); // 0.3 of sprite height
 
-            LogicSack.DoUpdateView = false;
+            LogicProjectile.DoUpdateView = false;
         }
     }
 

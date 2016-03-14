@@ -116,6 +116,7 @@ public class GameManager : MonoBehaviour
             StructureClassLoader.InitClasses();
             UnitClassLoader.InitClasses();
             ItemClassLoader.InitClasses();
+            ProjectileClassLoader.InitClasses();
             ClassLoadThreadDone = true;
         }
         catch (Exception e)

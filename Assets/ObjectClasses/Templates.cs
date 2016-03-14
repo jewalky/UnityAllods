@@ -610,4 +610,12 @@ public static class TemplateLoader
 
         return Templates.Modifiers[id];
     }
+
+    public static Templates.TplSpell GetSpellById(int id)
+    {
+        if (id < 0 || id >= Templates.Spells.Count)
+            return null;
+
+        return Templates.Spells[id];
+    }
 }

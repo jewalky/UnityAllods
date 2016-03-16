@@ -34,6 +34,8 @@ public class UnitClass
         AttackPhases = other.AttackPhases;
         DyingPhases = other.DyingPhases;
         BonePhases = other.BonePhases;
+        Width = other.Width;
+        Height = other.Height;
         CenterX = other.CenterX;
         CenterY = other.CenterY;
         SelectionX1 = other.SelectionX1;
@@ -51,6 +53,8 @@ public class UnitClass
         TextureFile = other.TextureFile;
         InMapEditor = other.InMapEditor;
         Flip = other.Flip; // if sprite flip should be done
+        Projectile = other.Projectile;
+        ShootOffset = other.ShootOffset;
     }
 
     public string DescText = null;
@@ -65,6 +69,8 @@ public class UnitClass
     public int AttackPhases = MagicIntNull;
     public int DyingPhases = MagicIntNull; // these are sometimes in another file.
     public int BonePhases = MagicIntNull; // same as above.
+    public int Width = MagicIntNull;
+    public int Height = MagicIntNull;
     public float CenterX = -2;
     public float CenterY = -2;
     public int SelectionX1 = MagicIntNull;
@@ -83,6 +89,8 @@ public class UnitClass
     private Dictionary<int, Texture2D> TextureFile = new Dictionary<int, Texture2D>();
     public bool InMapEditor = false;
     public bool Flip = false; // if sprite flip should be done
+    public int Projectile = MagicIntNull;
+    public Vector2[] ShootOffset = null;
 
     public Texture2D UpdateInfoPicture(int face)
     {
@@ -227,10 +235,12 @@ public class UnitClassLoader
             cls.AttackPhases = reg.GetInt(on, "AttackPhases", cls.AttackPhases);
             cls.DyingPhases = reg.GetInt(on, "DyingPhases", cls.DyingPhases);
             cls.BonePhases = reg.GetInt(on, "BonePhases", cls.BonePhases);
-            int w = reg.GetInt(on, "Width", -1);
-            int h = reg.GetInt(on, "Height", -1);
-            if (w > 0 && h > 0)
+            cls.Width = reg.GetInt(on, "Width", cls.Width);
+            cls.Height = reg.GetInt(on, "Height", cls.Height);
+            if (cls.Width != UnitClass.MagicIntNull && cls.Height != UnitClass.MagicIntNull)
             {
+                int w = cls.Width;
+                int h = cls.Height;
                 int cx = reg.GetInt(on, "CenterX", UnitClass.MagicIntNull);
                 int cy = reg.GetInt(on, "CenterY", UnitClass.MagicIntNull);
                 if (cx != UnitClass.MagicIntNull && cy != UnitClass.MagicIntNull)
@@ -305,6 +315,20 @@ public class UnitClassLoader
             cls.InfoPicture = reg.GetString(on, "InfoPicture", cls.InfoPicture);
             cls.InMapEditor = reg.GetInt(on, "InMapEditor", 0) != 0;
             cls.Flip = reg.GetInt(on, "Flip", 0) != 0;
+            cls.Projectile = reg.GetInt(on, "Projectile", cls.Projectile);
+            int[] shootOffset = reg.GetArray(on, "ShootOffset", null);
+            if (shootOffset != null && shootOffset.Length == 16)
+            {
+                cls.ShootOffset = new Vector2[8];
+                for (int j = 0; j < 8; j++)
+                {
+                    int ix = shootOffset[j * 2];
+                    int iy = shootOffset[j * 2 + 1];
+                    float fx = ix;
+                    float fy = iy;
+                    cls.ShootOffset[j] = new Vector2(fx, fy);
+                }
+            }
 
             Classes.Add(cls);
         }
@@ -348,6 +372,10 @@ public class UnitClassLoader
                     cls.DyingPhases = clsp.DyingPhases;
                 if (cls.BonePhases == UnitClass.MagicIntNull)
                     cls.BonePhases = clsp.BonePhases;
+                if (cls.Width == UnitClass.MagicIntNull)
+                    cls.Width = clsp.Width;
+                if (cls.Height == UnitClass.MagicIntNull)
+                    cls.Height = clsp.Height;
                 if (cls.CenterX == -2)
                     cls.CenterX = clsp.CenterX;
                 if (cls.CenterY == -2)
@@ -376,6 +404,10 @@ public class UnitClassLoader
                     cls.InMapEditor = clsp.InMapEditor;
                 if (cls.Flip == false)
                     cls.Flip = clsp.Flip;
+                if (cls.Projectile == UnitClass.MagicIntNull)
+                    cls.Projectile = clsp.Projectile;
+                if (cls.ShootOffset == null)
+                    cls.ShootOffset = clsp.ShootOffset;
 
                 id = clsp.ParentID;
             }
@@ -399,6 +431,10 @@ public class UnitClassLoader
                 cls.DyingPhases = 0;
             if (cls.BonePhases == UnitClass.MagicIntNull)
                 cls.BonePhases = 0;
+            if (cls.Width == UnitClass.MagicIntNull)
+                cls.Width = 0;
+            if (cls.Height == UnitClass.MagicIntNull)
+                cls.Height = 0;
             if (cls.CenterX == -2)
                 cls.CenterX = 0;
             if (cls.CenterY == -2)
@@ -423,6 +459,22 @@ public class UnitClassLoader
                 cls.AttackDelay = 0;
             if (cls.InfoPicture == null)
                 cls.InfoPicture = "beeh";
+            if (cls.Projectile == UnitClass.MagicIntNull)
+                cls.Projectile = 0;
+            if (cls.ShootOffset == null)
+            {
+                cls.ShootOffset = new Vector2[8];
+                for (int i = 0; i < 8; i++)
+                    cls.ShootOffset[i] = new Vector2(0.0f, 0.0f);
+            }
+            else
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    cls.ShootOffset[i].x = cls.ShootOffset[i].x / cls.Width - cls.CenterX;
+                    cls.ShootOffset[i].y = cls.ShootOffset[i].y / cls.Height - cls.CenterY;
+                }
+            }
             cls.Dying = GetUnitClassById(cls.DyingID);
             cls.InfoPicture = "graphics/infowindow/" + cls.InfoPicture;
         }

@@ -259,4 +259,16 @@ public class MapObject : IDisposable
             }
         }
     }
+
+    public static int FaceVector(float dx, float dy)
+    {
+        float deltaY = dy;
+        float deltaX = dx;
+        int sang = (int)(Math.Atan2(deltaY, deltaX) * 180 / Math.PI) - 90;
+        while (sang > 360)
+            sang -= 360;
+        while (sang < 0)
+            sang += 360;
+        return sang;
+    }
 }

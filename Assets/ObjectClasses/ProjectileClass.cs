@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 public class ProjectileClass
 {
@@ -16,6 +17,7 @@ public class ProjectileClass
     public bool IsHoming;
     public bool Is16A;
     public bool IsSFX;
+    public bool Flip;
 
     public void UpdateSprite()
     {
@@ -66,6 +68,8 @@ public class ProjectileClassLoader
             cls.RotationPhases = reg.GetInt(on, "RotationPhases", 0);
             cls.IsSFX = reg.GetInt(on, "SFX", 0) != 0;
             cls.IsHoming = reg.GetInt(on, "Homing", 0) != 0;
+            cls.Flip = reg.GetInt(on, "Flip", 0) != 0;
+            Debug.LogFormat("{0} flip = {1}", cls.FileName, cls.Flip);
             Classes.Add(cls);
         }
     }

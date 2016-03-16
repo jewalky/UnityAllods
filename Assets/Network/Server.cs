@@ -398,4 +398,43 @@ public class Server
             client.SendCommand(nosckCmd);
         }
     }
+
+    public static void SpawnProjectileHoming(AllodsProjectile id, IPlayerPawn source, float x, float y, float z, MapUnit target, float speed, MapProjectileCallback cb = null)
+    {
+        SpawnProjectileHoming((int)id, source, x, y, z, target, speed, cb);
+    }
+
+    public static void SpawnProjectileDirectional(AllodsProjectile id, IPlayerPawn source, float x, float y, float z, float tgx, float tgy, float tgz, float speed, MapProjectileCallback cb = null)
+    {
+        SpawnProjectileDirectional((int)id, source, x, y, z, tgx, tgy, tgz, speed, cb);
+    }
+
+    public static void SpawnProjectileSimple(AllodsProjectile id, IPlayerPawn source, float x, float y, float z)
+    {
+        SpawnProjectileSimple((int)id, source, x, y, z);
+    }
+
+    public static void SpawnProjectileHoming(int id, IPlayerPawn source, float x, float y, float z, MapUnit target, float speed, MapProjectileCallback cb = null)
+    {
+        MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicHoming(target, speed), cb);
+        proj.SetPosition(x, y, z);
+        MapLogic.Instance.Objects.Add(proj);
+        // todo notify clients
+    }
+
+    public static void SpawnProjectileDirectional(int id, IPlayerPawn source, float x, float y, float z, float tgx, float tgy, float tgz, float speed, MapProjectileCallback cb = null)
+    {
+        MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicDirectional(tgx, tgy, tgz, speed), cb);
+        proj.SetPosition(x, y, z);
+        MapLogic.Instance.Objects.Add(proj);
+        // todo notify clients
+    }
+
+    public static void SpawnProjectileSimple(int id, IPlayerPawn source, float x, float y, float z)
+    {
+        MapProjectile proj = new MapProjectile(id, source, null, null); // this is usually SFX like stuff. projectile plays animation based on typeid and stops.
+        proj.SetPosition(x, y, z);
+        MapLogic.Instance.Objects.Add(proj);
+        // todo notify clients
+    }
 }

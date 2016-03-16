@@ -65,6 +65,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 _Angle += 360;
             while (_Angle >= 360)
                 _Angle -= 360;
+            DoUpdateView = true;
         }
     }
 
@@ -112,6 +113,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public readonly bool[,] Vision = new bool[41, 41];
     public readonly ScanrangeCalc VisionCalc = new ScanrangeCalc();
     public readonly UnitInteraction Interaction = null;
+
+    public readonly List<MapProjectile> TargetedBy = new List<MapProjectile>();
 
     public MapUnit()
     {
@@ -340,14 +343,14 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public int FaceCell(int x, int y)
     {
         // from current x/y
-        float deltaY = y - Y;
-        float deltaX = x - X;
-        int sang = (int)(Math.Atan2(deltaY, deltaX) * 180 / Math.PI) - 90;
-        while (sang > 360)
-            sang -= 360;
-        while (sang < 0)
-            sang += 360;
-        return sang;
+        return FaceVector(x - X, y - Y);
+    }
+
+    public int FaceCellPrecise(int x, int y)
+    {
+        float rx = x + 0.5f;
+        float ry = y + 0.5f;
+        return FaceVector(rx - (X + (float)Width / 2 + FracX), ry - (Y + (float)Height / 2 + FracY));
     }
 
     public void SetPosition(int x, int y)

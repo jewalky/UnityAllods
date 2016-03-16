@@ -412,10 +412,6 @@ class MapLogic
                 GameManager.Instance.CallDelegateOnNextFrame(() =>
                 {
                     ConsolePlayer.Avatar = CreateAvatar(ConsolePlayer);
-                    MapProjectile proj = new MapProjectile(15);
-                    proj.SetPosition(16, 16, 0);
-                    proj.Target = ConsolePlayer.Avatar;
-                    Objects.Add(proj);
                     // center view on avatar.
                     MapView.Instance.CenterOnObject(ConsolePlayer.Avatar);
                     return false;

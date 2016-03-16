@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using ProtoBuf;
+using UnityEngine;
 
 public class IdleAction : IUnitAction
 {
@@ -242,12 +243,55 @@ public class AttackAction : IUnitAction
         if (Speed * Timer >= Unit.Charge && !NetworkManager.IsClient && !DamageDone)
         {
             // do damage here!
-            //
-            if (TargetUnit.TakeDamage(DamageFlags, Unit, Damage) > 0)
+            // check if we need to fire a projectile (range)
+            AllodsProjectile proj = AllodsProjectile.None; // default :D
+
+            if (Unit.Interaction.GetAttackRange() > 1)
             {
-                TargetUnit.DoUpdateInfo = true;
-                TargetUnit.DoUpdateView = true;
+                // send this projectile to clients too
+                // make projectile specified in the unit class.
+                proj = (AllodsProjectile)Unit.Class.Projectile;
             }
+
+            if (proj != AllodsProjectile.None)
+            {
+                // following offsets are based on unit's width, height and center
+                float cX = Unit.X + Unit.Width * 0.5f + Unit.FracX;
+                float cY = Unit.Y + Unit.Height * 0.5f + Unit.FracY;
+
+                float tX = TargetUnit.X + TargetUnit.Width * 0.5f + TargetUnit.FracX;
+                float tY = TargetUnit.Y + TargetUnit.Height * 0.5f + TargetUnit.FracY;
+
+                Vector2 dir = new Vector2(tX - cX, tY - cY).normalized * ((Unit.Width + Unit.Height) / 2) / 1.5f;
+                cX += dir.x;
+                cY += dir.y;
+
+                Server.SpawnProjectileDirectional(proj, Unit, cX, cY, 0,
+                                                              tX, tY, 0,
+                                                              10,
+                                                              (MapProjectile fproj) =>
+                                                              {
+                                                                  if (fproj.ProjectileX >= TargetUnit.X + TargetUnit.FracX &&
+                                                                      fproj.ProjectileY >= TargetUnit.Y + TargetUnit.FracY &&
+                                                                      fproj.ProjectileX < TargetUnit.X + TargetUnit.FracX + TargetUnit.Width &&
+                                                                      fproj.ProjectileY < TargetUnit.Y + TargetUnit.FracY + TargetUnit.Height)
+                                                                  {
+                                                                      Debug.LogFormat("projectile hit!");
+                                                                  }
+
+                                                                  fproj.Dispose();
+                                                                  MapLogic.Instance.Objects.Remove(fproj);
+                                                              });
+            }
+            else
+            {
+                if (TargetUnit.TakeDamage(DamageFlags, Unit, Damage) > 0)
+                {
+                    TargetUnit.DoUpdateInfo = true;
+                    TargetUnit.DoUpdateView = true;
+                }
+            }
+
             DamageDone = true;
         }
 

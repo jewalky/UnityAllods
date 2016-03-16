@@ -161,7 +161,7 @@ public class AttackState : IUnitState
             // in direct proximity!
             // 
             Vector2i enemyCell = TargetUnit.Interaction.GetClosestPointTo(Unit);
-            int angleNeeded = Unit.FaceCell(enemyCell.x, enemyCell.y);
+            int angleNeeded = Unit.FaceCellPrecise(enemyCell.x, enemyCell.y);
             if (Unit.Angle != angleNeeded)
             {
                 Unit.AddActions(new RotateAction(Unit, angleNeeded));

@@ -23,7 +23,7 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
     private MeshFilter ShadowFilter;
     private Mesh ShadowMesh;
 
-    private Mesh UpdateMesh(Images.AllodsSprite sprite, int frame, Mesh mesh, float shadowOffs, bool first)
+    private Mesh UpdateMesh(Images.AllodsSprite sprite, int frame, Mesh mesh, float shadowOffs, bool first, bool flip)
     {
         Texture2D sTex = sprite.Atlas;
         float sW = sprite.Sprites[frame].rect.width;
@@ -46,10 +46,20 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
         qv[pp++] = new Vector3(shadowOffsXLeft, sH, 0);
 
         Vector2[] quv = new Vector2[4];
-        quv[0] = new Vector2(tMinX, tMinY);
-        quv[1] = new Vector2(tMaxX, tMinY);
-        quv[2] = new Vector2(tMaxX, tMaxY);
-        quv[3] = new Vector2(tMinX, tMaxY);
+        if (!flip)
+        {
+            quv[0] = new Vector2(tMinX, tMinY);
+            quv[1] = new Vector2(tMaxX, tMinY);
+            quv[2] = new Vector2(tMaxX, tMaxY);
+            quv[3] = new Vector2(tMinX, tMaxY);
+        }
+        else
+        {
+            quv[0] = new Vector2(tMaxX, tMinY);
+            quv[1] = new Vector2(tMinX, tMinY);
+            quv[2] = new Vector2(tMinX, tMaxY);
+            quv[3] = new Vector2(tMaxX, tMaxY);
+        }
 
         mesh.vertices = qv;
         mesh.uv = quv;
@@ -154,6 +164,44 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
             }
 
             int actualFrame = 0;
+            // now, projectile frame is RotationPhases * angle + CurrentFrame
+            // thus, max count of frames is Count / RotationPhases
+            int actualRotationPhases;
+            if (LogicProjectile.Class.RotationPhases > 0)
+                actualRotationPhases = LogicProjectile.Class.RotationPhases;
+            else actualRotationPhases = 16;
+            int actualAngle = 0;
+
+
+            int lPA = (int)(Mathf.Round((float)LogicProjectile.Angle / 45) * 45) % 360;
+            // calculate nearest angle
+
+            bool doFlip = false;
+            if (actualRotationPhases < 1)
+            {
+                actualAngle = 0;
+            }
+            else if (LogicProjectile.Class.Flip)
+            {
+                actualRotationPhases = actualRotationPhases / 2;
+                if (LogicProjectile.Angle < 180)
+                {
+                    actualAngle = lPA * actualRotationPhases / 180;
+                }
+                else
+                {
+                    actualAngle = (180 - (lPA - 180)) * actualRotationPhases / 180;
+                    doFlip = true;
+                }
+            }
+            else
+            {
+                actualAngle = lPA * actualRotationPhases / 360;
+            }
+
+            actualFrame = LogicProjectile.Class.Phases * actualAngle + LogicProjectile.CurrentFrame;
+            Debug.LogFormat("actualFrame = {0}, actualAngle = {1}", actualFrame, actualAngle);
+
             // always centered
             Vector2 xP = MapView.Instance.MapToScreenCoords(LogicProjectile.ProjectileX, LogicProjectile.ProjectileY - LogicProjectile.ProjectileZ, 1, 1);
             transform.localPosition = new Vector3(xP.x - sprites.Sprites[actualFrame].rect.width * 0.5f,
@@ -161,8 +209,8 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
                                                   MakeZFromY(xP.y) - 8); // order sprites by y coordinate basically
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicObstacle.Class.CenterX));
             //Renderer.sprite = sprites.Sprites[actualFrame];
-            ProjectileMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (ProjectileMesh == null));
-            ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null)); // 0.3 of sprite height
+            ProjectileMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (ProjectileMesh == null), doFlip);
+            ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null), doFlip); // 0.3 of sprite height
 
             LogicProjectile.DoUpdateView = false;
         }

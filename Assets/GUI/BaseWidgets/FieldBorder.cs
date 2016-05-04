@@ -17,8 +17,16 @@ public class FieldBorder : Widget
         UpdateMesh();
     }
 
+    private int LastWidth = -1;
+    private int LastHeight = -1;
     public void UpdateMesh()
     {
+        if (Filter.mesh != null && LastWidth == Width && LastHeight == Height)
+            return;
+
+        LastWidth = Width;
+        LastHeight = Height;
+
         Mesh mesh = Filter.mesh;
         if (mesh == null) mesh = new Mesh();
         mesh.Clear();
@@ -30,7 +38,7 @@ public class FieldBorder : Widget
         // top line
         qv[pp++] = new Vector3(0, 0);
         qc[ppc++] = new Color32(0, 0, 0, 255);
-        qv[pp++] = new Vector3(Width - 2, 0);
+        qv[pp++] = new Vector3(Width - 1, 0);
         qc[ppc++] = new Color32(0, 0, 0, 255);
 
         // left line
@@ -48,7 +56,7 @@ public class FieldBorder : Widget
         // bottom line
         qv[pp++] = new Vector3(0, Height - 1);
         qc[ppc++] = new Color32(90, 113, 99, 255);
-        qv[pp++] = new Vector3(Width - 2, Height - 1);
+        qv[pp++] = new Vector3(Width - 1, Height - 1);
         qc[ppc++] = new Color32(90, 113, 99, 255);
 
         mesh.vertices = qv;
@@ -62,6 +70,6 @@ public class FieldBorder : Widget
 
     public void Update()
     {
-        
+        UpdateMesh();
     }
 }

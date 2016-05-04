@@ -76,7 +76,8 @@ public class Window : Widget, IUiEventProcessor
 
         WorkingArea = Utils.CreateObject();
         WorkingArea.transform.parent = transform;
-        WorkingArea.transform.localPosition = new Vector3(oScreenX, oScreenY, -0.025f);
+        //WorkingArea.transform.localPosition = new Vector3(oScreenX, oScreenY, -0.025f);
+        WorkingArea.transform.localPosition = new Vector3(oScreenX, oScreenY, -1.025f);
 
         int shadowOffs = 8;
 
@@ -140,6 +141,10 @@ public class Window : Widget, IUiEventProcessor
                 case KeyCode.Escape:
                     Destroy(gameObject);
                     break;
+                case KeyCode.Tab:
+                    // advance child focus
+                    AdvanceWidgetFocus(WorkingArea.transform, !e.shift);
+                    break;
             }
         }
         else if (e.rawType == EventType.MouseMove)
@@ -148,5 +153,57 @@ public class Window : Widget, IUiEventProcessor
         }
 
         return true;
+    }
+
+    public static void AdvanceWidgetFocus(Transform p, bool forward)
+    {
+        int cFocused = forward ? -1 : p.childCount;
+
+        for (int i = 0; i < p.childCount; i++)
+        {
+            Widget cwid = p.GetChild(i).GetComponent<Widget>();
+            if (cwid == null)
+                continue;
+
+            if (cwid.IsFocused)
+            {
+                cFocused = i;
+                break;
+            }
+        }
+
+        if (forward)
+        {
+            for (int i = cFocused+1; i < cFocused+p.childCount; i++)
+            {
+                Widget cwid = p.GetChild(i%p.childCount).GetComponent<Widget>();
+                if (cwid == null)
+                    continue;
+                if (!(cwid is IFocusableWidget))
+                    continue;
+
+                cwid.IsFocused = true;
+                break;
+            }
+        }
+        else
+        {
+            for (int i = cFocused-1; i >= cFocused-p.childCount; i--)
+            {
+                int iact = i;
+                while (iact < 0)
+                    iact += p.childCount;
+                iact %= p.childCount;
+
+                Widget cwid = p.GetChild(iact).GetComponent<Widget>();
+                if (cwid == null)
+                    continue;
+                if (!(cwid is IFocusableWidget))
+                    continue;
+
+                cwid.IsFocused = true;
+                break;
+            }
+        }
     }
 }

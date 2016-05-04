@@ -117,11 +117,13 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         ChatField.Font = Fonts.Font1;
         ChatField.Width = Screen.width - 176 - 4;
         ChatField.Height = Fonts.Font1.LineHeight;
+        ChatField.IsFocused = true;
         ChatField.OnReturn = () =>
         {
             string text = ChatField.Value;
             ChatField.Value = "";
-            ChatField.Visible = false; // hide chat after successful message
+            //ChatField.Visible = false; // hide chat after successful message
+            ChatField.gameObject.SetActive(false);
             if (text.Trim().Length > 0)
             {
                 // handle chat.
@@ -134,15 +136,13 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
 
     public void Show()
     {
-        Utils.SetRendererEnabledWithChildren(gameObject, true);
         ChatFieldEnabled = false;
         ChatField.Value = "";
-        ChatField.Visible = false;
+        ChatField.gameObject.SetActive(false);
     }
 
     public void Hide()
     {
-        Utils.SetRendererEnabledWithChildren(gameObject, false);
         ChatFieldEnabled = false;
         ChatField.Value = "";
 
@@ -153,6 +153,7 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         }
 
         Messages.Clear();
+        ChatField.gameObject.SetActive(false);
     }
 
     public void Update()
@@ -172,7 +173,8 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
                 case KeyCode.Return:
                 case KeyCode.KeypadEnter:
                     ChatFieldEnabled = true;
-                    ChatField.Visible = true;
+                    //ChatField.Visible = true;
+                    ChatField.gameObject.SetActive(true);
                     return true;
                 case KeyCode.Backspace: // remove all messages
                     foreach (ChatMessage msg in Messages)
@@ -183,14 +185,15 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
                     {
                         ChatFieldEnabled = false;
                         ChatField.Value = "";
-                        ChatField.Visible = false;
+                        //ChatField.Visible = false;
+                        ChatField.gameObject.SetActive(false);
                         return true;
                     }
                     break;
             }
         }
 
-        if (ChatField.Visible)
+        if (ChatField.isActiveAndEnabled)
             return true; // do not allow events to leak down into the map
 
         return false;

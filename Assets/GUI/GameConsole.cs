@@ -77,6 +77,7 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         EditField.Prefix = "> ";
         EditField.Width = Screen.width - 4;
         EditField.Height = Fonts.Font2.LineHeight;
+        EditField.IsFocused = true;
         EditField.OnReturn = () =>
         {
             string cmd = EditField.Value;

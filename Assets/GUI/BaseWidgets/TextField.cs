@@ -4,13 +4,15 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-public class TextField : Widget, IUiEventProcessor
+public class TextField : Widget, IUiEventProcessor, IFocusableWidget
 {
     public delegate void ReturnHandler();
 
     AllodsTextRenderer EditRendererA;
     GameObject EditObject;
     MeshRenderer EditRenderer;
+    // border
+    FieldBorder Border;
     
     // Mesh for cursor, mesh for selection, mesh for cat...owait.
     GameObject SelectionObject;
@@ -58,22 +60,44 @@ public class TextField : Widget, IUiEventProcessor
         }
     }
 
-    public void OnDestroy()
-    {
-        UiManager.Instance.Unsubscribe(this);
-    }
-
-    public bool Visible
+    public bool BorderVisible
     {
         get
         {
-            return (EditRenderer.enabled && SelectionRenderer.enabled);
+            return Border != null && Border.isActiveAndEnabled;
         }
 
         set
         {
-            Utils.SetRendererEnabledWithChildren(gameObject, value);
+            if (value)
+            {
+                if (Border == null)
+                {
+                    Border = Utils.CreateObjectWithScript<FieldBorder>();
+                    Border.transform.parent = transform;
+                    Border.Width = Width;
+                    Border.Height = Height;
+                    Border.transform.localPosition = new Vector2(0, 0);
+                }
+
+                Border.gameObject.SetActive(true);
+            }
+            else
+            {
+                if (Border != null)
+                    Border.gameObject.SetActive(false);
+            }
         }
+    }
+
+    public int Padding = 0;
+
+    // mouse selection
+    private bool SelectingM = false;
+
+    public void OnDestroy()
+    {
+        UiManager.Instance.Unsubscribe(this);
     }
 
     public void Start()
@@ -98,7 +122,39 @@ public class TextField : Widget, IUiEventProcessor
         SelectionRenderer.material = new Material(MainCamera.MainShader);
 
         Selection1 = Selection2 = 0;
-        Visible = false;
+    }
+
+    // relative X/Y.
+    private int MouseXYToSelection()
+    {
+        Vector2 mpos = Utils.GetMousePosition();
+        float x = mpos.x;
+        float y = mpos.y;
+        x -= EditObject.transform.position.x;
+        y -= EditObject.transform.position.y;
+
+        if (x <= 0)
+            return 0;
+
+        int mmax = Font.Width(_Value);
+        if (x > mmax)
+            return _Value.Length;
+
+        for (int i = 0; i < _Value.Length; i++)
+        {
+            int mcur = Font.Width(_Value.Substring(0, i));
+            int mnext = Font.Width(_Value.Substring(0, i+1));
+            if (x >= mcur && x < mnext)
+            {
+                int cwidth = mnext - mcur;
+                int cactual = (int)x - mcur;
+                if (cactual < cwidth / 2)
+                    return i;
+                return i + 1;
+            }
+        }
+
+        return Value.Length;
     }
 
     public bool ProcessEvent(Event e)
@@ -106,6 +162,8 @@ public class TextField : Widget, IUiEventProcessor
         // handle input events here
         if (e.type == EventType.KeyDown)
         {
+            if (!IsFocused) return false;
+
             if (e.keyCode == KeyCode.V && e.control)
             {
                 // paste
@@ -146,6 +204,14 @@ public class TextField : Widget, IUiEventProcessor
                     string selected = _Value.Substring(ss1, ss2 - ss1);
                     GUIUtility.systemCopyBuffer = selected;
                 }
+                return true;
+            }
+            else if (e.keyCode == KeyCode.A && e.control)
+            {
+                Debug.LogFormat("ctrl+a");
+                Selection1 = 0;
+                Selection2 = _Value.Length;
+                return true;
             }
 
             switch (e.keyCode)
@@ -254,6 +320,29 @@ public class TextField : Widget, IUiEventProcessor
                     break;
             }
         }
+        else if (e.rawType == EventType.MouseDown)
+        {
+            // detect position
+            Vector2 mpos = Utils.GetMousePosition();
+            if (!new Rect(transform.position.x, transform.position.y, Width, Height).Contains(mpos))
+                return false;
+
+            // focus field
+            IsFocused = true;
+
+            Selection2 = Selection1 = MouseXYToSelection();
+            SelectingM = true;
+            return true;
+        }
+        else if (e.rawType == EventType.MouseUp)
+        {
+            SelectingM = false;
+        }
+        else if (e.rawType == EventType.MouseMove)
+        {
+            if (SelectingM)
+                Selection2 = MouseXYToSelection();
+        }
 
         return false;
     }
@@ -291,7 +380,7 @@ public class TextField : Widget, IUiEventProcessor
         for (int i = 0; i < 8; i++)
         {
             if (i < 4) qc[i] = new Color(0, 0, 0, (s1 != s2) ? 1 : 0); // only show this part if selection rect exists!
-            else qc[i] = new Color(1, 1, 1, EditCursor ? 1 : 0);
+            else qc[i] = new Color(1, 1, 1, EditCursor&&IsFocused ? 1 : 0);
         }
 
         SelectionMesh.vertices = qv;
@@ -310,5 +399,24 @@ public class TextField : Widget, IUiEventProcessor
             EditCursorTimer = 0;
             EditCursor = !EditCursor;
         }
+
+        if (Border != null)
+        {
+            Border.Width = Width;
+            Border.Height = Height;
+        }
+
+        EditObject.transform.localPosition = new Vector2(Padding, Padding);
+        SelectionObject.transform.localPosition = new Vector2(Padding, Padding);
+    }
+
+    public void OnFocus()
+    {
+        EditCursor = true;
+    }
+
+    public void OnBlur()
+    {
+
     }
 }

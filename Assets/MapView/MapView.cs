@@ -635,6 +635,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                 case KeyCode.Escape:
                     {
                         // todo: create main menu
+                        ExampleWindow wnd = Utils.CreateObjectWithScript<ExampleWindow>();
                     }
                     return true;
                 case KeyCode.Space:

@@ -155,6 +155,7 @@ public class MouseCursor : MonoBehaviour {
         Instance.transform.position = new Vector3(mPos.x - CurrentCursor.Xoffs, mPos.y - CurrentCursor.Yoffs, MainCamera.MouseZ);
         Renderer.sprite = CurrentCursor.Sprites[CurrentCursorFrame];
         Renderer.material.shader = MainCamera.MainShaderPaletted;
+        //Renderer.material.shader = MainCamera.BatShader;
         Renderer.material.SetTexture("_Palette", CurrentCursor.Sprite.OwnPalette);
     }
 }

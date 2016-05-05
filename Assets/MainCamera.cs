@@ -25,11 +25,13 @@ public class MainCamera : MonoBehaviour
     public Shader _MainShaderPaletted;
     public Shader _TerrainShader;
     public Shader _TerrainFOWShader;
+    public Shader _BatShader;
 
     public static Shader MainShader { get { return Instance._MainShader; } }
     public static Shader MainShaderPaletted { get { return Instance._MainShaderPaletted; } }
     public static Shader TerrainShader { get { return Instance._TerrainShader; } }
     public static Shader TerrainFOWShader { get { return Instance._TerrainFOWShader; } }
+    public static Shader BatShader { get { return Instance._BatShader; } }
 
     // Use this for initialization
     private AllodsTextRenderer m_fpsr = null;

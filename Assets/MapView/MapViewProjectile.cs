@@ -40,25 +40,41 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
 
         Vector3[] qv = new Vector3[4];
         int pp = 0;
-        qv[pp++] = new Vector3(shadowOffsReal, 0, 0);
-        qv[pp++] = new Vector3(shadowOffsReal + sW, 0, 0);
-        qv[pp++] = new Vector3(shadowOffsXLeft + sW, sH, 0);
-        qv[pp++] = new Vector3(shadowOffsXLeft, sH, 0);
 
         Vector2[] quv = new Vector2[4];
-        if (!flip)
+        if (LogicProjectile.Class.ID == 7)
         {
-            quv[0] = new Vector2(tMinX, tMinY);
-            quv[1] = new Vector2(tMaxX, tMinY);
-            quv[2] = new Vector2(tMaxX, tMaxY);
-            quv[3] = new Vector2(tMinX, tMaxY);
+            qv[pp++] = new Vector3(0, 0, 0);
+            qv[pp++] = new Vector3(32, 0, 0);
+            qv[pp++] = new Vector3(32, 32, 0);
+            qv[pp++] = new Vector3(0, 32, 0);
+
+            quv[0] = new Vector2(0, 0);
+            quv[1] = new Vector2(1, 0);
+            quv[2] = new Vector2(1, 1);
+            quv[3] = new Vector2(0, 1);
         }
         else
         {
-            quv[0] = new Vector2(tMaxX, tMinY);
-            quv[1] = new Vector2(tMinX, tMinY);
-            quv[2] = new Vector2(tMinX, tMaxY);
-            quv[3] = new Vector2(tMaxX, tMaxY);
+            qv[pp++] = new Vector3(shadowOffsReal, 0, 0);
+            qv[pp++] = new Vector3(shadowOffsReal + sW, 0, 0);
+            qv[pp++] = new Vector3(shadowOffsXLeft + sW, sH, 0);
+            qv[pp++] = new Vector3(shadowOffsXLeft, sH, 0);
+
+            if (!flip)
+            {
+                quv[0] = new Vector2(tMinX, tMinY);
+                quv[1] = new Vector2(tMaxX, tMinY);
+                quv[2] = new Vector2(tMaxX, tMaxY);
+                quv[3] = new Vector2(tMinX, tMaxY);
+            }
+            else
+            {
+                quv[0] = new Vector2(tMaxX, tMinY);
+                quv[1] = new Vector2(tMinX, tMinY);
+                quv[2] = new Vector2(tMinX, tMaxY);
+                quv[3] = new Vector2(tMaxX, tMaxY);
+            }
         }
 
         mesh.vertices = qv;
@@ -150,16 +166,23 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
 
             if (!spriteSet)
             {
-                Renderer.material = new Material(MainCamera.MainShaderPaletted);
-                if (LogicProjectile.Class.HasPalette)
-                    Renderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
+                if (LogicProjectile.Class.ID == 7) // bat_sonic attack, apparently hardcoded
+                {
+                    Renderer.material = new Material(MainCamera.BatShader);
+                }
                 else
                 {
-                    if (_BasePalette == null) _BasePalette = Images.LoadPalette("graphics/projectiles/projectiles.pal");
-                    Renderer.material.SetTexture("_Palette", _BasePalette);
+                    Renderer.material = new Material(MainCamera.MainShaderPaletted);
+                    if (LogicProjectile.Class.HasPalette)
+                        Renderer.material.SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
+                    else
+                    {
+                        if (_BasePalette == null) _BasePalette = Images.LoadPalette("graphics/projectiles/projectiles.pal");
+                        Renderer.material.SetTexture("_Palette", _BasePalette);
+                    }
+                    ShadowRenderer.material = Renderer.material;
+                    ShadowRenderer.material.color = new Color(0, 0, 0, 0.5f);
                 }
-                ShadowRenderer.material = Renderer.material;
-                ShadowRenderer.material.color = new Color(0, 0, 0, 0.5f);
                 spriteSet = true;
             }
 
@@ -204,9 +227,19 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
 
             // always centered
             Vector2 xP = MapView.Instance.MapToScreenCoords(LogicProjectile.ProjectileX, LogicProjectile.ProjectileY - LogicProjectile.ProjectileZ, 1, 1);
-            transform.localPosition = new Vector3(xP.x - sprites.Sprites[actualFrame].rect.width * 0.5f,
-                                                  xP.y - sprites.Sprites[actualFrame].rect.height * 0.5f,
-                                                  MakeZFromY(xP.y) - 8); // order sprites by y coordinate basically
+            if (LogicProjectile.Class.ID == 7)
+            {
+                transform.localPosition = new Vector3(xP.x - 16,
+                                                      xP.y - 16,
+                                                      MakeZFromY(xP.y) - 8); // order sprites by y coordinate basically
+            }
+            else
+            {
+                transform.localPosition = new Vector3(xP.x - sprites.Sprites[actualFrame].rect.width * 0.5f,
+                                                      xP.y - sprites.Sprites[actualFrame].rect.height * 0.5f,
+                                                      MakeZFromY(xP.y) - 8); // order sprites by y coordinate basically
+            }
+
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicObstacle.Class.CenterX));
             //Renderer.sprite = sprites.Sprites[actualFrame];
             ProjectileMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (ProjectileMesh == null), doFlip);

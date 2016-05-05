@@ -200,7 +200,7 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
             }
 
             actualFrame = LogicProjectile.Class.Phases * actualAngle + LogicProjectile.CurrentFrame;
-            Debug.LogFormat("actualFrame = {0}, actualAngle = {1}", actualFrame, actualAngle);
+            //Debug.LogFormat("actualFrame = {0}, actualAngle = {1}", actualFrame, actualAngle);
 
             // always centered
             Vector2 xP = MapView.Instance.MapToScreenCoords(LogicProjectile.ProjectileX, LogicProjectile.ProjectileY - LogicProjectile.ProjectileZ, 1, 1);

@@ -655,6 +655,19 @@ class MapLogic
         return null;
     }
 
+    public MapStructure GetStructureByTag(int tag)
+    {
+        foreach (MapObject mobj in Objects)
+        {
+            if (mobj.GetObjectType() != MapObjectType.Structure) continue;
+            MapStructure struc = (MapStructure)mobj;
+            if (struc.Tag == tag)
+                return struc;
+        }
+
+        return null;
+    }
+
     // sack related
     public MapSack GetSackByTag(int tag)
     {

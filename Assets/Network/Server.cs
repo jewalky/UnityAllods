@@ -420,6 +420,37 @@ public class Server
         proj.SetPosition(x, y, z);
         MapLogic.Instance.Objects.Add(proj);
         // todo notify clients
+
+        if (NetworkManager.IsServer)
+        {
+            foreach (ServerClient client in ServerManager.Clients)
+            {
+                if (client.State != ClientState.Playing)
+                    continue;
+
+                Player p = MapLogic.Instance.GetNetPlayer(client);
+                MapObject sourceObj = (MapObject)source;
+                if (!sourceObj.IsVisibleForNetPlayer(p))
+                    ObjectBecameVisible(p, sourceObj); // force keyframe update for source unit
+
+                ClientCommands.AddProjectileHoming app;
+                app.X = x;
+                app.Y = y;
+                app.Z = z;
+                app.SourceType = sourceObj.GetObjectType();
+
+                if (app.SourceType == MapObjectType.Human ||
+                    app.SourceType == MapObjectType.Monster) app.SourceTag = ((MapUnit)sourceObj).Tag;
+                else if (app.SourceType == MapObjectType.Structure) app.SourceTag = ((MapStructure)sourceObj).Tag;
+                else app.SourceTag = -1;
+
+                app.Speed = speed;
+                app.TargetTag = target.Tag;
+                app.TypeID = id;
+
+                client.SendCommand(app);
+            }
+        }
     }
 
     public static void SpawnProjectileDirectional(int id, IPlayerPawn source, float x, float y, float z, float tgx, float tgy, float tgz, float speed, MapProjectileCallback cb = null)
@@ -428,6 +459,39 @@ public class Server
         proj.SetPosition(x, y, z);
         MapLogic.Instance.Objects.Add(proj);
         // todo notify clients
+
+        if (NetworkManager.IsServer)
+        {
+            foreach (ServerClient client in ServerManager.Clients)
+            {
+                if (client.State != ClientState.Playing)
+                    continue;
+
+                Player p = MapLogic.Instance.GetNetPlayer(client);
+                MapObject sourceObj = (MapObject)source;
+                if (!sourceObj.IsVisibleForNetPlayer(p))
+                    ObjectBecameVisible(p, sourceObj); // force keyframe update for source unit
+
+                ClientCommands.AddProjectileDirectional app;
+                app.X = x;
+                app.Y = y;
+                app.Z = z;
+                app.TargetX = tgx;
+                app.TargetY = tgy;
+                app.TargetZ = tgz;
+                app.SourceType = sourceObj.GetObjectType();
+
+                if (app.SourceType == MapObjectType.Human ||
+                    app.SourceType == MapObjectType.Monster) app.SourceTag = ((MapUnit)sourceObj).Tag;
+                else if (app.SourceType == MapObjectType.Structure) app.SourceTag = ((MapStructure)sourceObj).Tag;
+                else app.SourceTag = -1;
+
+                app.Speed = speed;
+                app.TypeID = id;
+
+                client.SendCommand(app);
+            }
+        }
     }
 
     public static void SpawnProjectileSimple(int id, IPlayerPawn source, float x, float y, float z)
@@ -436,5 +500,34 @@ public class Server
         proj.SetPosition(x, y, z);
         MapLogic.Instance.Objects.Add(proj);
         // todo notify clients
+
+        if (NetworkManager.IsServer)
+        {
+            foreach (ServerClient client in ServerManager.Clients)
+            {
+                if (client.State != ClientState.Playing)
+                    continue;
+
+                Player p = MapLogic.Instance.GetNetPlayer(client);
+                MapObject sourceObj = (MapObject)source;
+                if (!sourceObj.IsVisibleForNetPlayer(p))
+                    ObjectBecameVisible(p, sourceObj); // force keyframe update for source unit
+
+                ClientCommands.AddProjectileSimple app;
+                app.X = x;
+                app.Y = y;
+                app.Z = z;
+                app.SourceType = sourceObj.GetObjectType();
+
+                if (app.SourceType == MapObjectType.Human ||
+                    app.SourceType == MapObjectType.Monster) app.SourceTag = ((MapUnit)sourceObj).Tag;
+                else if (app.SourceType == MapObjectType.Structure) app.SourceTag = ((MapStructure)sourceObj).Tag;
+                else app.SourceTag = -1;
+
+                app.TypeID = id;
+
+                client.SendCommand(app);
+            }
+        }
     }
 }

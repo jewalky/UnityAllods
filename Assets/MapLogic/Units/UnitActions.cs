@@ -227,7 +227,10 @@ public class AttackAction : IUnitAction
         {
             if (Speed * Unit.AttackTime >= Unit.Class.AttackFrames[Unit.AttackFrame].Time)
             {
-                Unit.AttackFrame = ++Unit.AttackFrame % Unit.Class.AttackPhases;
+                //Unit.AttackFrame = ++Unit.AttackFrame % Unit.Class.AttackPhases;
+                Unit.AttackFrame++;
+                if (Unit.AttackFrame >= Unit.Class.AttackPhases)
+                    Unit.AttackFrame = Unit.Class.AttackPhases - 1;
                 Unit.AttackTime = -1;
                 Unit.DoUpdateView = true;
             }
@@ -276,7 +279,13 @@ public class AttackAction : IUnitAction
                                                                       fproj.ProjectileX < TargetUnit.X + TargetUnit.FracX + TargetUnit.Width &&
                                                                       fproj.ProjectileY < TargetUnit.Y + TargetUnit.FracY + TargetUnit.Height)
                                                                   {
-                                                                      Debug.LogFormat("projectile hit!");
+                                                                      //Debug.LogFormat("projectile hit!");
+                                                                      // done, make damage
+                                                                      if (TargetUnit.TakeDamage(DamageFlags, Unit, Damage) > 0)
+                                                                      {
+                                                                          TargetUnit.DoUpdateInfo = true;
+                                                                          TargetUnit.DoUpdateView = true;
+                                                                      }
                                                                   }
 
                                                                   fproj.Dispose();

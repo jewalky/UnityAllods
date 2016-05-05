@@ -28,5 +28,10 @@ public enum ClientIdentifiers
 
     UnitItemPickup,
     SackAt,
-    NoSackAt
+    NoSackAt,
+
+    //projectile directional, homing, simple
+    AddProjectileDirectional,
+    AddProjectileHoming,
+    AddProjectileSimple
 }

@@ -601,4 +601,182 @@ namespace ClientCommands
             return true;
         }
     }
+
+    /*    public static void SpawnProjectileHoming(int id, IPlayerPawn source, float x, float y, float z, MapUnit target, float speed, MapProjectileCallback cb = null)
+    {
+        MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicHoming(target, speed), cb);
+        proj.SetPosition(x, y, z);
+        MapLogic.Instance.Objects.Add(proj);
+        // todo notify clients
+    }
+
+    public static void SpawnProjectileDirectional(int id, IPlayerPawn source, float x, float y, float z, float tgx, float tgy, float tgz, float speed, MapProjectileCallback cb = null)
+    {
+        MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicDirectional(tgx, tgy, tgz, speed), cb);
+        proj.SetPosition(x, y, z);
+        MapLogic.Instance.Objects.Add(proj);
+        // todo notify clients
+    }
+
+    public static void SpawnProjectileSimple(int id, IPlayerPawn source, float x, float y, float z)
+    {
+        MapProjectile proj = new MapProjectile(id, source, null, null); // this is usually SFX like stuff. projectile plays animation based on typeid and stops.
+        proj.SetPosition(x, y, z);
+        MapLogic.Instance.Objects.Add(proj);
+        // todo notify clients
+    }*/
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.AddProjectileHoming)]
+    public struct AddProjectileHoming : IClientCommand
+    {
+        [ProtoMember(1)]
+        public float X;
+        [ProtoMember(2)]
+        public float Y;
+        [ProtoMember(3)]
+        public float Z;
+        [ProtoMember(4)]
+        public MapObjectType SourceType;
+        [ProtoMember(5)]
+        public int SourceTag;
+        [ProtoMember(6)]
+        public int TypeID;
+        [ProtoMember(7)]
+        public int TargetTag;
+        [ProtoMember(8)]
+        public float Speed;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            IPlayerPawn source = null;
+            if (SourceTag > 0)
+            {
+                switch (SourceType)
+                {
+                    case MapObjectType.Human:
+                    case MapObjectType.Monster:
+                        source = MapLogic.Instance.GetUnitByTag(SourceTag);
+                        break;
+
+                    case MapObjectType.Structure:
+                        source = MapLogic.Instance.GetStructureByTag(SourceTag);
+                        break;
+                }
+            }
+
+            MapUnit target = MapLogic.Instance.GetUnitByTag(TargetTag);
+            if (target == null)
+                return false;
+
+            Server.SpawnProjectileHoming(TypeID, source, X, Y, Z, target, Speed, (MapProjectile fproj) =>
+            {
+                fproj.Dispose();
+                MapLogic.Instance.Objects.Remove(fproj);
+            });
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.AddProjectileDirectional)]
+    public struct AddProjectileDirectional : IClientCommand
+    {
+        [ProtoMember(1)]
+        public float X;
+        [ProtoMember(2)]
+        public float Y;
+        [ProtoMember(3)]
+        public float Z;
+        [ProtoMember(4)]
+        public MapObjectType SourceType;
+        [ProtoMember(5)]
+        public int SourceTag;
+        [ProtoMember(6)]
+        public int TypeID;
+        [ProtoMember(7)]
+        public float TargetX;
+        [ProtoMember(8)]
+        public float TargetY;
+        [ProtoMember(9)]
+        public float TargetZ;
+        [ProtoMember(10)]
+        public float Speed;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            IPlayerPawn source = null;
+            if (SourceTag > 0)
+            {
+                switch (SourceType)
+                {
+                    case MapObjectType.Human:
+                    case MapObjectType.Monster:
+                        source = MapLogic.Instance.GetUnitByTag(SourceTag);
+                        break;
+
+                    case MapObjectType.Structure:
+                        source = MapLogic.Instance.GetStructureByTag(SourceTag);
+                        break;
+                }
+            }
+
+            Server.SpawnProjectileDirectional(TypeID, source, X, Y, Z, TargetX, TargetY, TargetZ, Speed, (MapProjectile fproj) =>
+            {
+                fproj.Dispose();
+                MapLogic.Instance.Objects.Remove(fproj);
+            });
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.AddProjectileSimple)]
+    public struct AddProjectileSimple : IClientCommand
+    {
+        [ProtoMember(1)]
+        public float X;
+        [ProtoMember(2)]
+        public float Y;
+        [ProtoMember(3)]
+        public float Z;
+        [ProtoMember(4)]
+        public MapObjectType SourceType;
+        [ProtoMember(5)]
+        public int SourceTag;
+        [ProtoMember(6)]
+        public int TypeID;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            IPlayerPawn source = null;
+            if (SourceTag > 0)
+            {
+                switch (SourceType)
+                {
+                    case MapObjectType.Human:
+                    case MapObjectType.Monster:
+                        source = MapLogic.Instance.GetUnitByTag(SourceTag);
+                        break;
+
+                    case MapObjectType.Structure:
+                        source = MapLogic.Instance.GetStructureByTag(SourceTag);
+                        break;
+                }
+            }
+
+            Server.SpawnProjectileSimple(TypeID, source, X, Y, Z);
+            return true;
+        }
+    }
 }

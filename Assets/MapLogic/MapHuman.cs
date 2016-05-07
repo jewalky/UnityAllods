@@ -198,115 +198,109 @@ public class MapHuman : MapUnit
         }
 
         // if not client, recalc stats
-        if (!NetworkManager.IsClient)
+        // actually, let client do this too, we send it the required info anyway
+        // max brms
+        short maxBody = 100, maxReaction = 100, maxMind = 100, maxSpirit = 100;
+        if ((Gender & GenderFlags.MaleFighter) == GenderFlags.MaleFighter)
         {
-            // max brms
-            short maxBody = 100, maxReaction = 100, maxMind = 100, maxSpirit = 100;
-            if ((Gender & GenderFlags.MaleFighter) == GenderFlags.MaleFighter)
-            {
-                maxBody = 52;
-                maxReaction = 50;
-                maxMind = 48;
-                maxSpirit = 46;
-            }
-            else if ((Gender & GenderFlags.FemaleFighter) == GenderFlags.FemaleFighter)
-            {
-                maxBody = 50;
-                maxReaction = 52;
-                maxMind = 46;
-                maxSpirit = 48;
-            }
-            else if ((Gender & GenderFlags.MaleMage) == GenderFlags.MaleMage)
-            {
-                maxBody = 48;
-                maxReaction = 46;
-                maxMind = 52;
-                maxSpirit = 50;
-            }
-            else if ((Gender & GenderFlags.FemaleMage) == GenderFlags.FemaleMage)
-            {
-                maxBody = 46;
-                maxReaction = 48;
-                maxMind = 50;
-                maxSpirit = 52;
-            }
+            maxBody = 52;
+            maxReaction = 50;
+            maxMind = 48;
+            maxSpirit = 46;
+        }
+        else if ((Gender & GenderFlags.FemaleFighter) == GenderFlags.FemaleFighter)
+        {
+            maxBody = 50;
+            maxReaction = 52;
+            maxMind = 46;
+            maxSpirit = 48;
+        }
+        else if ((Gender & GenderFlags.MaleMage) == GenderFlags.MaleMage)
+        {
+            maxBody = 48;
+            maxReaction = 46;
+            maxMind = 52;
+            maxSpirit = 50;
+        }
+        else if ((Gender & GenderFlags.FemaleMage) == GenderFlags.FemaleMage)
+        {
+            maxBody = 46;
+            maxReaction = 48;
+            maxMind = 50;
+            maxSpirit = 52;
+        }
 
-            CoreStats.Body = Math.Min(CoreStats.Body, maxBody);
-            CoreStats.Reaction = Math.Min(CoreStats.Reaction, maxReaction);
-            CoreStats.Mind = Math.Min(CoreStats.Mind, maxMind);
-            CoreStats.Spirit = Math.Min(CoreStats.Spirit, maxSpirit);
+        CoreStats.Body = Math.Min(CoreStats.Body, maxBody);
+        CoreStats.Reaction = Math.Min(CoreStats.Reaction, maxReaction);
+        CoreStats.Mind = Math.Min(CoreStats.Mind, maxMind);
+        CoreStats.Spirit = Math.Min(CoreStats.Spirit, maxSpirit);
 
-            // 
-            // add stats from items
-            ItemStats = new UnitStats();
-            foreach (Item bodyitem in ItemsBody)
-                ItemStats.MergeEffects(bodyitem.Effects);
+        // 
+        // add stats from items
+        ItemStats = new UnitStats();
+        foreach (Item bodyitem in ItemsBody)
+            ItemStats.MergeEffects(bodyitem.Effects);
 
-            //Debug.LogFormat("ItemStats = {0}", ItemStats.ToString());
+        //Debug.LogFormat("ItemStats = {0}", ItemStats.ToString());
 
-            Stats = CoreStats; // add all item stats
-            Stats.MergeStats(ItemStats);
-            // CoreStats = only BRMS used
-            //Debug.LogFormat("Body = {0}, {1}, {2}", Stats.Body, CoreStats.Body, ItemStats.Body);
+        Stats = CoreStats; // add all item stats
+        Stats.MergeStats(ItemStats);
+        // CoreStats = only BRMS used
+        //Debug.LogFormat("Body = {0}, {1}, {2}", Stats.Body, CoreStats.Body, ItemStats.Body);
 
-            /*
-                *(_WORD *)(this + 150) = (signed __int64)(sub_53066C((double)*(signed int *)(this + 304) / 5000.0 + 1.0)
-                                            * (double)((v34 != 0) + 1)
-                                            + (double)*(_WORD *)(this + 150));
-                *(_WORD *)(v28 + 150) = (signed __int64)((sub_53064C(*(_WORD *)(v28 + 132)) / 100.0 + 1.0)
-                                                        * (double)*(_WORD *)(v28 + 150));
+        /*
+            *(_WORD *)(this + 150) = (signed __int64)(sub_53066C((double)*(signed int *)(this + 304) / 5000.0 + 1.0)
+                                        * (double)((v34 != 0) + 1)
+                                        + (double)*(_WORD *)(this + 150));
+            *(_WORD *)(v28 + 150) = (signed __int64)((sub_53064C(*(_WORD *)(v28 + 132)) / 100.0 + 1.0)
+                                                    * (double)*(_WORD *)(v28 + 150));
 
-            sub_53066C(a1):
-            log(a1) / log(1.1)
+        sub_53066C(a1):
+        log(a1) / log(1.1)
 
-            sub_53064C(a1):
-            pow(1.1, a1)
+        sub_53064C(a1):
+        pow(1.1, a1)
 
-            health = body * (is_fighter ? 2 : 1)
-            health += sub_53066C(experience_total) / 5000.0 + 1 * (is_fighter ? 2 : 1)
-            health *= sub_53064C(body) / 100.0 + 1.0
+        health = body * (is_fighter ? 2 : 1)
+        health += sub_53066C(experience_total) / 5000.0 + 1 * (is_fighter ? 2 : 1)
+        health *= sub_53064C(body) / 100.0 + 1.0
+        */
+
+        float experience_total = 7320;
+        float fighter_mult = (Gender & GenderFlags.Fighter) != 0 ? 2 : 1;
+        float mage_mult = (Gender & GenderFlags.Mage) != 0 ? 2 : 1;
+
+        Stats.HealthMax = (int)(Stats.Body * fighter_mult);
+        Stats.HealthMax += (int)(Log11(experience_total / 5000f + fighter_mult));
+        Stats.HealthMax = (int)((Pow11(Stats.Body) / 100f + 1f) * Stats.HealthMax);
+
+        if ((Gender & GenderFlags.Mage) != 0)
+        {
+            Stats.ManaMax = (int)(Stats.Spirit * mage_mult);
+            Stats.ManaMax += (int)(Log11(experience_total / 5000f + mage_mult));
+            Stats.ManaMax = (int)((Pow11(Stats.Spirit) / 100f + 1f) * Stats.ManaMax);
+        }
+        else Stats.ManaMax = -1;
+
+        //
+        /*
+            if ( *(v28 + 134) >= 12 )
+            *(v28 + 140) = *(v28 + 134) / 5 + 12;       // speed
+            else
+            *(v28 + 140) = *(v28 + 134);
+            if ( *(v28 + 14) == 19 || *(v28 + 14) == 21 ) // ManHorse_LanceShield, ManHorse_SwordShield
+            *(v28 + 140) += 10;
             */
 
-            float experience_total = 7320;
-            float fighter_mult = (Gender & GenderFlags.Fighter) != 0 ? 2 : 1;
-            float mage_mult = (Gender & GenderFlags.Mage) != 0 ? 2 : 1;
+        if (Stats.Reaction < 12)
+            Stats.Speed = (byte)Stats.Reaction;
+        else Stats.Speed = (byte)Math.Min(Stats.Reaction / 5 + 12, 255);
+        if (Class.ID == 19 || Class.ID == 21) // horseman
+            Stats.Speed += 10;
+        Stats.RotationSpeed = Stats.Speed;
 
-            Stats.HealthMax = (int)(Stats.Body * fighter_mult);
-            Stats.HealthMax += (int)(Log11(experience_total / 5000f + fighter_mult));
-            Stats.HealthMax = (int)((Pow11(Stats.Body) / 100f + 1f) * Stats.HealthMax);
-
-            if ((Gender & GenderFlags.Mage) != 0)
-            {
-                Stats.ManaMax = (int)(Stats.Spirit * mage_mult);
-                Stats.ManaMax += (int)(Log11(experience_total / 5000f + mage_mult));
-                Stats.ManaMax = (int)((Pow11(Stats.Spirit) / 100f + 1f) * Stats.ManaMax);
-            }
-            else Stats.ManaMax = -1;
-
-            //
-            /*
-              if ( *(v28 + 134) >= 12 )
-                *(v28 + 140) = *(v28 + 134) / 5 + 12;       // speed
-              else
-                *(v28 + 140) = *(v28 + 134);
-              if ( *(v28 + 14) == 19 || *(v28 + 14) == 21 ) // ManHorse_LanceShield, ManHorse_SwordShield
-                *(v28 + 140) += 10;
-             */
-
-            if (Stats.Reaction < 12)
-                Stats.Speed = (byte)Stats.Reaction;
-            else Stats.Speed = (byte)Math.Min(Stats.Reaction / 5 + 12, 255);
-            if (Class.ID == 19 || Class.ID == 21) // horseman
-                Stats.Speed += 10;
-            Stats.RotationSpeed = Stats.Speed;
-
-            // tell the client to update stats
-            if (NetworkManager.IsServer)
-                Server.NotifyUnitStats(this);
-
-            DoUpdateInfo = true;
-            DoUpdateView = true;
-        }
+        DoUpdateInfo = true;
+        DoUpdateView = true;
     }
 
     public override void Update()

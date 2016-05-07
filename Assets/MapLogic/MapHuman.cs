@@ -121,6 +121,17 @@ public class MapHuman : MapUnit
         }
     }
 
+    // these functions are used in ROM2
+    private static float Pow11(float v)
+    {
+        return Mathf.Pow(1.1f, v);
+    }
+
+    private static float Log11(float v)
+    {
+        return Mathf.Log(v) / Mathf.Log(1.1f);
+    }
+
     public override void UpdateItems()
     {
         if (IsHero)
@@ -189,7 +200,94 @@ public class MapHuman : MapUnit
         // if not client, recalc stats
         if (!NetworkManager.IsClient)
         {
+            /*
+                *(_WORD *)(this + 150) = (signed __int64)(sub_53066C((double)*(signed int *)(this + 304) / 5000.0 + 1.0)
+                                            * (double)((v34 != 0) + 1)
+                                            + (double)*(_WORD *)(this + 150));
+                *(_WORD *)(v28 + 150) = (signed __int64)((sub_53064C(*(_WORD *)(v28 + 132)) / 100.0 + 1.0)
+                                                        * (double)*(_WORD *)(v28 + 150));
 
+            sub_53066C(a1):
+            log(a1) / log(1.1)
+
+            sub_53064C(a1):
+            pow(1.1, a1)
+
+            health = body * (is_fighter ? 2 : 1)
+            health += sub_53066C(experience_total) / 5000.0 + 1 * (is_fighter ? 2 : 1)
+            health *= sub_53064C(body) / 100.0 + 1.0
+            */
+
+            // max brms
+            short maxBody = 100, maxReaction = 100, maxMind = 100, maxSpirit = 100;
+            if ((Gender & GenderFlags.MaleFighter) == GenderFlags.MaleFighter)
+            {
+                maxBody = 52;
+                maxReaction = 50;
+                maxMind = 48;
+                maxSpirit = 46;
+            }
+            else if ((Gender & GenderFlags.FemaleFighter) == GenderFlags.FemaleFighter)
+            {
+                maxBody = 50;
+                maxReaction = 52;
+                maxMind = 46;
+                maxSpirit = 48;
+            }
+            else if ((Gender & GenderFlags.MaleMage) == GenderFlags.MaleMage)
+            {
+                maxBody = 48;
+                maxReaction = 46;
+                maxMind = 52;
+                maxSpirit = 50;
+            }
+            else if ((Gender & GenderFlags.FemaleMage) == GenderFlags.FemaleMage)
+            {
+                maxBody = 46;
+                maxReaction = 48;
+                maxMind = 50;
+                maxSpirit = 52;
+            }
+
+            Stats.Body = Math.Min(Stats.Body, maxBody);
+            Stats.Reaction = Math.Min(Stats.Reaction, maxReaction);
+            Stats.Mind = Math.Min(Stats.Mind, maxMind);
+            Stats.Spirit = Math.Min(Stats.Spirit, maxSpirit);
+
+            float experience_total = 7320;
+            float fighter_mult = (Gender & GenderFlags.Fighter) != 0 ? 2 : 1;
+            float mage_mult = (Gender & GenderFlags.Mage) != 0 ? 2 : 1;
+
+            Stats.HealthMax = (int)(Stats.Body * fighter_mult);
+            Stats.HealthMax += (int)(Log11(experience_total / 5000f + fighter_mult));
+            Stats.HealthMax = (int)((Pow11(Stats.Body) / 100f + 1f) * Stats.HealthMax);
+
+            if ((Gender & GenderFlags.Mage) != 0)
+            {
+                Stats.ManaMax = (int)(Stats.Spirit * mage_mult);
+                Stats.ManaMax += (int)(Log11(experience_total / 5000f + mage_mult));
+                Stats.ManaMax = (int)((Pow11(Stats.Spirit) / 100f + 1f) * Stats.ManaMax);
+            }
+            else Stats.ManaMax = -1;
+
+            //
+            /*
+              if ( *(v28 + 134) >= 12 )
+                *(v28 + 140) = *(v28 + 134) / 5 + 12;       // speed
+              else
+                *(v28 + 140) = *(v28 + 134);
+              if ( *(v28 + 14) == 19 || *(v28 + 14) == 21 ) // ManHorse_LanceShield, ManHorse_SwordShield
+                *(v28 + 140) += 10;
+             */
+
+            if (Stats.Reaction < 12)
+                Stats.Speed = (byte)Stats.Reaction;
+            else Stats.Speed = (byte)Math.Min(Stats.Reaction / 5 + 12, 255);
+            if (Class.ID == 19 || Class.ID == 21) // horseman
+                Stats.Speed += 10;
+            Stats.RotationSpeed = Stats.Speed;
+
+            // 
         }
     }
 
@@ -234,3 +332,4 @@ public class MapHuman : MapUnit
 
     public override string TemplateName { get { return Template.Name; } }
 }
+ 

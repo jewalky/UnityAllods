@@ -30,6 +30,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public UnitClass Class = null;
     private Templates.TplMonster Template = null; // 
     public UnitStats Stats;
+    public UnitStats CoreStats;
+    public UnitStats ItemStats;
     private Player _Player;
 
     public Player Player
@@ -142,6 +144,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         IsAlive = true;
         IsDying = false;
         Stats = new UnitStats();
+        CoreStats = Stats;
+        ItemStats = new UnitStats();
         Actions.Clear();
         States.Clear();
         Actions.Add(new IdleAction(this));
@@ -167,14 +171,14 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Width = Template.TokenSize;
         Height = Width;
 
-        Stats.Health = Stats.HealthMax = Math.Max(Template.HealthMax, 0);
-        Stats.Mana = Stats.ManaMax = Math.Max(Template.ManaMax, 0); // they sometimes put -1 as mana counter for fighters
+        CoreStats.Health = CoreStats.HealthMax = Math.Max(Template.HealthMax, 0);
+        CoreStats.Mana = CoreStats.ManaMax = Math.Max(Template.ManaMax, 0); // they sometimes put -1 as mana counter for fighters
 
         // BRMS
-        Stats.Body = (short)Template.Body;
-        Stats.Reaction = (short)Template.Reaction;
-        Stats.Mind = (short)Template.Mind;
-        Stats.Spirit = (short)Template.Spirit;
+        CoreStats.Body = (short)Template.Body;
+        CoreStats.Reaction = (short)Template.Reaction;
+        CoreStats.Mind = (short)Template.Mind;
+        CoreStats.Spirit = (short)Template.Spirit;
 
         // physical damage and resists
         int templateMin = Template.PhysicalMin;
@@ -189,34 +193,35 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             templateMin = Template.PhysicalMax;
             templateMax = (Template.PhysicalMin - Template.PhysicalMax) * 64;
         }
-        Stats.DamageMin = (short)templateMin;
-        Stats.DamageMax = (short)(templateMax + templateMin);
-        Stats.ToHit = (short)Template.ToHit;
-        Stats.Absorbtion = (short)Template.Absorbtion;
-        Stats.Defence = (short)Template.Defense;
+
+        CoreStats.DamageMin = (short)templateMin;
+        CoreStats.DamageMax = (short)(templateMax + templateMin);
+        CoreStats.ToHit = (short)Template.ToHit;
+        CoreStats.Absorbtion = (short)Template.Absorbtion;
+        CoreStats.Defence = (short)Template.Defense;
 
         // magical resists
-        Stats.ProtectionFire = (byte)Template.ProtectionFire;
-        Stats.ProtectionWater = (byte)Template.ProtectionWater;
-        Stats.ProtectionAir = (byte)Template.ProtectionAir;
-        Stats.ProtectionEarth = (byte)Template.ProtectionEarth;
-        Stats.ProtectionAstral = (byte)Template.ProtectionAstral;
+        CoreStats.ProtectionFire = (byte)Template.ProtectionFire;
+        CoreStats.ProtectionWater = (byte)Template.ProtectionWater;
+        CoreStats.ProtectionAir = (byte)Template.ProtectionAir;
+        CoreStats.ProtectionEarth = (byte)Template.ProtectionEarth;
+        CoreStats.ProtectionAstral = (byte)Template.ProtectionAstral;
 
         // physical resists (custom)
-        Stats.ProtectionBlade = (byte)Template.ProtectionBlade;
-        Stats.ProtectionAxe = (byte)Template.ProtectionAxe;
-        Stats.ProtectionBludgeon = (byte)Template.ProtectionBludgeon;
-        Stats.ProtectionPike = (byte)Template.ProtectionPike;
-        Stats.ProtectionShooting = (byte)Template.ProtectionShooting;
+        CoreStats.ProtectionBlade = (byte)Template.ProtectionBlade;
+        CoreStats.ProtectionAxe = (byte)Template.ProtectionAxe;
+        CoreStats.ProtectionBludgeon = (byte)Template.ProtectionBludgeon;
+        CoreStats.ProtectionPike = (byte)Template.ProtectionPike;
+        CoreStats.ProtectionShooting = (byte)Template.ProtectionShooting;
 
         // speed and scanrange
-        Stats.RotationSpeed = (byte)Template.RotationSpeed;
-        if (Stats.RotationSpeed < 1)
-            Stats.RotationSpeed = 1;
-        Stats.Speed = (byte)Template.Speed;
-        if (Stats.Speed < 1)
-            Stats.Speed = 1;
-        Stats.ScanRange = Template.ScanRange;
+        CoreStats.RotationSpeed = (byte)Template.RotationSpeed;
+        if (CoreStats.RotationSpeed < 1)
+            CoreStats.RotationSpeed = 1;
+        CoreStats.Speed = (byte)Template.Speed;
+        if (CoreStats.Speed < 1)
+            CoreStats.Speed = 1;
+        CoreStats.ScanRange = Template.ScanRange;
 
         // initial items
         if (Template.EquipItem1.Length > 0)
@@ -234,6 +239,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         }
 
         CalculateVision();
+        UpdateItems();
     }
 
     public override void Dispose()
@@ -246,7 +252,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     // this is called when on-body items are modified
     public virtual void UpdateItems()
     {
-
+        Stats = CoreStats;
     }
 
     public override void Update()

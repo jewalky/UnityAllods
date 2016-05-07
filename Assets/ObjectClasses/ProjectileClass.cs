@@ -69,7 +69,7 @@ public class ProjectileClassLoader
             cls.IsSFX = reg.GetInt(on, "SFX", 0) != 0;
             cls.IsHoming = reg.GetInt(on, "Homing", 0) != 0;
             cls.Flip = reg.GetInt(on, "Flip", 0) != 0;
-            Debug.LogFormat("{0} flip = {1}", cls.FileName, cls.Flip);
+            //Debug.LogFormat("{0} flip = {1}", cls.FileName, cls.Flip);
             Classes.Add(cls);
         }
     }

@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-public class ItemPack
+public class ItemPack : IEnumerable<Item>
 {
     private List<Item> ItemList = new List<Item>();
     public bool Passive { get; private set; }
@@ -130,6 +131,16 @@ public class ItemPack
             newItem.Index = position;
 
         return newItem;
+    }
+
+    public IEnumerator<Item> GetEnumerator()
+    {
+        return ItemList.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return ItemList.GetEnumerator();
     }
 
     public Item this[int index]

@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Reflection;
 using ProtoBuf;
+using UnityEngine;
 
 // this class is used by items, monsters and humans.
 // this class should be optimized because it gets sent over network.
 // current size is ~80 bytes.
 [ProtoContract]
-public struct UnitStats
+public class UnitStats
 {
     public bool TrySetHealth(int nh)
     {
@@ -82,9 +83,56 @@ public struct UnitStats
     [ProtoMember(54)] public byte ProtectionPike;
     [ProtoMember(55)] public byte ProtectionShooting;
 
-    public static UnitStats operator +(UnitStats a, UnitStats b)
+    public void MergeEffects(List<ItemEffect> effects)
     {
-        UnitStats outObj = new UnitStats();
+        foreach (ItemEffect eff in effects)
+        {
+            if (eff.Type1 == ItemEffect.Effects.CastSpell ||
+                eff.Type1 == ItemEffect.Effects.TeachSpell) continue;
+
+            // get stat
+            FieldInfo field = typeof(UnitStats).GetField(eff.Type1.ToString());
+            if (field == null)
+                continue;
+
+            if (field.FieldType == typeof(byte))
+            {
+                int fa = (byte)field.GetValue(this);
+                int fb = eff.Value1;
+                field.SetValue(this, (byte)Math.Min(fa + fb, 255));
+            }
+            else if (field.FieldType == typeof(short))
+            {
+                int fa = (short)field.GetValue(this);
+                int fb = eff.Value1;
+                field.SetValue(this, (short)Math.Max(Math.Min(fa + fb, 32767), -32768));
+            }
+            else if (field.FieldType == typeof(int))
+            {
+                long fa = (int)field.GetValue(this);
+                long fb = eff.Value1;
+                field.SetValue(this, (int)Math.Max(Math.Min(fa + fb, 2147483647), -2147483648));
+            }
+            else if (field.FieldType == typeof(long))
+            {
+                long fa = (long)field.GetValue(this);
+                long fb = eff.Value1;
+                field.SetValue(this, fa + fb);
+            }
+            else if (field.FieldType == typeof(float))
+            {
+                float fa = (float)field.GetValue(this);
+                float fb = eff.Value1;
+                field.SetValue(this, fa + fb);
+            }
+        }
+    }
+
+    //public static UnitStats operator +(UnitStats a, UnitStats b)
+    public void MergeStats(UnitStats b)
+    {
+        UnitStats a = this;
+        UnitStats outObj = this;
         FieldInfo[] fields = typeof(UnitStats).GetFields();
         foreach (FieldInfo field in fields)
         {
@@ -121,51 +169,6 @@ public struct UnitStats
                 field.SetValue(outObj, fa + fb);
             }
         }
-
-        return outObj;
-    }
-
-    public static UnitStats operator -(UnitStats a, UnitStats b)
-    {
-        UnitStats outObj = new UnitStats();
-        FieldInfo[] fields = typeof(UnitStats).GetFields();
-        foreach (FieldInfo field in fields)
-        {
-            // we process byte, short, int, float and long.
-            // handle overflows.
-            if (field.FieldType == typeof(byte))
-            {
-                int fa = (byte)field.GetValue(a);
-                int fb = (byte)field.GetValue(b);
-                field.SetValue(outObj, (byte)Math.Min(fa - fb, 255));
-            }
-            else if (field.FieldType == typeof(short))
-            {
-                int fa = (short)field.GetValue(a);
-                int fb = (short)field.GetValue(b);
-                field.SetValue(outObj, (short)Math.Max(Math.Min(fa - fb, 32767), -32768));
-            }
-            else if (field.FieldType == typeof(int))
-            {
-                long fa = (int)field.GetValue(a);
-                long fb = (int)field.GetValue(b);
-                field.SetValue(outObj, (int)Math.Max(Math.Min(fa - fb, 2147483647), -2147483648));
-            }
-            else if (field.FieldType == typeof(long))
-            {
-                long fa = (long)field.GetValue(a);
-                long fb = (long)field.GetValue(b);
-                field.SetValue(outObj, fa - fb);
-            }
-            else if (field.FieldType == typeof(float))
-            {
-                float fa = (float)field.GetValue(a);
-                float fb = (float)field.GetValue(b);
-                field.SetValue(outObj, fa - fb);
-            }
-        }
-
-        return outObj;
     }
 
     public override string ToString()

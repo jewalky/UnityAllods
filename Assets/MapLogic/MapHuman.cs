@@ -62,23 +62,23 @@ public class MapHuman : MapUnit
         Width = Math.Max(1, Template.TokenSize);
         Height = Width;
 
-        Stats.Health = Stats.HealthMax = Math.Max(Template.HealthMax, 0);
-        Stats.Mana = Stats.ManaMax = Math.Max(Template.ManaMax, 0); // they sometimes put -1 as mana counter for fighters
+        CoreStats.Health = CoreStats.HealthMax = Math.Max(Template.HealthMax, 0);
+        CoreStats.Mana = CoreStats.ManaMax = Math.Max(Template.ManaMax, 0); // they sometimes put -1 as mana counter for fighters
 
         // BRMS
-        Stats.Body = (short)Template.Body;
-        Stats.Reaction = (short)Template.Reaction;
-        Stats.Mind = (short)Template.Mind;
-        Stats.Spirit = (short)Template.Spirit;
+        CoreStats.Body = (short)Template.Body;
+        CoreStats.Reaction = (short)Template.Reaction;
+        CoreStats.Mind = (short)Template.Mind;
+        CoreStats.Spirit = (short)Template.Spirit;
 
         // speed and scanrange
-        Stats.RotationSpeed = (byte)Template.RotationSpeed;
-        if (Stats.RotationSpeed < 1)
-            Stats.RotationSpeed = 1;
-        Stats.Speed = (byte)Template.Speed;
-        if (Stats.Speed < 1)
-            Stats.Speed = 1;
-        Stats.ScanRange = Template.ScanRange;
+        CoreStats.RotationSpeed = (byte)Template.RotationSpeed;
+        if (CoreStats.RotationSpeed < 1)
+            CoreStats.RotationSpeed = 1;
+        CoreStats.Speed = (byte)Template.Speed;
+        if (CoreStats.Speed < 1)
+            CoreStats.Speed = 1;
+        CoreStats.ScanRange = Template.ScanRange;
 
         // human specific
         if (Template.Gender == 1)
@@ -200,24 +200,6 @@ public class MapHuman : MapUnit
         // if not client, recalc stats
         if (!NetworkManager.IsClient)
         {
-            /*
-                *(_WORD *)(this + 150) = (signed __int64)(sub_53066C((double)*(signed int *)(this + 304) / 5000.0 + 1.0)
-                                            * (double)((v34 != 0) + 1)
-                                            + (double)*(_WORD *)(this + 150));
-                *(_WORD *)(v28 + 150) = (signed __int64)((sub_53064C(*(_WORD *)(v28 + 132)) / 100.0 + 1.0)
-                                                        * (double)*(_WORD *)(v28 + 150));
-
-            sub_53066C(a1):
-            log(a1) / log(1.1)
-
-            sub_53064C(a1):
-            pow(1.1, a1)
-
-            health = body * (is_fighter ? 2 : 1)
-            health += sub_53066C(experience_total) / 5000.0 + 1 * (is_fighter ? 2 : 1)
-            health *= sub_53064C(body) / 100.0 + 1.0
-            */
-
             // max brms
             short maxBody = 100, maxReaction = 100, maxMind = 100, maxSpirit = 100;
             if ((Gender & GenderFlags.MaleFighter) == GenderFlags.MaleFighter)
@@ -249,10 +231,41 @@ public class MapHuman : MapUnit
                 maxSpirit = 52;
             }
 
-            Stats.Body = Math.Min(Stats.Body, maxBody);
-            Stats.Reaction = Math.Min(Stats.Reaction, maxReaction);
-            Stats.Mind = Math.Min(Stats.Mind, maxMind);
-            Stats.Spirit = Math.Min(Stats.Spirit, maxSpirit);
+            CoreStats.Body = Math.Min(CoreStats.Body, maxBody);
+            CoreStats.Reaction = Math.Min(CoreStats.Reaction, maxReaction);
+            CoreStats.Mind = Math.Min(CoreStats.Mind, maxMind);
+            CoreStats.Spirit = Math.Min(CoreStats.Spirit, maxSpirit);
+
+            // 
+            // add stats from items
+            ItemStats = new UnitStats();
+            foreach (Item bodyitem in ItemsBody)
+                ItemStats.MergeEffects(bodyitem.Effects);
+
+            //Debug.LogFormat("ItemStats = {0}", ItemStats.ToString());
+
+            Stats = CoreStats; // add all item stats
+            Stats.MergeStats(ItemStats);
+            // CoreStats = only BRMS used
+            //Debug.LogFormat("Body = {0}, {1}, {2}", Stats.Body, CoreStats.Body, ItemStats.Body);
+
+            /*
+                *(_WORD *)(this + 150) = (signed __int64)(sub_53066C((double)*(signed int *)(this + 304) / 5000.0 + 1.0)
+                                            * (double)((v34 != 0) + 1)
+                                            + (double)*(_WORD *)(this + 150));
+                *(_WORD *)(v28 + 150) = (signed __int64)((sub_53064C(*(_WORD *)(v28 + 132)) / 100.0 + 1.0)
+                                                        * (double)*(_WORD *)(v28 + 150));
+
+            sub_53066C(a1):
+            log(a1) / log(1.1)
+
+            sub_53064C(a1):
+            pow(1.1, a1)
+
+            health = body * (is_fighter ? 2 : 1)
+            health += sub_53066C(experience_total) / 5000.0 + 1 * (is_fighter ? 2 : 1)
+            health *= sub_53064C(body) / 100.0 + 1.0
+            */
 
             float experience_total = 7320;
             float fighter_mult = (Gender & GenderFlags.Fighter) != 0 ? 2 : 1;
@@ -286,9 +299,10 @@ public class MapHuman : MapUnit
             if (Class.ID == 19 || Class.ID == 21) // horseman
                 Stats.Speed += 10;
             Stats.RotationSpeed = Stats.Speed;
-
-            // 
         }
+
+        DoUpdateInfo = true;
+        DoUpdateView = true;
     }
 
     public override void Update()

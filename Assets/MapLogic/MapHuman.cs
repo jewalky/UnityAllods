@@ -245,6 +245,7 @@ public class MapHuman : MapUnit
 
         Stats = CoreStats; // add all item stats
         Stats.MergeStats(ItemStats);
+        Stats.DamageMax = (short)(Stats.DamageMin + Stats.DamageMax);
         // CoreStats = only BRMS used
         //Debug.LogFormat("Body = {0}, {1}, {2}", Stats.Body, CoreStats.Body, ItemStats.Body);
 

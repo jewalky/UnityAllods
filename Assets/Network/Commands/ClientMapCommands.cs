@@ -503,7 +503,7 @@ namespace ClientCommands
             MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
             if (unit == null)
             {
-                Debug.LogFormat("Attempted to set pack for nonexistent unit {0}", Tag);
+                Debug.LogFormat("Attempted to set stats for nonexistent unit {0}", Tag);
                 return true;
             }
 

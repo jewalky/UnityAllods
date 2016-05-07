@@ -299,10 +299,14 @@ public class MapHuman : MapUnit
             if (Class.ID == 19 || Class.ID == 21) // horseman
                 Stats.Speed += 10;
             Stats.RotationSpeed = Stats.Speed;
-        }
 
-        DoUpdateInfo = true;
-        DoUpdateView = true;
+            // tell the client to update stats
+            if (NetworkManager.IsServer)
+                Server.NotifyUnitStats(this);
+
+            DoUpdateInfo = true;
+            DoUpdateView = true;
+        }
     }
 
     public override void Update()

@@ -83,6 +83,29 @@ public class UnitStats
     [ProtoMember(54)] public byte ProtectionPike;
     [ProtoMember(55)] public byte ProtectionShooting;
 
+    public UnitStats()
+    {
+        // do nothing
+    }
+
+    public UnitStats(UnitStats other)
+    {
+        FieldInfo[] fields = typeof(UnitStats).GetFields();
+        foreach (FieldInfo field in fields)
+        {
+            // we process byte, short, int, float and long.
+            // handle overflows.
+            if (field.FieldType == typeof(byte) ||
+                field.FieldType == typeof(short) ||
+                field.FieldType == typeof(int) ||
+                field.FieldType == typeof(long) ||
+                field.FieldType == typeof(float))
+            {
+                field.SetValue(this, field.GetValue(other));
+            }
+        }
+    }
+
     public void MergeEffects(List<ItemEffect> effects)
     {
         foreach (ItemEffect eff in effects)

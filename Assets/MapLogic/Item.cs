@@ -365,6 +365,9 @@ public class Item
 
     private void InitItem()
     {
+        if (Class == null)
+            return;
+
         if (Class.IsSpecial)
         {
             // do nothing.

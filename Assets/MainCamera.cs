@@ -37,13 +37,14 @@ public class MainCamera : MonoBehaviour
     private AllodsTextRenderer m_fpsr = null;
     private GameObject m_fpso = null;
 
-    public Images.AllodsSprite arrow;
-    public Texture2D arrowTex;
+    public AudioClip testclip = null;
 
     void Start()
     {
-        arrow = Images.Load256("graphics/projectiles/archer/arrow.256", false);
-        arrowTex = arrow.Atlas;
+        testclip = Audio.LoadWAV("add.wav");
+        GameObject go = new GameObject();
+        AudioSource goas = go.AddComponent<AudioSource>();
+        goas.PlayOneShot(testclip, 1);
 
         // set w/h to screen res
         Camera cam = GetComponent<Camera>();

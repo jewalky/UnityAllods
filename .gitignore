@@ -25,7 +25,7 @@ ExportedObj/
 # Unity3D Generated File On Crash Reports
 sysinfo.txt
 
-#*.res
+*.res
 
 # own project directories
 screenshots

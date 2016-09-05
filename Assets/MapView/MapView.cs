@@ -740,6 +740,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                 break;
             }
         }
+        _MouseCellX = Mathf.Clamp(_MouseCellX, 0, MapLogic.Instance.Width-1);
+        _MouseCellY = Mathf.Clamp(_MouseCellY, 0, MapLogic.Instance.Height-1);
         //Debug.Log(string.Format("mouse = {0} {1} (from {2} {3})", _MouseCellX, _MouseCellY, mPos.x, mPos.y));
 
         // temporary!

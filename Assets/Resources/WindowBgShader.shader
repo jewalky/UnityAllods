@@ -1,4 +1,4 @@
-﻿Shader "Custom/MainShader"
+﻿Shader "Custom/WindowBgShader"
 {
 	Properties
 	{
@@ -84,8 +84,21 @@
 						wcoord.y >= ClipArea[1] + ClipArea[3]) discard;
 				}
 
-				half4 texcol = tex2D(_MainTex, IN.texcoord) * IN.color;
+			half2 tuv = half2(1.0 / (_ScreenParams.xy / 2));
+			half4 col = half4(0, 0, 0, 0);
+			for (int y = -1; y <= 1; y++)
+			{
+				for (int x = -1; x <= 1; x++)
+				{
+					half2 lpos = IN.texcoord + tuv.xy*half2(x, y);
+					half4 lcol = tex2D(_MainTex, lpos);
+					half len2 = length(IN.texcoord.xy - lpos) * _ScreenParams.xy;
+					col += lcol * ((8-len2)/8) * 0.5;
+				}
+			}
+				half4 texcol = col * IN.color;
 				texcol.rgb *= _Lightness * 2;
+				texcol.a = 1;
 				return texcol;
 			}
 			ENDCG

@@ -10,7 +10,8 @@ public class Window : Widget, IUiEventProcessor
     private static Images.AllodsSprite wnd_LM = null;
     private static Material wnd_LMMat = null;
 
-    private Mesh BgMesh;
+    private Mesh wMesh;
+    private RenderTexture BgTexture;
     private GameObject BgObject;
 
     public GameObject WorkingArea { get; private set; }
@@ -46,15 +47,29 @@ public class Window : Widget, IUiEventProcessor
         UiManager.Instance.Subscribe(this);
 
         // init base mesh
-        BgObject = Utils.CreateObject();
+        // make screenshot of background.
+        BgTexture = new RenderTexture(Screen.width / 2, Screen.height / 2, 24);
+        Camera mc = MainCamera.Instance.GetComponent<Camera>();
+        mc.targetTexture = BgTexture;
+        bool cvis = MouseCursor.Instance.Visible;
+        MouseCursor.Instance.Visible = false;
+        mc.Render();
+        MouseCursor.Instance.Visible = cvis;
+        mc.targetTexture = null;
+        BgObject = Utils.CreatePrimitive(PrimitiveType.Quad);
         BgObject.transform.parent = transform;
-        BgObject.transform.localPosition = new Vector3(0, 0, 0);
-        BgObject.transform.localScale = new Vector3(1, 1, 1);
-        MeshRenderer bgRenderer = BgObject.AddComponent<MeshRenderer>();
-        MeshFilter bgFilter = BgObject.AddComponent<MeshFilter>();
-        BgMesh = new Mesh();
-        bgFilter.mesh = BgMesh;
-        bgRenderer.material = wnd_LMMat;
+        BgObject.transform.localPosition = new Vector3(Screen.width/2, Screen.height/2, 0.025f);
+        BgObject.transform.localScale = new Vector3(Screen.width, -Screen.height, 1);
+        MeshRenderer bgRenderer = BgObject.GetComponent<MeshRenderer>();
+        bgRenderer.material = new Material(MainCamera.WindowBgShader);
+        bgRenderer.material.mainTexture = BgTexture;
+        bgRenderer.material.color = new Color(0.25f, 0.25f, 0.25f, 1);
+        
+        MeshRenderer wRenderer = gameObject.AddComponent<MeshRenderer>();
+        MeshFilter wFilter = gameObject.AddComponent<MeshFilter>();
+        Mesh wMesh = new Mesh();
+        wFilter.mesh = wMesh;
+        wRenderer.material = wnd_LMMat;
 
         int vcnt = (8 * Height + 8 * Width + 4 * Width * Height + 4 * 4) // main part
                     + (4 * Width + 4 * Height + 4 * 3)
@@ -82,7 +97,8 @@ public class Window : Widget, IUiEventProcessor
         int shadowOffs = 8;
 
         // main shadow
-        Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, 0, 0, Screen.width, Screen.height, wnd_LM.AtlasRects[0], shadowColor);
+        //Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, 0, 0, Screen.width, Screen.height, wnd_LM.AtlasRects[0], shadowColor);
+        
 
         // add shadow corners
         Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, shadowOffs + oScreenX + Width * 96, shadowOffs + oScreenY - 48, 48, 48, wnd_LM.AtlasRects[3], shadowColor);
@@ -118,10 +134,10 @@ public class Window : Widget, IUiEventProcessor
         Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, oScreenX + Width * 96, oScreenY + Height * 64, 48, 48, wnd_LM.AtlasRects[8], fullColor);
         Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, oScreenX - 48, oScreenY + Height * 64, 48, 48, wnd_LM.AtlasRects[6], fullColor);
 
-        BgMesh.vertices = qv;
-        BgMesh.uv = quv;
-        BgMesh.colors = qc;
-        BgMesh.SetIndices(qt, MeshTopology.Quads, 0);
+        wMesh.vertices = qv;
+        wMesh.uv = quv;
+        wMesh.colors = qc;
+        wMesh.SetIndices(qt, MeshTopology.Quads, 0);
 
         OnStart();
     }

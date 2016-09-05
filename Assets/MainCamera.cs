@@ -26,26 +26,21 @@ public class MainCamera : MonoBehaviour
     public Shader _TerrainShader;
     public Shader _TerrainFOWShader;
     public Shader _BatShader;
+    public Shader _WindowBgShader;
 
     public static Shader MainShader { get { return Instance._MainShader; } }
     public static Shader MainShaderPaletted { get { return Instance._MainShaderPaletted; } }
     public static Shader TerrainShader { get { return Instance._TerrainShader; } }
     public static Shader TerrainFOWShader { get { return Instance._TerrainFOWShader; } }
     public static Shader BatShader { get { return Instance._BatShader; } }
+    public static Shader WindowBgShader { get { return Instance._WindowBgShader; } }
 
     // Use this for initialization
     private AllodsTextRenderer m_fpsr = null;
     private GameObject m_fpso = null;
 
-    public AudioClip testclip = null;
-
     void Start()
     {
-        testclip = Audio.LoadWAV("add.wav");
-        GameObject go = new GameObject();
-        AudioSource goas = go.AddComponent<AudioSource>();
-        goas.PlayOneShot(testclip, 1);
-
         // set w/h to screen res
         Camera cam = GetComponent<Camera>();
         //camera.transform.position = new Vector3(-0.5f, 0.5f);

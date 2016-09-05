@@ -22,6 +22,19 @@ public class MouseCursor : MonoBehaviour {
         }
     }
 
+    public bool Visible
+    {
+        get
+        {
+            return Renderer.enabled;
+        }
+
+        set
+        {
+            Renderer.enabled = value;
+        }
+    }
+
     public static MapCursorSettings CurrentCursor = null;
     public static Texture2D tex = null;
     private static float LastCursorTime = 0;

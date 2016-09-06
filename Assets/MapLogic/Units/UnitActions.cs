@@ -22,8 +22,12 @@ public class IdleAction : IUnitAction
                 Unit.States.RemoveAt(Unit.States.Count - 1);
         }
 
-        if (Unit.Actions.Count != actionsBefore)
+        if (Unit.Actions.Count > actionsBefore) // new actions were added
+        {
+            while (!Unit.Actions.Last().Process())
+                Unit.Actions.RemoveAt(Unit.Actions.Count - 1);
             return true;
+        }
 
         if (Unit.VState != UnitVisualState.Idle && (!NetworkManager.IsClient || Unit.AllowIdle))
         {
@@ -156,9 +160,11 @@ public class MoveAction : IUnitAction
                 FracAdd = (float)Unit.Stats.Speed / 400; // otherwise can be written as speed / 20 / 20.
                 MoveSpeed = (float)Unit.Stats.Speed / 20; // move animation play speed.
             }
-            Frac += FracAdd;
+
+            Frac = Mathf.Clamp01(Frac);
             Unit.FracX = Frac * (TargetX - Unit.X);
             Unit.FracY = Frac * (TargetY - Unit.Y);
+            Frac += FracAdd;
             Unit.DoUpdateView = true;
             Unit.VState = UnitVisualState.Moving;
             if (Unit.Class.MovePhases > 1)

@@ -53,15 +53,14 @@ public class UiManager : MonoBehaviour
 
     private void UpdateTopZ()
     {
-        /*
-        TopZ = MainCamera.InterfaceZ;
+        // this is not needed for drawing anymore, but required for proper UiManager sorting.
+        TopZ = MainCamera.InterfaceZ + 0.25f;
         foreach (MonoBehaviour wnd in Windows)
         {
-            if (wnd.transform.position.z - 0.05f < TopZ)
-                TopZ = wnd.transform.position.z - 0.05f;
-        }*/
+            if (wnd.transform.position.z - 0.001f < TopZ)
+                TopZ = wnd.transform.position.z - 0.001f;
+        }
         // disable all windows except the topmost one
-        TopZ = MainCamera.InterfaceZ + 0.25f;
         if (Windows.Count <= 0) return;
         for (int i = 0; i < Windows.Count - 1; i++)
             Windows[i].gameObject.SetActive(false);
@@ -445,6 +444,13 @@ public class UiManager : MonoBehaviour
             {
                 ProcessorsEnabled.Add(true);
                 enc++;
+                continue;
+            }
+
+            // check if object is active
+            if (!mb.gameObject.activeInHierarchy)
+            {
+                ProcessorsEnabled.Add(false);
                 continue;
             }
 

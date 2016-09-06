@@ -16,6 +16,9 @@ public class Window : Widget, IUiEventProcessor
 
     public GameObject WorkingArea { get; private set; }
 
+    public delegate void ReturnHandler();
+    public ReturnHandler OnReturn = null;
+
     public virtual void OnAwake()
     {
 
@@ -41,14 +44,10 @@ public class Window : Widget, IUiEventProcessor
             wnd_LMMat.SetTexture("_Palette", wnd_LM.OwnPalette);
         }
 
-        transform.parent = UiManager.Instance.transform;
-        transform.localScale = new Vector3(1, 1, 1);
-        transform.position = new Vector3(0, 0, UiManager.Instance.RegisterWindow(this));
-        UiManager.Instance.Subscribe(this);
-
         // init base mesh
         // make screenshot of background.
-        BgTexture = new RenderTexture(Screen.width / 2, Screen.height / 2, 24);
+        // this should be done before everything, otherwise the previous window can't be screenshotted
+        BgTexture = new RenderTexture(Screen.width, Screen.height, 24);
         Camera mc = MainCamera.Instance.GetComponent<Camera>();
         mc.targetTexture = BgTexture;
         bool cvis = MouseCursor.Instance.Visible;
@@ -64,7 +63,13 @@ public class Window : Widget, IUiEventProcessor
         bgRenderer.material = new Material(MainCamera.WindowBgShader);
         bgRenderer.material.mainTexture = BgTexture;
         bgRenderer.material.color = new Color(0.25f, 0.25f, 0.25f, 1);
-        
+
+        // init transform
+        transform.parent = UiManager.Instance.transform;
+        transform.localScale = new Vector3(1, 1, 1);
+        transform.position = new Vector3(0, 0, UiManager.Instance.RegisterWindow(this));
+        UiManager.Instance.Subscribe(this);
+
         MeshRenderer wRenderer = gameObject.AddComponent<MeshRenderer>();
         MeshFilter wFilter = gameObject.AddComponent<MeshFilter>();
         Mesh wMesh = new Mesh();
@@ -75,7 +80,7 @@ public class Window : Widget, IUiEventProcessor
                     + (4 * Width + 4 * Height + 4 * 3)
                     + 4; // shadow border
         Color fullColor = new Color(1, 1, 1, 1);
-        Color shadowColor = new Color(0, 0, 0, 0.5f);
+        Color shadowColor = new Color(0, 0, 0, 0.25f);
         Vector3[] qv = new Vector3[vcnt];
         Vector2[] quv = new Vector2[vcnt];
         Color[] qc = new Color[vcnt];
@@ -160,6 +165,10 @@ public class Window : Widget, IUiEventProcessor
                 case KeyCode.Tab:
                     // advance child focus
                     AdvanceWidgetFocus(WorkingArea.transform, !e.shift);
+                    break;
+                case KeyCode.Return:
+                case KeyCode.KeypadEnter:
+                    if (OnReturn != null) OnReturn();
                     break;
             }
         }

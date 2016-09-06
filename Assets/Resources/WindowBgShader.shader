@@ -84,7 +84,7 @@
 						wcoord.y >= ClipArea[1] + ClipArea[3]) discard;
 				}
 
-			half2 tuv = half2(1.0 / (_ScreenParams.xy / 2));
+			half2 tuv = half2(1.0 / (_ScreenParams.xy));
 			half4 col = half4(0, 0, 0, 0);
 			for (int y = -1; y <= 1; y++)
 			{

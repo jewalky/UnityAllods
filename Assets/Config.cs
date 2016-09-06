@@ -50,8 +50,9 @@ public class Config
     public static void Save()
     {
         // write file with current values
-        using (FileStream fs = File.OpenWrite("unityallods.cfg"))
+        using (FileStream fs = File.Open("unityallods.cfg", FileMode.Create))
         {
+            
             StreamWriter sw = new StreamWriter(fs);
             PropertyInfo[] configFields = typeof(Config).GetProperties(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
             foreach (PropertyInfo field in configFields)

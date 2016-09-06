@@ -45,6 +45,7 @@ public class ExampleWindow : Window
         m_Button.Width = 128;
         m_Button.Height = 24;
         m_Button.Text = "CLICK";
+        m_Button.OnClick = OnButtonClick;
 
         m_Checkbox = Utils.CreateObjectWithScript<CheckBox>();
         m_Checkbox.transform.parent = WorkingArea.transform;
@@ -59,5 +60,10 @@ public class ExampleWindow : Window
     public void Update()
     {
         
+    }
+
+    public void OnButtonClick()
+    {
+        MessageBox.Show("Жопа. Жопа жопа жопа жопа жопа жопа ЖОПА ЖОПА ЖОПА ЖОПА.", MessageBox.ButtonsType.Ok);
     }
 }

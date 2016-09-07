@@ -153,6 +153,7 @@ public class UiManager : MonoBehaviour
         float doStartDragX = lastMouseX;
         float doStartDragY = lastMouseY;
         Vector2 mPos = Utils.GetMousePosition();
+        Object mProcessor = null;
         /*if (mPos.x != lastMouseX ||
             mPos.y != lastMouseY)*/
         {
@@ -170,7 +171,10 @@ public class UiManager : MonoBehaviour
                 // check if processor's renderer is enabled. implicitly don't give any events to invisible objects.
                 if (!ProcessorsEnabled[i]) continue;
                 if (((IUiEventProcessor)Processors[i]).ProcessEvent(ef))
+                {
+                    mProcessor = Processors[i];
                     break;
+                }
             }
 
             if (lastMouseX != mPos.x ||
@@ -188,26 +192,22 @@ public class UiManager : MonoBehaviour
         // process drag-drop for items.
         // first ask every element if they can process the drop.
         bool dragProcessed = false;
-        for (int i = Processors.Count - 1; i >= 0; i--)
+        //for (int i = Processors.Count - 1; i >= 0; i--)
+        if (mProcessor != null && mProcessor is IUiItemDragger)
         {
-            if (!ProcessorsEnabled[i]) continue;
-            if (!(Processors[i] is IUiItemDragger)) continue;
-
-            _CurrentDragDragger = (IUiItemDragger)Processors[i];
+            _CurrentDragDragger = (IUiItemDragger)mProcessor;
 
             // start dragging if coordinates changed with mouse button pressed.
             // don't call doStartDrag further if one of the widgets has processed it.
-            if (doStartDrag && ((IUiItemDragger)Processors[i]).ProcessStartDrag(doStartDragX, doStartDragY))
+            if (doStartDrag && _CurrentDragDragger.ProcessStartDrag(doStartDragX, doStartDragY))
             {
                 doStartDrag = false;
                 _CurrentDragDragger = null;
-                break;
+                goto NoDrag;
             }
 
-            _CurrentDragDragger = null;
-
             // process already done dragging (if any)
-            if (DragItem != null && ((IUiItemDragger)Processors[i]).ProcessDrag(DragItem, mPos.x, mPos.y))
+            if (DragItem != null && _CurrentDragDragger.ProcessDrag(DragItem, mPos.x, mPos.y))
             {
                 dragProcessed = true;
                 // check drop. if drop is done and processed, we should complete dragging.
@@ -221,10 +221,11 @@ public class UiManager : MonoBehaviour
                     if (newItem == null)
                     {
                         CancelDrag();
-                        continue;
+                        _CurrentDragDragger = null;
+                        goto NoDrag;
                     }
 
-                    if (((IUiItemDragger)Processors[i]).ProcessDrop(newItem, mPos.x, mPos.y))
+                    if (_CurrentDragDragger.ProcessDrop(newItem, mPos.x, mPos.y))
                     {
                         _DragDragger.ProcessEndDrag();
                         DragItem = null;
@@ -234,7 +235,11 @@ public class UiManager : MonoBehaviour
                     }
                 }
             }
+
+            _CurrentDragDragger = null;
         }
+
+        NoDrag:
 
         if (DragItem != null)
         {

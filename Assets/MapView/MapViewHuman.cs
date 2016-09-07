@@ -408,6 +408,8 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
     {
         if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
             return false;
+        if (!LogicHuman.IsItemUsable(item))
+            return false;
         return true; // allow drag if this unit belongs to console player
     }
 

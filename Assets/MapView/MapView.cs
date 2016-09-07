@@ -697,6 +697,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         else if (e.rawType == EventType.MouseMove)
         {
             UpdateInput();
+            return true;
         }
         else if (e.rawType == EventType.MouseDown && e.button == 0)
         {
@@ -734,11 +735,14 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                     }
                 }
             }
+
+            return true;
         }
         else if (e.rawType == EventType.MouseDown && e.button == 1)
         {
             SelectedObject = null; // deselect
             Commandbar.EnabledCommands = 0;
+            return true;
         }
 
         return false;

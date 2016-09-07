@@ -154,6 +154,22 @@ namespace ServerCommands
         [ProtoMember(8)]
         public int Count;
 
+        private Item GetItem(MapUnit unit)
+        {
+            Item item = null;
+            switch (Source)
+            {
+                case ItemMoveLocation.UnitBody:
+                    item = unit.GetItemFromBody((MapUnit.BodySlot)SourceIndex);
+                    break;
+                case ItemMoveLocation.UnitPack:
+                    item = unit.ItemsPack[SourceIndex];
+                    break;
+            }
+
+            return item;
+        }
+
         private Item TakeItem(MapUnit unit)
         {
             Item item = null;
@@ -191,6 +207,7 @@ namespace ServerCommands
             {
                 case ItemMoveLocation.UnitBody:
                     if (unit == null) return true;
+                    item = GetItem(unit);
                     if (!unit.IsItemUsable(item)) return true; // can't use
                     item = TakeItem(unit);
                     if (item == null) return true;

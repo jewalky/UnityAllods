@@ -62,7 +62,7 @@ public class Window : Widget, IUiEventProcessor
         MeshRenderer bgRenderer = BgObject.GetComponent<MeshRenderer>();
         bgRenderer.material = new Material(MainCamera.WindowBgShader);
         bgRenderer.material.mainTexture = BgTexture;
-        bgRenderer.material.color = new Color(0.25f, 0.25f, 0.25f, 1);
+        bgRenderer.material.color = new Color(0.15f, 0.15f, 0.15f, 1);
 
         // init transform
         transform.parent = UiManager.Instance.transform;

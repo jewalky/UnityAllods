@@ -124,6 +124,8 @@ public class MapHuman : MapUnit
 
     public override bool IsItemUsable(Item item)
     {
+        if (item == null)
+            return false;
         if (!item.IsValid)
             return false;
         if (((Gender & GenderFlags.Mage) != 0) && !item.Class.UsableMage)

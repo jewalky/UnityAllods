@@ -40,6 +40,8 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
     // buttons
     private static Texture2D BTextMode;
     private static Texture2D BHumanMode;
+    private static Texture2D BPackOpen;
+    private static Texture2D BPackClosed;
 
     private GameObject HBackRObject;
     private GameObject HBackLObject;
@@ -51,6 +53,8 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
     // buttons
     private GameObject BTextModeObject;
     private GameObject BHumanModeObject;
+    private GameObject BPackOpenObject;
+    private GameObject BPackClosedObject;
 
     // black quad for <=768 video modes
     private GameObject BlackQuad;
@@ -102,6 +106,8 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
 
         if (BTextMode == null) BTextMode = Images.LoadImage("graphics/interface/textmode.bmp", 0, Images.ImageType.AllodsBMP);
         if (BHumanMode == null) BHumanMode = Images.LoadImage("graphics/interface/humanmode.bmp", 0, Images.ImageType.AllodsBMP);
+        if (BPackOpen == null) BPackOpen = Images.LoadImage("graphics/interface/backpackop.bmp", 0, Images.ImageType.AllodsBMP);
+        if (BPackClosed == null) BPackClosed = Images.LoadImage("graphics/interface/backpackcl.bmp", 0, Images.ImageType.AllodsBMP);
 
         transform.localScale = new Vector3(1, 1, 0.01f);
         transform.localPosition = new Vector3(Screen.width - 176, 238, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
@@ -184,6 +190,16 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
             BlackQuad.transform.localScale = new Vector3(1, 1, 1);
             BlackQuad.transform.localPosition = new Vector3(TBackL.width, 0, 0.002f);
         }
+
+        // these buttons are present in any resolution
+        // backpack open/closed button
+        Utils.MakeTexturedQuad(out BPackOpenObject, BPackOpen);
+        Utils.MakeTexturedQuad(out BPackClosedObject, BPackClosed);
+        BPackOpenObject.transform.parent = BPackClosedObject.transform.parent = transform;
+        BPackOpenObject.transform.localScale = BPackClosedObject.transform.localScale = new Vector3(1, 1, 1);
+        BPackOpenObject.transform.localPosition = new Vector3(16, 208, -0.002f);
+        BPackClosedObject.transform.localPosition = new Vector3(17, 201, -0.002f);
+        BPackOpenObject.SetActive(false);
     }
 
     public void OnDestroy()
@@ -223,6 +239,17 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
                         IsHumanMode = !IsHumanMode;
                     }
                 }
+
+                if (BPackOpenObject != null)
+                {
+                    if (new Rect(BPackOpenObject.transform.localPosition.x,
+                                 BPackOpenObject.transform.localPosition.y,
+                                 BPackOpen.width, BPackOpen.height).Contains(mPosLocal))
+                    {
+                        // switch to open inventory.
+                        MapView.Instance.InventoryVisible = !MapView.Instance.InventoryVisible;
+                    }
+                }
             }
 
             // check if event was inside view pic
@@ -258,6 +285,13 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
             Viewer.DisplayPic((BHumanModeObject == null || HumanMode), HBackRObject.transform);
             Viewer.DisplayInfo((BHumanModeObject == null || !HumanMode), TBackRObject.transform);
             Viewer.GetObject().DoUpdateInfo = false;
+        }
+
+        if (BPackOpenObject != null && BPackClosedObject != null)
+        {
+            bool invopen = MapView.Instance.InventoryVisible;
+            BPackOpenObject.SetActive(invopen);
+            BPackClosedObject.SetActive(!invopen);
         }
     }
 

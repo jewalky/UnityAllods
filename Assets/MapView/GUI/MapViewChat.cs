@@ -159,6 +159,14 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
     public void Update()
     {
         UpdateChatMessages();
+
+        if (MapLogic.Instance.IsLoaded)
+        {
+            int dst = 0;
+            if (MapView.Instance.InventoryVisible)
+                dst += 90;
+            ChatField.transform.localPosition = new Vector3(2, Screen.height - Fonts.Font1.LineHeight - 2 - dst, -0.001f);
+        }
     }
 
     public bool ProcessEvent(Event e)

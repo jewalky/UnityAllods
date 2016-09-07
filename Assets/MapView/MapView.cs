@@ -535,12 +535,26 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
     int WaterAnimFrame = 0;
     float scrollTimer = 0;
 
+    private bool _InventoryVisible;
+    public bool InventoryVisible
+    {
+        get
+        {
+            return (_InventoryVisible && MapLogic.Instance.IsLoaded);
+        }
+
+        set
+        {
+            _InventoryVisible = value;
+        }
+    }
+
     void Update()
     {
         MiniMap.gameObject.SetActive(MapLogic.Instance.IsLoaded);
         Commandbar.gameObject.SetActive(MapLogic.Instance.IsLoaded);
         Infowindow.gameObject.SetActive(MapLogic.Instance.IsLoaded);
-        Inventory.gameObject.SetActive(MapLogic.Instance.IsLoaded);
+        Inventory.gameObject.SetActive(InventoryVisible);
 
         if (!MapLogic.Instance.IsLoaded)
             return;
@@ -639,7 +653,22 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                     }
                     return true;
                 case KeyCode.Space:
-                    Client.SendRespawn();
+                    // check if local unit is dead.
+                    // for dead local unit, space sends respawn.
+                    // for alive local unit, space toggles both spellbook and inventory.
+                    if (MapLogic.Instance.ConsolePlayer != null &&
+                        !MapLogic.Instance.ConsolePlayer.Avatar.IsAlive)
+                    {
+                        Client.SendRespawn();
+                    }
+                    else
+                    {
+                        bool cstate = InventoryVisible; // && SpellbookVisible
+                        InventoryVisible = !cstate;
+                    }
+                    return true;
+                case KeyCode.BackQuote:
+                    InventoryVisible = !InventoryVisible;
                     return true;
             }
         }

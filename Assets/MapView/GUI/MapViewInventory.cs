@@ -18,7 +18,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
     private static Texture2D InvArrow2 = null;
     private static Texture2D InvArrow3 = null;
     private static Texture2D InvArrow4 = null;
-
+    
     public void Awake()
     {
         int itemCount = (Screen.width - 176 - 64) / 80; // each arrow is 32 in width

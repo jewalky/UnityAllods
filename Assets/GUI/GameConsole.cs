@@ -97,8 +97,10 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
 
     public bool ProcessEvent(Event e)
     {
-        if (e.type == EventType.KeyDown &&
-            e.keyCode == KeyCode.BackQuote)
+        if ((e.type == EventType.KeyDown &&
+             e.keyCode == KeyCode.BackQuote && e.shift) ||
+            (e.type == EventType.KeyDown &&
+             (e.keyCode == KeyCode.BackQuote || e.keyCode == KeyCode.Escape) && ConsoleActive))
         {
             ConsoleActive = !ConsoleActive;
             if (ConsoleActive)

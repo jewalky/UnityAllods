@@ -191,6 +191,7 @@ namespace ServerCommands
             {
                 case ItemMoveLocation.UnitBody:
                     if (unit == null) return true;
+                    if (!unit.IsItemUsable(item)) return true; // can't use
                     item = TakeItem(unit);
                     if (item == null) return true;
                     unit.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);

@@ -439,6 +439,8 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
     {
         if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
             return false;
+        if (!LogicHuman.IsItemUsable(item))
+            return false;
         SendItemMoveCommand(item);
         // put item to body
         LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
@@ -464,6 +466,8 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
     public bool ProcessAutoDrop(Item item)
     {
         if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
+            return false;
+        if (!LogicHuman.IsItemUsable(item))
             return false;
         SendItemMoveCommand(item);
         // put item to body

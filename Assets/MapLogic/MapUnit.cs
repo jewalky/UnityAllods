@@ -432,6 +432,13 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         return ItemsBody.FindItemBySlot(slot);
     }
 
+    public virtual bool IsItemUsable(Item item)
+    {
+        if (!item.IsValid)
+            return false;
+        return true;
+    }
+
     public void PutItemToBody(BodySlot slot, Item item)
     {
         // unequip existing item on specified slot

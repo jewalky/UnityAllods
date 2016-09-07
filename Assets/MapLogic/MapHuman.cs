@@ -113,12 +113,24 @@ public class MapHuman : MapUnit
             ItemsPack.PutItem(ItemsPack.Count, new Item("Potion Body"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Plate Cuirass {body=4}"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Plate Cuirass {body=4}"));
+            ItemsPack.PutItem(ItemsPack.Count, new Item("Wood Shaman Staff {castSpell=Diamond_Dust:100}"));
             /*                    MapProjectile proj = new MapProjectile(15);
                     proj.SetPosition(16, 16, 0);
                     proj.Target = ConsolePlayer.Avatar;
                     Objects.Add(proj);
 */          ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Crossbow"));
         }
+    }
+
+    public override bool IsItemUsable(Item item)
+    {
+        if (!item.IsValid)
+            return false;
+        if (((Gender & GenderFlags.Mage) != 0) && !item.Class.UsableMage)
+            return false;
+        if (((Gender & GenderFlags.Fighter) != 0) && !item.Class.UsableFighter)
+            return false;
+        return true;
     }
 
     // these functions are used in ROM2

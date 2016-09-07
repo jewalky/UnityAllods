@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection;
 using UnityEngine;
+using Spells;
 
 public class Spell
 {
@@ -42,14 +44,16 @@ public class Spell
     }
 
     public MapUnit User = null;
+    public Item Item = null;
     public Templates.TplSpell Template;
+    public int SpellID = 0;
 
     private int OwnSkill = 0;
     public int Skill
     {
         get
         {
-            if (User != null)
+            if (User != null && Item == null)
             {
                 switch (Template.Sphere)
                 {
@@ -80,8 +84,29 @@ public class Spell
 
     public Spell(int id)
     {
-        Template = TemplateLoader.GetSpellById(id);
+        SpellID = id;
+        Template = TemplateLoader.GetSpellById(id-1);
         if (Template == null)
             Debug.LogFormat("Invalid spell created (id={0})", id);
+    }
+
+    public SpellProc Cast(int tgX, int tgY, MapUnit tgUnit = null)
+    {
+        // find spellproc instance for this spell
+        // 
+        Type spt = SpellProc.FindProcTypeFromSpell(this);
+        if (spt == null)
+            return null;
+
+        try
+        {
+            ConstructorInfo ci = spt.GetConstructor(new Type[] { typeof(Spell), typeof(int), typeof(int), typeof(MapUnit) });
+            SpellProc sp = (SpellProc)ci.Invoke(new object[] { this, tgX, tgY, tgUnit });
+            return sp;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 }

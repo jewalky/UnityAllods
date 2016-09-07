@@ -2,6 +2,7 @@
 using System.Linq;
 using ProtoBuf;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class IdleAction : IUnitAction
 {
@@ -255,6 +256,34 @@ public class AttackAction : IUnitAction
             // check if we need to fire a projectile (range)
             AllodsProjectile proj = AllodsProjectile.None; // default :D
 
+            // check for castspell in weapon.
+            // check for weapon.
+            List<Spell> castspells = new List<Spell>();
+            bool procoverride = false;
+            if (Unit.GetObjectType() == MapObjectType.Human)
+            {
+                Item weapon = ((MapHuman)Unit).GetItemFromBody(MapUnit.BodySlot.Weapon);
+                // if weapon is a staff, then castspell is called immediately.
+                // otherwise castspell is only applied when the projectile hits.
+                if (weapon != null && weapon.IsValid)
+                {
+                    foreach (ItemEffect eff in weapon.Effects)
+                    {
+                        if (eff.Type1 == ItemEffect.Effects.CastSpell)
+                        {
+                            Spell sp = new Spell(eff.Value1);
+                            sp.Skill = eff.Value2;
+                            sp.User = Unit;
+                            sp.Item = weapon;
+                            castspells.Add(sp);
+                        }
+                    }
+
+                    if (weapon.Class.Option.Name == "Staff" || weapon.Class.Option.Name == "Shaman Staff")
+                        procoverride = true;
+                }
+            }
+
             if (Unit.Interaction.GetAttackRange() > 1)
             {
                 // send this projectile to clients too
@@ -262,48 +291,62 @@ public class AttackAction : IUnitAction
                 proj = (AllodsProjectile)Unit.Class.Projectile;
             }
 
-            if (proj != AllodsProjectile.None)
+            if (!procoverride)
             {
-                // following offsets are based on unit's width, height and center
-                float cX = Unit.X + Unit.Width * 0.5f + Unit.FracX;
-                float cY = Unit.Y + Unit.Height * 0.5f + Unit.FracY;
+                if (proj != AllodsProjectile.None)
+                {
+                    // following offsets are based on unit's width, height and center
+                    float cX = Unit.X + Unit.Width * 0.5f + Unit.FracX;
+                    float cY = Unit.Y + Unit.Height * 0.5f + Unit.FracY;
 
-                float tX = TargetUnit.X + TargetUnit.Width * 0.5f + TargetUnit.FracX;
-                float tY = TargetUnit.Y + TargetUnit.Height * 0.5f + TargetUnit.FracY;
+                    float tX = TargetUnit.X + TargetUnit.Width * 0.5f + TargetUnit.FracX;
+                    float tY = TargetUnit.Y + TargetUnit.Height * 0.5f + TargetUnit.FracY;
 
-                Vector2 dir = new Vector2(tX - cX, tY - cY).normalized * ((Unit.Width + Unit.Height) / 2) / 1.5f;
-                cX += dir.x;
-                cY += dir.y;
+                    Vector2 dir = new Vector2(tX - cX, tY - cY).normalized * ((Unit.Width + Unit.Height) / 2) / 1.5f;
+                    cX += dir.x;
+                    cY += dir.y;
 
-                Server.SpawnProjectileDirectional(proj, Unit, cX, cY, 0,
-                                                              tX, tY, 0,
-                                                              10,
-                                                              (MapProjectile fproj) =>
-                                                              {
-                                                                  if (fproj.ProjectileX >= TargetUnit.X + TargetUnit.FracX &&
-                                                                      fproj.ProjectileY >= TargetUnit.Y + TargetUnit.FracY &&
-                                                                      fproj.ProjectileX < TargetUnit.X + TargetUnit.FracX + TargetUnit.Width &&
-                                                                      fproj.ProjectileY < TargetUnit.Y + TargetUnit.FracY + TargetUnit.Height)
+                    Server.SpawnProjectileDirectional(proj, Unit, cX, cY, 0,
+                                                                  tX, tY, 0,
+                                                                  10,
+                                                                  (MapProjectile fproj) =>
                                                                   {
-                                                                      //Debug.LogFormat("projectile hit!");
-                                                                      // done, make damage
-                                                                      if (TargetUnit.TakeDamage(DamageFlags, Unit, Damage) > 0)
+                                                                      if (fproj.ProjectileX >= TargetUnit.X + TargetUnit.FracX &&
+                                                                          fproj.ProjectileY >= TargetUnit.Y + TargetUnit.FracY &&
+                                                                          fproj.ProjectileX < TargetUnit.X + TargetUnit.FracX + TargetUnit.Width &&
+                                                                          fproj.ProjectileY < TargetUnit.Y + TargetUnit.FracY + TargetUnit.Height)
                                                                       {
-                                                                          TargetUnit.DoUpdateInfo = true;
-                                                                          TargetUnit.DoUpdateView = true;
+                                                                          //Debug.LogFormat("projectile hit!");
+                                                                          // done, make damage
+                                                                          if (TargetUnit.TakeDamage(DamageFlags, Unit, Damage) > 0)
+                                                                          {
+                                                                              TargetUnit.DoUpdateInfo = true;
+                                                                              TargetUnit.DoUpdateView = true;
+                                                                          }
                                                                       }
-                                                                  }
 
-                                                                  fproj.Dispose();
-                                                                  MapLogic.Instance.Objects.Remove(fproj);
-                                                              });
+                                                                      fproj.Dispose();
+                                                                      MapLogic.Instance.Objects.Remove(fproj);
+                                                                  });
+                }
+                else
+                {
+                    if (TargetUnit.TakeDamage(DamageFlags, Unit, Damage) > 0)
+                    {
+                        TargetUnit.DoUpdateInfo = true;
+                        TargetUnit.DoUpdateView = true;
+                    }
+                }
             }
             else
             {
-                if (TargetUnit.TakeDamage(DamageFlags, Unit, Damage) > 0)
+                // cast spells directly
+                // just do something atm.
+                // todo: check spells that can be only casted on self (distance 0).
+                foreach (Spell spell in castspells)
                 {
-                    TargetUnit.DoUpdateInfo = true;
-                    TargetUnit.DoUpdateView = true;
+                    Spells.SpellProc sp = spell.Cast(TargetUnit.X + TargetUnit.Width / 2, TargetUnit.Y + TargetUnit.Height / 2, TargetUnit);
+                    if (sp != null) Unit.AddSpellEffects(sp);
                 }
             }
 

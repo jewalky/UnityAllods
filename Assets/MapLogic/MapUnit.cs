@@ -75,6 +75,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public bool IsDying = false;
     public List<IUnitAction> Actions = new List<IUnitAction>();
     public List<IUnitState> States = new List<IUnitState>();
+    public List<Spells.SpellProc> SpellEffects = new List<Spells.SpellProc>();
     public UnitVisualState VState = UnitVisualState.Idle;
     public bool AllowIdle = false;
     public int IdleFrame = 0;
@@ -262,6 +263,11 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         UpdateNetVisibility();
 
+        // process spell effects
+        while (SpellEffects.Count > 0 && !SpellEffects.Last().Process())
+            SpellEffects.RemoveAt(SpellEffects.Count - 1);
+
+        // process actions
         while (!Actions.Last().Process())
             Actions.RemoveAt(Actions.Count - 1);
 
@@ -399,6 +405,12 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             Actions.Add(states[i]);
         if (NetworkManager.IsServer)
             Server.NotifyAddUnitActions(this, states);
+    }
+
+    public void AddSpellEffects(params Spells.SpellProc[] effects)
+    {
+        for (int i = 0; i < effects.Length; i++)
+            SpellEffects.Add(effects[i]);
     }
 
     public void SetState(IUnitState state)

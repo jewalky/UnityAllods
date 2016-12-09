@@ -23,6 +23,7 @@ public class MapProjectileLogicHoming : IMapProjectileLogic
     public MapProjectileLogicHoming(MapUnit target, float speed)
     {
         Target = target;
+        Speed = speed;
     }
 
     public void SetProjectile(MapProjectile proj)

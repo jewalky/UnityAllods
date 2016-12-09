@@ -142,7 +142,7 @@ namespace Spells
 
             Server.SpawnProjectileHoming(type, Spell.User, cX, cY, 0,
                                             TargetUnit,
-                                            10,
+                                            speed,
                                             (MapProjectile fproj) =>
                                             {
                                                 //Debug.LogFormat("spell projectile hit!");

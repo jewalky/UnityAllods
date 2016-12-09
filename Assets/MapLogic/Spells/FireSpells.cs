@@ -14,6 +14,9 @@ namespace Spells
 
         public override bool Process()
         {
+            if (NetworkManager.IsClient)
+                return false;
+
             SpawnProjectile(AllodsProjectile.FireArrow, 10, 20);
             return false;
         }
@@ -26,6 +29,9 @@ namespace Spells
 
         public override bool Process()
         {
+            if (NetworkManager.IsClient)
+                return false;
+
             int ballDamage = 16;
 
             // here SpawnProjectile is basically duplicated. except some functions that aren't needed.

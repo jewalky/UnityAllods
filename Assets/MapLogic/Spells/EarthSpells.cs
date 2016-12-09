@@ -14,6 +14,9 @@ namespace Spells
 
         public override bool Process()
         {
+            if (NetworkManager.IsClient)
+                return false;
+
             SpawnProjectile(AllodsProjectile.DiamondDust, 10, 20);
             return false;
         }

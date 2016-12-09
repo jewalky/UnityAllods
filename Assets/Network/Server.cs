@@ -429,9 +429,12 @@ public class Server
                     continue;
 
                 Player p = MapLogic.Instance.GetNetPlayer(client);
-                MapObject sourceObj = (MapObject)source;
-                if (!sourceObj.IsVisibleForNetPlayer(p))
-                    ObjectBecameVisible(p, sourceObj); // force keyframe update for source unit
+                if (source != null)
+                {
+                    MapObject sourceObj = (MapObject)source;
+                    if (!sourceObj.IsVisibleForNetPlayer(p))
+                        ObjectBecameVisible(p, sourceObj); // force keyframe update for source unit
+                }
 
                 ClientCommands.AddProjectileHoming app;
                 app.X = x;
@@ -468,9 +471,12 @@ public class Server
                     continue;
 
                 Player p = MapLogic.Instance.GetNetPlayer(client);
-                MapObject sourceObj = (MapObject)source;
-                if (!sourceObj.IsVisibleForNetPlayer(p))
-                    ObjectBecameVisible(p, sourceObj); // force keyframe update for source unit
+                if (source != null)
+                {
+                    MapObject sourceObj = (MapObject)source;
+                    if (!sourceObj.IsVisibleForNetPlayer(p))
+                        ObjectBecameVisible(p, sourceObj); // force keyframe update for source unit
+                }
 
                 ClientCommands.AddProjectileDirectional app;
                 app.X = x;
@@ -509,9 +515,12 @@ public class Server
                     continue;
 
                 Player p = MapLogic.Instance.GetNetPlayer(client);
-                MapObject sourceObj = (MapObject)source;
-                if (!sourceObj.IsVisibleForNetPlayer(p))
-                    ObjectBecameVisible(p, sourceObj); // force keyframe update for source unit
+                if (source != null)
+                {
+                    MapObject sourceObj = (MapObject)source;
+                    if (!sourceObj.IsVisibleForNetPlayer(p))
+                        ObjectBecameVisible(p, sourceObj); // force keyframe update for source unit
+                }
 
                 ClientCommands.AddProjectileSimple app;
                 app.X = x;

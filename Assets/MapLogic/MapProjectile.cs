@@ -121,6 +121,37 @@ public class MapProjectileLogicDirectional : IMapProjectileLogic
     }
 }
 
+// MapProjectileLogicSimple = a projectile that is used for sfx, not as actual projectile. this plays an animation.
+public class MapProjectileLogicSimple : IMapProjectileLogic
+{
+    MapProjectile Projectile = null;
+    float AnimationSpeed;
+    int Timer = 0;
+
+    public MapProjectileLogicSimple(float animspeed = 0.5f)
+    {
+        AnimationSpeed = animspeed;
+    }
+
+    public void SetProjectile(MapProjectile proj)
+    {
+        Projectile = proj;
+    }
+
+    public bool Update()
+    {
+        int frame = (int)(Timer * AnimationSpeed);
+        if (frame < 0) frame = 0; // shouldn't happen though
+        if (frame >= Projectile.Class.Phases)
+            return false;
+        Projectile.CurrentFrame = frame;
+        Projectile.CurrentTics = 0;
+        Projectile.DoUpdateView = true;
+        Timer++;
+        return true;
+    }
+}
+
 // human readable enum of projectile IDs for use with spells and such
 public enum AllodsProjectile
 {
@@ -309,6 +340,11 @@ public class MapProjectile : MapObject, IDynlight
             {
                 if (Callback != null)
                     Callback(this);
+                else
+                {
+                    Dispose();
+                    return;
+                }
                 Logic = null; // logic done
             }
         }

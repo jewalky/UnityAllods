@@ -113,7 +113,7 @@ public class MapHuman : MapUnit
             ItemsPack.PutItem(ItemsPack.Count, new Item("Potion Body"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Plate Cuirass {body=4}"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Plate Cuirass {body=4}"));
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Wood Shaman Staff {castSpell=Diamond_Dust:100}"));
+            ItemsPack.PutItem(ItemsPack.Count, new Item("Wood Shaman Staff {castSpell=Fire_Ball:100}"));
             /*                    MapProjectile proj = new MapProjectile(15);
                     proj.SetPosition(16, 16, 0);
                     proj.Target = ConsolePlayer.Avatar;

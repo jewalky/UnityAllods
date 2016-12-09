@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-public class MapObstacle : MapObject
+public class MapObstacle : MapObject, IVulnerable
 {
     public override MapObjectType GetObjectType() { return MapObjectType.Obstacle; }
     protected override Type GetGameObjectType() { return typeof(MapViewObstacle); }
@@ -9,6 +9,7 @@ public class MapObstacle : MapObject
     public ObstacleClass Class = null;
     public int CurrentFrame = 0;
     public int CurrentTime = 0;
+    public bool IsDead = false;
 
     public MapObstacle(int typeId)
     {
@@ -54,5 +55,31 @@ public class MapObstacle : MapObject
     public override MapNodeFlags GetNodeLinkFlags(int x, int y)
     {
         return MapNodeFlags.DynamicGround;
+    }
+
+    public int TakeDamage(DamageFlags flags, MapUnit source, int count)
+    {
+        if ((flags & DamageFlags.Fire) == 0)
+            return 0;
+
+        // check if "alive"
+        if (IsDead || Class.DeadObject < 0 || Class.DeadObject == Class.ID)
+            return 0;
+
+        IsDead = true;
+
+        // spawn dead sfx.
+        Server.SpawnProjectileSimple(AllodsProjectile.FireWall, null, X + 0.5f, Y + 0.5f, 0, 1);
+
+        // set current class id to deadobject.
+        ObstacleClass deadClass = ObstacleClassLoader.GetObstacleClassById(Class.DeadObject);
+        if (deadClass == null)
+            return 0;
+
+        Class = deadClass;
+        CurrentFrame = 0;
+        CurrentTime = 0;
+        DoUpdateView = true;
+        return count;
     }
 }

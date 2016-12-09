@@ -409,9 +409,9 @@ public class Server
         SpawnProjectileDirectional((int)id, source, x, y, z, tgx, tgy, tgz, speed, cb);
     }
 
-    public static void SpawnProjectileSimple(AllodsProjectile id, IPlayerPawn source, float x, float y, float z)
+    public static void SpawnProjectileSimple(AllodsProjectile id, IPlayerPawn source, float x, float y, float z, float animspeed = 0.5f)
     {
-        SpawnProjectileSimple((int)id, source, x, y, z);
+        SpawnProjectileSimple((int)id, source, x, y, z, animspeed);
     }
 
     public static void SpawnProjectileHoming(int id, IPlayerPawn source, float x, float y, float z, MapUnit target, float speed, MapProjectileCallback cb = null)
@@ -494,9 +494,9 @@ public class Server
         }
     }
 
-    public static void SpawnProjectileSimple(int id, IPlayerPawn source, float x, float y, float z)
+    public static void SpawnProjectileSimple(int id, IPlayerPawn source, float x, float y, float z, float animspeed = 0.5f)
     {
-        MapProjectile proj = new MapProjectile(id, source, null, null); // this is usually SFX like stuff. projectile plays animation based on typeid and stops.
+        MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicSimple(animspeed), null); // this is usually SFX like stuff. projectile plays animation based on typeid and stops.
         proj.SetPosition(x, y, z);
         MapLogic.Instance.Objects.Add(proj);
         // todo notify clients

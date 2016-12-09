@@ -120,7 +120,7 @@ public class MapViewObstacle : MapViewObject, IObjectManualUpdate
 
             Images.AllodsSpriteSeparate sprites = LogicObstacle.Class.File.File;
 
-            if (!spriteSet)
+            if (sprites == null || !spriteSet)
             {
                 LogicObstacle.Class.File.UpdateSprite();
                 sprites = LogicObstacle.Class.File.File;

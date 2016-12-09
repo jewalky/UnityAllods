@@ -16,7 +16,7 @@ public class Spell
         Fire_Ball,
         Wall_of_Fire,
         Protection_from_Fire,
-        Ice_Arrow,
+        Ice_Missile,
         Poison_Cloud,
         Blizzard,
         Protection_from_Water,

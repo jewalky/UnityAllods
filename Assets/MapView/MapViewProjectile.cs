@@ -164,7 +164,7 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
 
             Images.AllodsSprite sprites = LogicProjectile.Class.File;
 
-            if (!spriteSet)
+            if (sprites == null || !spriteSet)
             {
                 if (LogicProjectile.Class.ID == 7) // bat_sonic attack, apparently hardcoded
                 {

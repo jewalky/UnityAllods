@@ -163,7 +163,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
                 for (int lx = 0; lx < InvWidth; lx++)
                 {
                     AllodsTextRenderer atr = new AllodsTextRenderer(Fonts.Font2);
-                    atr.Text = "meow";
+                    atr.Text = "";
                     atr.Material.color = new Color32(0xBD, 0x9E, 0x4A, 0xFF);
                     GameObject go = atr.GetNewGameObject(0.01f, transform, 100, 0.01f);
                     TextObjects.Add(go);

@@ -72,6 +72,32 @@ namespace Spells
         {
             return false;
         }
+
+        public static DamageFlags SphereToDamageFlags(Spell sp)
+        {
+            DamageFlags spdf = 0;
+            // set damage flags depending on spell sphere
+            switch (sp.Template.Sphere)
+            {
+                case 1:
+                    spdf |= DamageFlags.Fire;
+                    break;
+                case 2:
+                    spdf |= DamageFlags.Water;
+                    break;
+                case 3:
+                    spdf |= DamageFlags.Air;
+                    break;
+                case 4:
+                    spdf |= DamageFlags.Earth;
+                    break;
+                case 5:
+                    spdf |= DamageFlags.Astral;
+                    break;
+            }
+
+            return spdf;
+        }
     }
 
     // this is the base class used for
@@ -83,6 +109,7 @@ namespace Spells
     {
         public SpellProcProjectileGeneric(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
 
+        // this should only be called for arrows (i.e. homing projectiles), with TargetUnit set.
         protected void SpawnProjectile(AllodsProjectile type, int speed, int damage)
         {
             // following offsets are based on unit's width, height and center
@@ -113,85 +140,24 @@ namespace Spells
                 cY = tY;
             }
 
-            Server.SpawnProjectileDirectional(type, Spell.User, cX, cY, 0,
-                                                                tX, tY, 0,
-                                                                10,
-                                                                (MapProjectile fproj) =>
-                                                                {
-                                                                    if (fproj.ProjectileX >= TargetUnit.X + TargetUnit.FracX &&
-                                                                        fproj.ProjectileY >= TargetUnit.Y + TargetUnit.FracY &&
-                                                                        fproj.ProjectileX < TargetUnit.X + TargetUnit.FracX + TargetUnit.Width &&
-                                                                        fproj.ProjectileY < TargetUnit.Y + TargetUnit.FracY + TargetUnit.Height)
-                                                                    {
-                                                                        //Debug.LogFormat("spell projectile hit!");
-                                                                        // done, make damage
-                                                                        DamageFlags spdf = 0;
-                                                                        // set damage flags depending on spell sphere
-                                                                        switch (Spell.Template.Sphere)
-                                                                        {
-                                                                            case 1:
-                                                                                spdf |= DamageFlags.Fire;
-                                                                                break;
-                                                                            case 2:
-                                                                                spdf |= DamageFlags.Water;
-                                                                                break;
-                                                                            case 3:
-                                                                                spdf |= DamageFlags.Air;
-                                                                                break;
-                                                                            case 4:
-                                                                                spdf |= DamageFlags.Earth;
-                                                                                break;
-                                                                            case 5:
-                                                                                spdf |= DamageFlags.Astral;
-                                                                                break;
-                                                                        }
+            Server.SpawnProjectileHoming(type, Spell.User, cX, cY, 0,
+                                            TargetUnit,
+                                            10,
+                                            (MapProjectile fproj) =>
+                                            {
+                                                //Debug.LogFormat("spell projectile hit!");
+                                                // done, make damage
+                                                DamageFlags spdf = SphereToDamageFlags(Spell);
 
-                                                                        if (TargetUnit.TakeDamage(spdf, Spell.User, damage) > 0)
-                                                                        {
-                                                                            TargetUnit.DoUpdateInfo = true;
-                                                                            TargetUnit.DoUpdateView = true;
-                                                                        }
-                                                                    }
+                                                if (TargetUnit.TakeDamage(spdf, Spell.User, damage) > 0)
+                                                {
+                                                    TargetUnit.DoUpdateInfo = true;
+                                                    TargetUnit.DoUpdateView = true;
+                                                }
 
-                                                                    fproj.Dispose();
-                                                                    MapLogic.Instance.Objects.Remove(fproj);
-                                                                });
-        }
-    }
-
-    [SpellProcId(Spell.Spells.Fire_Arrow)]
-    public class SpellProcFireArrow : SpellProcProjectileGeneric
-    {
-        public SpellProcFireArrow(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
-
-        public override bool Process()
-        {
-            SpawnProjectile(AllodsProjectile.FireArrow, 10, 20);
-            return false;
-        }
-    }
-
-    [SpellProcId(Spell.Spells.Ice_Arrow)]
-    public class SpellProcIceMissile : SpellProcProjectileGeneric
-    {
-        public SpellProcIceMissile(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
-
-        public override bool Process()
-        {
-            SpawnProjectile(AllodsProjectile.IceMissile, 10, 20);
-            return false;
-        }
-    }
-
-    [SpellProcId(Spell.Spells.Diamond_Dust)]
-    public class SpellProcDiamondDust : SpellProcProjectileGeneric
-    {
-        public SpellProcDiamondDust(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
-
-        public override bool Process()
-        {
-            SpawnProjectile(AllodsProjectile.DiamondDust, 10, 20);
-            return false;
+                                                fproj.Dispose();
+                                                MapLogic.Instance.Objects.Remove(fproj);
+                                            });
         }
     }
 }

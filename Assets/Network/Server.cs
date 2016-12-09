@@ -429,9 +429,9 @@ public class Server
                     continue;
 
                 Player p = MapLogic.Instance.GetNetPlayer(client);
-                if (source != null)
+                MapObject sourceObj = (MapObject)source;
+                if (sourceObj != null)
                 {
-                    MapObject sourceObj = (MapObject)source;
                     if (!sourceObj.IsVisibleForNetPlayer(p))
                         ObjectBecameVisible(p, sourceObj); // force keyframe update for source unit
                 }
@@ -440,7 +440,7 @@ public class Server
                 app.X = x;
                 app.Y = y;
                 app.Z = z;
-                app.SourceType = sourceObj.GetObjectType();
+                app.SourceType = (sourceObj != null) ? sourceObj.GetObjectType() : MapObjectType.Object;
 
                 if (app.SourceType == MapObjectType.Human ||
                     app.SourceType == MapObjectType.Monster) app.SourceTag = ((MapUnit)sourceObj).Tag;
@@ -471,9 +471,9 @@ public class Server
                     continue;
 
                 Player p = MapLogic.Instance.GetNetPlayer(client);
-                if (source != null)
+                MapObject sourceObj = (MapObject)source;
+                if (sourceObj != null)
                 {
-                    MapObject sourceObj = (MapObject)source;
                     if (!sourceObj.IsVisibleForNetPlayer(p))
                         ObjectBecameVisible(p, sourceObj); // force keyframe update for source unit
                 }
@@ -485,7 +485,7 @@ public class Server
                 app.TargetX = tgx;
                 app.TargetY = tgy;
                 app.TargetZ = tgz;
-                app.SourceType = sourceObj.GetObjectType();
+                app.SourceType = (sourceObj != null) ? sourceObj.GetObjectType() : MapObjectType.Object;
 
                 if (app.SourceType == MapObjectType.Human ||
                     app.SourceType == MapObjectType.Monster) app.SourceTag = ((MapUnit)sourceObj).Tag;
@@ -515,9 +515,9 @@ public class Server
                     continue;
 
                 Player p = MapLogic.Instance.GetNetPlayer(client);
-                if (source != null)
+                MapObject sourceObj = (MapObject)source;
+                if (sourceObj != null)
                 {
-                    MapObject sourceObj = (MapObject)source;
                     if (!sourceObj.IsVisibleForNetPlayer(p))
                         ObjectBecameVisible(p, sourceObj); // force keyframe update for source unit
                 }
@@ -526,7 +526,7 @@ public class Server
                 app.X = x;
                 app.Y = y;
                 app.Z = z;
-                app.SourceType = sourceObj.GetObjectType();
+                app.SourceType = (sourceObj != null) ? sourceObj.GetObjectType() : MapObjectType.Object;
 
                 if (app.SourceType == MapObjectType.Human ||
                     app.SourceType == MapObjectType.Monster) app.SourceTag = ((MapUnit)sourceObj).Tag;

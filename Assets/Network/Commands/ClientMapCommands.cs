@@ -779,4 +779,38 @@ namespace ClientCommands
             return true;
         }
     }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.StaticObjectDead)]
+    public struct StaticObjectDead : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int X;
+        [ProtoMember(2)]
+        public int Y;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            if (X < 0 || X >= MapLogic.Instance.Width ||
+                Y < 0 || Y >= MapLogic.Instance.Height)
+                    return false;
+
+            MapNode node = MapLogic.Instance.Nodes[X, Y];
+            for (int i = 0; i < node.Objects.Count; i++)
+            {
+                // check object type.
+                if (node.Objects[i].GetObjectType() != MapObjectType.Obstacle)
+                    continue;
+
+                MapObstacle ob = (MapObstacle)node.Objects[i];
+                ob.SetDead(false);
+            }
+
+            return true;
+        }
+    }
+
 }

@@ -30,8 +30,11 @@ public enum ClientIdentifiers
     SackAt,
     NoSackAt,
 
-    //projectile directional, homing, simple
+    // projectile directional, homing, simple
     AddProjectileDirectional,
     AddProjectileHoming,
-    AddProjectileSimple
+    AddProjectileSimple,
+
+    // kill static object (i.e. trees)
+    StaticObjectDead
 }

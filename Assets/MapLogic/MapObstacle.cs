@@ -39,6 +39,9 @@ public class MapObstacle : MapObject, IVulnerable
     {
         if (Class == null)
             return;
+
+        UpdateNetVisibility(); // :( ?
+
         // do not animate if visibility != 2, also do not render at all if visibility == 0
         if (Class.Frames.Length > 1 && GetVisibility() == 2)
         {
@@ -57,29 +60,44 @@ public class MapObstacle : MapObject, IVulnerable
         return MapNodeFlags.DynamicGround;
     }
 
-    public int TakeDamage(DamageFlags flags, MapUnit source, int count)
+    public bool SetDead(bool sfx)
     {
-        if ((flags & DamageFlags.Fire) == 0)
-            return 0;
-
         // check if "alive"
         if (IsDead || Class.DeadObject < 0 || Class.DeadObject == Class.ID)
-            return 0;
+            return false;
 
         IsDead = true;
 
         // spawn dead sfx.
-        Server.SpawnProjectileSimple(AllodsProjectile.FireWall, null, X + 0.5f, Y + 0.5f, 0, 1);
+        if (sfx)
+            Server.SpawnProjectileSimple(AllodsProjectile.FireWall, null, X + 0.5f, Y + 0.5f, 0, 1);
 
         // set current class id to deadobject.
         ObstacleClass deadClass = ObstacleClassLoader.GetObstacleClassById(Class.DeadObject);
         if (deadClass == null)
-            return 0;
+            return false;
 
         Class = deadClass;
         CurrentFrame = 0;
         CurrentTime = 0;
         DoUpdateView = true;
-        return count;
+        return true;
+    }
+
+    public int TakeDamage(DamageFlags flags, MapUnit source, int count)
+    {
+        if ((flags & DamageFlags.Fire) == 0)
+            return 0;
+
+        if (SetDead(true))
+        {
+            // inform clients.
+            if (NetworkManager.IsServer)
+                Server.NotifyStaticObjectDead(X, Y);
+
+            return count;
+        }
+
+        return 0;
     }
 }

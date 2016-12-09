@@ -180,6 +180,12 @@ public class Server
             MapSack sack = (MapSack)mobj;
             NotifySack(sack.X, sack.Y, sack.Pack.Price);
         }
+        else if (mobj.GetObjectType() == MapObjectType.Obstacle)
+        {
+            MapObstacle obstacle = (MapObstacle)mobj;
+            if (obstacle.IsDead)
+                Server.NotifyStaticObjectDead(obstacle.X, obstacle.Y);
+        }
     }
 
     public static void ObjectBecameInvisible(Player player, MapObject mobj)
@@ -537,6 +543,24 @@ public class Server
 
                 client.SendCommand(app);
             }
+        }
+    }
+
+    public static void NotifyStaticObjectDead(int x, int y)
+    {
+        if (!NetworkManager.IsServer)
+            return;
+
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            ClientCommands.StaticObjectDead sod;
+            sod.X = x;
+            sod.Y = y;
+
+            client.SendCommand(sod);
         }
     }
 }

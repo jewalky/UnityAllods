@@ -170,6 +170,11 @@ public class Server
                 for (int i = 0; i < unit.ItemsPack.Count; i++)
                     unitCmd.ItemsPack.Add(new NetItem(unit.ItemsPack[i]));
 
+            uint sps = 0;
+            foreach (Spell cspell in unit.SpellBook)
+                sps |= 1u << (int)cspell.SpellID;
+            unitCmd.SpellBook = sps;
+
             player.NetClient.SendCommand(unitCmd);
             // also notify of current unit state
             NotifyAddUnitActionsSingle(player.NetClient, unit, unit.Actions.Skip(1).ToArray());
@@ -561,6 +566,27 @@ public class Server
             sod.Y = y;
 
             client.SendCommand(sod);
+        }
+    }
+
+    public static void NotifyUnitSpells(MapUnit unit)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            Player p = MapLogic.Instance.GetNetPlayer(client);
+            if (unit.IsVisibleForNetPlayer(p))
+            {
+                ClientCommands.UnitSpells spellsCmd;
+                spellsCmd.Tag = unit.Tag;
+                uint sps = 0;
+                foreach (Spell cspell in unit.SpellBook)
+                    sps |= 1u << (int)cspell.SpellID;
+                spellsCmd.SpellBook = sps;
+                client.SendCommand(spellsCmd);
+            }
         }
     }
 }

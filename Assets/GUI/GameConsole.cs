@@ -193,25 +193,42 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
 
     public static string[] SplitArguments(string commandLine)
     {
-        var parmChars = commandLine.ToCharArray();
-        var inSingleQuote = false;
-        var inDoubleQuote = false;
-        for (var index = 0; index < parmChars.Length; index++)
+        List<string> args = new List<string>();
+        string cstr = "";
+        bool inQuote = false;
+        for (int i = 0; i <= commandLine.Length; i++)
         {
-            if (parmChars[index] == '"' && !inSingleQuote)
+            if (i == commandLine.Length)
             {
-                inDoubleQuote = !inDoubleQuote;
-                parmChars[index] = '\n';
+                args.Add(cstr);
+                break;
             }
-            if (parmChars[index] == '\'' && !inDoubleQuote)
+
+            char c = commandLine[i];
+            if (c == '\\')
             {
-                inSingleQuote = !inSingleQuote;
-                parmChars[index] = '\n';
+                if (i+1 < commandLine.Length)
+                {
+                    i++;
+                    cstr += commandLine[i];
+                }
             }
-            if (!inSingleQuote && !inDoubleQuote && parmChars[index] == ' ')
-                parmChars[index] = '\n';
+            else if (c == '"')
+            {
+                inQuote = !inQuote;
+            }
+            else if (c == ' ' && !inQuote)
+            {
+                args.Add(cstr);
+                cstr = "";
+            }
+            else
+            {
+                cstr += c;
+            }
         }
-        return (new string(parmChars)).Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+        return args.ToArray();
     }
 
     public bool ExecuteCommand(string cmd)

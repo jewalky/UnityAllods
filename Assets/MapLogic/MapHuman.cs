@@ -102,6 +102,17 @@ public class MapHuman : MapUnit
             PutItemToBody((BodySlot)item.Class.Option.Slot, item);
         }
 
+        // spellbook
+        for (int i = 0; i < 32; i++)
+        {
+            uint sp = 1u << i;
+            if (Template.ManaMax > 0 && (Template.KnownSpells & sp) != 0)
+            {
+                Spell cspell = new Spell(i, this);
+                SpellBook.Add(cspell);
+            }
+        }
+
         CalculateVision();
         UpdateItems();
 

@@ -52,7 +52,7 @@ namespace Spells
 
         public static Type FindProcTypeFromSpell(Spell spell)
         {
-            return FindProcTypeFromSpellId("Spells", spell.SpellID);
+            return FindProcTypeFromSpellId("Spells", (int)spell.SpellID);
         }
 
         protected readonly int TargetX;

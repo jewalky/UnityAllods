@@ -44,6 +44,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
     private MapViewInfowindow Infowindow;
     private MapViewChat Chat;
     private MapViewInventory Inventory;
+    private MapViewSpellbook Spellbook;
+    private bool SpellbookDecastOnHide;
 
     public MapObject SelectedObject { get; private set; }
     public MapObject HoveredObject { get; private set; }
@@ -71,6 +73,10 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         Inventory = Utils.CreateObjectWithScript<MapViewInventory>();
         Inventory.transform.parent = UiManager.Instance.transform;
         Inventory.gameObject.SetActive(false);
+        Spellbook = Utils.CreateObjectWithScript<MapViewSpellbook>();
+        Spellbook.transform.parent = UiManager.Instance.transform;
+        Spellbook.gameObject.SetActive(false);
+        SpellbookDecastOnHide = true;
 
         Chat = Utils.CreateObjectWithScript<MapViewChat>();
         Chat.transform.parent = UiManager.Instance.transform;
@@ -467,6 +473,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                 ///
             }
             else Inventory.SetPack(null);
+            Spellbook.SetSpells((MapUnit)mobj);
         }
     }
 
@@ -549,12 +556,27 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         }
     }
 
+    private bool _SpellbookVisible;
+    public bool SpellbookVisible
+    {
+        get
+        {
+            return (_SpellbookVisible && MapLogic.Instance.IsLoaded);
+        }
+
+        set
+        {
+            _SpellbookVisible = value;
+        }
+    }
+
     void Update()
     {
         MiniMap.gameObject.SetActive(MapLogic.Instance.IsLoaded);
         Commandbar.gameObject.SetActive(MapLogic.Instance.IsLoaded);
         Infowindow.gameObject.SetActive(MapLogic.Instance.IsLoaded);
         Inventory.gameObject.SetActive(InventoryVisible);
+        Spellbook.gameObject.SetActive(SpellbookVisible);
 
         if (!MapLogic.Instance.IsLoaded)
             return;
@@ -663,12 +685,19 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                     }
                     else
                     {
-                        bool cstate = InventoryVisible; // && SpellbookVisible
+                        bool cstate = InventoryVisible && SpellbookVisible;
                         InventoryVisible = !cstate;
+                        SpellbookVisible = !cstate;
+                        Spellbook.Update();
                     }
                     return true;
                 case KeyCode.BackQuote:
                     InventoryVisible = !InventoryVisible;
+                    Spellbook.Update();
+                    return true;
+                case KeyCode.Q:
+                    SpellbookVisible = !SpellbookVisible;
+                    Spellbook.Update();
                     return true;
             }
         }
@@ -717,7 +746,14 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                     SelectedObject.GetObjectType() == MapObjectType.Human)
                 {
                     MapUnit unit = (MapUnit)SelectedObject;
-                    if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move)
+                    if (GetCastSpell() != Spell.Spells.NoneSpell)
+                    {
+                        if (HoveredObject != null && (HoveredObject.GetObjectType() == MapObjectType.Monster ||
+                                                      HoveredObject.GetObjectType() == MapObjectType.Human))
+                            Client.SendCastToUnit(unit, GetCastSpell(), (MapUnit)HoveredObject);
+                        else Client.SendCastToArea(unit, GetCastSpell(), MouseCellX, MouseCellY);
+                    }
+                    else if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move)
                     {
                         Client.SendMoveUnit(unit, MouseCellX, MouseCellY);
                     }
@@ -746,6 +782,22 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         }
 
         return false;
+    }
+
+    Spell.Spells GetCastSpell()
+    {
+        if (SpellbookVisible && Spellbook.Unit == SelectedObject && Spellbook.ActiveSpell != Spell.Spells.NoneSpell)
+        {
+            Spell.Spells sp = Spellbook.ActiveSpell;
+            Templates.TplSpell spl = TemplateLoader.GetSpellById((int)sp - 1);
+
+            if (spl.SpellTarget == 2 ||
+                (spl.SpellTarget == 1 && HoveredObject != null && (HoveredObject.GetObjectType() == MapObjectType.Human || HoveredObject.GetObjectType() == MapObjectType.Monster)))
+            {
+                return Spellbook.ActiveSpell;
+            }
+        }
+        return Spell.Spells.NoneSpell;
     }
 
     void UpdateInput()
@@ -823,6 +875,12 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
             Infowindow.Viewer = (IMapViewSelfie)SelectedObject.GameScript;
         else Infowindow.Viewer = null;
         HoveredObject = o;
+
+        if (GetCastSpell() != Spell.Spells.NoneSpell)
+        {
+            MouseCursor.SetCursor(MouseCursor.CurCast);
+            return;
+        }
 
         if (!hoveringDarkness && HoveredObject != null && (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move || Commandbar.CurrentCommand == 0))
         {

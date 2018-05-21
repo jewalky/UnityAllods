@@ -272,4 +272,76 @@ namespace ServerCommands
             return true;
         }
     }
+
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.CastToUnit)]
+    public struct CastToUnit : IServerCommand
+    {
+        [ProtoMember(1)]
+        public int TagFrom;
+        [ProtoMember(2)]
+        public int TagTo;
+        [ProtoMember(3)]
+        public int SpellID;
+
+        public bool Process(ServerClient client)
+        {
+            if (client.State != ClientState.Playing)
+                return false;
+
+            Player player = MapLogic.Instance.GetNetPlayer(client);
+            if (player == null)
+                return false; // huehue, same as "order error" in a2server.exe, except we just boot them
+
+            MapUnit unitFrom = MapLogic.Instance.GetUnitByTag(TagFrom);
+            // we can't do anything with units that don't belong to our player.
+            if (unitFrom.Player != player)
+                return true;
+
+            MapUnit unitTo = MapLogic.Instance.GetUnitByTag(TagTo);
+
+            Spell cspell = unitFrom.GetSpell((Spell.Spells)SpellID);
+            if (cspell == null)
+                return true; // spell not found
+
+            unitFrom.SetState(new CastState(unitFrom, cspell, unitTo));
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.CastToArea)]
+    public struct CastToArea : IServerCommand
+    {
+        [ProtoMember(1)]
+        public int TagFrom;
+        [ProtoMember(2)]
+        public int SpellID;
+        [ProtoMember(3)]
+        public int TargetX;
+        [ProtoMember(4)]
+        public int TargetY;
+
+        public bool Process(ServerClient client)
+        {
+            if (client.State != ClientState.Playing)
+                return false;
+
+            Player player = MapLogic.Instance.GetNetPlayer(client);
+            if (player == null)
+                return false; // huehue, same as "order error" in a2server.exe, except we just boot them
+
+            MapUnit unitFrom = MapLogic.Instance.GetUnitByTag(TagFrom);
+            // we can't do anything with units that don't belong to our player.
+            if (unitFrom.Player != player)
+                return true;
+
+            Spell cspell = unitFrom.GetSpell((Spell.Spells)SpellID);
+            if (cspell == null)
+                return true; // spell not found
+
+            unitFrom.SetState(new CastState(unitFrom, cspell, TargetX, TargetY));
+            return true;
+        }
+    }
 }

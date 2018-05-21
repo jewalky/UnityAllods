@@ -15,6 +15,8 @@ public enum ServerIdentifiers
     ChatMessage,
     MoveUnit,
     AttackUnit,
+    CastToUnit,
+    CastToArea,
 
     RespawnAvatar,
 

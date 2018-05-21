@@ -105,14 +105,20 @@ public class MapProjectileLogicDirectional : IMapProjectileLogic
             Projectile.ProjectileY != targetCenter.y ||
             Projectile.ProjectileZ != targetCenter.z)
         {
-            if (Math.Sign(targetCenter.x - newPos.x) != Math.Sign(targetCenter.x - Projectile.ProjectileX))
+            bool done = false;
+            if ((new Vector3(Projectile.ProjectileX, Projectile.ProjectileY, Projectile.ProjectileZ) - targetCenter).magnitude <= 0.01f ||
+                Math.Sign(targetCenter.x - newPos.x) != Math.Sign(targetCenter.x - Projectile.ProjectileX) ||
+                Math.Sign(targetCenter.y - newPos.y) != Math.Sign(targetCenter.y - Projectile.ProjectileY) ||
+                Math.Sign(targetCenter.z - newPos.z) != Math.Sign(targetCenter.z - Projectile.ProjectileZ))
+            {
                 newPos.x = targetCenter.x;
-            if (Math.Sign(targetCenter.y - newPos.y) != Math.Sign(targetCenter.y - Projectile.ProjectileY))
                 newPos.y = targetCenter.y;
-            if (Math.Sign(targetCenter.z - newPos.z) != Math.Sign(targetCenter.z - Projectile.ProjectileZ))
                 newPos.z = targetCenter.z;
+                done = true;
+            }
+
             Projectile.SetPosition(newPos.x, newPos.y, newPos.z);
-            return true;
+            return !done;
         }
         else
         {

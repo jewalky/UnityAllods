@@ -169,6 +169,8 @@ namespace ClientCommands
         public List<NetItem> ItemsBody;
         [ProtoMember(25)]
         public List<NetItem> ItemsPack;
+        [ProtoMember(26)]
+        public uint SpellBook;
 
         public bool Process()
         {
@@ -240,6 +242,19 @@ namespace ClientCommands
                 unit.DoUpdateView = true; // update view if unit already present on map (otherwise its automatically done)
                 unit.DoUpdateInfo = true;
             }
+
+            // add spells
+            unit.SpellBook.Clear();
+            for (int i = 0; i < 32; i++)
+            {
+                uint sp = 1u << i;
+                if ((SpellBook & sp) != 0)
+                {
+                    Spell cspell = new Spell(i, unit);
+                    unit.SpellBook.Add(cspell);
+                }
+            }
+
             unit.Update(); // set isalive/isdying
             return true;
         }
@@ -304,7 +319,9 @@ namespace ClientCommands
             if (state.GetType() == typeof(AttackAction))
             {
                 aus.Attack = (AttackAction)state;
-                aus.TargetUnitTag = aus.Attack.TargetUnit.Tag;
+                if (aus.Attack.TargetUnit != null)
+                    aus.TargetUnitTag = aus.Attack.TargetUnit.Tag;
+                else aus.TargetUnitTag = -1;
             }
             else aus.Attack = null;
             if (state.GetType() == typeof(DeathAction))
@@ -361,9 +378,10 @@ namespace ClientCommands
                     {
                         States[i].Attack.Unit = unit;
                         MapUnit targetUnit = MapLogic.Instance.GetUnitByTag(States[i].TargetUnitTag);
-                        if (targetUnit == null)
-                            return false; // bad packet
                         States[i].Attack.TargetUnit = targetUnit;
+                        States[i].Attack.Spell = unit.GetSpell((Spell.Spells)States[i].Attack.SpellID);
+                        if (States[i].Attack.Spell == null && States[i].Attack.TargetUnit == null)
+                            return false; // bad packet
                         unit.Actions.Insert(pPos, States[i].Attack);
                     }
 
@@ -808,6 +826,43 @@ namespace ClientCommands
 
                 MapObstacle ob = (MapObstacle)node.Objects[i];
                 ob.SetDead(false);
+            }
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.UnitSpells)]
+    public struct UnitSpells : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public uint SpellBook;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null)
+            {
+                Debug.LogFormat("Attempted to set spells for nonexistent unit {0}", Tag);
+                return true;
+            }
+
+            // add spells
+            unit.SpellBook.Clear();
+            for (int i = 0; i < 32; i++)
+            {
+                uint sp = 1u << i;
+                if ((SpellBook & sp) != 0)
+                {
+                    Spell cspell = new Spell(i, unit);
+                    unit.SpellBook.Add(cspell);
+                }
             }
 
             return true;

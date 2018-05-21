@@ -222,6 +222,8 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
                 actualAngle = lPA * actualRotationPhases / 360;
             }
 
+            actualAngle %= 16;
+
             actualFrame = LogicProjectile.Class.Phases * actualAngle + LogicProjectile.CurrentFrame;
             //Debug.LogFormat("actualFrame = {0}, actualAngle = {1}", actualFrame, actualAngle);
 
@@ -231,13 +233,13 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
             {
                 transform.localPosition = new Vector3(xP.x - 16,
                                                       xP.y - 16,
-                                                      MakeZFromY(xP.y) - 8); // order sprites by y coordinate basically
+                                                      MakeZFromY(xP.y) - 128); // order sprites by y coordinate basically
             }
             else
             {
                 transform.localPosition = new Vector3(xP.x - sprites.Sprites[actualFrame].rect.width * 0.5f,
                                                       xP.y - sprites.Sprites[actualFrame].rect.height * 0.5f,
-                                                      MakeZFromY(xP.y) - 8); // order sprites by y coordinate basically
+                                                      MakeZFromY(xP.y) - 128); // order sprites by y coordinate basically
             }
 
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicObstacle.Class.CenterX));

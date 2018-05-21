@@ -119,6 +119,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public readonly List<MapProjectile> TargetedBy = new List<MapProjectile>();
 
+    public readonly List<Spell> SpellBook = new List<Spell>();
+
     public MapUnit()
     {
         Interaction = new UnitInteraction(this);
@@ -174,6 +176,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         CoreStats.Health = CoreStats.HealthMax = Math.Max(Template.HealthMax, 0);
         CoreStats.Mana = CoreStats.ManaMax = Math.Max(Template.ManaMax, 0); // they sometimes put -1 as mana counter for fighters
+
+        CoreStats.HealthRegeneration = (short)Template.HealthRegeneration;
+        CoreStats.ManaRegeneration = (short)Template.ManaRegeneration;
 
         // BRMS
         CoreStats.Body = (short)Template.Body;
@@ -237,6 +242,17 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             Item item2 = new Item(Template.EquipItem2);
             if (item2.IsValid)
                 PutItemToBody((BodySlot)item2.Class.Option.Slot, item2);
+        }
+
+        // spellbook
+        for (int i = 0; i < 32; i++)
+        {
+            uint sp = 1u << i;
+            if (Template.ManaMax > 0 && (Template.KnownSpells & sp) != 0)
+            {
+                Spell cspell = new Spell(i, this);
+                SpellBook.Add(cspell);
+            }
         }
 
         CalculateVision();
@@ -313,6 +329,27 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                     //
                     MapViewChat.Instance.AddChatMessage(Player.AllColorsSystem, Locale.Patch[68]);
                     MapViewChat.Instance.AddChatMessage(Player.AllColorsSystem, Locale.Patch[69]); // your character died. press space to continue
+                }
+            }
+
+            // health and mana regeneration
+            // 1% per second * mana regeneration?
+            if (!NetworkManager.IsClient)
+            {
+                if (MapLogic.Instance.LevelTime % 40 == 0)
+                {
+                    if (Stats.Mana < Stats.ManaMax)
+                    {
+                        Stats.TrySetMana((int)(Stats.Mana + (float)Stats.ManaMax / 100 * (float)Stats.ManaRegeneration / 100));
+                        DoUpdateView = true;
+                        DoUpdateInfo = true;
+                    }
+                    if (Stats.Health < Stats.HealthMax)
+                    {
+                        Stats.TrySetHealth((int)(Stats.Health + (float)Stats.HealthMax / 100 * Stats.HealthRegeneration / 100));
+                        DoUpdateView = true;
+                        DoUpdateInfo = true;
+                    }
                 }
             }
         }
@@ -554,4 +591,16 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public virtual int Face { get { return Template.Face; } }
 
     public virtual string TemplateName { get { return Template.Name; } }
+
+    // 
+    public Spell GetSpell(Spell.Spells spell)
+    {
+        foreach (Spell cspell in SpellBook)
+        {
+            if (cspell.SpellID == spell)
+                return cspell;
+        }
+
+        return null;
+    }
 }

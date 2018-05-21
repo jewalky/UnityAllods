@@ -46,7 +46,7 @@ public class Spell
     public MapUnit User = null;
     public Item Item = null;
     public Templates.TplSpell Template;
-    public int SpellID = 0;
+    public Spells SpellID = 0;
 
     private int OwnSkill = 0;
     public int Skill
@@ -82,12 +82,13 @@ public class Spell
         }
     }
 
-    public Spell(int id)
+    public Spell(int id, MapUnit unit = null)
     {
-        SpellID = id;
+        SpellID = (Spells)id;
         Template = TemplateLoader.GetSpellById(id-1);
         if (Template == null)
             Debug.LogFormat("Invalid spell created (id={0})", id);
+        User = unit;
     }
 
     public SpellProc Cast(int tgX, int tgY, MapUnit tgUnit = null)
@@ -108,5 +109,14 @@ public class Spell
         {
             return null;
         }
+    }
+
+    public float GetDistance()
+    {
+        // maxRange is base range
+        // on top of that, skill / 30 is added for regular spells, and skill / 3 for teleport
+        if (SpellID == Spells.Teleport)
+            return 7 + Skill / 3;
+        return 7 + Skill / 30;
     }
 }

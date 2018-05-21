@@ -239,3 +239,84 @@ public class PickupState : IUnitState
         }
     }
 }
+
+public class CastState : IUnitState
+{
+    private MapUnit Unit;
+    private Spell Spell;
+    private MapUnit TargetUnit;
+    private int TargetX;
+    private int TargetY;
+    private bool Executed;
+
+    public CastState(MapUnit unit, Spell spell, MapUnit targetUnit)
+    {
+        Unit = unit;
+        Spell = spell;
+        TargetUnit = targetUnit;
+        TargetX = TargetY = -1;
+        Executed = false;
+    }
+
+    public CastState(MapUnit unit, Spell spell, int targetX, int targetY)
+    {
+        Unit = unit;
+        Spell = spell;
+        TargetUnit = null;
+        TargetX = targetX;
+        TargetY = targetY;
+        Executed = false;
+    }
+
+    public bool Process()
+    {
+        if (Executed && Unit.Actions[Unit.Actions.Count - 1].GetType() != typeof(AttackAction))
+            return false;
+
+        if (Unit.Stats.Health <= 0)
+            return false;
+
+        if (TargetUnit == Unit || (TargetUnit != null && (!TargetUnit.IsAlive || !MapLogic.Instance.Objects.Contains(TargetUnit))))
+            return false;
+
+        if (TargetUnit != null && !Unit.Interaction.CheckCanAttack(TargetUnit))
+            return false;
+
+        // assume melee attack right now
+        // check if in direct proximity
+        if ((TargetUnit != null && Unit.Interaction.GetClosestDistanceTo(TargetUnit) <= Spell.GetDistance() + 0.5f) ||
+            (TargetUnit == null && (Unit.Interaction.GetClosestPointTo(TargetX, TargetY)-new Vector2i(TargetX, TargetY)).magnitude <= Spell.GetDistance() + 0.5f))
+        {
+            // in direct proximity!
+            // 
+            Vector2i enemyCell = (TargetUnit != null ? TargetUnit.Interaction.GetClosestPointTo(Unit) : new Vector2i(TargetX, TargetY));
+            int angleNeeded = Unit.FaceCellPrecise(enemyCell.x, enemyCell.y);
+            if (Unit.Angle != angleNeeded)
+            {
+                Unit.AddActions(new RotateAction(Unit, angleNeeded));
+                return true;
+            }
+
+            //
+            //Debug.LogFormat("ATTACKING");
+            if (Unit.Stats.Mana >= Spell.Template.ManaCost)
+            {
+                Unit.AddActions(new AttackAction(Unit, TargetUnit, Spell, TargetX, TargetY));
+                Unit.Stats.TrySetMana(Unit.Stats.Mana - Spell.Template.ManaCost);
+                Unit.DoUpdateView = true;
+                Unit.DoUpdateInfo = true;
+            }
+            else return false; // :( no mana
+            Executed = true;
+        }
+        else
+        {
+            // make one step to the target.
+            if (TargetUnit != null)
+                MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y);
+            else MoveState.TryWalkTo(Unit, TargetX, TargetY);
+        }
+
+        return true;
+    }
+}

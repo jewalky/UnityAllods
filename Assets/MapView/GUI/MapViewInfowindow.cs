@@ -42,6 +42,8 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
     private static Texture2D BHumanMode;
     private static Texture2D BPackOpen;
     private static Texture2D BPackClosed;
+    private static Texture2D BBookOpen;
+    private static Texture2D BBookClosed;
 
     private GameObject HBackRObject;
     private GameObject HBackLObject;
@@ -55,6 +57,8 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
     private GameObject BHumanModeObject;
     private GameObject BPackOpenObject;
     private GameObject BPackClosedObject;
+    private GameObject BBookOpenObject;
+    private GameObject BBookClosedObject;
 
     // black quad for <=768 video modes
     private GameObject BlackQuad;
@@ -108,6 +112,8 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         if (BHumanMode == null) BHumanMode = Images.LoadImage("graphics/interface/humanmode.bmp", 0, Images.ImageType.AllodsBMP);
         if (BPackOpen == null) BPackOpen = Images.LoadImage("graphics/interface/backpackop.bmp", 0, Images.ImageType.AllodsBMP);
         if (BPackClosed == null) BPackClosed = Images.LoadImage("graphics/interface/backpackcl.bmp", 0, Images.ImageType.AllodsBMP);
+        if (BBookOpen == null) BBookOpen = Images.LoadImage("graphics/interface/bookopened.bmp", 0, Images.ImageType.AllodsBMP);
+        if (BBookClosed == null) BBookClosed = Images.LoadImage("graphics/interface/bookclosed.bmp", 0, Images.ImageType.AllodsBMP);
 
         transform.localScale = new Vector3(1, 1, 0.01f);
         transform.localPosition = new Vector3(Screen.width - 176, 238, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
@@ -200,6 +206,14 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         BPackOpenObject.transform.localPosition = new Vector3(16, 208, -0.002f);
         BPackClosedObject.transform.localPosition = new Vector3(17, 201, -0.002f);
         BPackOpenObject.SetActive(false);
+        // spellbook open/close button
+        Utils.MakeTexturedQuad(out BBookOpenObject, BBookOpen);
+        Utils.MakeTexturedQuad(out BBookClosedObject, BBookClosed);
+        BBookOpenObject.transform.parent = BBookClosedObject.transform.parent = transform;
+        BBookOpenObject.transform.localScale = BBookClosedObject.transform.localScale = new Vector3(1, 1, 1);
+        BBookOpenObject.transform.localPosition = new Vector3(16, 0, -0.002f);
+        BBookClosedObject.transform.localPosition = new Vector3(16, 4, -0.002f);
+        BBookOpenObject.SetActive(false);
     }
 
     public void OnDestroy()
@@ -250,6 +264,17 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
                         MapView.Instance.InventoryVisible = !MapView.Instance.InventoryVisible;
                     }
                 }
+
+                if (BBookOpenObject != null)
+                {
+                    if (new Rect(BBookOpenObject.transform.localPosition.x,
+                                 BBookOpenObject.transform.localPosition.y,
+                                 BBookOpen.width, BBookOpen.height).Contains(mPosLocal))
+                    {
+                        // switch to open spellbook
+                        MapView.Instance.SpellbookVisible = !MapView.Instance.SpellbookVisible;
+                    }
+                }
             }
 
             // check if event was inside view pic
@@ -292,6 +317,13 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
             bool invopen = MapView.Instance.InventoryVisible;
             BPackOpenObject.SetActive(invopen);
             BPackClosedObject.SetActive(!invopen);
+        }
+
+        if (BBookOpenObject != null && BBookClosedObject != null)
+        {
+            bool spbopen = MapView.Instance.SpellbookVisible;
+            BBookOpenObject.SetActive(spbopen);
+            BBookClosedObject.SetActive(!spbopen);
         }
     }
 

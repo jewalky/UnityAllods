@@ -12,6 +12,8 @@ using UnityEngine;
 [ProtoContract]
 public class UnitStats
 {
+    public class PreserveStats : Attribute { }
+
     public bool TrySetHealth(int nh)
     {
         int oh = Health;
@@ -22,7 +24,7 @@ public class UnitStats
     public bool TrySetMana(int nm)
     {
         int om = Mana;
-        Mana = Math.Min(HealthMax, Math.Max(0, nm));
+        Mana = Math.Min(ManaMax, Math.Max(0, nm));
         return (om != Mana);
     }
 
@@ -32,10 +34,10 @@ public class UnitStats
     [ProtoMember(4)] public short Mind;
     [ProtoMember(5)] public short Reaction;
     [ProtoMember(6)] public short Spirit;
-    [ProtoMember(7)] public int Health;
+    [PreserveStats][ProtoMember(7)] public int Health;
     [ProtoMember(8)] public int HealthMax;
     [ProtoMember(9)] public short HealthRegeneration;
-    [ProtoMember(10)] public int Mana;
+    [PreserveStats][ProtoMember(10)] public int Mana;
     [ProtoMember(11)] public int ManaMax;
     [ProtoMember(12)] public short ManaRegeneration;
     [ProtoMember(13)] public short ToHit;
@@ -159,6 +161,9 @@ public class UnitStats
         FieldInfo[] fields = typeof(UnitStats).GetFields();
         foreach (FieldInfo field in fields)
         {
+            PreserveStats[] ps = (PreserveStats[])field.GetCustomAttributes(typeof(PreserveStats), false);
+            if (ps.Length > 0)
+                continue;
             // we process byte, short, int, float and long.
             // handle overflows.
             if (field.FieldType == typeof(byte))

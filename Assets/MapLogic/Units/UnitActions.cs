@@ -194,6 +194,7 @@ public class AttackAction : IUnitAction
 {
     public MapUnit Unit;
     public MapUnit TargetUnit;
+    public Spell Spell;
     private bool DamageDone;
     [ProtoMember(1)]
     public int Timer;
@@ -203,11 +204,19 @@ public class AttackAction : IUnitAction
     public int Damage;
     [ProtoMember(4)]
     public float Speed;
+    [ProtoMember(5)]
+    public int TargetX;
+    [ProtoMember(6)]
+    public int TargetY;
+    [ProtoMember(7)]
+    public int SpellID;
 
     public AttackAction()
     {
         Unit = null;
         TargetUnit = null;
+        Spell = null;
+        DamageDone = false;
     }
 
     public AttackAction(MapUnit unit, MapUnit targetUnit, DamageFlags damageFlags, int damage)
@@ -217,6 +226,21 @@ public class AttackAction : IUnitAction
         DamageFlags = damageFlags;
         Damage = damage;
         Timer = 0;
+        Spell = null;
+        SpellID = -1;
+        TargetX = TargetY = -1;
+    }
+
+    public AttackAction(MapUnit unit, MapUnit targetUnit, Spell spell, int targetX, int targetY)
+    {
+        Unit = unit;
+        TargetUnit = targetUnit;
+        Spell = spell;
+        if (Spell != null)
+            SpellID = (int)Spell.SpellID;
+        else SpellID = -1;
+        TargetX = targetX;
+        TargetY = targetY;
     }
 
     public bool Process()
@@ -291,7 +315,7 @@ public class AttackAction : IUnitAction
                 proj = (AllodsProjectile)Unit.Class.Projectile;
             }
 
-            if (!procoverride)
+            if (!procoverride && Spell == null)
             {
                 if (proj != AllodsProjectile.None)
                 {
@@ -323,6 +347,13 @@ public class AttackAction : IUnitAction
                                                                               TargetUnit.DoUpdateInfo = true;
                                                                               TargetUnit.DoUpdateView = true;
                                                                           }
+
+                                                                          // and cast spell
+                                                                          foreach (Spell spell in castspells)
+                                                                          {
+                                                                              Spells.SpellProc sp = spell.Cast(TargetUnit.X + TargetUnit.Width / 2, TargetUnit.Y + TargetUnit.Height / 2, TargetUnit);
+                                                                              if (sp != null) Unit.AddSpellEffects(sp);
+                                                                          }
                                                                       }
 
                                                                       fproj.Dispose();
@@ -343,10 +374,21 @@ public class AttackAction : IUnitAction
                 // cast spells directly
                 // just do something atm.
                 // todo: check spells that can be only casted on self (distance 0).
-                foreach (Spell spell in castspells)
+                if (Spell != null)
                 {
-                    Spells.SpellProc sp = spell.Cast(TargetUnit.X + TargetUnit.Width / 2, TargetUnit.Y + TargetUnit.Height / 2, TargetUnit);
+                    Spells.SpellProc sp;
+                    if (TargetUnit != null)
+                        sp = Spell.Cast(TargetUnit.X + TargetUnit.Width / 2, TargetUnit.Y + TargetUnit.Height / 2, TargetUnit);
+                    else sp = Spell.Cast(TargetX, TargetY, null);
                     if (sp != null) Unit.AddSpellEffects(sp);
+                }
+                else
+                {
+                    foreach (Spell spell in castspells)
+                    {
+                        Spells.SpellProc sp = spell.Cast(TargetUnit.X + TargetUnit.Width / 2, TargetUnit.Y + TargetUnit.Height / 2, TargetUnit);
+                        if (sp != null) Unit.AddSpellEffects(sp);
+                    }
                 }
             }
 

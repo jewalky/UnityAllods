@@ -115,6 +115,59 @@ public class Client
         }
     }
 
+    public static void SendCastToUnit(MapUnit unit, Spell.Spells spell, MapUnit target)
+    {
+        Spell cspell = unit.GetSpell(spell);
+        if (cspell == null)
+            return;
+
+        if (cspell.Template.SpellTarget == 2)
+        {
+            SendCastToArea(unit, spell, target.X+target.Width/2, target.Y+target.Height/2);
+            return;
+        }
+
+        if (NetworkManager.IsClient)
+        {
+            ServerCommands.CastToUnit cunitCmd;
+            cunitCmd.TagFrom = unit.Tag;
+            cunitCmd.SpellID = (int)spell;
+            cunitCmd.TagTo = target.Tag;
+            ClientManager.SendCommand(cunitCmd);
+        }
+        else
+        {
+            if (MapLogic.Instance.ConsolePlayer == unit.Player)
+            {
+                unit.SetState(new CastState(unit, cspell, target));
+            }
+        }
+    }
+
+    public static void SendCastToArea(MapUnit unit, Spell.Spells spell, int x, int y)
+    {
+        Spell cspell = unit.GetSpell(spell);
+        if (cspell == null)
+            return;
+
+        if (NetworkManager.IsClient)
+        {
+            ServerCommands.CastToArea careaCmd;
+            careaCmd.TagFrom = unit.Tag;
+            careaCmd.SpellID = (int)spell;
+            careaCmd.TargetX = x;
+            careaCmd.TargetY = y;
+            ClientManager.SendCommand(careaCmd);
+        }
+        else
+        {
+            if (MapLogic.Instance.ConsolePlayer == unit.Player)
+            {
+                unit.SetState(new CastState(unit, cspell, x, y));
+            }
+        }
+    }
+
     public static void SendRespawn()
     {
         if (NetworkManager.IsClient)

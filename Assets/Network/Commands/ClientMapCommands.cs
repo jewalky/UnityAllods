@@ -326,6 +326,7 @@ namespace ClientCommands
         {
             if (!MapLogic.Instance.IsLoaded)
                 return false;
+
             MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
             if (unit == null)
             {

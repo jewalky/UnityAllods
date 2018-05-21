@@ -315,6 +315,13 @@ public class Item
 
         InitItem();
         MagicEffects.AddRange(original.MagicEffects);
+
+        if (Class == null)
+        {
+            Debug.LogFormat("Invalid item duplicated (class=<null>)");
+            return;
+        }
+
         UpdateItem();
     }
 

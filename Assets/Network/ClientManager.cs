@@ -175,6 +175,8 @@ public class ClientManager
                 return;
             }
 
+            //Debug.LogFormat("received packet = {0}\n{1}", o.GetType().Name, o.ToString());
+
             if (!((IClientCommand)o).Process())
                 NetworkManager.Instance.Disconnect();
         }

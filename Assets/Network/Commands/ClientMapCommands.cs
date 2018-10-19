@@ -841,6 +841,56 @@ namespace ClientCommands
     }
 
     [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.AddProjectileLightning)]
+    public struct AddProjectileLightning: IClientCommand
+    {
+        [ProtoMember(1)]
+        public float X;
+        [ProtoMember(2)]
+        public float Y;
+        [ProtoMember(3)]
+        public float Z;
+        [ProtoMember(4)]
+        public MapObjectType SourceType;
+        [ProtoMember(5)]
+        public int SourceTag;
+        [ProtoMember(6)]
+        public int TargetTag;
+        [ProtoMember(7)]
+        public int Color;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            IPlayerPawn source = null;
+            if (SourceTag > 0)
+            {
+                switch (SourceType)
+                {
+                    case MapObjectType.Human:
+                    case MapObjectType.Monster:
+                        source = MapLogic.Instance.GetUnitByTag(SourceTag);
+                        break;
+
+                    case MapObjectType.Structure:
+                        source = MapLogic.Instance.GetStructureByTag(SourceTag);
+                        break;
+                }
+            }
+
+            MapUnit target = MapLogic.Instance.GetUnitByTag(TargetTag);
+            if (target == null)
+                return false;
+
+            Server.SpawnProjectileLightning(source, X, Y, Z, target, Color);
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
     [NetworkPacketId(ClientIdentifiers.StaticObjectDead)]
     public struct StaticObjectDead : IClientCommand
     {

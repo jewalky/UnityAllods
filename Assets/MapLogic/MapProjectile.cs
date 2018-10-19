@@ -35,7 +35,7 @@ public class MapProjectileLogicHoming : IMapProjectileLogic
             Target.TargetedBy.Add(proj);
     }
 
-    public bool Update()
+    public virtual bool Update()
     {
         // calculate target direction!
         // check if target is gone
@@ -44,6 +44,7 @@ public class MapProjectileLogicHoming : IMapProjectileLogic
 
         if (Target != null)
         {
+            // special magic for lightning
             Projectile.LightLevel = 256;
             Vector2 targetCenter = new Vector2(Target.X + (float)Target.Width / 2 + Target.FracX, Target.Y + (float)Target.Height / 2 + Target.FracY);
             Projectile.Angle = MapObject.FaceVector(targetCenter.x - Projectile.ProjectileX, targetCenter.y - Projectile.ProjectileY);
@@ -149,6 +150,9 @@ public class MapProjectileLogicSimple : IMapProjectileLogic
 
     public bool Update()
     {
+        if (AnimationSpeed == 0)
+            return true;
+
         int frame = (int)(Timer * AnimationSpeed);
         if (frame < 0) frame = 0; // shouldn't happen though
         if (frame >= Projectile.Class.Phases)
@@ -167,6 +171,107 @@ public class MapProjectileLogicSimple : IMapProjectileLogic
         }
 
         Timer++;
+        return true;
+    }
+}
+
+// MapProjectileLogicLightning = same as homing but special
+public class MapProjectileLogicLightning : IMapProjectileLogic
+{
+    MapProjectile Projectile;
+    MapUnit Target;
+    List<MapProjectile> SubProjectiles;
+
+    int TargetAngle;
+    Vector2 TargetCenter;
+    Vector2 TargetDir;
+    float TargetDst;
+
+    float AnimTime;
+
+    int Color;
+
+    public MapProjectileLogicLightning(MapUnit target, int color)
+    {
+        Target = target;
+        SubProjectiles = new List<MapProjectile>();
+        AnimTime = 0;
+        Color = Math.Min(8, Math.Max(0, color));
+    }
+
+    public void SetProjectile(MapProjectile proj)
+    {
+        if (Projectile != null && Target != null)
+            Target.TargetedBy.Remove(Projectile);
+        Projectile = proj;
+        if (Target != null)
+            Target.TargetedBy.Add(proj);
+    }
+
+    private float Sin10(float v)
+    {
+        return Mathf.Sin(2 * Mathf.PI * v);
+    }
+
+    public virtual bool Update()
+    {
+        // calculate target direction!
+        // check if target is gone
+        if (!Target.IsAlive || !MapLogic.Instance.Objects.Contains(Target))
+            Target = null;
+
+        Projectile.Alpha = 0;
+
+        if (Target != null && SubProjectiles.Count <= 0)
+        {
+            // special magic for lightning
+            Projectile.LightLevel = 256;
+            TargetCenter = new Vector2(Target.X + (float)Target.Width / 2 + Target.FracX, Target.Y + (float)Target.Height / 2 + Target.FracY);
+            TargetAngle = Projectile.Angle = MapObject.FaceVector(TargetCenter.x - Projectile.ProjectileX, TargetCenter.y - Projectile.ProjectileY);
+            TargetDir = new Vector2(TargetCenter.x - Projectile.ProjectileX, TargetCenter.y - Projectile.ProjectileY);
+            TargetDir.Normalize();
+            // spawn projectiles along the way
+            TargetDst = new Vector2(TargetCenter.x - Projectile.ProjectileX, TargetCenter.y - Projectile.ProjectileY).magnitude;
+            for (float i = 0; i < TargetDst; i += 0.15f)
+            {
+                MapProjectile visProj = new MapProjectile(AllodsProjectile.Lightning);
+                visProj.SetPosition(Projectile.ProjectileX + TargetDir.x * i, Projectile.ProjectileY + TargetDir.y * i, 0); // for now
+                MapLogic.Instance.Objects.Add(visProj);
+                SubProjectiles.Add(visProj);
+            }
+        }
+
+        AnimTime += 0.1f;
+
+        for (int i = 0; i < SubProjectiles.Count; i++)
+        {
+            float idst = 0.15f * i;
+            // get angle from first to second. calculate sin wave
+            float baseX = Projectile.ProjectileX + TargetDir.x * idst;
+            float baseY = Projectile.ProjectileY + TargetDir.y * idst;
+            float angleToDst = Mathf.Atan2(TargetDir.y, TargetDir.x);
+            float sinScale = TargetDst / 8 * Mathf.Sin((float)MapLogic.Instance.LevelTime / 2 * TargetDst);
+            Vector2 offs = new Vector2(0, Sin10(idst/TargetDst) * sinScale);
+            float sinX = Mathf.Cos(angleToDst) * offs.x - Mathf.Sin(angleToDst) * offs.y;
+            float sinY = Mathf.Cos(angleToDst) * offs.y + Mathf.Sin(angleToDst) * offs.x;
+            SubProjectiles[i].SetPosition(baseX + sinX, baseY + sinY, 0);
+            SubProjectiles[i].Alpha = 1f - AnimTime;
+            SubProjectiles[i].LightLevel = (int)(256 * (1f - AnimTime));
+        }
+
+        if (AnimTime > 1)
+        {
+            foreach (MapProjectile sub in SubProjectiles)
+            {
+                sub.Dispose();
+                MapLogic.Instance.Objects.Remove(sub);
+            }
+
+            Projectile.Dispose();
+            MapLogic.Instance.Objects.Remove(Projectile);
+            return false;
+        }
+
         return true;
     }
 }
@@ -309,6 +414,21 @@ public class MapProjectile : MapObject, IDynlight
         }
     }
 
+    private float _Alpha;
+    public float Alpha
+    {
+        get
+        {
+            return _Alpha;
+        }
+
+        set
+        {
+            _Alpha = value;
+            DoUpdateView = true;
+        }
+    }
+
     public MapProjectile(AllodsProjectile proj, IPlayerPawn source = null, IMapProjectileLogic logic = null, MapProjectileCallback cb = null)
     {
         InitProjectile((int)proj, source, logic, cb);
@@ -335,6 +455,7 @@ public class MapProjectile : MapObject, IDynlight
 
         Width = 1;
         Height = 1;
+        Alpha = 1f;
         DoUpdateView = true;
     }
 

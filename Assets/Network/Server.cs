@@ -430,7 +430,6 @@ public class Server
         MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicHoming(target, speed), cb);
         proj.SetPosition(x, y, z);
         MapLogic.Instance.Objects.Add(proj);
-        // todo notify clients
 
         if (NetworkManager.IsServer)
         {
@@ -472,7 +471,6 @@ public class Server
         MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicDirectional(tgx, tgy, tgz, speed), cb);
         proj.SetPosition(x, y, z);
         MapLogic.Instance.Objects.Add(proj);
-        // todo notify clients
 
         if (NetworkManager.IsServer)
         {
@@ -516,7 +514,6 @@ public class Server
         MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicSimple(animspeed), null); // this is usually SFX like stuff. projectile plays animation based on typeid and stops.
         proj.SetPosition(x, y, z);
         MapLogic.Instance.Objects.Add(proj);
-        // todo notify clients
 
         if (NetworkManager.IsServer)
         {
@@ -545,6 +542,46 @@ public class Server
                 else app.SourceTag = -1;
 
                 app.TypeID = id;
+
+                client.SendCommand(app);
+            }
+        }
+    }
+
+    public static void SpawnProjectileLightning(IPlayerPawn source, float x, float y, float z, MapUnit target, int color, MapProjectileCallback cb = null)
+    {
+        MapProjectile proj = new MapProjectile(AllodsProjectile.Lightning, source, new MapProjectileLogicLightning(target, color), cb);
+        proj.SetPosition(x, y, z);
+        MapLogic.Instance.Objects.Add(proj);
+
+        if (NetworkManager.IsServer)
+        {
+            foreach (ServerClient client in ServerManager.Clients)
+            {
+                if (client.State != ClientState.Playing)
+                    continue;
+
+                Player p = MapLogic.Instance.GetNetPlayer(client);
+                MapObject sourceObj = (MapObject)source;
+                if (sourceObj != null)
+                {
+                    if (!sourceObj.IsVisibleForNetPlayer(p))
+                        ObjectBecameVisible(p, sourceObj); // force keyframe update for source unit
+                }
+
+                ClientCommands.AddProjectileLightning app;
+                app.X = x;
+                app.Y = y;
+                app.Z = z;
+                app.SourceType = (sourceObj != null) ? sourceObj.GetObjectType() : MapObjectType.Object;
+
+                if (app.SourceType == MapObjectType.Human ||
+                    app.SourceType == MapObjectType.Monster) app.SourceTag = ((MapUnit)sourceObj).Tag;
+                else if (app.SourceType == MapObjectType.Structure) app.SourceTag = ((MapStructure)sourceObj).Tag;
+                else app.SourceTag = -1;
+
+                app.TargetTag = target.Tag;
+                app.Color = color;
 
                 client.SendCommand(app);
             }

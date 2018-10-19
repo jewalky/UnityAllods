@@ -776,6 +776,17 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         }
         else if (e.rawType == EventType.MouseDown && e.button == 1)
         {
+            // logic: if spellbook is open and some spell is selected, set spell to NoneSpell
+            // player clicked somewhere not on the book (presumably over the map)
+            if (SpellbookVisible)
+            {
+                if (Spellbook.ActiveSpell != Spell.Spells.NoneSpell)
+                {
+                    Spellbook.ActiveSpell = Spell.Spells.NoneSpell;
+                    return true;
+                }
+            }
+
             SelectedObject = null; // deselect
             Commandbar.EnabledCommands = 0;
             return true;

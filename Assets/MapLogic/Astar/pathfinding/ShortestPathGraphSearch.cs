@@ -86,11 +86,23 @@ public class ShortestPathGraphSearch<State, Action> {
 
 		frontierMap.Add(fromState, startNode);
 
+        int cycleGuard = 0;
+
 		while (!frontier.IsEmpty){
+            /*if (++cycleGuard > 256)
+            {
+                Debug.LogFormat("cycleguard = {0}", cycleGuard);
+                return null;
+            }*/
+
 			SearchNode<State,Action> node = frontier.Dequeue();
 			frontierMap.Remove(node.state);
-			
-			if (node.state.Equals(toState)) return BuildSolution(node);
+
+            if (node.state.Equals(toState))
+            {
+                //Debug.LogFormat("cycleguard = {0}", cycleGuard);
+                return BuildSolution(node);
+            }
 			exploredSet.Add(node.state);
             // dirty hack to prevent jumping overhead
             if (exploredSet.Count > 2048)
@@ -124,8 +136,8 @@ public class ShortestPathGraphSearch<State, Action> {
 				}
 			}
 		}
-
-		return null;
+        //Debug.LogFormat("cycleguard = {0}", cycleGuard);
+        return null;
 	}
 	
 	private SearchNode<State,Action> CreateSearchNode(SearchNode<State,Action> node, Action action, State child, State toState){

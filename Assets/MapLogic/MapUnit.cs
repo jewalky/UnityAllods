@@ -374,10 +374,30 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         return IsFlying ? MapNodeFlags.DynamicAir : MapNodeFlags.DynamicGround;
     }
 
+    private int AstarNodesWalked = 0;
+    private int AstarLastX = -1;
+    private int AstarLastY = -1;
+    private List<Vector2i> AstarLastSolution;
     private ShortestPathGraphSearch<Vector2i, Vector2i> AstarSearcher = null;
     private UnitAstarHelper AstarSearcherH = null;
     public List<Vector2i> DecideNextMove(int targetX, int targetY, bool staticOnly)
     {
+        if (AstarNodesWalked < 16 &&
+            AstarLastX == targetX && AstarLastY == targetY && AstarLastSolution != null &&
+            AstarNodesWalked+1 < AstarLastSolution.Count &&
+            AstarLastSolution.Count > 0 && Interaction.CheckWalkableForUnit(AstarLastSolution[AstarNodesWalked+1].x, AstarLastSolution[AstarNodesWalked+1].y, staticOnly))
+        {
+            if (AstarLastSolution[AstarNodesWalked].x == X &&
+                AstarLastSolution[AstarNodesWalked].y == Y)
+            {
+                AstarNodesWalked++;
+                List<Vector2i> npath = AstarLastSolution.Skip(AstarNodesWalked).ToList();
+                return npath;
+            }
+        }
+
+        AstarNodesWalked = 16;
+
         // if targetX,targetY is blocked, refuse to pathfind.
         if (!Interaction.CheckWalkableForUnit(targetX, targetY, staticOnly))
             return null;
@@ -395,6 +415,10 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             if (nodes == null)
                 return null;
             nodes.Add(new Vector2i(targetX, targetY));
+            AstarNodesWalked = 0;
+            AstarLastX = targetX;
+            AstarLastY = targetY;
+            AstarLastSolution = nodes;
             return nodes;
         }
         catch (Exception)

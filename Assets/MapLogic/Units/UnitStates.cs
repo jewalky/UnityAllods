@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using UnityEngine;
+using System.Collections.Generic;
 
 public class IdleState : IUnitState
 {
@@ -102,6 +103,8 @@ public class MoveState : IUnitState
 
                 if (path2 != null)
                     path = path2;
+                else if (i == 0)
+                    return false; // next node is not walkable. this means we got right into a wall
 
                 break;
             }
@@ -127,7 +130,9 @@ public class MoveState : IUnitState
         if (Unit.X == WalkX && Unit.Y == WalkY)
             return false;
 
-        TryWalkTo(Unit, WalkX, WalkY);
+        if (!TryWalkTo(Unit, WalkX, WalkY))
+            return false;
+
         return true;
     }
 }

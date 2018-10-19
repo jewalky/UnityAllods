@@ -504,6 +504,7 @@ public class MapProjectile : MapObject, IDynlight
         Width = 1;
         Height = 1;
         Alpha = 1f;
+        Color = new Color(1, 1, 1, 1);
         DoUpdateView = true;
     }
 

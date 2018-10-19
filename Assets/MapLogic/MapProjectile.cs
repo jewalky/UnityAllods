@@ -44,6 +44,7 @@ public class MapProjectileLogicHoming : IMapProjectileLogic
 
         if (Target != null)
         {
+            Projectile.LightLevel = 256;
             Vector2 targetCenter = new Vector2(Target.X + (float)Target.Width / 2 + Target.FracX, Target.Y + (float)Target.Height / 2 + Target.FracY);
             Projectile.Angle = MapObject.FaceVector(targetCenter.x - Projectile.ProjectileX, targetCenter.y - Projectile.ProjectileY);
             Vector2 dir = new Vector2(targetCenter.x - Projectile.ProjectileX, targetCenter.y - Projectile.ProjectileY);

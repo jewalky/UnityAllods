@@ -101,6 +101,11 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
     {
         Infowindow.Viewer = null;
         Commandbar.EnabledCommands = 0;
+        UnloadMeshes();
+    }
+
+    public void UnloadMeshes()
+    {
 
         GameObject[] dMeshChunks = MeshChunks;
         GameObject[] dFOWMeshChunks = FOWMeshChunks;
@@ -183,7 +188,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         if (GridMeshMaterial == null)
             GridMeshMaterial = new Material(MainCamera.MainShader);
 
-        Unload();
+        UnloadMeshes();
         if (!MapLogic.Instance.IsLoaded)
             return;
 

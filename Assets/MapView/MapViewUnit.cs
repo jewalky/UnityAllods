@@ -267,6 +267,11 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         ShadowObject.transform.localPosition = new Vector3(0, 0, 16);
     }
 
+    protected virtual Texture2D GetDeathPalette(UnitFile f)
+    {
+        return f.UpdatePalette(LogicUnit.Face);
+    }
+
     protected virtual Texture2D GetPalette()
     {
         return LogicUnit.Class.File.UpdatePalette(LogicUnit.Face);
@@ -401,7 +406,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                     dCls = dCls.Dying;
                 dCls.File.UpdateSprite();
                 sprites = dCls.File.File;
-                Renderer.material.SetTexture("_Palette", dCls.File.UpdatePalette(LogicUnit.Face));
+                Renderer.material.SetTexture("_Palette", GetDeathPalette(dCls.File));
 
                 int moveSize = dCls.MoveBeginPhases + dCls.MovePhases;
                 int attackSize = dCls.AttackPhases;

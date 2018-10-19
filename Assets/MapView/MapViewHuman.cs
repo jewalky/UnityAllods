@@ -19,6 +19,11 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         return UpdateHumanPalette();
     }
 
+    protected override Texture2D GetDeathPalette(UnitFile cls)
+    {
+        return GetPalette();
+    }
+
     private static Texture2D[,] _HumanPalettes = null;
     // type = 0 - heroes
     // type = 1 - heroes_l

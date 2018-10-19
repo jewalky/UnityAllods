@@ -122,6 +122,7 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         {
             string text = ChatField.Value;
             ChatField.Value = "";
+            ChatField.Update();
             //ChatField.Visible = false; // hide chat after successful message
             ChatField.gameObject.SetActive(false);
             if (text.Trim().Length > 0)

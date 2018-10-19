@@ -146,6 +146,41 @@ class MapLogic
         MapLightingNeedsUpdate = true;
     }
 
+    public float GetHeightAt(int x, int y)
+    {
+        if (x >= 0 && x < MapLogic.Instance.Width &&
+            y >= 0 && y < MapLogic.Instance.Height)
+            return MapLogic.Instance.Nodes[x, y].Height;
+        return 0;
+    }
+
+    public float GetHeightAt(float x, float y, int w, int h)
+    {
+        float height = 0;
+        int count = 0;
+        for (int ly = (int)y; ly < (int)y + h; ly++)
+        {
+            for (int lx = (int)x; lx < (int)x + w; lx++)
+            {
+                int baseX = lx;
+                int baseY = ly;
+                float fracX = x - baseX; // fractional part
+                float fracY = y - baseY; // fractional part
+
+                float h1 = GetHeightAt(baseX, baseY);
+                float h2 = GetHeightAt(baseX + 1, baseY);
+                float h3 = GetHeightAt(baseX, baseY + 1);
+                float h4 = GetHeightAt(baseX + 1, baseY + 1);
+
+                float l1 = h1 * (1.0f - fracX) + h2 * fracX;
+                float l2 = h3 * (1.0f - fracX) + h4 * fracX;
+                height += (l1 * (1.0f - fracY) + l2 * fracY);
+                count++;
+            }
+        }
+        return height/count;
+    }
+
     public Texture2D CheckLightingTexture()
     {
         if (MapLightingUpdated || MapLightingTex == null)

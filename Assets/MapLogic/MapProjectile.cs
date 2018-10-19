@@ -261,7 +261,15 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
             Projectile.CallCallback();
         }
 
-        AnimTime += 0.01f;
+        AnimTime += 0.08f;
+
+        float hUDiff = MapLogic.Instance.GetHeightAt(TargetCenter.x, TargetCenter.y, 1, 1) / 32f;
+        float htOrig = MapLogic.Instance.GetHeightAt(Projectile.ProjectileX, Projectile.ProjectileY, 1, 1) / 32f;
+        float angleToDst = Mathf.Atan2(TargetDir.y, TargetDir.x);
+        float sinScale = TargetDst / 8 * Mathf.Sin((float)MapLogic.Instance.LevelTime / 2 * TargetDst);
+        Vector2 offs = new Vector2(0, 1);
+        float sinX = Mathf.Cos(angleToDst) * offs.x - Mathf.Sin(angleToDst) * offs.y;
+        float sinY = Mathf.Cos(angleToDst) * offs.y + Mathf.Sin(angleToDst) * offs.x;
 
         for (int i = 0; i < SubProjectiles.Count; i++)
         {
@@ -269,18 +277,19 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
             // get angle from first to second. calculate sin wave
             float baseX = Projectile.ProjectileX + TargetDir.x * idst;
             float baseY = Projectile.ProjectileY + TargetDir.y * idst;
-            float angleToDst = Mathf.Atan2(TargetDir.y, TargetDir.x);
-            float sinScale = TargetDst / 8 * Mathf.Sin((float)MapLogic.Instance.LevelTime / 2 * TargetDst);
-            Vector2 offs = new Vector2(0, Sin10(idst/TargetDst) * sinScale);
-            float sinX = Mathf.Cos(angleToDst) * offs.x - Mathf.Sin(angleToDst) * offs.y;
-            float sinY = Mathf.Cos(angleToDst) * offs.y + Mathf.Sin(angleToDst) * offs.x;
+            
+            float sscale = (Sin10(idst / TargetDst) * sinScale);
             MapProjectile sub = SubProjectiles[i];
             sub.Color = Colors[Color];
             sub.Alpha = 1f - AnimTime;
             sub.LightLevel = 0;
             if (i % 12 == 0)
                 sub.LightLevel = (int)(512 * (1f - AnimTime));
-            sub.SetPosition(baseX + sinX, baseY + sinY, 0);
+            float htDiff = MapLogic.Instance.GetHeightAt(baseX + sinX*sscale, baseY + sinY*sscale, 1, 1)/32f;
+            float lval = (float)i / SubProjectiles.Count;
+            float htLerp = hUDiff * lval + htOrig * (1f - lval);
+
+            sub.SetPosition(baseX + sinX*sscale, baseY + sinY*sscale, -htDiff+htLerp);
         }
 
         if (AnimTime > 1)

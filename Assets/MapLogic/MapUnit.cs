@@ -89,6 +89,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     // for visual state stuff
     public float FracX = 0;
     public float FracY = 0;
+    // for damage calculation per tick
+    private bool DamageLastVisible = false;
+    private int DamageLast = 0;
 
     public enum BodySlot
     {
@@ -340,18 +343,29 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 {
                     if (Stats.Mana < Stats.ManaMax)
                     {
-                        Stats.TrySetMana((int)(Stats.Mana + (float)Stats.ManaMax / 100 * (float)Stats.ManaRegeneration / 100));
+                        if (Stats.TrySetMana((int)(Stats.Mana + (float)Stats.ManaMax / 100 * (float)Stats.ManaRegeneration / 100)) &&
+                            NetworkManager.IsServer) Server.NotifyUnitStatsShort(this);
                         DoUpdateView = true;
                         DoUpdateInfo = true;
                     }
                     if (Stats.Health < Stats.HealthMax)
                     {
-                        Stats.TrySetHealth((int)(Stats.Health + (float)Stats.HealthMax / 100 * Stats.HealthRegeneration / 100));
+                        if (Stats.TrySetHealth((int)(Stats.Health + (float)Stats.HealthMax / 100 * Stats.HealthRegeneration / 100)) &&
+                            NetworkManager.IsServer) Server.NotifyUnitStatsShort(this);
                         DoUpdateView = true;
                         DoUpdateInfo = true;
                     }
                 }
             }
+        }
+
+        if (!NetworkManager.IsClient && DamageLast > 0)
+        {
+            if (NetworkManager.IsServer)
+                Server.NotifyDamageUnit(this, DamageLast, DamageLastVisible);
+            MapView.Instance.SpawnDamageNumbers(this, DamageLast, false);
+            DamageLast = 0;
+            DamageLastVisible = false;
         }
     }
 
@@ -568,8 +582,12 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         if (Stats.TrySetHealth(Stats.Health - damagecount))
         {
-            if (NetworkManager.IsServer)
-                Server.NotifyDamageUnit(this, damagecount, (flags & DamageFlags.Astral) == 0);
+            if (!NetworkManager.IsClient)
+            {
+                DamageLast += damagecount;
+                if ((flags & DamageFlags.Astral) == 0)
+                    DamageLastVisible = true;
+            }
             return damagecount;
         }
 

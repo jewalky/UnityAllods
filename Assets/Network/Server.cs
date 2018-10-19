@@ -589,4 +589,25 @@ public class Server
             }
         }
     }
+
+    public static void NotifyUnitStatsShort(MapUnit unit)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            Player p = MapLogic.Instance.GetNetPlayer(client);
+            if (unit.IsVisibleForNetPlayer(p))
+            {
+                ClientCommands.UnitStatsShort statsCmd;
+                statsCmd.Tag = unit.Tag;
+                statsCmd.Health = unit.Stats.Health;
+                statsCmd.HealthMax = unit.Stats.HealthMax;
+                statsCmd.Mana = unit.Stats.Mana;
+                statsCmd.ManaMax = unit.Stats.ManaMax;
+                client.SendCommand(statsCmd);
+            }
+        }
+    }
 }

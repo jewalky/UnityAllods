@@ -962,6 +962,21 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         return o;
     }
 
+    // spawn damage count
+    public void SpawnDamageNumbers(MapUnit unit, int damage, bool crit)
+    {
+        float poffs = 0;
+        if (unit.Player.Avatar == unit)
+            poffs += 8;
+        SpawnDamageNumbers(unit.X + unit.FracX + (float)unit.Width/2, unit.Y + unit.FracY + (float)unit.Height/2, (float)(unit.Width+unit.Height)/2+poffs, damage, false, unit.Player);
+    }
+
+    private void SpawnDamageNumbers(float x, float y, float z, int damage, bool crit, Player p)
+    {
+        MapViewNumbers mvn = MapViewNumbers.Create(x, y, z, damage, crit, p);
+        mvn.transform.parent = transform;
+    }
+
     public Vector2 MapToScreenCoords(float x, float y, int w, int h)
     {
         float height = 0;

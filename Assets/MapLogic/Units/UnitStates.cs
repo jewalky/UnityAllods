@@ -302,7 +302,8 @@ public class CastState : IUnitState
             if (Unit.Stats.Mana >= Spell.Template.ManaCost)
             {
                 Unit.AddActions(new AttackAction(Unit, TargetUnit, Spell, TargetX, TargetY));
-                Unit.Stats.TrySetMana(Unit.Stats.Mana - Spell.Template.ManaCost);
+                if (Unit.Stats.TrySetMana(Unit.Stats.Mana - Spell.Template.ManaCost) && NetworkManager.IsServer)
+                    Server.NotifyUnitStatsShort(Unit);
                 Unit.DoUpdateView = true;
                 Unit.DoUpdateInfo = true;
             }

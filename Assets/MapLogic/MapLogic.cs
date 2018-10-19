@@ -105,7 +105,7 @@ class MapLogic
             for (int x = (int)vRec.xMin; x < vRec.xMax; x++)
             {
                 Nodes[x, y].DynLight = 0;
-                foreach(MapObject mobj in Nodes[x, y].Objects)
+                foreach (MapObject mobj in Nodes[x, y].Objects)
                 {
                     if (mobj is IDynlight)
                         Nodes[x, y].DynLight += ((IDynlight)mobj).GetLightValue();
@@ -218,7 +218,7 @@ class MapLogic
             if (value > 8) value = 8;
 
             _Speed = value;
-            float scale = 5 * (_Speed+1);
+            float scale = 5 * (_Speed + 1);
             Time.timeScale = scale;
 
             if (NetworkManager.IsServer)
@@ -400,7 +400,7 @@ class MapLogic
 
         // postprocessing
         // if we are playing in singleplayer, then console player is Self.
-        if (!NetworkManager.IsClient && !NetworkManager.IsServer) 
+        if (!NetworkManager.IsClient && !NetworkManager.IsServer)
         {
             Player Self = GetPlayerByName("Self");
             if (Self == null) GameConsole.Instance.WriteLine("Error: couldn't set ConsolePlayer: Self not found!");
@@ -688,7 +688,7 @@ class MapLogic
         if (x < 0 || y < 0 || x >= Width || y >= Height)
             return null;
 
-        foreach (MapObject mobj in Nodes[x,y].Objects)
+        foreach (MapObject mobj in Nodes[x, y].Objects)
         {
             if (mobj.GetObjectType() != MapObjectType.Sack) continue;
             MapSack sack = (MapSack)mobj;
@@ -727,7 +727,7 @@ class MapLogic
         MapSack existingsack = null;
         if (alwayscreate) RemoveSackAt(x, y);
         else existingsack = GetSackAt(x, y);
-        
+
         if (existingsack == null)
         {
             existingsack = new MapSack(pack);

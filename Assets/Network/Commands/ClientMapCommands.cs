@@ -452,6 +452,8 @@ namespace ClientCommands
             if (Visible)
             {
                 // todo: display flying hp
+                if (unit.GetVisibityInCamera())
+                    MapView.Instance.SpawnDamageNumbers(unit, Damage, false);
             }
 
             return true;
@@ -528,6 +530,45 @@ namespace ClientCommands
 
             unit.Stats = Stats;
             unit.DoUpdateView = true;
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.UnitStatsShort)]
+    public struct UnitStatsShort : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public int Health;
+        [ProtoMember(3)]
+        public int Mana;
+        [ProtoMember(4)]
+        public int HealthMax;
+        [ProtoMember(5)]
+        public int ManaMax;
+        // todo: effect flags (like invisibility)
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null)
+            {
+                Debug.LogFormat("Attempted to set stats for nonexistent unit {0}", Tag);
+                return true;
+            }
+
+            unit.Stats.Health = Health;
+            unit.Stats.HealthMax = HealthMax;
+            unit.Stats.Mana = Mana;
+            unit.Stats.ManaMax = ManaMax;
+            unit.DoUpdateView = true;
+            unit.DoUpdateInfo = true;
 
             return true;
         }

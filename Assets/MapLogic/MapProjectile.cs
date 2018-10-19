@@ -191,12 +191,26 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
 
     int Color;
 
+    private static Color[] Colors =
+    new Color[] {
+        new Color(1, 1, 1, 1),
+        new Color(1, 0, 0, 1),
+        new Color(1, 0.5f, 0, 1), // lol 7 colors
+        new Color(1, 1, 0, 1),
+        new Color(0, 1, 0, 1),
+        new Color(0, 1, 1, 1),
+        new Color(0.5f, 0, 1, 1), // lol 7 colors (x2)
+        new Color(1, 0, 1, 1),
+    };
+
     public MapProjectileLogicLightning(MapUnit target, int color)
     {
         Target = target;
         SubProjectiles = new List<MapProjectile>();
         AnimTime = 0;
-        Color = Math.Min(8, Math.Max(0, color));
+        if (Color < 0) color = 0;
+        if (Color > 7) color = 7;
+        Color = color;
     }
 
     public void SetProjectile(MapProjectile proj)
@@ -217,10 +231,12 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
     {
         // calculate target direction!
         // check if target is gone
-        if (!Target.IsAlive || !MapLogic.Instance.Objects.Contains(Target))
+        if (Target != null && (!Target.IsAlive || !MapLogic.Instance.Objects.Contains(Target)))
             Target = null;
 
         Projectile.Alpha = 0;
+
+        const float density = 0.15f;
 
         if (Target != null && SubProjectiles.Count <= 0)
         {
@@ -232,20 +248,24 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
             TargetDir.Normalize();
             // spawn projectiles along the way
             TargetDst = new Vector2(TargetCenter.x - Projectile.ProjectileX, TargetCenter.y - Projectile.ProjectileY).magnitude;
-            for (float i = 0; i < TargetDst; i += 0.15f)
+            for (float i = 0; i < TargetDst; i += density)
             {
                 MapProjectile visProj = new MapProjectile(AllodsProjectile.Lightning);
+                visProj.Color = Colors[Color];
+                visProj.LightLevel = 0;
                 visProj.SetPosition(Projectile.ProjectileX + TargetDir.x * i, Projectile.ProjectileY + TargetDir.y * i, 0); // for now
                 MapLogic.Instance.Objects.Add(visProj);
                 SubProjectiles.Add(visProj);
             }
+
+            Projectile.CallCallback();
         }
 
-        AnimTime += 0.1f;
+        AnimTime += 0.01f;
 
         for (int i = 0; i < SubProjectiles.Count; i++)
         {
-            float idst = 0.15f * i;
+            float idst = density * i;
             // get angle from first to second. calculate sin wave
             float baseX = Projectile.ProjectileX + TargetDir.x * idst;
             float baseY = Projectile.ProjectileY + TargetDir.y * idst;
@@ -254,9 +274,13 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
             Vector2 offs = new Vector2(0, Sin10(idst/TargetDst) * sinScale);
             float sinX = Mathf.Cos(angleToDst) * offs.x - Mathf.Sin(angleToDst) * offs.y;
             float sinY = Mathf.Cos(angleToDst) * offs.y + Mathf.Sin(angleToDst) * offs.x;
-            SubProjectiles[i].SetPosition(baseX + sinX, baseY + sinY, 0);
-            SubProjectiles[i].Alpha = 1f - AnimTime;
-            SubProjectiles[i].LightLevel = (int)(256 * (1f - AnimTime));
+            MapProjectile sub = SubProjectiles[i];
+            sub.Color = Colors[Color];
+            sub.Alpha = 1f - AnimTime;
+            sub.LightLevel = 0;
+            if (i % 12 == 0)
+                sub.LightLevel = (int)(512 * (1f - AnimTime));
+            sub.SetPosition(baseX + sinX, baseY + sinY, 0);
         }
 
         if (AnimTime > 1)
@@ -429,6 +453,21 @@ public class MapProjectile : MapObject, IDynlight
         }
     }
 
+    private Color _Color;
+    public Color Color
+    {
+        get
+        {
+            return _Color;
+        }
+
+        set
+        {
+            _Color = value;
+            DoUpdateView = true;
+        }
+    }
+
     public MapProjectile(AllodsProjectile proj, IPlayerPawn source = null, IMapProjectileLogic logic = null, MapProjectileCallback cb = null)
     {
         InitProjectile((int)proj, source, logic, cb);
@@ -473,20 +512,22 @@ public class MapProjectile : MapObject, IDynlight
         base.Dispose();
     }
 
+    public void CallCallback()
+    {
+        if (Callback != null)
+            Callback(this);
+        Callback = null;
+    }
+
     public override void Update()
     {
         if (Logic != null)
         {
             if (!Logic.Update())
             {
-                if (Callback != null)
-                    Callback(this);
-                else
-                {
-                    Dispose();
-                    return;
-                }
-                Logic = null; // logic done
+                CallCallback();
+                Dispose();
+                return;
             }
         }
     }

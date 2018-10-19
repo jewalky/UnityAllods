@@ -164,7 +164,11 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
 
             Images.AllodsSprite sprites = LogicProjectile.Class.File;
 
-            Renderer.material.color = new Color(1, 1, 1, LogicProjectile.Alpha);
+            // This is a hack for prismatic spray support. Maybe something else in the future
+            Renderer.material.color = new Color(LogicProjectile.Color.r,
+                                                LogicProjectile.Color.g,
+                                                LogicProjectile.Color.b,
+                                                LogicProjectile.Color.a*LogicProjectile.Alpha);
 
             if (sprites == null || !spriteSet)
             {

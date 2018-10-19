@@ -148,6 +148,8 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
             Builder.AddQuad(1, 5 + spx * 38 + 1, 5 + spy * 38 + 1, 36, 36);
         }
 
+        Builder.CurrentMesh = 1;
+
         Filter.mesh = Builder.ToMesh(MeshTopology.Quads, MeshTopology.Quads);
     }
 

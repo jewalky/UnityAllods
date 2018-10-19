@@ -95,6 +95,7 @@ public class MapProjectileLogicDirectional : IMapProjectileLogic
 
     public bool Update()
     {
+        Projectile.LightLevel = 256;
         Vector3 targetCenter = new Vector3(TargetX, TargetY, TargetZ);
         Projectile.Angle = MapObject.FaceVector(targetCenter.x - Projectile.ProjectileX, targetCenter.y - Projectile.ProjectileY);
         Vector3 dir = new Vector3(targetCenter.x - Projectile.ProjectileX, targetCenter.y - Projectile.ProjectileY, targetCenter.z - Projectile.ProjectileZ);
@@ -154,6 +155,16 @@ public class MapProjectileLogicSimple : IMapProjectileLogic
         Projectile.CurrentFrame = frame;
         Projectile.CurrentTics = 0;
         Projectile.DoUpdateView = true;
+
+        // this particular part is a hack
+        if (Projectile.Class.ID == (int)AllodsProjectile.Explosion)
+        {
+            // radians aren't 0..1 which is not exactly easy to work with, but well
+            // todo: google, rewrite properly
+            float frad = Mathf.Max(0, (Mathf.Sin((float)frame * (Mathf.PI * 2) / Projectile.Class.Phases) + 0.5f));
+            Projectile.LightLevel = (int)(frad * 512);
+        }
+
         Timer++;
         return true;
     }
@@ -328,6 +339,7 @@ public class MapProjectile : MapObject, IDynlight
 
     public override void Dispose()
     {
+        LightLevel = 0;
         for (int i = 0; i < MapLogic.Instance.Objects.Count; i++)
         {
             MapObject mobj = MapLogic.Instance.Objects[i];

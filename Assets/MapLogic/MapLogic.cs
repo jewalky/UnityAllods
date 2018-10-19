@@ -100,15 +100,46 @@ class MapLogic
     public void CalculateDynLighting()
     {
         Rect vRec = MapView.Instance.VisibleRect;
+
         for (int y = (int)vRec.yMin; y < vRec.yMax; y++)
         {
             for (int x = (int)vRec.xMin; x < vRec.xMax; x++)
             {
                 Nodes[x, y].DynLight = 0;
+            }
+        }
+
+        for (int y = (int)vRec.yMin; y < vRec.yMax; y++)
+        {
+            for (int x = (int)vRec.xMin; x < vRec.xMax; x++)
+            {
                 foreach (MapObject mobj in Nodes[x, y].Objects)
                 {
                     if (mobj is IDynlight)
-                        Nodes[x, y].DynLight += ((IDynlight)mobj).GetLightValue();
+                    {
+                        int lval = ((IDynlight)mobj).GetLightValue();
+                        if (lval > 256)
+                        {
+                            int lightDist = Mathf.CeilToInt((float)lval / 256);
+                            for (int ly = y-lightDist; ly <= y+lightDist; ly++)
+                            {
+                                if (ly < (int)vRec.yMin || ly >= (int)vRec.yMax)
+                                   continue;
+                                for (int lx = x-lightDist; lx <= x+lightDist; lx++)
+                                {
+                                    if (lx < (int)vRec.xMin || lx >= (int)vRec.xMax)
+                                        continue;
+                                    float dst = Mathf.Min(new Vector2(lx - x, ly - y).magnitude, lightDist);
+                                    int lightExtend = (int)(256 * (lightDist-dst) / lightDist);
+                                    Nodes[lx, ly].DynLight += lightExtend;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Nodes[x, y].DynLight += lval;
+                        }
+                    }
                 }
             }
         }

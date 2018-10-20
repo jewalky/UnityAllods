@@ -115,7 +115,7 @@ public class Client
         }
     }
 
-    public static void SendCastToUnit(MapUnit unit, Spell.Spells spell, MapUnit target)
+    public static void SendCastToUnit(MapUnit unit, Spell.Spells spell, MapUnit target, int x, int y)
     {
         Spell cspell = unit.GetSpell(spell);
         if (cspell == null)
@@ -123,7 +123,16 @@ public class Client
 
         if (cspell.Template.SpellTarget == 2)
         {
-            SendCastToArea(unit, spell, target.X+target.Width/2, target.Y+target.Height/2);
+            if (x <= unit.X+unit.Width && y <= unit.Y+unit.Height &&
+                x >= unit.X && y >= unit.Y)
+            {
+                SendCastToArea(unit, spell, x, y);
+                return;
+            }
+
+            // x,y does not match unit coordinates. take unit as priority?
+            Vector2i unitCoords = target.Interaction.GetClosestPointTo(unit);
+            SendCastToArea(unit, spell, unitCoords.x, unitCoords.y);
             return;
         }
 

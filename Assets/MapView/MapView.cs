@@ -757,7 +757,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                     {
                         if (HoveredObject != null && (HoveredObject.GetObjectType() == MapObjectType.Monster ||
                                                       HoveredObject.GetObjectType() == MapObjectType.Human))
-                            Client.SendCastToUnit(unit, GetCastSpell(), (MapUnit)HoveredObject);
+                            Client.SendCastToUnit(unit, GetCastSpell(), (MapUnit)HoveredObject, MouseCellX, MouseCellY);
                         else Client.SendCastToArea(unit, GetCastSpell(), MouseCellX, MouseCellY);
                     }
                     else if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move)

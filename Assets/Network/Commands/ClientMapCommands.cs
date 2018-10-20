@@ -280,7 +280,6 @@ namespace ClientCommands
             else
             {
                 unit.Dispose();
-                MapLogic.Instance.Objects.Remove(unit);
             }
 
             return true;
@@ -734,7 +733,6 @@ namespace ClientCommands
             Server.SpawnProjectileHoming(TypeID, source, X, Y, Z, target, Speed, (MapProjectile fproj) =>
             {
                 fproj.Dispose();
-                MapLogic.Instance.Objects.Remove(fproj);
             });
 
             return true;
@@ -790,7 +788,6 @@ namespace ClientCommands
             Server.SpawnProjectileDirectional(TypeID, source, X, Y, Z, TargetX, TargetY, TargetZ, Speed, (MapProjectile fproj) =>
             {
                 fproj.Dispose();
-                MapLogic.Instance.Objects.Remove(fproj);
             });
 
             return true;

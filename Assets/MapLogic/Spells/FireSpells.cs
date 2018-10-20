@@ -96,7 +96,6 @@ namespace Spells
                                                                                                                 continue;
 
                                                                                                             mp.Dispose();
-                                                                                                            MapLogic.Instance.Objects.Remove(mp);
                                                                                                             continue;
                                                                                                         }
                                                                                                         else
@@ -109,7 +108,6 @@ namespace Spells
                                                                                             }
 
                                                                                             fproj.Dispose();
-                                                                                            MapLogic.Instance.Objects.Remove(fproj);
                                                                                         });
 
             return false;
@@ -177,7 +175,6 @@ namespace Spells
                                             continue;
 
                                         mp.Dispose();
-                                        MapLogic.Instance.Objects.Remove(mp);
                                         continue;
                                     }
                                     else

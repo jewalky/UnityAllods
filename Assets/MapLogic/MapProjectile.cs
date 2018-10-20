@@ -295,13 +295,9 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
         if (AnimTime > 1)
         {
             foreach (MapProjectile sub in SubProjectiles)
-            {
                 sub.Dispose();
-                MapLogic.Instance.Objects.Remove(sub);
-            }
 
             Projectile.Dispose();
-            MapLogic.Instance.Objects.Remove(Projectile);
             return false;
         }
 

@@ -75,9 +75,9 @@ public class MapStructure : MapObject, IDynlight, IPlayerPawn, IVulnerable, IDis
 
     public override void Dispose()
     {
-        base.Dispose();
         if (_Player != null)
             _Player.Objects.Remove(this);
+        base.Dispose();
     }
 
     private void InitStructure()

@@ -353,7 +353,6 @@ public class AttackAction : IUnitAction
                                                                       }
 
                                                                       fproj.Dispose();
-                                                                      MapLogic.Instance.Objects.Remove(fproj);
                                                                   });
                 }
                 else

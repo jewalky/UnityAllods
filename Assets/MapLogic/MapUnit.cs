@@ -265,9 +265,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public override void Dispose()
     {
-        base.Dispose();
         if (_Player != null)
             _Player.Objects.Remove(this);
+        base.Dispose();
     }
 
     // this is called when on-body items are modified

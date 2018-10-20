@@ -152,7 +152,6 @@ namespace Spells
                                                 TargetUnit.TakeDamage(spdf, Spell.User, damage);
 
                                                 fproj.Dispose();
-                                                MapLogic.Instance.Objects.Remove(fproj);
                                             });
         }
     }

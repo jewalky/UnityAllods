@@ -43,12 +43,7 @@ namespace Spells
                                             (MapProjectile fproj) =>
                                             {
                                                 DamageFlags spdf = SphereToDamageFlags(Spell);
-
-                                                if (target.TakeDamage(spdf, Spell.User, damage) > 0)
-                                                {
-                                                    target.DoUpdateInfo = true;
-                                                    target.DoUpdateView = true;
-                                                }
+                                                target.TakeDamage(spdf, Spell.User, damage);
                                             });
         }
     }

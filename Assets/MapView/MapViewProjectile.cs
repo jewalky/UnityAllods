@@ -164,12 +164,6 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
 
             Images.AllodsSprite sprites = LogicProjectile.Class.File;
 
-            // This is a hack for prismatic spray support. Maybe something else in the future
-            Renderer.material.color = new Color(LogicProjectile.Color.r,
-                                                LogicProjectile.Color.g,
-                                                LogicProjectile.Color.b,
-                                                LogicProjectile.Color.a*LogicProjectile.Alpha);
-
             if (sprites == null || !spriteSet)
             {
                 if (LogicProjectile.Class.ID == 7) // bat_sonic attack, apparently hardcoded
@@ -191,6 +185,12 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
                 }
                 spriteSet = true;
             }
+
+            // This is a hack for prismatic spray support. Maybe something else in the future
+            Renderer.material.color = new Color(LogicProjectile.Color.r,
+                                                LogicProjectile.Color.g,
+                                                LogicProjectile.Color.b,
+                                                LogicProjectile.Color.a * LogicProjectile.Alpha);
 
             int actualFrame = 0;
             // now, projectile frame is RotationPhases * angle + CurrentFrame

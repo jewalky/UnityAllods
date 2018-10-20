@@ -371,15 +371,25 @@ public class MapProjectileLogicEOT : IMapProjectileLogic
             ll = 0.5f + Mathf.Sin((float)timeOffset/4+RSeed*2)/4;
         }
 
-        if (timeOffset % 2 == 0)
+        if (Projectile.Class.ID == (int)AllodsProjectile.FireWall && timeOffset % 2 == 0)
             RSeed = UnityEngine.Random.Range(0f, 1f);
 
         Projectile.CurrentFrame = Frame;
         Projectile.CurrentTics = 0;
         Projectile.DoUpdateView = true;
         if (Projectile.Class.ID != (int)AllodsProjectile.FireWall)
-            ll = 0;
+            ll = -1;
         Projectile.LightLevel = (int)(256+ll*256f);
+
+        if (Projectile.Class.ID == (int)AllodsProjectile.PoisonCloud)
+        {
+            if (timeOffset < 16)
+                Projectile.Alpha = (float)timeOffset / 16;
+            else if (timeOffset >= 16 && timeOffset < Duration - 16)
+                Projectile.Alpha = (1f - (float)(timeOffset - 16) / (Duration - 32)) * 0.5f + 0.5f;
+            else if (timeOffset > Duration - 16)
+                Projectile.Alpha = 0.5f - ((float)timeOffset - (Duration - 16)) / 16 * 0.5f;
+        }
 
         Timer++;
         return true;
@@ -597,7 +607,7 @@ public class MapProjectile : MapObject, IDynlight
         Height = 1;
         Alpha = 1f;
         Color = new Color(1, 1, 1, 1);
-        ZOffset = -128;
+        ZOffset = 128;
         DoUpdateView = true;
     }
 

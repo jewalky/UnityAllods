@@ -82,12 +82,28 @@ namespace Spells
                                                                                                     {
                                                                                                         MapObject mo = node.Objects[i];
                                                                                                         if (!(mo is IVulnerable))
+                                                                                                        {
+                                                                                                            // aoe fire effect: remove cloud effects if any
+                                                                                                            if (!(mo is MapProjectile))
+                                                                                                                continue;
+
+                                                                                                            MapProjectile mp = (MapProjectile)mo;
+                                                                                                            if (mp.Class == null || mp.Class.ID != (int)AllodsProjectile.PoisonCloud)
+                                                                                                                continue;
+
+                                                                                                            // don't remove if on edge of fire wall
+                                                                                                            if (new Vector2(mp.ProjectileX - fproj.ProjectileX, mp.ProjectileY - fproj.ProjectileY).magnitude > 1.5f)
+                                                                                                                continue;
+
+                                                                                                            mp.Dispose();
+                                                                                                            MapLogic.Instance.Objects.Remove(mp);
                                                                                                             continue;
-                                                                                                        IVulnerable mov = (IVulnerable)mo;
-                                                                                                        mov.TakeDamage(spdf, Spell.User, dmg);
-                                                                                                        mo.DoUpdateInfo = true;
-                                                                                                        mo.DoUpdateView = true;
-                                                                                                        //Debug.LogFormat("{0} <- {1}", mo, dmg);
+                                                                                                        }
+                                                                                                        else
+                                                                                                        {
+                                                                                                            IVulnerable mov = (IVulnerable)mo;
+                                                                                                            mov.TakeDamage(spdf, Spell.User, dmg);
+                                                                                                        }
                                                                                                     }
                                                                                                 }
                                                                                             }
@@ -147,12 +163,29 @@ namespace Spells
                                 {
                                     MapObject mo = node.Objects[i];
                                     if (!(mo is IVulnerable))
+                                    {
+                                        // aoe fire effect: remove cloud effects if any
+                                        if (!(mo is MapProjectile))
+                                            continue;
+
+                                        MapProjectile mp = (MapProjectile)mo;
+                                        if (mp.Class == null || mp.Class.ID != (int)AllodsProjectile.PoisonCloud)
+                                            continue;
+
+                                        // don't remove if on edge of fire wall
+                                        if (new Vector2(mp.ProjectileX - proj.ProjectileX, mp.ProjectileY - proj.ProjectileY).magnitude > 0.8f)
+                                            continue;
+
+                                        mp.Dispose();
+                                        MapLogic.Instance.Objects.Remove(mp);
                                         continue;
-                                    IVulnerable mov = (IVulnerable)mo;
-                                    int dmg = (int)(10 * pdst);
-                                    mov.TakeDamage(spdf, Spell.User, dmg);
-                                    mo.DoUpdateInfo = true;
-                                    mo.DoUpdateView = true;
+                                    }
+                                    else
+                                    {
+                                        IVulnerable mov = (IVulnerable)mo;
+                                        int dmg = (int)(10 * pdst);
+                                        mov.TakeDamage(spdf, Spell.User, dmg);
+                                    }
                                 }
                             }
                         }

@@ -985,7 +985,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
     {
         float poffs = 0;
         if (unit.Player.Avatar == unit)
-            poffs += 8;
+            poffs += 1;
         SpawnDamageNumbers(unit.X + unit.FracX + (float)unit.Width/2, unit.Y + unit.FracY + (float)unit.Height/2, (float)(unit.Width+unit.Height)/2+poffs, damage, false, unit.Player);
     }
 

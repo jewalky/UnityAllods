@@ -342,17 +342,13 @@ public class AttackAction : IUnitAction
                                                                       {
                                                                           //Debug.LogFormat("projectile hit!");
                                                                           // done, make damage
-                                                                          if (TargetUnit.TakeDamage(DamageFlags, Unit, Damage) > 0)
-                                                                          {
-                                                                              TargetUnit.DoUpdateInfo = true;
-                                                                              TargetUnit.DoUpdateView = true;
-                                                                          }
+                                                                          TargetUnit.TakeDamage(DamageFlags, Unit, Damage);
 
                                                                           // and cast spell
                                                                           foreach (Spell spell in castspells)
                                                                           {
                                                                               Spells.SpellProc sp = spell.Cast(TargetUnit.X + TargetUnit.Width / 2, TargetUnit.Y + TargetUnit.Height / 2, TargetUnit);
-                                                                              if (sp != null) Unit.AddSpellEffects(sp);
+                                                                              if (sp != null) Unit.AddSpellProcessors(sp);
                                                                           }
                                                                       }
 
@@ -362,11 +358,7 @@ public class AttackAction : IUnitAction
                 }
                 else
                 {
-                    if (TargetUnit.TakeDamage(DamageFlags, Unit, Damage) > 0)
-                    {
-                        TargetUnit.DoUpdateInfo = true;
-                        TargetUnit.DoUpdateView = true;
-                    }
+                    TargetUnit.TakeDamage(DamageFlags, Unit, Damage);
                 }
             }
             else
@@ -380,14 +372,14 @@ public class AttackAction : IUnitAction
                     if (TargetUnit != null)
                         sp = Spell.Cast(TargetUnit.X + TargetUnit.Width / 2, TargetUnit.Y + TargetUnit.Height / 2, TargetUnit);
                     else sp = Spell.Cast(TargetX, TargetY, null);
-                    if (sp != null) Unit.AddSpellEffects(sp);
+                    if (sp != null) Unit.AddSpellProcessors(sp);
                 }
                 else
                 {
                     foreach (Spell spell in castspells)
                     {
                         Spells.SpellProc sp = spell.Cast(TargetUnit.X + TargetUnit.Width / 2, TargetUnit.Y + TargetUnit.Height / 2, TargetUnit);
-                        if (sp != null) Unit.AddSpellEffects(sp);
+                        if (sp != null) Unit.AddSpellProcessors(sp);
                     }
                 }
             }

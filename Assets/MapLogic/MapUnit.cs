@@ -75,7 +75,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public bool IsDying = false;
     public List<IUnitAction> Actions = new List<IUnitAction>();
     public List<IUnitState> States = new List<IUnitState>();
-    public List<Spells.SpellProc> SpellEffects = new List<Spells.SpellProc>();
+    public List<Spells.SpellProc> SpellProcessors = new List<Spells.SpellProc>();
+    public List<SpellEffects.Effect> SpellEffects = new List<SpellEffects.Effect>();
     public UnitVisualState VState = UnitVisualState.Idle;
     public bool AllowIdle = false;
     public int IdleFrame = 0;
@@ -282,9 +283,20 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         UpdateNetVisibility();
 
+        // process spell processors
+        while (SpellProcessors.Count > 0 && !SpellProcessors.Last().Process())
+            SpellProcessors.RemoveAt(SpellProcessors.Count - 1);
+
         // process spell effects
-        while (SpellEffects.Count > 0 && !SpellEffects.Last().Process())
-            SpellEffects.RemoveAt(SpellEffects.Count - 1);
+        for (int i = 0; i < SpellEffects.Count; i++)
+        {
+            if (!SpellEffects[i].Process())
+            {
+                SpellEffects[i].OnDetach();
+                SpellEffects.RemoveAt(i);
+                i--;
+            }
+        }
 
         // process actions
         while (!Actions.Last().Process())
@@ -326,6 +338,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 IsDying = false;
                 DoUpdateView = true;
                 UnlinkFromWorld();
+                for (int i = 0; i < SpellEffects.Count; i++)
+                    SpellEffects[i].OnDetach();
+                SpellEffects.Clear();
                 if (Player == MapLogic.Instance.ConsolePlayer &&
                     Player != null && Player.Avatar == this)
                 {
@@ -482,10 +497,43 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             Server.NotifyAddUnitActions(this, states);
     }
 
-    public void AddSpellEffects(params Spells.SpellProc[] effects)
+    public void AddSpellEffects(params SpellEffects.Effect[] effects)
     {
         for (int i = 0; i < effects.Length; i++)
-            SpellEffects.Add(effects[i]);
+        {
+            SpellEffects.Effect ef = effects[i];
+            if (!ef.OnAttach(this))
+                continue;
+            ef.SetUnit(this);
+            SpellEffects.Add(ef);
+        }
+    }
+
+    public List<T> GetSpellEffects<T>() where T : SpellEffects.Effect
+    {
+        List<T> ov = new List<T>();
+        for (int i = 0; i < SpellEffects.Count; i++)
+        {
+            if (SpellEffects[i] is T)
+                ov.Add((T)SpellEffects[i]);
+        }
+
+        return ov;
+    }
+
+    public void RemoveSpellEffect(SpellEffects.Effect ef)
+    {
+        if (SpellEffects.Contains(ef) && ef.Unit == this)
+        {
+            ef.OnDetach();
+            SpellEffects.Remove(ef);
+        }
+    }
+
+    public void AddSpellProcessors(params Spells.SpellProc[] processors)
+    {
+        for (int i = 0; i < processors.Length; i++)
+            SpellProcessors.Add(processors[i]);
     }
 
     public void SetState(IUnitState state)
@@ -606,6 +654,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         if (Stats.TrySetHealth(Stats.Health - damagecount))
         {
+            DoUpdateInfo = true;
+            DoUpdateView = true;
+
             if (!NetworkManager.IsClient)
             {
                 DamageLast += damagecount;

@@ -146,6 +146,9 @@ public class MapStructure : MapObject, IDynlight, IPlayerPawn, IVulnerable, IDis
             return 0;
 
         Health -= count;
+        DoUpdateInfo = true;
+        DoUpdateView = true;
+
         return count;
     }
 }

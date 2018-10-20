@@ -55,10 +55,10 @@ namespace Spells
             return FindProcTypeFromSpellId("Spells", (int)spell.SpellID);
         }
 
-        protected readonly int TargetX;
-        protected readonly int TargetY;
-        protected readonly Spell Spell;
-        protected readonly MapUnit TargetUnit;
+        public readonly int TargetX;
+        public readonly int TargetY;
+        public readonly Spell Spell;
+        public readonly MapUnit TargetUnit;
 
         public SpellProc(Spell spell, int tgX, int tgY, MapUnit tgUnit)
         {
@@ -149,11 +149,7 @@ namespace Spells
                                                 // done, make damage
                                                 DamageFlags spdf = SphereToDamageFlags(Spell);
 
-                                                if (TargetUnit.TakeDamage(spdf, Spell.User, damage) > 0)
-                                                {
-                                                    TargetUnit.DoUpdateInfo = true;
-                                                    TargetUnit.DoUpdateView = true;
-                                                }
+                                                TargetUnit.TakeDamage(spdf, Spell.User, damage);
 
                                                 fproj.Dispose();
                                                 MapLogic.Instance.Objects.Remove(fproj);

@@ -28,4 +28,10 @@ public interface IShortestPath<State,Action> {
 	/// Returns the new state after an action has been applied
 	/// </summary>
 	State ApplyAction(State location, Action action);
+
+    /// <summary>
+    /// [ZZ] Compares two states with custom logic for end state
+    /// </summary>
+    bool IsToState(State fromState, State toState);
+
 }

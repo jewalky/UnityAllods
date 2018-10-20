@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 class UnitAstarHelper : IShortestPath<Vector2i, Vector2i>
 {
     private MapUnit unit;
     public bool StaticLookup = false;
+    public float Distance = 1;
 
     public UnitAstarHelper(MapUnit unit)
     {
@@ -60,5 +62,13 @@ class UnitAstarHelper : IShortestPath<Vector2i, Vector2i>
     public Vector2i ApplyAction(Vector2i state, Vector2i action)
     {
         return action;
+    }
+
+    // [ZZ] logic changed: allow helper to compare current to end state
+    public bool IsToState(Vector2i fromState, Vector2i toState)
+    {
+        if (Distance == 1)
+            return fromState.Equals(toState);
+        return Mathf.CeilToInt((toState - fromState).magnitude) <= Distance;
     }
 }

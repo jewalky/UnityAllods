@@ -45,10 +45,13 @@ public class MoveState : IUnitState
     }
 
     // made static because it's also used by other actions
-    public static bool TryWalkTo(MapUnit unit, int walkX, int walkY)
+    public static bool TryWalkTo(MapUnit unit, int walkX, int walkY, float distance = 1)
     {
         // check if target is walkable for us (statically)
-        if (!unit.Interaction.CheckWalkableForUnit(walkX, walkY, false))
+        if (distance < 1)
+            distance = 1;
+
+        if (!unit.Interaction.CheckWalkableForUnit(walkX, walkY, false) && distance < 2)
         {
             List<Vector2i> switchNodes = new List<Vector2i>();
             for (int ly = walkY - unit.Height; ly < walkY + unit.Height; ly++)
@@ -80,7 +83,7 @@ public class MoveState : IUnitState
             return true;
 
         // try to pathfind
-        List<Vector2i> path = unit.DecideNextMove(walkX, walkY, true);
+        List<Vector2i> path = unit.DecideNextMove(walkX, walkY, true, distance);
         if (path == null)
             return false;
 
@@ -97,7 +100,7 @@ public class MoveState : IUnitState
                 int pnum = path.Count - 1;
                 while (path2 == null && pnum >= 0)
                 {
-                    path2 = unit.DecideNextMove(path[pnum].x, path[pnum].y, false);
+                    path2 = unit.DecideNextMove(path[pnum].x, path[pnum].y, false, distance);
                     pnum--;
                 }
 
@@ -181,7 +184,7 @@ public class AttackState : IUnitState
         else
         {
             // make one step to the target.
-            MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y);
+            MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, Unit.Interaction.GetAttackRange());
         }
 
         return true;
@@ -323,8 +326,8 @@ public class CastState : IUnitState
         {
             // make one step to the target.
             if (TargetUnit != null)
-                MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y);
-            else MoveState.TryWalkTo(Unit, TargetX, TargetY);
+                MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, Spell.GetDistance());
+            else MoveState.TryWalkTo(Unit, TargetX, TargetY, Spell.GetDistance());
         }
 
         return true;

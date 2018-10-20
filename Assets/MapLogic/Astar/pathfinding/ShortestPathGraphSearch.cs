@@ -98,7 +98,7 @@ public class ShortestPathGraphSearch<State, Action> {
 			SearchNode<State,Action> node = frontier.Dequeue();
 			frontierMap.Remove(node.state);
 
-            if (node.state.Equals(toState))
+            if (info.IsToState(node.state, toState))
             {
                 //Debug.LogFormat("cycleguard = {0}", cycleGuard);
                 return BuildSolution(node);

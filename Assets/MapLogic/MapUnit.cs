@@ -395,7 +395,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     private List<Vector2i> AstarLastSolution;
     private ShortestPathGraphSearch<Vector2i, Vector2i> AstarSearcher = null;
     private UnitAstarHelper AstarSearcherH = null;
-    public List<Vector2i> DecideNextMove(int targetX, int targetY, bool staticOnly)
+    public List<Vector2i> DecideNextMove(int targetX, int targetY, bool staticOnly, float distance = 1)
     {
         if (AstarNodesWalked < 16 &&
             AstarLastX == targetX && AstarLastY == targetY && AstarLastSolution != null &&
@@ -413,8 +413,11 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         AstarNodesWalked = 16;
 
+        if (distance < 1)
+            distance = 1;
+
         // if targetX,targetY is blocked, refuse to pathfind.
-        if (!Interaction.CheckWalkableForUnit(targetX, targetY, staticOnly))
+        if (!Interaction.CheckWalkableForUnit(targetX, targetY, staticOnly) && distance < 2)
             return null;
 
         // init astar searcher
@@ -423,6 +426,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         if (AstarSearcher == null)
             AstarSearcher = new ShortestPathGraphSearch<Vector2i, Vector2i>(AstarSearcherH);
         AstarSearcherH.StaticLookup = staticOnly;
+        AstarSearcherH.Distance = distance;
 
         try
         {

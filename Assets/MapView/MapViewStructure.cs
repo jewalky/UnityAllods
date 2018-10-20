@@ -36,10 +36,9 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
 
 
     // infowindow stuff
-    private GameObject TexObject;
-    private MeshRenderer TexRenderer;
-    private Material TexMaterial;
-
+    private static GameObject TexObject;
+    private static MeshRenderer TexRenderer;
+    private static Material TexMaterial;
 
     private Mesh UpdateMesh(Images.AllodsSprite sprite, int frame, Mesh mesh, int x, int y, int w, int h, float shadowOffs, bool first, bool onlyColors)
     {
@@ -328,22 +327,29 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
             // init infowindow
             if (TexMaterial == null)
                 TexMaterial = new Material(MainCamera.MainShader);
-            TexObject = Utils.CreatePrimitive(PrimitiveType.Quad);
-            TexRenderer = TexObject.GetComponent<MeshRenderer>();
+            if (TexObject == null)
+            {
+                TexObject = Utils.CreatePrimitive(PrimitiveType.Quad);
+                TexRenderer = TexObject.GetComponent<MeshRenderer>();
+                TexRenderer.enabled = true;
+                TexObject.name = "MapViewStructure$InfoPic";
+            }
+
+            TexObject.SetActive(true);
+
+            TexRenderer.transform.parent = parent;
+            // load infowindow texture.
             TexRenderer.material = TexMaterial;
             TexRenderer.material.mainTexture = LogicStructure.Class.PictureFile;
-            TexRenderer.enabled = true;
-            TexRenderer.transform.parent = parent;
-            TexRenderer.transform.localPosition = new Vector3((float)LogicStructure.Class.PictureFile.width / 2 + 16,
+            TexRenderer.transform.localPosition = new Vector3((float)LogicStructure.Class.PictureFile.width / 2,
                                                          (float)LogicStructure.Class.PictureFile.height / 2 + 2, -0.01f);
             TexRenderer.transform.localScale = new Vector3(LogicStructure.Class.PictureFile.width,
                                                            LogicStructure.Class.PictureFile.height, 1);
         }
         else
         {
-            Destroy(TexObject);
-            TexObject = null;
-            TexRenderer = null;
+            if (TexObject != null)
+                TexObject.SetActive(false);
         }
     }
 

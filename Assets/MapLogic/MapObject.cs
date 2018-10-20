@@ -111,8 +111,7 @@ public class MapObject : IDisposable
     {
         UnlinkFromWorld();
         DisposeNoUnlink();
-        if (MapLogic.Instance.Objects.Contains(this)) // unnecessary check?
-            MapLogic.Instance.Objects.Remove(this);
+        MapLogic.Instance.Objects.Remove(this);
     }
 
     public virtual void Update()

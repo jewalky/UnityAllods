@@ -810,6 +810,10 @@ namespace ClientCommands
         public int SourceTag;
         [ProtoMember(6)]
         public int TypeID;
+        [ProtoMember(7)]
+        public float AnimSpeed;
+        [ProtoMember(8)]
+        public float Scale;
 
         public bool Process()
         {
@@ -832,7 +836,7 @@ namespace ClientCommands
                 }
             }
 
-            Server.SpawnProjectileSimple(TypeID, source, X, Y, Z);
+            Server.SpawnProjectileSimple(TypeID, source, X, Y, Z, AnimSpeed, Scale);
             return true;
         }
     }

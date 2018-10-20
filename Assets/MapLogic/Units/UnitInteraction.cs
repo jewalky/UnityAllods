@@ -15,6 +15,8 @@ public class UnitInteraction
     // returns true if cell is walkable for this unit
     public bool CheckWalkableForUnit(int x, int y, bool staticOnly)
     {
+        if (x < 8 || x > MapLogic.Instance.Width - 8 ||
+            y < 8 || y > MapLogic.Instance.Height - 8) return false;
         for (int ly = y; ly < y + Unit.Height; ly++)
         {
             for (int lx = x; lx < x + Unit.Width; lx++)

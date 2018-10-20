@@ -753,7 +753,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                     SelectedObject.GetObjectType() == MapObjectType.Human)
                 {
                     MapUnit unit = (MapUnit)SelectedObject;
-                    if (GetCastSpell() != Spell.Spells.NoneSpell)
+                    if (GetCastSpell() != Spell.Spells.NoneSpell && (MapLogic.Instance.Nodes[MouseCellX, MouseCellY].Flags & MapNodeFlags.Visible) != 0)
                     {
                         if (HoveredObject != null && (HoveredObject.GetObjectType() == MapObjectType.Monster ||
                                                       HoveredObject.GetObjectType() == MapObjectType.Human))
@@ -894,7 +894,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         else Infowindow.Viewer = null;
         HoveredObject = o;
 
-        if (GetCastSpell() != Spell.Spells.NoneSpell)
+        if (GetCastSpell() != Spell.Spells.NoneSpell && !hoveringDarkness)
         {
             MouseCursor.SetCursor(MouseCursor.CurCast);
             return;

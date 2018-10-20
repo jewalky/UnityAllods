@@ -275,6 +275,10 @@ public class CastState : IUnitState
 
     public bool Process()
     {
+        // check target. if target is outside map range, terminate. server doesn't really handle this well
+        if (TargetX < 8 || TargetY < 8 || TargetX >= MapLogic.Instance.Width - 8 || TargetY >= MapLogic.Instance.Height - 8)
+            return false;
+
         if (Executed && Unit.Actions[Unit.Actions.Count - 1].GetType() != typeof(AttackAction))
             return false;
 

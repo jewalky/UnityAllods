@@ -237,19 +237,20 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
             Vector2 xP = MapView.Instance.MapToScreenCoords(LogicProjectile.ProjectileX, LogicProjectile.ProjectileY - LogicProjectile.ProjectileZ, 1, 1);
             if (LogicProjectile.Class.ID == 7)
             {
-                transform.localPosition = new Vector3(xP.x - 16,
-                                                      xP.y - 16,
+                transform.localPosition = new Vector3(xP.x - 16 * LogicProjectile.Scale,
+                                                      xP.y - 16 * LogicProjectile.Scale,
                                                       MakeZFromY(xP.y) - LogicProjectile.ZOffset); // order sprites by y coordinate basically
             }
             else
             {
-                transform.localPosition = new Vector3(xP.x - sprites.Sprites[actualFrame].rect.width * 0.5f,
-                                                      xP.y - sprites.Sprites[actualFrame].rect.height * 0.5f,
+                transform.localPosition = new Vector3(xP.x - sprites.Sprites[actualFrame].rect.width * 0.5f * LogicProjectile.Scale,
+                                                      xP.y - sprites.Sprites[actualFrame].rect.height * 0.5f * LogicProjectile.Scale,
                                                       MakeZFromY(xP.y) - LogicProjectile.ZOffset); // order sprites by y coordinate basically
             }
 
-            //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicObstacle.Class.CenterX));
-            //Renderer.sprite = sprites.Sprites[actualFrame];
+            transform.localScale = new Vector3(LogicProjectile.Scale, LogicProjectile.Scale, LogicProjectile.Scale);
+            ShadowObject.transform.localScale = new Vector3(LogicProjectile.Scale, LogicProjectile.Scale, LogicProjectile.Scale);
+
             ProjectileMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (ProjectileMesh == null), doFlip);
             ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null), doFlip); // 0.3 of sprite height
 

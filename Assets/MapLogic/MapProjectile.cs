@@ -136,11 +136,13 @@ public class MapProjectileLogicSimple : IMapProjectileLogic
 {
     MapProjectile Projectile = null;
     float AnimationSpeed;
+    float Scale;
     int Timer = 0;
 
-    public MapProjectileLogicSimple(float animspeed = 0.5f)
+    public MapProjectileLogicSimple(float animspeed = 0.5f, float scale = 1f)
     {
         AnimationSpeed = animspeed;
+        Scale = scale;
     }
 
     public void SetProjectile(MapProjectile proj)
@@ -152,6 +154,8 @@ public class MapProjectileLogicSimple : IMapProjectileLogic
     {
         if (AnimationSpeed == 0)
             return true;
+
+        Projectile.Scale = Scale;
 
         int frame = (int)(Timer * AnimationSpeed);
         if (frame < 0) frame = 0; // shouldn't happen though
@@ -576,6 +580,21 @@ public class MapProjectile : MapObject, IDynlight
         }
     }
 
+    private float _Scale;
+    public float Scale
+    {
+        get
+        {
+            return _Scale;
+        }
+
+        set
+        {
+            _Scale = value;
+            DoUpdateView = true;
+        }
+    }
+
     public MapProjectile(AllodsProjectile proj, IPlayerPawn source = null, IMapProjectileLogic logic = null, MapProjectileCallback cb = null)
     {
         InitProjectile((int)proj, source, logic, cb);
@@ -605,6 +624,7 @@ public class MapProjectile : MapObject, IDynlight
         Alpha = 1f;
         Color = new Color(1, 1, 1, 1);
         ZOffset = 128;
+        Scale = 1;
         DoUpdateView = true;
     }
 

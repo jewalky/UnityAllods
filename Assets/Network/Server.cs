@@ -420,9 +420,9 @@ public class Server
         SpawnProjectileDirectional((int)id, source, x, y, z, tgx, tgy, tgz, speed, cb);
     }
 
-    public static void SpawnProjectileSimple(AllodsProjectile id, IPlayerPawn source, float x, float y, float z, float animspeed = 0.5f)
+    public static void SpawnProjectileSimple(AllodsProjectile id, IPlayerPawn source, float x, float y, float z, float animspeed = 0.5f, float scale = 1f)
     {
-        SpawnProjectileSimple((int)id, source, x, y, z, animspeed);
+        SpawnProjectileSimple((int)id, source, x, y, z, animspeed, scale);
     }
 
     public static void SpawnProjectileEOT(AllodsProjectile id, IPlayerPawn source, float x, float y, float z, int duration, int frequency, int startframes = 0, int endframes = 0, int zoffs = -128, MapProjectileCallback cb = null)
@@ -514,9 +514,9 @@ public class Server
         }
     }
 
-    public static void SpawnProjectileSimple(int id, IPlayerPawn source, float x, float y, float z, float animspeed = 0.5f)
+    public static void SpawnProjectileSimple(int id, IPlayerPawn source, float x, float y, float z, float animspeed = 0.5f, float scale = 1f)
     {
-        MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicSimple(animspeed), null); // this is usually SFX like stuff. projectile plays animation based on typeid and stops.
+        MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicSimple(animspeed, scale), null); // this is usually SFX like stuff. projectile plays animation based on typeid and stops.
         proj.SetPosition(x, y, z);
         MapLogic.Instance.Objects.Add(proj);
 
@@ -547,6 +547,8 @@ public class Server
                 else app.SourceTag = -1;
 
                 app.TypeID = id;
+                app.AnimSpeed = animspeed;
+                app.Scale = scale;
 
                 client.SendCommand(app);
             }

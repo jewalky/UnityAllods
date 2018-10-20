@@ -912,6 +912,8 @@ namespace ClientCommands
         public int StartFrames;
         [ProtoMember(9)]
         public int EndFrames;
+        [ProtoMember(10)]
+        public int ZOffset;
 
         public bool Process()
         {
@@ -934,7 +936,7 @@ namespace ClientCommands
                 }
             }
 
-            Server.SpawnProjectileEOT(TypeID, source, X, Y, Z, Duration, Duration, StartFrames, EndFrames);
+            Server.SpawnProjectileEOT(TypeID, source, X, Y, Z, Duration, Duration, StartFrames, EndFrames, ZOffset);
             return true;
         }
     }

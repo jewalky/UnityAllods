@@ -554,6 +554,21 @@ public class MapProjectile : MapObject, IDynlight
         }
     }
 
+    private int _ZOffset;
+    public int ZOffset
+    {
+        get
+        {
+            return _ZOffset;
+        }
+
+        set
+        {
+            _ZOffset = value;
+            DoUpdateView = true;
+        }
+    }
+
     public MapProjectile(AllodsProjectile proj, IPlayerPawn source = null, IMapProjectileLogic logic = null, MapProjectileCallback cb = null)
     {
         InitProjectile((int)proj, source, logic, cb);
@@ -582,6 +597,7 @@ public class MapProjectile : MapObject, IDynlight
         Height = 1;
         Alpha = 1f;
         Color = new Color(1, 1, 1, 1);
+        ZOffset = -128;
         DoUpdateView = true;
     }
 

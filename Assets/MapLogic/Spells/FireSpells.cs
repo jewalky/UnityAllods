@@ -127,7 +127,7 @@ namespace Spells
                     float fy = y;
                     float rx = Mathf.Cos(angle) * x - Mathf.Sin(angle) * y;
                     float ry = Mathf.Cos(angle) * y + Mathf.Sin(angle) * x;
-                    Server.SpawnProjectileEOT(AllodsProjectile.FireWall, Spell.User, TargetX+rx+0.5f, TargetY+ry+0.5f, 0, 40*4, 10, 4, 4, proj =>
+                    Server.SpawnProjectileEOT(AllodsProjectile.FireWall, Spell.User, TargetX+rx+0.5f, TargetY+ry+0.5f, 0, 40*4, 10, 4, 4, 16, proj =>
                     {
                         DamageFlags spdf = SphereToDamageFlags(Spell);
                         // get projectile cells

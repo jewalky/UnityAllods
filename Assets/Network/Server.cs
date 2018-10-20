@@ -425,9 +425,9 @@ public class Server
         SpawnProjectileSimple((int)id, source, x, y, z, animspeed);
     }
 
-    public static void SpawnProjectileEOT(AllodsProjectile id, IPlayerPawn source, float x, float y, float z, int duration, int frequency, int startframes = 0, int endframes = 0, MapProjectileCallback cb = null)
+    public static void SpawnProjectileEOT(AllodsProjectile id, IPlayerPawn source, float x, float y, float z, int duration, int frequency, int startframes = 0, int endframes = 0, int zoffs = -128, MapProjectileCallback cb = null)
     {
-        SpawnProjectileEOT((int)id, source, x, y, z, duration, frequency, startframes, endframes, cb);
+        SpawnProjectileEOT((int)id, source, x, y, z, duration, frequency, startframes, endframes, zoffs, cb);
     }
 
     public static void SpawnProjectileHoming(int id, IPlayerPawn source, float x, float y, float z, MapUnit target, float speed, MapProjectileCallback cb = null)
@@ -593,9 +593,10 @@ public class Server
         }
     }
 
-    public static void SpawnProjectileEOT(int id, IPlayerPawn source, float x, float y, float z, int duration, int frequency, int startframes = 0, int endframes = 0, MapProjectileCallback cb = null)
+    public static void SpawnProjectileEOT(int id, IPlayerPawn source, float x, float y, float z, int duration, int frequency, int startframes = 0, int endframes = 0, int zoffs = -128, MapProjectileCallback cb = null)
     {
         MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicEOT(duration, frequency, startframes, endframes), cb);
+        proj.ZOffset = zoffs;
         proj.SetPosition(x, y, z);
         MapLogic.Instance.Objects.Add(proj);
 
@@ -629,6 +630,7 @@ public class Server
                 app.Duration = duration;
                 app.StartFrames = startframes;
                 app.EndFrames = endframes;
+                app.ZOffset = zoffs;
 
                 client.SendCommand(app);
             }

@@ -145,6 +145,8 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
                 int currentLightAtNode = Mathf.Max(MapLogic.Instance.Nodes[LogicStructure.X + lx, LogicStructure.Y + lTy].DynLight, ownDynLight);
                 if (currentLightAtNode > 0)
                     cellLight += (float)currentLightAtNode / 255;
+                if (cellLight > 1f)
+                    cellLight = 1f;
 
                 qc[ppc++] = new Color(cellLight, cellLight, cellLight);
                 qc[ppc++] = new Color(cellLight, cellLight, cellLight);

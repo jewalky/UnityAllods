@@ -523,11 +523,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public void RemoveSpellEffect(SpellEffects.Effect ef)
     {
-        if (SpellEffects.Contains(ef) && ef.Unit == this)
-        {
+        if (SpellEffects.Remove(ef))
             ef.OnDetach();
-            SpellEffects.Remove(ef);
-        }
     }
 
     public void AddSpellProcessors(params Spells.SpellProc[] processors)

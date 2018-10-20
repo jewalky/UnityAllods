@@ -96,6 +96,7 @@ namespace Spells
                                                                                                                 continue;
 
                                                                                                             mp.Dispose();
+                                                                                                            i--;
                                                                                                             continue;
                                                                                                         }
                                                                                                         else
@@ -175,6 +176,7 @@ namespace Spells
                                             continue;
 
                                         mp.Dispose();
+                                        i--;
                                         continue;
                                     }
                                     else

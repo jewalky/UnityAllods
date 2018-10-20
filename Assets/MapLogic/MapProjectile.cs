@@ -383,8 +383,9 @@ public class MapProjectileLogicEOT : IMapProjectileLogic
                 Projectile.Alpha = (float)timeOffset / 16;
             else if (timeOffset >= 16 && timeOffset < Duration - 16)
                 Projectile.Alpha = (1f - (float)(timeOffset - 16) / (Duration - 32)) * 0.5f + 0.5f;
-            else if (timeOffset > Duration - 16)
+            else if (timeOffset >= Duration - 16)
                 Projectile.Alpha = 0.5f - ((float)timeOffset - (Duration - 16)) / 16 * 0.5f;
+            Projectile.Alpha = Projectile.Alpha * (0.5f + ((Mathf.Sin((float)timeOffset / 16 + Projectile.X*Projectile.Y + RSeed) + 0.5f) / 4));
         }
 
         Timer++;
@@ -540,7 +541,7 @@ public class MapProjectile : MapObject, IDynlight
 
         set
         {
-            _Alpha = value;
+            _Alpha = Mathf.Clamp01(value);
             DoUpdateView = true;
         }
     }

@@ -309,6 +309,83 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
     }
 }
 
+// MapProjectileEOT = regular projectile, but animates for specified amount of time and calls callback every N ticks
+public class MapProjectileLogicEOT : IMapProjectileLogic
+{
+    MapProjectile Projectile = null;
+    int StartFrames;
+    int EndFrames;
+    int Timer = 0;
+    int Frame = 0;
+
+    int Duration;
+    int Frequency;
+    int TimerAtStart = -1;
+
+    float RSeed = 0;
+
+    public MapProjectileLogicEOT(int duration, int frequency, int startframes = 0, int endframes = 0)
+    {
+        RSeed = UnityEngine.Random.Range(0f, 1f);
+        Duration = duration;
+        StartFrames = startframes;
+        EndFrames = endframes;
+        Frequency = frequency;
+    }
+
+    public void SetProjectile(MapProjectile proj)
+    {
+        Projectile = proj;
+    }
+
+    public bool Update()
+    {
+        if (TimerAtStart == -1)
+            TimerAtStart = MapLogic.Instance.LevelTime;
+
+        int timeOffset = MapLogic.Instance.LevelTime - TimerAtStart;
+        if (timeOffset % Frequency == 0)
+            Projectile.CallCallback(timeOffset >= Duration);
+
+        if (timeOffset >= Duration) // die
+            return false;
+
+        float ll = 0;
+
+        // first, check start and end
+        // roughly use 2 ticks per frame
+        if (timeOffset > Duration-EndFrames*2)
+        {
+            int endframe = (timeOffset - (Duration - EndFrames * 2)) / 2;
+            Frame = Projectile.Class.Phases - EndFrames + endframe;
+            ll = 1f - (float)endframe / EndFrames;
+        }
+        else if (timeOffset < StartFrames*2)
+        {
+            Frame = timeOffset / 2;
+            ll = (float)Frame / StartFrames;
+        }
+        else
+        {
+            Frame = (timeOffset / 2 % (Projectile.Class.Phases - (StartFrames + EndFrames))) + StartFrames;
+            ll = 0.5f + Mathf.Sin((float)timeOffset/4+RSeed*2)/4;
+        }
+
+        if (timeOffset % 2 == 0)
+            RSeed = UnityEngine.Random.Range(0f, 1f);
+
+        Projectile.CurrentFrame = Frame;
+        Projectile.CurrentTics = 0;
+        Projectile.DoUpdateView = true;
+        if (Projectile.Class.ID != (int)AllodsProjectile.FireWall)
+            ll = 0;
+        Projectile.LightLevel = (int)(256+ll*256f);
+
+        Timer++;
+        return true;
+    }
+}
+
 // human readable enum of projectile IDs for use with spells and such
 public enum AllodsProjectile
 {
@@ -522,11 +599,12 @@ public class MapProjectile : MapObject, IDynlight
         base.Dispose();
     }
 
-    public void CallCallback()
+    public void CallCallback(bool nullify = true)
     {
         if (Callback != null)
             Callback(this);
-        Callback = null;
+        if (nullify)
+            Callback = null;
     }
 
     public override void Update()
@@ -535,7 +613,7 @@ public class MapProjectile : MapObject, IDynlight
         {
             if (!Logic.Update())
             {
-                CallCallback();
+                CallCallback(true);
                 Dispose();
                 return;
             }

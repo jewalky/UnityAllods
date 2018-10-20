@@ -425,6 +425,11 @@ public class Server
         SpawnProjectileSimple((int)id, source, x, y, z, animspeed);
     }
 
+    public static void SpawnProjectileEOT(AllodsProjectile id, IPlayerPawn source, float x, float y, float z, int duration, int frequency, int startframes = 0, int endframes = 0, MapProjectileCallback cb = null)
+    {
+        SpawnProjectileEOT((int)id, source, x, y, z, duration, frequency, startframes, endframes, cb);
+    }
+
     public static void SpawnProjectileHoming(int id, IPlayerPawn source, float x, float y, float z, MapUnit target, float speed, MapProjectileCallback cb = null)
     {
         MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicHoming(target, speed), cb);
@@ -582,6 +587,48 @@ public class Server
 
                 app.TargetTag = target.Tag;
                 app.Color = color;
+
+                client.SendCommand(app);
+            }
+        }
+    }
+
+    public static void SpawnProjectileEOT(int id, IPlayerPawn source, float x, float y, float z, int duration, int frequency, int startframes = 0, int endframes = 0, MapProjectileCallback cb = null)
+    {
+        MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicEOT(duration, frequency, startframes, endframes), cb);
+        proj.SetPosition(x, y, z);
+        MapLogic.Instance.Objects.Add(proj);
+
+        if (NetworkManager.IsServer)
+        {
+            foreach (ServerClient client in ServerManager.Clients)
+            {
+                if (client.State != ClientState.Playing)
+                    continue;
+
+                Player p = MapLogic.Instance.GetNetPlayer(client);
+                MapObject sourceObj = (MapObject)source;
+                if (sourceObj != null)
+                {
+                    if (!sourceObj.IsVisibleForNetPlayer(p))
+                        ObjectBecameVisible(p, sourceObj); // force keyframe update for source unit
+                }
+
+                ClientCommands.AddProjectileEOT app;
+                app.X = x;
+                app.Y = y;
+                app.Z = z;
+                app.SourceType = (sourceObj != null) ? sourceObj.GetObjectType() : MapObjectType.Object;
+
+                if (app.SourceType == MapObjectType.Human ||
+                    app.SourceType == MapObjectType.Monster) app.SourceTag = ((MapUnit)sourceObj).Tag;
+                else if (app.SourceType == MapObjectType.Structure) app.SourceTag = ((MapStructure)sourceObj).Tag;
+                else app.SourceTag = -1;
+
+                app.TypeID = id;
+                app.Duration = duration;
+                app.StartFrames = startframes;
+                app.EndFrames = endframes;
 
                 client.SendCommand(app);
             }

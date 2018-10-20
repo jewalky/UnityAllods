@@ -478,7 +478,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                 ///
             }
             else Inventory.SetPack(null);
-            Spellbook.SetSpells((MapUnit)mobj);
+            if (mobj is MapUnit)
+                Spellbook.SetSpells((MapUnit)mobj);
+            else Spellbook.SetSpells(null);
         }
     }
 

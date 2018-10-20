@@ -891,6 +891,55 @@ namespace ClientCommands
     }
 
     [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.AddProjectileEOT)]
+    public struct AddProjectileEOT : IClientCommand
+    {
+        [ProtoMember(1)]
+        public float X;
+        [ProtoMember(2)]
+        public float Y;
+        [ProtoMember(3)]
+        public float Z;
+        [ProtoMember(4)]
+        public MapObjectType SourceType;
+        [ProtoMember(5)]
+        public int SourceTag;
+        [ProtoMember(6)]
+        public int TypeID;
+        [ProtoMember(7)]
+        public int Duration;
+        [ProtoMember(8)]
+        public int StartFrames;
+        [ProtoMember(9)]
+        public int EndFrames;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            IPlayerPawn source = null;
+            if (SourceTag > 0)
+            {
+                switch (SourceType)
+                {
+                    case MapObjectType.Human:
+                    case MapObjectType.Monster:
+                        source = MapLogic.Instance.GetUnitByTag(SourceTag);
+                        break;
+
+                    case MapObjectType.Structure:
+                        source = MapLogic.Instance.GetStructureByTag(SourceTag);
+                        break;
+                }
+            }
+
+            Server.SpawnProjectileEOT(TypeID, source, X, Y, Z, Duration, Duration, StartFrames, EndFrames);
+            return true;
+        }
+    }
+
+    [ProtoContract]
     [NetworkPacketId(ClientIdentifiers.StaticObjectDead)]
     public struct StaticObjectDead : IClientCommand
     {

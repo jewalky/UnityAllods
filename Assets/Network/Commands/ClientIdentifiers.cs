@@ -37,6 +37,7 @@ public enum ClientIdentifiers
     AddProjectileHoming,
     AddProjectileSimple,
     AddProjectileLightning,
+    AddProjectileEOT,
 
     // kill static object (i.e. trees)
     StaticObjectDead

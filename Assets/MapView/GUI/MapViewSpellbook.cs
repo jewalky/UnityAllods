@@ -190,13 +190,21 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
 
     public void SetSpells(MapUnit unit)
     {
-        Unit = unit;
-        Spells = unit.SpellBook;
-        SpellsMask = 0;
-        foreach (Spell cspell in Spells)
+        if (unit != null)
         {
-            uint sp = 1u << (int)cspell.SpellID;
-            SpellsMask |= sp;
+            Unit = unit;
+            Spells = unit.SpellBook;
+            SpellsMask = 0;
+            foreach (Spell cspell in Spells)
+            {
+                uint sp = 1u << (int)cspell.SpellID;
+                SpellsMask |= sp;
+            }
+        }
+        else
+        {
+            Spells = null;
+            SpellsMask = 0;
         }
         UpdateMesh();
     }

@@ -120,7 +120,8 @@ class MapLogic
                         int lval = ((IDynlight)mobj).GetLightValue();
                         if (lval > 256)
                         {
-                            int lightDist = Mathf.CeilToInt((float)lval / 256);
+                            float lightDistF = (float)lval / 256;
+                            int lightDist = Mathf.CeilToInt(lightDistF);
                             for (int ly = y-lightDist; ly <= y+lightDist; ly++)
                             {
                                 if (ly < (int)vRec.yMin || ly >= (int)vRec.yMax)
@@ -130,7 +131,9 @@ class MapLogic
                                     if (lx < (int)vRec.xMin || lx >= (int)vRec.xMax)
                                         continue;
                                     float dst = Mathf.Min(new Vector2(lx - x, ly - y).magnitude, lightDist);
-                                    int lightExtend = (int)(256 * (lightDist-dst) / lightDist);
+                                    int lightExtend = (int)(256f * (lightDistF - dst) / lightDistF);
+                                    if (lightExtend < 0)
+                                        lightExtend = 0;
                                     Nodes[lx, ly].DynLight += lightExtend;
                                 }
                             }

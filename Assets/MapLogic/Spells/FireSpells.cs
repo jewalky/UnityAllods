@@ -99,4 +99,68 @@ namespace Spells
             return false;
         }
     }
+
+    [SpellProcId(Spell.Spells.Wall_of_Fire)]
+    public class SpellProcFireWall : SpellProc
+    {
+        public SpellProcFireWall(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (NetworkManager.IsClient)
+                return false;
+
+            // we need to spawn several EoT projectiles at the destination
+            // 5x2
+
+            float sourceX = Spell.User.X + Spell.User.FracX + Spell.User.Width / 2f;
+            float sourceY = Spell.User.Y + Spell.User.FracY + Spell.User.Height / 2f;
+            Vector2 direction = new Vector2(TargetX + 0.5f - sourceX, TargetY + 0.5f - sourceY);
+            float angle = Mathf.Atan2(direction.y, direction.x) - (Mathf.PI/180)*90;
+
+            for (int x = -2; x <= 2; x++)
+            {
+                for (int y = 0; y < 2; y++)
+                {
+                    // rotate x and y
+                    float fx = x;
+                    float fy = y;
+                    float rx = Mathf.Cos(angle) * x - Mathf.Sin(angle) * y;
+                    float ry = Mathf.Cos(angle) * y + Mathf.Sin(angle) * x;
+                    Server.SpawnProjectileEOT(AllodsProjectile.FireWall, Spell.User, TargetX+rx+0.5f, TargetY+ry+0.5f, 0, 40*4, 10, 4, 4, proj =>
+                    {
+                        DamageFlags spdf = SphereToDamageFlags(Spell);
+                        // get projectile cells
+                        int axFrom = Mathf.Max(0, Mathf.FloorToInt(proj.ProjectileX));
+                        int axTo = Mathf.Min(MapLogic.Instance.Width-1, Mathf.CeilToInt(proj.ProjectileX));
+                        int ayFrom = Mathf.Max(0, Mathf.FloorToInt(proj.ProjectileY));
+                        int ayTo = Mathf.Min(MapLogic.Instance.Height - 1, Mathf.CeilToInt(proj.ProjectileY));
+                        for (int py = ayFrom; py <= ayTo; py++)
+                        {
+                            for (int px = axFrom; px <= axTo; px++)
+                            {
+                                // check how much projectile is on this cell
+                                float pdst = 1f - Mathf.Min(1f, new Vector2(px + 0.5f - proj.ProjectileX, py + 0.5f - proj.ProjectileY).magnitude);
+                                // 0..1 effect power
+                                MapNode node = MapLogic.Instance.Nodes[px, py];
+                                for (int i = 0; i < node.Objects.Count; i++)
+                                {
+                                    MapObject mo = node.Objects[i];
+                                    if (!(mo is IVulnerable))
+                                        continue;
+                                    IVulnerable mov = (IVulnerable)mo;
+                                    int dmg = (int)(10 * pdst);
+                                    mov.TakeDamage(spdf, Spell.User, dmg);
+                                    mo.DoUpdateInfo = true;
+                                    mo.DoUpdateView = true;
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            return false;
+        }
+    }
 }

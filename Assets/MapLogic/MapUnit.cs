@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 public interface IUnitAction
@@ -22,11 +23,21 @@ public enum UnitVisualState
     Dying
 }
 
-[Flags]
+
+[Flags] // This is the various effects unit can have
 public enum UnitFlags
 {
     None            = 0x0000,
-    Invisible       = 0x0001
+    Invisible       = 0x0001,
+    Poisoned        = 0x0002,
+    ProtectionFire  = 0x0004,
+    ProtectionWater = 0x0008,
+    ProtectionAir   = 0x0010,
+    ProtectionEarth = 0x0020,
+    ProtectionAstral= 0x0040,
+    Shield          = 0x0080,
+    Bless           = 0x0100,
+    Curse           = 0x0200
 }
 
 public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
@@ -84,6 +95,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public List<IUnitState> States = new List<IUnitState>();
     public List<Spells.SpellProc> SpellProcessors = new List<Spells.SpellProc>();
     public List<SpellEffects.Effect> SpellEffects = new List<SpellEffects.Effect>();
+    public List<SpellEffects.EffectIndicator> SpellIndicators = new List<SpellEffects.EffectIndicator>();
     public UnitVisualState VState = UnitVisualState.Idle;
     public bool AllowIdle = false;
     public int IdleFrame = 0;
@@ -114,6 +126,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             if (_Flags != value)
             {
                 _Flags = value;
+                DoUpdateView = true;
+                CheckIndicators();
                 Server.NotifyUnitFlags(this);
             }
         }
@@ -290,6 +304,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public override void Dispose()
     {
+        Flags = 0; // remove all indicators
         if (_Player != null)
             _Player.Objects.Remove(this);
         base.Dispose();
@@ -326,6 +341,10 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 i--;
             }
         }
+
+        // process spell effect indicators
+        for (int i = 0; i < SpellIndicators.Count; i++)
+            SpellIndicators[i].Process();
 
         // check DEATH
         if (Stats.Health <= 0 && IsAlive && !IsDying)
@@ -729,10 +748,44 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         // don't draw, don't allow to target invisible units
         if ((Flags & UnitFlags.Invisible) != 0)
         {
-            if ((Player.Diplomacy[MapLogic.Instance.ConsolePlayer.ID] & DiplomacyFlags.Vision) == 0)
+            if (MapLogic.Instance.ConsolePlayer != null && (Player.Diplomacy[MapLogic.Instance.ConsolePlayer.ID] & DiplomacyFlags.Vision) == 0)
                 return 0;
         }
 
         return base.GetVisibilityInFOW();
+    }
+
+    //
+    private void CheckIndicators()
+    {
+        // get all indicators for current flag set
+        List<Type> currentindicators = new List<Type>();
+        foreach (SpellEffects.EffectIndicator indicator in SpellIndicators)
+            currentindicators.Add(indicator.GetType());
+
+        List<Type> indicators = global::SpellEffects.EffectIndicator.FindIndicatorFromFlags(Flags);
+        foreach (Type itype in indicators)
+        {
+            // add all indicators that don't exist yet
+            if (!currentindicators.Contains(itype))
+            {
+                ConstructorInfo ci = itype.GetConstructor(new Type[] { typeof(MapUnit) });
+                SpellEffects.EffectIndicator indicator = (SpellEffects.EffectIndicator)ci.Invoke(new object[] { this });
+                indicator.OnEnable();
+                SpellIndicators.Add(indicator);
+            }
+        }
+
+        // remove all indicators that shouldn't exist
+        for (int i = 0; i < SpellIndicators.Count; i++)
+        {
+            SpellEffects.EffectIndicator indicator = SpellIndicators[i];
+            if (!indicators.Contains(indicator.GetType()))
+            {
+                indicator.OnDisable();
+                SpellIndicators.RemoveAt(i);
+                i--;
+            }
+        }
     }
 }

@@ -13,9 +13,6 @@ namespace SpellEffects
         Spells.SpellProc ParentProc;
         int Damage;
 
-        // indicator
-        MapProjectile Indicator;
-
         public Poison(Spells.SpellProc parentProc, int damage, int duration) : base(duration)
         {
             ParentProc = parentProc;
@@ -44,8 +41,7 @@ namespace SpellEffects
 
         public override void OnDetach()
         {
-            if (Indicator != null)
-                Indicator.Dispose();
+            Unit.Flags &= ~UnitFlags.Poisoned;
         }
 
         public override bool Process()
@@ -53,34 +49,41 @@ namespace SpellEffects
             if (!base.Process())
                 return false;
 
+            Unit.Flags |= UnitFlags.Poisoned;
             if (MapLogic.Instance.LevelTime % 40 == 0)
             {
                 Unit.TakeDamage(Spells.SpellProc.SphereToDamageFlags(ParentProc.Spell), ParentProc.Spell.User, Damage);
             }
-
-            // only one instance of Poison should render the indicator. check for this
-            List<Poison> poisons = Unit.GetSpellEffects<Poison>();
-            if (this == poisons[0] && Indicator == null)
-            {
-                Indicator = new MapProjectile(AllodsProjectile.PoisonSign, Unit);
-                Indicator.ZOffset = 64;
-                Indicator.Alpha = 0.5f;
-                MapLogic.Instance.Objects.Add(Indicator);
-            }
-            else if (this != poisons[0] && Indicator != null)
-            {
-                Indicator.Dispose();
-                Indicator = null;
-            }
-
-            if (Indicator != null)
-            {
-                Indicator.SetPosition(Unit.X + Unit.FracX + Unit.Width / 2f, Unit.Y + Unit.FracY + Unit.Height / 2f, 1f+(((Unit.Width+Unit.Height)/2f)-1f) / 2f);
-                Indicator.CurrentFrame = (Indicator.CurrentFrame + 1) % Indicator.Class.Phases;
-                Indicator.DoUpdateView = true;
-            }
-
+            // This is the various effects unit can have
             return true;
+        }
+    }
+
+    [SpellIndicatorFlags(UnitFlags.Poisoned)]
+    public class PoisonIndicator : EffectIndicator
+    {
+        public PoisonIndicator(MapUnit unit) : base(unit) { }
+
+        MapProjectile Indicator;
+
+        public override void OnEnable()
+        {
+            Indicator = new MapProjectile(AllodsProjectile.PoisonSign, Unit);
+            Indicator.ZOffset = 64;
+            Indicator.Alpha = 0.5f;
+            MapLogic.Instance.Objects.Add(Indicator);
+        }
+
+        public override void OnDisable()
+        {
+            Indicator.Dispose();
+        }
+
+        public override void Process()
+        {
+            Indicator.SetPosition(Unit.X + Unit.FracX + Unit.Width / 2f, Unit.Y + Unit.FracY + Unit.Height / 2f, 1f + (((Unit.Width + Unit.Height) / 2f) - 1f) / 2f);
+            Indicator.CurrentFrame = (Indicator.CurrentFrame + 1) % Indicator.Class.Phases;
+            Indicator.DoUpdateView = true;
         }
     }
 }

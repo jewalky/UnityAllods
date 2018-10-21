@@ -287,6 +287,10 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         while (SpellProcessors.Count > 0 && !SpellProcessors.Last().Process())
             SpellProcessors.RemoveAt(SpellProcessors.Count - 1);
 
+        // process actions
+        while (!Actions.Last().Process())
+            Actions.RemoveAt(Actions.Count - 1);
+
         // process spell effects
         for (int i = 0; i < SpellEffects.Count; i++)
         {
@@ -297,10 +301,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 i--;
             }
         }
-
-        // process actions
-        while (!Actions.Last().Process())
-            Actions.RemoveAt(Actions.Count - 1);
 
         // check DEATH
         if (Stats.Health <= 0 && IsAlive && !IsDying)

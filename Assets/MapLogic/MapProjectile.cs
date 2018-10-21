@@ -192,20 +192,9 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
     float TargetDst;
 
     float AnimTime;
+    float Density;
 
     int Color;
-
-    private static Color[] Colors =
-    new Color[] {
-        new Color(1, 1, 1, 1),
-        new Color(1, 0, 0, 1),
-        new Color(1, 0.5f, 0, 1), // lol 7 colors
-        new Color(1, 1, 0, 1),
-        new Color(0, 1, 0, 1),
-        new Color(0, 1, 1, 1),
-        new Color(0.5f, 0, 1, 1), // lol 7 colors (x2)
-        new Color(1, 0, 1, 1),
-    };
 
     public MapProjectileLogicLightning(MapUnit target, int color)
     {
@@ -240,8 +229,6 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
 
         Projectile.Alpha = 0;
 
-        const float density = 0.15f;
-
         if (Target != null && SubProjectiles.Count <= 0)
         {
             // special magic for lightning
@@ -249,14 +236,15 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
             TargetCenter = new Vector2(Target.X + (float)Target.Width / 2 + Target.FracX, Target.Y + (float)Target.Height / 2 + Target.FracY);
             TargetAngle = Projectile.Angle = MapObject.FaceVector(TargetCenter.x - Projectile.ProjectileX, TargetCenter.y - Projectile.ProjectileY);
             TargetDir = new Vector2(TargetCenter.x - Projectile.ProjectileX, TargetCenter.y - Projectile.ProjectileY);
+            TargetDst = TargetDir.magnitude;
             TargetDir.Normalize();
             // spawn projectiles along the way
-            TargetDst = new Vector2(TargetCenter.x - Projectile.ProjectileX, TargetCenter.y - Projectile.ProjectileY).magnitude;
-            for (float i = 0; i < TargetDst; i += density)
+            Density = 0.2f;
+            for (float i = 0; i < TargetDst; i += Density)
             {
-                MapProjectile visProj = new MapProjectile(AllodsProjectile.Lightning);
-                visProj.Color = Colors[Color];
+                MapProjectile visProj = new MapProjectile(Color==0 ? AllodsProjectile.Lightning : AllodsProjectile.ChainLightning);
                 visProj.LightLevel = 0;
+                visProj.CurrentFrame = Color==0 ? 0 : (5 * (Color - 1));
                 visProj.SetPosition(Projectile.ProjectileX + TargetDir.x * i, Projectile.ProjectileY + TargetDir.y * i, 0); // for now
                 MapLogic.Instance.Objects.Add(visProj);
                 SubProjectiles.Add(visProj);
@@ -277,15 +265,15 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
 
         for (int i = 0; i < SubProjectiles.Count; i++)
         {
-            float idst = density * i;
+            float idst = Density * i;
             // get angle from first to second. calculate sin wave
             float baseX = Projectile.ProjectileX + TargetDir.x * idst;
             float baseY = Projectile.ProjectileY + TargetDir.y * idst;
             
             float sscale = (Sin10(idst / TargetDst) * sinScale);
             MapProjectile sub = SubProjectiles[i];
-            sub.Color = Colors[Color];
-            sub.Alpha = 1f - AnimTime;
+            int cframe = (Color == 0 ? 0 : (5 * (Color - 1)));
+            sub.CurrentFrame = (int)(cframe + 4 * AnimTime);
             sub.LightLevel = 0;
             if (i % 12 == 0)
                 sub.LightLevel = (int)(512 * (1f - AnimTime));

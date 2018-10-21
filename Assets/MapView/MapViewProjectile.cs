@@ -234,8 +234,18 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
             //Debug.LogFormat("actualFrame = {0}, actualAngle = {1}", actualFrame, actualAngle);
 
             // always centered
-            Vector2 xP = MapView.Instance.MapToScreenCoords(LogicProjectile.ProjectileX, LogicProjectile.ProjectileY - LogicProjectile.ProjectileZ, 1, 1);
-            if (LogicProjectile.Class.ID == 7)
+            Vector2 xP;
+            if (LogicProjectile.Class.ID != (int)AllodsProjectile.Lightning)
+            {
+                xP = MapView.Instance.MapToScreenCoords(LogicProjectile.ProjectileX, LogicProjectile.ProjectileY, 1, 1);
+                xP.y -= LogicProjectile.ProjectileZ * 32;
+            }
+            else
+            {
+                xP = MapView.Instance.MapToScreenCoords(LogicProjectile.ProjectileX, LogicProjectile.ProjectileY - LogicProjectile.ProjectileZ, 1, 1);
+            }
+
+            if (LogicProjectile.Class.ID == 7) // bat sonic boom
             {
                 transform.localPosition = new Vector3(xP.x - 16 * LogicProjectile.Scale,
                                                       xP.y - 16 * LogicProjectile.Scale,

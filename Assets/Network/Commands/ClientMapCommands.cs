@@ -1012,4 +1012,31 @@ namespace ClientCommands
         }
     }
 
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.UnitFlags)]
+    public struct UnitFlags : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public global::UnitFlags Flags;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null)
+            {
+                Debug.LogFormat("Attempted to set flags for nonexistent unit {0}", Tag);
+                return true;
+            }
+
+            unit.Flags = Flags;
+
+            return true;
+        }
+    }
+
 }

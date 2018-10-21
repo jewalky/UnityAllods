@@ -256,6 +256,7 @@ public class CastState : IUnitState
     private int TargetX;
     private int TargetY;
     private bool Executed;
+    private bool IsAttack;
 
     public CastState(MapUnit unit, Spell spell, MapUnit targetUnit)
     {
@@ -264,6 +265,7 @@ public class CastState : IUnitState
         TargetUnit = targetUnit;
         TargetX = TargetY = -1;
         Executed = false;
+        IsAttack = global::Spell.IsAttackSpell(spell.SpellID);
     }
 
     public CastState(MapUnit unit, Spell spell, int targetX, int targetY)
@@ -274,6 +276,7 @@ public class CastState : IUnitState
         TargetX = targetX;
         TargetY = targetY;
         Executed = false;
+        IsAttack = global::Spell.IsAttackSpell(spell.SpellID);
     }
 
     public bool Process()
@@ -295,7 +298,7 @@ public class CastState : IUnitState
         if (Unit.Stats.Health <= 0)
             return false;
 
-        if (TargetUnit == Unit || (TargetUnit != null && (!TargetUnit.IsAlive || !MapLogic.Instance.Objects.Contains(TargetUnit))))
+        if ((IsAttack && TargetUnit == Unit) || (TargetUnit != null && (!TargetUnit.IsAlive || !MapLogic.Instance.Objects.Contains(TargetUnit))))
             return false;
 
         if (TargetUnit != null && !Unit.Interaction.CheckCanAttack(TargetUnit))
@@ -308,12 +311,15 @@ public class CastState : IUnitState
         {
             // in direct proximity!
             // 
-            Vector2i enemyCell = (TargetUnit != null ? TargetUnit.Interaction.GetClosestPointTo(Unit) : new Vector2i(TargetX, TargetY));
-            int angleNeeded = Unit.FaceCellPrecise(enemyCell.x, enemyCell.y);
-            if (Unit.Angle != angleNeeded)
+            if (TargetUnit != Unit)
             {
-                Unit.AddActions(new RotateAction(Unit, angleNeeded));
-                return true;
+                Vector2i enemyCell = (TargetUnit != null ? TargetUnit.Interaction.GetClosestPointTo(Unit) : new Vector2i(TargetX, TargetY));
+                int angleNeeded = Unit.FaceCellPrecise(enemyCell.x, enemyCell.y);
+                if (Unit.Angle != angleNeeded)
+                {
+                    Unit.AddActions(new RotateAction(Unit, angleNeeded));
+                    return true;
+                }
             }
 
             //

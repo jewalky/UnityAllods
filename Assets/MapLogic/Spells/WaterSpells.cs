@@ -89,6 +89,8 @@ namespace Spells
                                         continue;
                                     MapUnit mov = (MapUnit)mo;
                                     int dmg = (int)(10 * pdst);
+                                    if (dmg <= 0)
+                                        continue; // don't add null effects
 
                                     SpellEffects.Effect eff = new SpellEffects.Poison(this, dmg, 40 * 4);
                                     mov.AddSpellEffects(eff);

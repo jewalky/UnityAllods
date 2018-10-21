@@ -327,8 +327,19 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             {
                 Renderer.material = new Material(MainCamera.MainShaderPaletted);
                 ShadowRenderer.material = Renderer.material;
-                ShadowRenderer.material.color = new Color(0, 0, 0, 0.5f);
                 spriteSet = true;
+            }
+
+            // handle invisiblity flag
+            if ((LogicUnit.Flags & UnitFlags.Invisible) != 0)
+            {
+                Renderer.material.color = new Color(1, 1, 1, 0.5f);
+                ShadowRenderer.material.color = new Color(0, 0, 0, 0.25f);
+            }
+            else
+            {
+                Renderer.material.color = new Color(1, 1, 1, 1);
+                ShadowRenderer.material.color = new Color(0, 0, 0, 0.5f);
             }
 
             int actualFrame = LogicUnit.Class.Index; // draw frame 0 of each unit

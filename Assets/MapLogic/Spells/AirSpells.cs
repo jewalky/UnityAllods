@@ -7,12 +7,16 @@ using UnityEngine;
 
 namespace Spells
 {
+    [SpellProcId(Spell.Spells.Lightning)]
     public class SpellProcLightning : SpellProc
     {
         public SpellProcLightning(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
 
         protected void SpawnProjectile(MapUnit target, int damage, int color, float dst)
         {
+            if (TargetUnit == null)
+                return;
+
             // following offsets are based on unit's width, height and center
             float tX, tY;
             if (target != null)
@@ -46,29 +50,31 @@ namespace Spells
                                                 target.TakeDamage(spdf, Spell.User, damage);
                                             });
         }
-    }
 
-    [SpellProcId(Spell.Spells.Lightning)]
-    public class SpellProcLightningSingle : SpellProcLightning
-    {
-        public SpellProcLightningSingle(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit)
+        public override bool Process()
         {
-            SpawnProjectile(tgUnit, 20, 0, 1);
+            SpawnProjectile(TargetUnit, 20, 0, 1);
+            return false;
         }
     }
 
     [SpellProcId(Spell.Spells.Prismatic_Spray)]
     public class SpellProcPrismaticSpray : SpellProcLightning
     {
-        public SpellProcPrismaticSpray(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit)
+        public SpellProcPrismaticSpray(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
         {
+            if (TargetUnit == null)
+                return false;
+
             //SpawnProjectile(tgUnit, 20, 1);
             // look for 7 enemies nearby
             List<MapUnit> targets = new List<MapUnit>();
-            int fromX = spell.User.X - 8;
-            int fromY = spell.User.Y - 8;
-            int toX = spell.User.X + spell.User.Width + 8;
-            int toY = spell.User.Y + spell.User.Height + 8;
+            int fromX = Spell.User.X - 8;
+            int fromY = Spell.User.Y - 8;
+            int toX = Spell.User.X + Spell.User.Width + 8;
+            int toY = Spell.User.Y + Spell.User.Height + 8;
             for (int y = fromY; y <= toY; y++)
             {
                 if (y < 0 || y >= MapLogic.Instance.Height)
@@ -84,7 +90,7 @@ namespace Spells
                         if (objnode is MapUnit)
                         {
                             MapUnit unit = (MapUnit)objnode;
-                            if ((spell.User.Player.Diplomacy[unit.Player.ID] & DiplomacyFlags.Enemy) != 0) // in war with this unit, then add to list
+                            if ((Spell.User.Player.Diplomacy[unit.Player.ID] & DiplomacyFlags.Enemy) != 0) // in war with this unit, then add to list
                             {
                                 if (!targets.Contains(unit))
                                     targets.Add(unit);
@@ -97,13 +103,31 @@ namespace Spells
             // randomize units
             System.Random rng = new System.Random();
             targets = targets.OrderBy(a => rng.Next()).Take(7).ToList();
-            if (!targets.Contains(tgUnit))
-                targets[0] = tgUnit;
+            if (!targets.Contains(TargetUnit))
+                targets[0] = TargetUnit;
 
             for (int i = 0; i < targets.Count; i++)
             {
-                SpawnProjectile(targets[i], 30, i + 1, 1f/targets.Count);
+                SpawnProjectile(targets[i], 30, i + 1, 1f / targets.Count);
             }
+
+            return false;
+        }
+    }
+
+    [SpellProcId(Spell.Spells.Invisibility)]
+    public class SpellProcInvisiblity : SpellProc
+    {
+        public SpellProcInvisiblity(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (TargetUnit == null)
+                return false;
+
+            SpellEffects.Effect eff = new SpellEffects.Invisibility(40*15); // 15 seconds invisible
+            TargetUnit.AddSpellEffects(eff);
+            return false;
         }
     }
 }

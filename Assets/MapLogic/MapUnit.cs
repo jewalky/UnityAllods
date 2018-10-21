@@ -22,6 +22,13 @@ public enum UnitVisualState
     Dying
 }
 
+[Flags]
+public enum UnitFlags
+{
+    None            = 0x0000,
+    Invisible       = 0x0001
+}
+
 public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 {
     public override MapObjectType GetObjectType() { return MapObjectType.Monster; }
@@ -93,6 +100,24 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     // for damage calculation per tick
     private bool DamageLastVisible = false;
     private int DamageLast = 0;
+
+    private UnitFlags _Flags = UnitFlags.None;
+    public UnitFlags Flags
+    {
+        get
+        {
+            return _Flags;
+        }
+
+        set
+        {
+            if (_Flags != value)
+            {
+                _Flags = value;
+                Server.NotifyUnitFlags(this);
+            }
+        }
+    }
 
     public enum BodySlot
     {
@@ -696,5 +721,18 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         }
 
         return null;
+    }
+
+    //
+    public override int GetVisibilityInFOW()
+    {
+        // don't draw, don't allow to target invisible units
+        if ((Flags & UnitFlags.Invisible) != 0)
+        {
+            if ((Player.Diplomacy[MapLogic.Instance.ConsolePlayer.ID] & DiplomacyFlags.Vision) == 0)
+                return 0;
+        }
+
+        return base.GetVisibilityInFOW();
     }
 }

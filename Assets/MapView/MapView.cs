@@ -739,7 +739,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         {
             // select unit if not selected yet
             if (HoveredObject != null &&
-                (SelectedObject == null || (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move &&
+                (SelectedObject == null || (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move && GetCastSpell() == Spell.Spells.NoneSpell &&
                                             !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) || (Commandbar.CurrentCommand == 0)))
             {
                 SelectedObject = HoveredObject;

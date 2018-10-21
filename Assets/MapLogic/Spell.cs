@@ -82,6 +82,30 @@ public class Spell
         }
     }
 
+    private static List<Spell.Spells> AttackSpells = new List<Spell.Spells>(new Spell.Spells[]
+    {
+        Spells.Fire_Arrow,
+        Spells.Fire_Ball,
+        Spells.Wall_of_Fire,
+        Spells.Lightning,
+        Spells.Prismatic_Spray,
+        Spells.Diamond_Dust,
+        Spells.Stone_Curse,
+        Spells.Ice_Missile,
+        Spells.Poison_Cloud,
+        Spells.Blizzard,
+        Spells.Acid_Spray,
+        Spells.Curse,
+        Spells.Darkness,
+        Spells.Slow,
+        Spells.Drain_Life
+    });
+
+    public static bool IsAttackSpell(Spells id)
+    {
+        return AttackSpells.Contains(id);
+    }
+
     public Spell(int id, MapUnit unit = null)
     {
         SpellID = (Spells)id;

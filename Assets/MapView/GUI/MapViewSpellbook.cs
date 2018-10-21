@@ -153,6 +153,8 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
         Filter.mesh = Builder.ToMesh(MeshTopology.Quads, MeshTopology.Quads);
     }
 
+    // for doubleclick
+    private float LastClickTime;
     public bool ProcessEvent(Event e)
     {
         if (e.rawType == EventType.MouseDown ||
@@ -179,6 +181,16 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
             if (e.rawType == EventType.MouseDown)
             {
                 ActiveSpell = sp;
+
+                float ctime = Time.unscaledTime;
+                if (ctime - LastClickTime < 0.25f && (SpellsMask & (int)ActiveSpell) != 0 && !Spell.IsAttackSpell(ActiveSpell))
+                {
+                    MapObject curObject = MapView.Instance.SelectedObject;
+                    if (curObject is MapUnit)
+                        Client.SendCastToUnit((MapUnit)curObject, sp, (MapUnit)curObject, curObject.X, curObject.Y);
+                }
+
+                LastClickTime = ctime;
             }
 
             MouseCursor.SetCursor(MouseCursor.CurDefault);

@@ -64,6 +64,7 @@ namespace SpellEffects
             {
                 Indicator = new MapProjectile(AllodsProjectile.PoisonSign, Unit);
                 Indicator.ZOffset = 64;
+                Indicator.Alpha = 0.5f;
                 MapLogic.Instance.Objects.Add(Indicator);
             }
             else if (this != poisons[0] && Indicator != null)

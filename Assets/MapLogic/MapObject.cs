@@ -186,7 +186,7 @@ public class MapObject : IDisposable
                  Y > MapView.Instance.VisibleRect.yMax || Y + Height < MapView.Instance.VisibleRect.yMin);
     }
 
-    public int GetVisibilityInFOW()
+    public virtual int GetVisibilityInFOW()
     {
         int extRadius = (GetObjectType() == MapObjectType.Obstacle) ? 2 : 0;
         int mw = MapLogic.Instance.Width;

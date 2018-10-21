@@ -698,4 +698,22 @@ public class Server
             }
         }
     }
+
+    public static void NotifyUnitFlags(MapUnit unit)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            Player p = MapLogic.Instance.GetNetPlayer(client);
+            if (unit.IsVisibleForNetPlayer(p))
+            {
+                ClientCommands.UnitFlags flagsCmd;
+                flagsCmd.Tag = unit.Tag;
+                flagsCmd.Flags = unit.Flags;
+                client.SendCommand(flagsCmd);
+            }
+        }
+    }
 }

@@ -252,6 +252,14 @@ public class AttackAction : IUnitAction
             Unit.AttackTime = 0;
             Unit.DoUpdateView = true;
             Speed = 0.5f;
+
+            // disable invisibility on attack, but only if target is not self
+            if (TargetUnit != Unit)
+            {
+                List<SpellEffects.Invisibility> invis = Unit.GetSpellEffects<SpellEffects.Invisibility>();
+                foreach (SpellEffects.Invisibility inv in invis)
+                    Unit.RemoveSpellEffect(inv);
+            }
         }
 
         if (Unit.Class.AttackPhases > 1)

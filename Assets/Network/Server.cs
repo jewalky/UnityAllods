@@ -175,6 +175,8 @@ public class Server
                 sps |= 1u << (int)cspell.SpellID;
             unitCmd.SpellBook = sps;
 
+            unitCmd.Flags = unit.Flags;
+
             player.NetClient.SendCommand(unitCmd);
             // also notify of current unit state
             NotifyAddUnitActionsSingle(player.NetClient, unit, unit.Actions.Skip(1).ToArray());

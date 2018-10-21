@@ -239,12 +239,24 @@ public class MapObject : IDisposable
             }
             else
             {
-                foreach (MapObject playerMobj in player.Objects)
+                // check if invisible
+                // [ZZ] todo: check if this is actually ok in real usage
+                if (this is MapUnit &&
+                    (((MapUnit)this).Flags & UnitFlags.Invisible) != 0 &&
+                    ownPlayer != null &&
+                    (ownPlayer.Diplomacy[player.ID] & DiplomacyFlags.Vision) == 0)
                 {
-                    if (Math.Abs(playerMobj.X - X) > 30 ||
-                        Math.Abs(playerMobj.Y - Y) > 30) continue; // basic coordinate check in 60x60 square with player unit in the center
-                    isVisibleForPlayer = true;
-                    break;
+                    isVisibleForPlayer = false;
+                }
+                else
+                {
+                    foreach (MapObject playerMobj in player.Objects)
+                    {
+                        if (Math.Abs(playerMobj.X - X) > 30 ||
+                            Math.Abs(playerMobj.Y - Y) > 30) continue; // basic coordinate check in 60x60 square with player unit in the center
+                        isVisibleForPlayer = true;
+                        break;
+                    }
                 }
             }
 

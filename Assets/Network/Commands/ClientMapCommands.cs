@@ -171,6 +171,8 @@ namespace ClientCommands
         public List<NetItem> ItemsPack;
         [ProtoMember(26)]
         public uint SpellBook;
+        [ProtoMember(27)]
+        public global::UnitFlags Flags;
 
         public bool Process()
         {

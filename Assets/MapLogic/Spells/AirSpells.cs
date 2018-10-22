@@ -102,9 +102,8 @@ namespace Spells
 
             // randomize units
             System.Random rng = new System.Random();
-            targets = targets.OrderBy(a => rng.Next()).Take(7).ToList();
-            if (!targets.Contains(TargetUnit))
-                targets[0] = TargetUnit;
+            targets = targets.Where(a => a != TargetUnit).OrderBy(a => rng.Next()).Take(6).ToList();
+            targets.Insert(0, TargetUnit);
 
             for (int i = 0; i < targets.Count; i++)
             {

@@ -45,4 +45,20 @@ namespace Spells
             return true;
         }
     }
+
+    [SpellProcId(Spell.Spells.Haste)]
+    public class SpellProcHaste : SpellProc
+    {
+        public SpellProcHaste(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (TargetUnit == null)
+                return false;
+
+            SpellEffects.Effect eff = new SpellEffects.Haste(40 * 60); // 1 minute fast
+            TargetUnit.AddSpellEffects(eff);
+            return false;
+        }
+    }
 }

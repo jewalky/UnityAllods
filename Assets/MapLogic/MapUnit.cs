@@ -310,10 +310,16 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         base.Dispose();
     }
 
-    // this is called when on-body items are modified
+    // this is called when on-body items or effects are modified
     public virtual void UpdateItems()
     {
-        Stats = CoreStats;
+        // set stats from effects
+        Stats = new UnitStats(CoreStats);
+        for (int i = 0; i < SpellEffects.Count; i++)
+            SpellEffects[i].ProcessStats(Stats);
+
+        DoUpdateView = true;
+        DoUpdateInfo = true;
     }
 
     public override void Update()

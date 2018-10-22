@@ -365,6 +365,9 @@ public class MapHuman : MapUnit
         if (CoreStats.ManaMax > 0)
             Stats.Mana = (int)(origMana * Stats.ManaMax);
 
+        for (int i = 0; i < SpellEffects.Count; i++)
+            SpellEffects[i].ProcessStats(Stats);
+
         //Debug.LogFormat("ItemStats = {0}", ItemStats.ToString());
 
         DoUpdateInfo = true;

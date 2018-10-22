@@ -106,7 +106,7 @@ public class MapHuman : MapUnit
         for (int i = 0; i < 32; i++)
         {
             uint sp = 1u << i;
-            if (Template.ManaMax > 0 && (Template.KnownSpells & sp) != 0)
+            if (Template.ManaMax > 0/* && (Template.KnownSpells & sp) != 0*/)  // [ZZ] uncomment for production!!! currently enables all spells on unit
             {
                 Spell cspell = new Spell(i, this);
                 SpellBook.Add(cspell);
@@ -115,6 +115,10 @@ public class MapHuman : MapUnit
 
         CalculateVision();
         UpdateItems();
+
+        // fix health and mana
+        Stats.TrySetHealth(Stats.HealthMax);
+        Stats.TrySetMana(Stats.ManaMax);
 
         // add item for testing
         if (!NetworkManager.IsClient)
@@ -125,11 +129,7 @@ public class MapHuman : MapUnit
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Plate Cuirass {body=4}"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Plate Cuirass {body=4}"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Wood Shaman Staff {castSpell=Fire_Ball:100}"));
-            /*                    MapProjectile proj = new MapProjectile(15);
-                    proj.SetPosition(16, 16, 0);
-                    proj.Target = ConsolePlayer.Avatar;
-                    Objects.Add(proj);
-*/          ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Crossbow"));
+            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Crossbow"));
         }
     }
 

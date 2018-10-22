@@ -174,6 +174,50 @@ public class ItemEffect
         return string.Format("{0}={1}", effect, value);
     }
 
+    public string ToVisualString()
+    {
+        string effect;
+        string value;
+        int vistype = (int)Type1;
+        if (Type1 == Effects.CastSpell)
+        {
+            effect = Locale.Stats[42];
+            // todo: spell power
+            int spid = Value1;
+            if (spid < 1 || spid-1 >= Locale.Spell.Count)
+            {
+                value = "\"unknown_" + spid.ToString() + "\"\nskill: " + Value2.ToString();
+            }
+            else
+            {
+                value = "\"" + Locale.Spell[spid-1] + "\"";
+            }
+            return string.Format("{0} {1}", effect, value);
+        }
+        else if (Type1 == Effects.TeachSpell)
+        {
+            effect = Locale.Stats[42];
+            //
+            int spid = Value1;
+            if (spid < 1 || spid-1 >= Locale.Spell.Count)
+                value = "unknown_" + spid.ToString();
+            else value = Locale.Spell[spid-1];
+            return string.Format("{0} \"{1}\"", effect, value);
+        }
+        else if (vistype < Locale.Stats.Count)
+        {
+            effect = Locale.Stats[vistype];
+            value = string.Format("+{0}", Value1);
+            return string.Format("{0} {1}", effect, value);
+        }
+        else
+        {
+            effect = Type1.ToString();
+            value = string.Format("+{0}", Value1);
+            return string.Format("{0} {1}", effect, value);
+        }
+    }
+
     public static List<ItemEffect> ParseEffectList(string spec_args)
     {
         List<ItemEffect> ov = new List<ItemEffect>();
@@ -535,6 +579,52 @@ public class Item
 
     public string ToVisualString()
     {
-        return Class.VisualName;
+        List<string> effects_str = new List<string>();
+        effects_str.Add(Class.VisualName);
+
+        List<ItemEffect> castEffects = new List<ItemEffect>();
+        for (int i = 0; i < Effects.Count; i++)
+        {
+            if (Effects[i].Type1 == ItemEffect.Effects.CastSpell ||
+                Effects[i].Type1 == ItemEffect.Effects.TeachSpell) castEffects.Add(Effects[i]);
+        }
+
+        // list cast effects
+        for (int i = 0; i < castEffects.Count; i++)
+        {
+            effects_str.Add(castEffects[i].ToVisualString());
+        }
+
+        // list native effects
+        for (int i = 0; i < NativeEffects.Count; i++)
+        {
+            if (NativeEffects[i].Type1 == ItemEffect.Effects.Price ||
+                NativeEffects[i].Type1 == ItemEffect.Effects.CastSpell ||
+                NativeEffects[i].Type1 == ItemEffect.Effects.TeachSpell) continue;
+            effects_str.Add(NativeEffects[i].ToVisualString());
+        }
+
+        // list magic effects if any
+        if (MagicEffects.Count > 0)
+        {
+            bool bmagic = false;
+            for (int i = 0; i < MagicEffects.Count; i++)
+            {
+                if (MagicEffects[i].Type1 == ItemEffect.Effects.Price ||
+                    MagicEffects[i].Type1 == ItemEffect.Effects.CastSpell ||
+                    MagicEffects[i].Type1 == ItemEffect.Effects.TeachSpell) continue;
+
+                if (!bmagic)
+                {
+                    effects_str.Add("");
+                    effects_str.Add(Locale.Main[189]); // Magic:
+                    bmagic = true;
+                }
+
+                effects_str.Add(MagicEffects[i].ToVisualString());
+            }
+        }
+
+        return string.Join("\n", effects_str.ToArray());
     }
 }

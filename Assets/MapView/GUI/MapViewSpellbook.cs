@@ -193,6 +193,14 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
                 LastClickTime = ctime;
             }
 
+            if (e.rawType == EventType.MouseMove &&
+                e.commandName == "tooltip" &&
+                (SpellsMask & (int)sp) != 0)
+            {
+                if (spd >= 0 && spd < Locale.Spells.Count)
+                    UiManager.Instance.SetTooltip(Locale.Spells[spd]);
+            }
+
             MouseCursor.SetCursor(MouseCursor.CurDefault);
             return true;
         }

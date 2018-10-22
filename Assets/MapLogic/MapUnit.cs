@@ -291,7 +291,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         for (int i = 0; i < 32; i++)
         {
             uint sp = 1u << i;
-            if (Template.ManaMax > 0/* && (Template.KnownSpells & sp) != 0*/) // [ZZ] uncomment for production!!! currently enables all spells on unit
+            if (Template.ManaMax > 0 && (Template.KnownSpells & sp) != 0)
             {
                 Spell cspell = new Spell(i, this);
                 SpellBook.Add(cspell);

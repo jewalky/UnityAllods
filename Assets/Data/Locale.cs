@@ -12,6 +12,10 @@ public class Locale
 
     public static List<string> ItemServ;
     public static List<string> ItemName;
+    public static List<string> Stats;
+
+    public static List<string> Spell; // spells by id
+    public static List<string> Spells; // spell tooltips for spellbook
 
     public static List<string> Patch;
 
@@ -24,6 +28,10 @@ public class Locale
 
         ItemServ = new StringFile("main/text/itemserv.txt").Strings;
         ItemName = new StringFile("main/text/itemname.txt").Strings;
+        Stats = new StringFile("main/text/stats.txt").Strings;
+
+        Spell = new StringFile("main/text/spell.txt").Strings;
+        Spells = new StringFile("main/text/spells.txt").Strings;
 
         Patch = new StringFile("patch/patch.txt").Strings;
     }

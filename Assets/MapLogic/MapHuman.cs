@@ -161,7 +161,7 @@ public class MapHuman : MapUnit
         if (!NetworkManager.IsClient)
         {
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Ring {body=4}"));
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Amulet {skillfire=100,skillwater=100,skillair=100,skillearth=100,skillastral=100}"));
+            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Amulet {skillfire=100,skillwater=100,skillair=100,skillearth=100,skillastral=100,manamax=16000}")); // for testing mage
             ItemsPack.PutItem(ItemsPack.Count, new Item("Potion Body"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Plate Cuirass {body=4}"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Plate Cuirass {body=4}"));
@@ -345,13 +345,13 @@ public class MapHuman : MapUnit
 
         baseStats.HealthMax = (int)(Stats.Body * fighter_mult);
         baseStats.HealthMax += (int)(Log11(experience_total / 5000f + fighter_mult));
-        baseStats.HealthMax = (int)((Pow11(Stats.Body) / 100f + 1f) * Stats.HealthMax);
+        baseStats.HealthMax = (int)((Pow11(Stats.Body) / 100f + 1f) * baseStats.HealthMax);
 
         if ((Gender & GenderFlags.Mage) != 0)
         {
             baseStats.ManaMax = (int)(Stats.Spirit * mage_mult);
             baseStats.ManaMax += (int)(Log11(experience_total / 5000f + mage_mult));
-            baseStats.ManaMax = (int)((Pow11(Stats.Spirit) / 100f + 1f) * Stats.ManaMax);
+            baseStats.ManaMax = (int)((Pow11(Stats.Spirit) / 100f + 1f) * baseStats.ManaMax);
         }
         else baseStats.ManaMax = -1;
 

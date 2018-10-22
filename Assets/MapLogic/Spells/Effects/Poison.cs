@@ -70,7 +70,6 @@ namespace SpellEffects
         {
             Indicator = new MapProjectile(AllodsProjectile.PoisonSign, Unit);
             Indicator.ZOffset = 64;
-            Indicator.Alpha = 0.5f;
             MapLogic.Instance.Objects.Add(Indicator);
         }
 
@@ -81,6 +80,7 @@ namespace SpellEffects
 
         public override void Process()
         {
+            Indicator.Alpha = (Unit.GetVisibility() == 2) ? 0.5f : 0;
             Indicator.SetPosition(Unit.X + Unit.FracX + Unit.Width / 2f, Unit.Y + Unit.FracY + Unit.Height / 2f, 1f + (((Unit.Width + Unit.Height) / 2f) - 1f) / 2f);
             Indicator.CurrentFrame = (Indicator.CurrentFrame + 1) % Indicator.Class.Phases;
             Indicator.DoUpdateView = true;

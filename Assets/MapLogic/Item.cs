@@ -174,7 +174,7 @@ public class ItemEffect
         return string.Format("{0}={1}", effect, value);
     }
 
-    public string ToVisualString()
+    public string ToVisualString(MapUnit unit, Item item)
     {
         string effect;
         string value;
@@ -190,7 +190,10 @@ public class ItemEffect
             }
             else
             {
-                value = "\"" + Locale.Spell[spid-1] + "\"";
+                Spell sp = new Spell(spid, unit);
+                sp.Skill = Value2;
+                sp.Item = item;
+                value = "\"" + Locale.Spell[spid - 1] + "\"\n" + sp.ToVisualString();
             }
             return string.Format("{0} {1}", effect, value);
         }
@@ -592,7 +595,7 @@ public class Item
         // list cast effects
         for (int i = 0; i < castEffects.Count; i++)
         {
-            effects_str.Add(castEffects[i].ToVisualString());
+            effects_str.Add(castEffects[i].ToVisualString(Parent!=null?Parent.Parent:null, this));
         }
 
         // list native effects
@@ -601,7 +604,7 @@ public class Item
             if (NativeEffects[i].Type1 == ItemEffect.Effects.Price ||
                 NativeEffects[i].Type1 == ItemEffect.Effects.CastSpell ||
                 NativeEffects[i].Type1 == ItemEffect.Effects.TeachSpell) continue;
-            effects_str.Add(NativeEffects[i].ToVisualString());
+            effects_str.Add(NativeEffects[i].ToVisualString(Parent != null ? Parent.Parent : null, this));
         }
 
         // list magic effects if any
@@ -621,7 +624,7 @@ public class Item
                     bmagic = true;
                 }
 
-                effects_str.Add(MagicEffects[i].ToVisualString());
+                effects_str.Add(MagicEffects[i].ToVisualString(Parent != null ? Parent.Parent : null, this));
             }
         }
 

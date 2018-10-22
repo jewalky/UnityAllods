@@ -17,7 +17,7 @@ namespace Spells
             if (NetworkManager.IsClient)
                 return false;
 
-            SpawnProjectile(AllodsProjectile.FireArrow, 10, 20);
+            SpawnProjectile(AllodsProjectile.FireArrow, 10, Spell.GetDamage());
             return false;
         }
     }
@@ -32,7 +32,7 @@ namespace Spells
             if (NetworkManager.IsClient)
                 return false;
 
-            int ballDamage = 16;
+            int ballDamage = Spell.GetDamage();
 
             // here SpawnProjectile is basically duplicated. except some functions that aren't needed.
             // following offsets are based on unit's width, height and center
@@ -142,7 +142,7 @@ namespace Spells
                     float fy = y;
                     float rx = Mathf.Cos(angle) * x - Mathf.Sin(angle) * y;
                     float ry = Mathf.Cos(angle) * y + Mathf.Sin(angle) * x;
-                    Server.SpawnProjectileEOT(AllodsProjectile.FireWall, Spell.User, TargetX+rx+0.5f, TargetY+ry+0.5f, 0, 40*4, 10, 4, 4, 16, proj =>
+                    Server.SpawnProjectileEOT(AllodsProjectile.FireWall, Spell.User, TargetX+rx+0.5f, TargetY+ry+0.5f, 0, (int)(20 * Spell.GetDuration()), 10, 4, 4, 16, proj =>
                     {
                         DamageFlags spdf = SphereToDamageFlags(Spell);
                         // get projectile cells
@@ -182,7 +182,7 @@ namespace Spells
                                     else
                                     {
                                         IVulnerable mov = (IVulnerable)mo;
-                                        int dmg = (int)(10 * pdst);
+                                        int dmg = (int)(Spell.GetDamage() * pdst);
                                         mov.TakeDamage(spdf, Spell.User, dmg);
                                     }
                                 }

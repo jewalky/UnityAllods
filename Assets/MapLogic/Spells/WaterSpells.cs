@@ -17,7 +17,7 @@ namespace Spells
             if (NetworkManager.IsClient)
                 return false;
 
-            SpawnProjectile(AllodsProjectile.IceMissile, 10, 20);
+            SpawnProjectile(AllodsProjectile.IceMissile, 10, Spell.GetDamage());
             return false;
         }
     }
@@ -66,7 +66,7 @@ namespace Spells
                     if (spawnblocked)
                         continue;
 
-                    Server.SpawnProjectileEOT(AllodsProjectile.PoisonCloud, Spell.User, x + 0.5f, y + 0.5f, 0, 40 * 4, 40, 0, 0, 16, proj =>
+                    Server.SpawnProjectileEOT(AllodsProjectile.PoisonCloud, Spell.User, x + 0.5f, y + 0.5f, 0, (int)(20 * Spell.GetDuration()), 40, 0, 0, 16, proj =>
                     {
                         DamageFlags spdf = SphereToDamageFlags(Spell);
                         // get projectile cells
@@ -88,11 +88,11 @@ namespace Spells
                                     if (!(mo is MapUnit))
                                         continue;
                                     MapUnit mov = (MapUnit)mo;
-                                    int dmg = (int)(10 * pdst);
+                                    int dmg = (int)(Spell.GetIndirectPower() * pdst);
                                     if (dmg <= 0)
                                         continue; // don't add null effects
 
-                                    SpellEffects.Effect eff = new SpellEffects.Poison(this, dmg, 40 * 4);
+                                    SpellEffects.Effect eff = new SpellEffects.Poison(this, dmg, 40 * 8); // originally 8 seconds
                                     mov.AddSpellEffects(eff);
                                 }
                             }

@@ -161,7 +161,7 @@ public class MapHuman : MapUnit
         if (!NetworkManager.IsClient)
         {
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Ring {body=4}"));
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Amulet {body=4}"));
+            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Amulet {skillfire=100,skillwater=100,skillair=100,skillearth=100,skillastral=100}"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Potion Body"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Plate Cuirass {body=4}"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Plate Cuirass {body=4}"));
@@ -311,19 +311,19 @@ public class MapHuman : MapUnit
         UnitStats baseStats = new UnitStats(CoreStats);
         if ((Gender & GenderFlags.Fighter) != 0)
         {
-            ItemStats.SkillBlade = (byte)GetSkill(ExperienceSkill.Blade);
-            ItemStats.SkillAxe = (byte)GetSkill(ExperienceSkill.Axe);
-            ItemStats.SkillBludgeon = (byte)GetSkill(ExperienceSkill.Bludgeon);
-            ItemStats.SkillPike = (byte)GetSkill(ExperienceSkill.Pike);
-            ItemStats.SkillShooting = (byte)GetSkill(ExperienceSkill.Shooting);
+            baseStats.SkillBlade = (byte)GetSkill(ExperienceSkill.Blade);
+            baseStats.SkillAxe = (byte)GetSkill(ExperienceSkill.Axe);
+            baseStats.SkillBludgeon = (byte)GetSkill(ExperienceSkill.Bludgeon);
+            baseStats.SkillPike = (byte)GetSkill(ExperienceSkill.Pike);
+            baseStats.SkillShooting = (byte)GetSkill(ExperienceSkill.Shooting);
         }
         else if ((Gender & GenderFlags.Mage) != 0)
         {
-            ItemStats.SkillFire = (byte)GetSkill(ExperienceSkill.Fire);
-            ItemStats.SkillWater = (byte)GetSkill(ExperienceSkill.Water);
-            ItemStats.SkillAir = (byte)GetSkill(ExperienceSkill.Air);
-            ItemStats.SkillEarth = (byte)GetSkill(ExperienceSkill.Earth);
-            ItemStats.SkillAstral = (byte)GetSkill(ExperienceSkill.Astral);
+            baseStats.SkillFire = (byte)GetSkill(ExperienceSkill.Fire);
+            baseStats.SkillWater = (byte)GetSkill(ExperienceSkill.Water);
+            baseStats.SkillAir = (byte)GetSkill(ExperienceSkill.Air);
+            baseStats.SkillEarth = (byte)GetSkill(ExperienceSkill.Earth);
+            baseStats.SkillAstral = (byte)GetSkill(ExperienceSkill.Astral);
         }
 
         Stats = new UnitStats(CoreStats);

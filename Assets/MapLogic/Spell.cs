@@ -48,12 +48,12 @@ public class Spell
     public Templates.TplSpell Template;
     public Spells SpellID = 0;
 
-    private int OwnSkill = 0;
+    private int OwnSkill = -1;
     public int Skill
     {
         get
         {
-            if (User != null && Item == null)
+            if (User != null && Item == null && OwnSkill < 0)
             {
                 switch (Template.Sphere)
                 {
@@ -71,18 +71,16 @@ public class Spell
                         return OwnSkill;
                 }
             }
-            else return OwnSkill;
+            else return Math.Max(0, OwnSkill);
         }
 
         set
         {
-            if (User != null && Template.Sphere >= 1 && Template.Sphere <= 5)
-                return;
             OwnSkill = value;
         }
     }
 
-    private static List<Spell.Spells> AttackSpells = new List<Spell.Spells>(new Spell.Spells[]
+    private static List<Spells> AttackSpells = new List<Spells>(new Spells[]
     {
         Spells.Fire_Arrow,
         Spells.Fire_Ball,
@@ -137,10 +135,158 @@ public class Spell
 
     public float GetDistance()
     {
+        // if from item and this item has range
+        //if (weapon.Class.Option.Name == "Staff" || weapon.Class.Option.Name == "Shaman Staff")
+        if (Item != null && Item.Class != null && Item.Class.Option != null && Item.Class.Option.Slot == (int)MapUnit.BodySlot.Weapon)
+        {
+            // get range of weapon
+            return Item.Class.Option.Range;
+        }
+
         // maxRange is base range
-        // on top of that, skill / 30 is added for regular spells, and skill / 3 for teleport
         if (SpellID == Spells.Teleport)
-            return 7 + Skill / 3;
-        return 7 + Skill / 30;
+            return 8 + (float)Skill / 4;
+        return Template.MaxRange + (float)Skill / 25;
+    }
+
+    private float GetMindModifier()
+    {
+        float mmod = 1f;
+        if (User != null && Item == null && User is MapHuman)
+        {
+            MapHuman huser = (MapHuman)User;
+            mmod = (float)huser.Stats.Mind * 0.02f;
+        }
+
+        return mmod;
+    }
+
+    public int GetDamageMin()
+    {
+        if (Template.DamageMin < 0 || Template.DamageMax < 0)
+            return 0;
+        return Math.Max(1, (int)(GetMindModifier() * Template.DamageMin * ((float)Skill / 25 + 1f)));
+    }
+
+    public int GetDamageMax()
+    {
+        if (Template.DamageMin < 0 || Template.DamageMax < 0)
+            return 0;
+        return (int)(GetMindModifier() * Template.DamageMax * ((float)Skill / 25 + 1f));
+    }
+
+    public int GetDamage()
+    {
+        int dmin = GetDamageMin();
+        int dmax = GetDamageMax();
+        return UnityEngine.Random.Range(dmin, dmax);
+    }
+
+    public int GetIndirectPower()
+    {
+        // 3..7
+        int pw = (int)(Skill * 0.07f);
+        return Math.Max(3, Math.Min(7, pw));
+    }
+
+    public float GetDuration()
+    {
+        if (SpellID == Spells.Stone_Curse)
+            return 1f + Skill * 0.15f;
+        if (Template.AreaDuration > 0)
+            return Template.AreaDuration + Skill * 0.1f;
+        if (Template.Duration > 0)
+            return (Template.Duration + Skill * (float)Template.Duration * 0.1f * GetMindModifier()) * 1.5f;
+        return 0;
+    }
+
+    // protection +X
+    public int GetProtection()
+    {
+        return 10 + Skill / 2;
+    }
+    
+    // bless and curse %
+    public int GetBlessing()
+    {
+        return (int)(40 + (float)Skill * 0.75);
+    }
+
+    // speed +X
+    public int GetSpeed()
+    {
+        return 2 + Skill / 10;
+    }
+
+    // absorbtion +X
+    public int GetAbsorbtion()
+    {
+        return 5 + Skill / 10;
+    }
+
+    public string ToVisualString()
+    {
+        List<string> sp_rows = new List<string>();
+
+        // all spells have mana cost. unless cast from item
+        if (User != null && Item == null)
+        {
+            sp_rows.Add(string.Format("{0}: {1}", Locale.Main[117], Template.ManaCost));
+        }
+
+        if (SpellID == Spells.Poison_Cloud)
+        {
+            sp_rows.Add(string.Format("{0}: {1}", Locale.Main[118], GetIndirectPower()));
+        }
+        else
+        {
+            // if spell has attack, add attack
+            int dmin = GetDamageMin();
+            int dmax = GetDamageMax();
+            if (dmin > 0 || dmax > 0)
+                sp_rows.Add(string.Format("{0}: {1}-{2}", Locale.Main[118], dmin, dmax));
+        }
+
+        // if spell has distance > 0, add distance.
+        float dst = GetDistance();
+        if (dst > 0)
+            sp_rows.Add(string.Format("{0}: {1}", Locale.Main[123], (int)dst));
+        // if spell has duration, add duration
+        float duration = GetDuration();
+        if (duration > 0)
+        {
+            if (SpellID == Spells.Stone_Curse)
+                sp_rows.Add(string.Format("{0}: 0.0-{1:0.0}", Locale.Main[124], duration));
+            else sp_rows.Add(string.Format("{0}: {1:0.0}", Locale.Main[124], duration));
+        }
+
+        switch (SpellID)
+        {
+            default:
+                break;
+            case Spells.Protection_from_Fire:
+            case Spells.Protection_from_Water:
+            case Spells.Protection_from_Air:
+            case Spells.Protection_from_Earth:
+                sp_rows.Add(string.Format("{0}: +{1}", Locale.Main[183], GetProtection()));
+                break;
+            case Spells.Shield:
+                sp_rows.Add(string.Format("{0}: +{1}", Locale.Main[24], GetAbsorbtion()));
+                break;
+            case Spells.Prismatic_Spray:
+                sp_rows.Add(string.Format("{0}: {1}", Locale.Main[186], GetIndirectPower()));
+                break;
+            case Spells.Bless:
+                sp_rows.Add(string.Format("{0} +{1}%", Locale.Main[185], GetBlessing()));
+                break;
+            case Spells.Curse:
+                sp_rows.Add(string.Format("{0} +{1}%", Locale.Main[187], GetBlessing()));
+                break;
+            case Spells.Haste:
+                sp_rows.Add(string.Format("{0}: +{1}", Locale.Main[22], GetSpeed()));
+                break;
+        }
+
+        return string.Join("\n", sp_rows.ToArray());
     }
 }

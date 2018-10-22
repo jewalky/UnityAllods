@@ -17,7 +17,7 @@ namespace Spells
             if (NetworkManager.IsClient)
                 return false;
 
-            SpawnProjectile(AllodsProjectile.DiamondDust, 10, 20);
+            SpawnProjectile(AllodsProjectile.DiamondDust, 10, Spell.GetDamage());
             return false;
         }
     }

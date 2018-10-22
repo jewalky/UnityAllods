@@ -198,7 +198,15 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
                 (SpellsMask & (int)sp) != 0)
             {
                 if (spd >= 0 && spd < Locale.Spells.Count)
-                    UiManager.Instance.SetTooltip(Locale.Spells[spd]);
+                {
+                    string tt = Locale.Spells[spd];
+                    MapObject curObject = MapView.Instance.SelectedObject;
+                    if (curObject is MapUnit)
+                    {
+                        tt += "\n"+new Spell((int)sp, (MapUnit)curObject).ToVisualString();
+                    }
+                    UiManager.Instance.SetTooltip(tt);
+                }
             }
 
             MouseCursor.SetCursor(MouseCursor.CurDefault);

@@ -53,7 +53,7 @@ namespace Spells
 
         public override bool Process()
         {
-            SpawnProjectile(TargetUnit, 20, 0, 1);
+            SpawnProjectile(TargetUnit, Spell.GetDamage(), 0, 1);
             return false;
         }
     }
@@ -68,13 +68,14 @@ namespace Spells
             if (TargetUnit == null)
                 return false;
 
-            //SpawnProjectile(tgUnit, 20, 1);
-            // look for 7 enemies nearby
+            // look for 3-7 enemies nearby
+            int maxTargets = Spell.GetIndirectPower();
             List<MapUnit> targets = new List<MapUnit>();
-            int fromX = Spell.User.X - 8;
-            int fromY = Spell.User.Y - 8;
-            int toX = Spell.User.X + Spell.User.Width + 8;
-            int toY = Spell.User.Y + Spell.User.Height + 8;
+            int range = Mathf.CeilToInt(Spell.GetDistance());
+            int fromX = Spell.User.X - range;
+            int fromY = Spell.User.Y - range;
+            int toX = Spell.User.X + Spell.User.Width + range;
+            int toY = Spell.User.Y + Spell.User.Height + range;
             for (int y = fromY; y <= toY; y++)
             {
                 if (y < 0 || y >= MapLogic.Instance.Height)
@@ -83,6 +84,9 @@ namespace Spells
                 {
                     if (x < 0 || x >= MapLogic.Instance.Width)
                         continue;
+
+                    if (targets.Count >= maxTargets - 1)
+                        break;
 
                     MapNode node = MapLogic.Instance.Nodes[x, y];
                     foreach (MapObject objnode in node.Objects)
@@ -102,12 +106,12 @@ namespace Spells
 
             // randomize units
             System.Random rng = new System.Random();
-            targets = targets.Where(a => a != TargetUnit).OrderBy(a => rng.Next()).Take(6).ToList();
+            targets = targets.Where(a => a != TargetUnit).OrderBy(a => rng.Next()).Take(maxTargets-1).ToList();
             targets.Insert(0, TargetUnit);
 
             for (int i = 0; i < targets.Count; i++)
             {
-                SpawnProjectile(targets[i], 30, i + 1, 1f / targets.Count);
+                SpawnProjectile(targets[i], Spell.GetDamage(), i + 1, 1f / targets.Count);
             }
 
             return false;

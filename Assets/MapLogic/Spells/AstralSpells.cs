@@ -56,7 +56,7 @@ namespace Spells
             if (TargetUnit == null)
                 return false;
 
-            SpellEffects.Effect eff = new SpellEffects.Haste(40 * 60); // 1 minute fast
+            SpellEffects.Effect eff = new SpellEffects.Haste((int)(20 * Spell.GetDuration()), Spell.GetSpeed());
             TargetUnit.AddSpellEffects(eff);
             return false;
         }

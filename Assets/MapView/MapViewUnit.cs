@@ -542,6 +542,10 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
     private static AllodsTextRenderer Info_ScanSpeedCaption; // scanrange + speed captions
     private static AllodsTextRenderer Info_ScanSpeed; // scanrange + speed values
 
+    //
+    private static AllodsTextRenderer Info_ExperienceCaption; // experience caption
+    private static AllodsTextRenderer Info_Experience; // experience value
+
     private AllodsTextRenderer DisplayInfoInit(Font.Align align, int x, int y, int w, int h, Color color)
     {
         // 70 10 39 19
@@ -581,6 +585,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 Info_Skill = DisplayInfoInit(Font.Align.Right, 7, 123, 63, 48, colorValue);
                 Info_ScanSpeedCaption = DisplayInfoInit(Font.Align.Left, 41, 201, 65, 18, colorCaption);
                 Info_ScanSpeed = DisplayInfoInit(Font.Align.Right, 41, 201, 65, 18, colorValue);
+                Info_ExperienceCaption = DisplayInfoInit(Font.Align.Left, 16, 187, 110, 8, colorCaption);
+                Info_Experience = DisplayInfoInit(Font.Align.Right, 16, 187, 110, 8, colorValue);
             }
 
             InfoObject.transform.parent = parent;
@@ -620,13 +626,55 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                                                                         LogicUnit.Stats.ProtectionEarth,
                                                                         LogicUnit.Stats.ProtectionAstral);
 
-            Info_SkillCaptionMain.Text = Locale.Main[28];
-            Info_SkillCaption.Text = string.Format("{0}\n{1}\n{2}\n{3}\n{4}", Locale.Main[30], Locale.Main[31], Locale.Main[32], Locale.Main[33], Locale.Main[34]);
-            Info_Skill.Text = string.Format("{0}\n{1}\n{2}\n{3}\n{4}", LogicUnit.Stats.ProtectionBlade,
-                                                                       LogicUnit.Stats.ProtectionAxe,
-                                                                       LogicUnit.Stats.ProtectionBludgeon,
-                                                                       LogicUnit.Stats.ProtectionPike,
-                                                                       LogicUnit.Stats.ProtectionShooting);
+            // parts of human info here.
+            if (LogicUnit is MapHuman)
+            {
+                Info_SkillCaptionMain.Text = Locale.Main[27];
+                MapHuman human = (MapHuman)LogicUnit;
+                if ((human.Gender & MapHuman.GenderFlags.Mage) != 0)
+                {
+                    Info_SkillCaption.Text = string.Format("{0}\n{1}\n{2}\n{3}\n{4}", Locale.Main[36], Locale.Main[37], Locale.Main[38], Locale.Main[39], Locale.Main[40]);
+                    Info_Skill.Text = string.Format("{0}\n{1}\n{2}\n{3}\n{4}", LogicUnit.Stats.SkillFire,
+                                                                               LogicUnit.Stats.SkillWater,
+                                                                               LogicUnit.Stats.SkillAir,
+                                                                               LogicUnit.Stats.SkillEarth,
+                                                                               LogicUnit.Stats.SkillAstral);
+                }
+                else if ((human.Gender & MapHuman.GenderFlags.Fighter) != 0)
+                {
+                    Info_SkillCaption.Text = string.Format("{0}\n{1}\n{2}\n{3}\n{4}", Locale.Main[30], Locale.Main[31], Locale.Main[32], Locale.Main[33], Locale.Main[34]);
+                    Info_Skill.Text = string.Format("{0}\n{1}\n{2}\n{3}\n{4}", LogicUnit.Stats.SkillBlade,
+                                                                               LogicUnit.Stats.SkillAxe,
+                                                                               LogicUnit.Stats.SkillBludgeon,
+                                                                               LogicUnit.Stats.SkillPike,
+                                                                               LogicUnit.Stats.SkillShooting);
+                }
+                else
+                {
+                    Info_SkillCaptionMain.Text = Locale.Main[28];
+                    Info_SkillCaption.Text = string.Format("{0}\n{1}\n{2}\n{3}\n{4}", Locale.Main[30], Locale.Main[31], Locale.Main[32], Locale.Main[33], Locale.Main[34]);
+                    Info_Skill.Text = string.Format("{0}\n{1}\n{2}\n{3}\n{4}", LogicUnit.Stats.ProtectionBlade,
+                                                                               LogicUnit.Stats.ProtectionAxe,
+                                                                               LogicUnit.Stats.ProtectionBludgeon,
+                                                                               LogicUnit.Stats.ProtectionPike,
+                                                                               LogicUnit.Stats.ProtectionShooting);
+                }
+
+                // display exp
+                Info_ExperienceCaption.Text = Locale.Main[46];
+                Info_Experience.Text = human.GetExperience().ToString();
+            }
+            else
+            {
+                Info_SkillCaptionMain.Text = Locale.Main[28];
+                Info_SkillCaption.Text = string.Format("{0}\n{1}\n{2}\n{3}\n{4}", Locale.Main[30], Locale.Main[31], Locale.Main[32], Locale.Main[33], Locale.Main[34]);
+                Info_Skill.Text = string.Format("{0}\n{1}\n{2}\n{3}\n{4}", LogicUnit.Stats.ProtectionBlade,
+                                                                           LogicUnit.Stats.ProtectionAxe,
+                                                                           LogicUnit.Stats.ProtectionBludgeon,
+                                                                           LogicUnit.Stats.ProtectionPike,
+                                                                           LogicUnit.Stats.ProtectionShooting);
+                Info_ExperienceCaption.Text = Info_Experience.Text = "";
+            }
 
             Info_ScanSpeedCaption.Text = string.Format("{0}\n{1}", Locale.Main[21], Locale.Main[22]);
             Info_ScanSpeed.Text = string.Format("{0:F1}\n{1}", LogicUnit.Stats.ScanRange, LogicUnit.Stats.Speed);

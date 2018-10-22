@@ -29,6 +29,23 @@ public class MapHuman : MapUnit
     public GenderFlags Gender { get; private set; }
     public bool IsHero { get; private set; }
 
+    public enum ExperienceSkill
+    {
+        Fire = 0,
+        Blade = 0,
+        Water = 1,
+        Axe = 1,
+        Air = 2,
+        Bludgeon = 2,
+        Earth = 3,
+        Pike = 3,
+        Astral = 4,
+        Shooting = 4
+    }
+
+    public ExperienceSkill MainSkill = ExperienceSkill.Fire;
+    private int[] Experience = new int[5] { 0, 0, 0, 0, 0 };
+
     public MapHuman(int serverId, bool hero = false)
     {
         IsHero = hero;
@@ -111,6 +128,26 @@ public class MapHuman : MapUnit
                 Spell cspell = new Spell(i, this);
                 SpellBook.Add(cspell);
             }
+        }
+
+        // set skills by experience
+        // [ZZ] I know that magic and fighting skills are exactly same in the array.
+        //      this is written this way in case it changes. will be optimized later
+        if ((Gender & GenderFlags.Fighter) != 0)
+        {
+            SetSkill(ExperienceSkill.Blade, Template.SkillBladeFire);
+            SetSkill(ExperienceSkill.Axe, Template.SkillAxeWater);
+            SetSkill(ExperienceSkill.Bludgeon, Template.SkillBludgeonAir);
+            SetSkill(ExperienceSkill.Pike, Template.SkillPikeEarth);
+            SetSkill(ExperienceSkill.Shooting, Template.SkillShootingAstral);
+        }
+        else if ((Gender & GenderFlags.Mage) != 0)
+        {
+            SetSkill(ExperienceSkill.Fire, Template.SkillBladeFire);
+            SetSkill(ExperienceSkill.Water, Template.SkillAxeWater);
+            SetSkill(ExperienceSkill.Air, Template.SkillBludgeonAir);
+            SetSkill(ExperienceSkill.Earth, Template.SkillPikeEarth);
+            SetSkill(ExperienceSkill.Astral, Template.SkillShootingAstral);
         }
 
         CalculateVision();
@@ -272,6 +309,23 @@ public class MapHuman : MapUnit
             ItemStats.MergeEffects(bodyitem.Effects);
 
         UnitStats baseStats = new UnitStats(CoreStats);
+        if ((Gender & GenderFlags.Fighter) != 0)
+        {
+            ItemStats.SkillBlade = (byte)GetSkill(ExperienceSkill.Blade);
+            ItemStats.SkillAxe = (byte)GetSkill(ExperienceSkill.Axe);
+            ItemStats.SkillBludgeon = (byte)GetSkill(ExperienceSkill.Bludgeon);
+            ItemStats.SkillPike = (byte)GetSkill(ExperienceSkill.Pike);
+            ItemStats.SkillShooting = (byte)GetSkill(ExperienceSkill.Shooting);
+        }
+        else if ((Gender & GenderFlags.Mage) != 0)
+        {
+            ItemStats.SkillFire = (byte)GetSkill(ExperienceSkill.Fire);
+            ItemStats.SkillWater = (byte)GetSkill(ExperienceSkill.Water);
+            ItemStats.SkillAir = (byte)GetSkill(ExperienceSkill.Air);
+            ItemStats.SkillEarth = (byte)GetSkill(ExperienceSkill.Earth);
+            ItemStats.SkillAstral = (byte)GetSkill(ExperienceSkill.Astral);
+        }
+
         Stats = new UnitStats(CoreStats);
         Stats.MergeStats(ItemStats);
         Stats.DamageMax += Stats.DamageMin; // allods use damagemax this way
@@ -357,5 +411,65 @@ public class MapHuman : MapUnit
     public override int Face { get { return Template.Face; } }
 
     public override string TemplateName { get { return Template.Name; } }
+
+    // experience stuff
+    public int GetExperience()
+    {
+        if ((Gender & GenderFlags.Mage | GenderFlags.Fighter) == 0)
+            return 0;
+
+        int exp = 0;
+        for (int i = 0; i < 5; i++)
+            exp += Experience[i];
+        return exp;
+    }
+
+    public int ScaleExperience(float scalar)
+    {
+        for (int i = 0; i < 5; i++)
+            Experience[i] = (int)(Experience[i] * scalar);
+        return 0;
+    }
+
+    public int SetSkillExperience(ExperienceSkill sk, int value)
+    {
+        if ((Gender & GenderFlags.Mage | GenderFlags.Fighter) == 0)
+            return 0;
+        return (Experience[(int)sk] = value);
+    }
+
+    public int GetSkillExperience(ExperienceSkill sk)
+    {
+        if ((Gender & GenderFlags.Mage | GenderFlags.Fighter) == 0)
+            return 0;
+        return Experience[(int)sk];
+    }
+
+    public void SetSkill(ExperienceSkill sk, int value)
+    {
+        int exp = value > 0 ? (int)((Mathf.Pow(1.1f, value) - 1f) * 1000f) : 0;
+        SetSkillExperience(sk, exp);
+    }
+
+    private static int[] ReverseExpTable;
+    public int GetSkill(ExperienceSkill sk)
+    {
+        int exp = GetSkillExperience(sk);
+
+        if (ReverseExpTable == null)
+        {
+            ReverseExpTable = new int[256];
+            for (int i = 0; i < 256; i++)
+                ReverseExpTable[i] = i > 0 ? (int)((Mathf.Pow(1.1f, i) - 1f) * 1000f) : 0;
+        }
+
+        for (int i = 0; i < ReverseExpTable.Length; i++)
+        {
+            if (ReverseExpTable[i] > exp)
+                return i - 1;
+        }
+
+        return 0;
+    }
 }
  

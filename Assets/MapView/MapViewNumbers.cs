@@ -16,11 +16,13 @@ public class MapViewNumbers : MapViewObject
     public int Number { get; private set; }
     public bool Critical { get; private set; }
     public Player Player { get; private set; }
+    public float OffsX { get; private set; }
+    public float OffsY { get; private set; }
 
     private int Count;
     
     //
-    public static MapViewNumbers Create(float x, float y, float z, int damage, bool crit, Player p)
+    public static MapViewNumbers Create(float x, float y, float z, int damage, bool crit, int offsX, int offsY, Player p)
     {
         AllodsTextRenderer textRenderer = new AllodsTextRenderer(Fonts.Font2, Font.Align.Center);
         textRenderer.Text = crit?"CRIT ":""+(-damage).ToString();
@@ -34,6 +36,8 @@ public class MapViewNumbers : MapViewObject
         mvn.Critical = crit;
         mvn.Player = p;
         mvn.Count = 0;
+        mvn.OffsX = offsX;
+        mvn.OffsY = offsY;
 
         mvn.GObject = gObject;
         mvn.TextRenderer = textRenderer;
@@ -48,7 +52,7 @@ public class MapViewNumbers : MapViewObject
     {
         //
         Vector2 coords = MapView.Instance.MapToScreenCoords(X, Y, 1, 1);
-        transform.localPosition = new Vector3(coords.x-Z*8, coords.y-Z*16, MakeZFromY(coords.y+256+Z*32));
+        transform.localPosition = new Vector3(coords.x+OffsX, coords.y+OffsY, MakeZFromY(coords.y+OffsY));
         Renderer = GObject.GetComponent<MeshRenderer>();
         Renderer.material.color = Player.AllColors[Player.Color];
     }

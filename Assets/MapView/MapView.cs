@@ -983,13 +983,14 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
     // spawn damage count
     public void SpawnDamageNumbers(MapUnit unit, int damage, bool crit)
     {
-        float poffs = 0;
-        if (unit.Player.Avatar == unit)
-            poffs += 1;
-        SpawnDamageNumbers(unit.X + unit.FracX + (float)unit.Width/2, unit.Y + unit.FracY + (float)unit.Height/2, (float)(unit.Width+unit.Height)/2+poffs, damage, false, unit.Player);
+        float usz = 1;// (int)(1f + (float)(unit.Width + unit.Height) / 4);
+        int offsX = (int)(-4 * usz);
+        int offsY = (int)(-16 * usz);
+
+        SpawnDamageNumbers(unit.X + unit.FracX, unit.Y + unit.FracY, 0, damage, false, offsX, offsY, unit.Player);
     }
 
-    private void SpawnDamageNumbers(float x, float y, float z, int damage, bool crit, Player p)
+    private void SpawnDamageNumbers(float x, float y, float z, int damage, bool crit, int offsX, int offsY, Player p)
     {
         int fromX = Mathf.FloorToInt(x);
         int fromY = Mathf.FloorToInt(y);
@@ -1006,7 +1007,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                 if (cx < 8 || cy < 8 ||
                     cx >= MapLogic.Instance.Width - 8 ||
                     cy >= MapLogic.Instance.Height - 8) continue;
-                if ((MapLogic.Instance.Nodes[cx, cy].Flags & MapNodeFlags.Visible) != 0)
+                if ((MapLogic.Instance.Nodes[cx, cy].Flags & MapNodeFlags.Visible) == 0)
                     continue;
                 anyvisible = true;
                 break;
@@ -1016,7 +1017,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         if (!anyvisible)
             return;
 
-        MapViewNumbers mvn = MapViewNumbers.Create(x, y, z, damage, crit, p);
+        MapViewNumbers mvn = MapViewNumbers.Create(x, y, z, damage, crit, offsX, offsY, p);
         mvn.transform.parent = transform;
     }
 

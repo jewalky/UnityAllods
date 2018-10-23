@@ -173,7 +173,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
                     TextObjects.Add(go);
                     TextRenderers.Add(atr);
 
-                    go.transform.localPosition = new Vector3((lx * 80 + 8) * InvScale, (ly * 80 + 80 - 3) * InvScale - atr.Font.LineHeight, -0.2f);
+                    go.transform.localPosition = new Vector3((lx * 80 + 6) * InvScale, (ly * 80 + 80 - 4) * InvScale - atr.Font.LineHeight, -0.2f);
                 }
             }
         }

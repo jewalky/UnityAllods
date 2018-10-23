@@ -509,7 +509,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         return FaceVector(rx - (X + (float)Width / 2 + FracX), ry - (Y + (float)Height / 2 + FracY));
     }
 
-    public void SetPosition(int x, int y)
+    public void SetPosition(int x, int y, bool netupdate)
     {
         UnlinkFromWorld();
         X = x;
@@ -518,9 +518,12 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         CalculateVision();
         DoUpdateView = true;
 
-        UpdateNetVisibility();
-        if (NetworkManager.IsServer)
-            Server.NotifyUnitTeleport(this);
+        if (netupdate)
+        {
+            UpdateNetVisibility();
+            if (NetworkManager.IsServer)
+                Server.NotifyUnitTeleport(this);
+        }
     }
 
     public void CalculateVision()

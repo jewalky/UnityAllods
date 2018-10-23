@@ -38,7 +38,7 @@ namespace Spells
                 MapUnit unit = Spell.User;
                 if (!unit.Interaction.CheckWalkableForUnit(utpX, utpY, false))
                     return false;
-                unit.SetPosition(utpX, utpY);
+                unit.SetPosition(utpX, utpY, true);
                 return false;
             }
 

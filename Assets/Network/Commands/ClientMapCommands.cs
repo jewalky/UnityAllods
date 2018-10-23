@@ -45,6 +45,7 @@ namespace ClientCommands
                 GameConsole.Instance.WriteLine("We are controlling player {0}.", player.Name);
                 MapLogic.Instance.ConsolePlayer = player;
             }
+            Debug.LogFormat("Added Player {0}", player.ID);
             MapLogic.Instance.AddNetPlayer(player, Silent);
             return true;
         }
@@ -200,7 +201,7 @@ namespace ClientCommands
             unit.Player = player;
             unit.IsAlive = IsAlive;
             unit.IsDying = IsDying;
-            unit.SetPosition(X, Y);
+            unit.SetPosition(X, Y, true);
             if (IsAvatar)
             {
                 unit.Player.Avatar = unit;
@@ -1064,7 +1065,7 @@ namespace ClientCommands
                 return true;
             }
 
-            unit.SetPosition(X, Y);
+            unit.SetPosition(X, Y, true);
 
             return true;
         }

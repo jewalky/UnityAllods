@@ -147,7 +147,8 @@ public class MoveAction : IUnitAction
         //Debug.LogFormat("walk state: moving to {0},{1} ({2})", TargetX, TargetY, Frac);
         if (Frac >= 1)
         {
-            Unit.SetPosition(TargetX, TargetY);
+            Frac = 1;
+            Unit.SetPosition(TargetX, TargetY, false);
             Unit.FracX = 0;
             Unit.FracY = 0;
             Unit.DoUpdateView = true;

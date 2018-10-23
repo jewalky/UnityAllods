@@ -691,7 +691,7 @@ class MapLogic
             return null;
         unit.Player = player;
         unit.Tag = GetFreeUnitTag(); // this is also used as network ID.
-        unit.SetPosition(16, 16);
+        unit.SetPosition(16, 16, false);
         Objects.Add(unit);
         return unit;
     }

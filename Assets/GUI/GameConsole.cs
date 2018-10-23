@@ -172,17 +172,20 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         string os = "";
         foreach (string arg in args)
         {
-            bool enclose = arg.Contains(' ');
+            bool enclose = arg.Contains(' ') || arg.Length <= 0;
             if (enclose) os += '"';
-            foreach (char ch in arg)
+            if (arg.Length > 0)
             {
-                if (ch == '\\')
-                    os += "\\\\";
-                else if (ch == '"')
-                    os += "\\\"";
-                else if (ch == '\'')
-                    os += "\\'";
-                else os += ch;
+                foreach (char ch in arg)
+                {
+                    if (ch == '\\')
+                        os += "\\\\";
+                    else if (ch == '"')
+                        os += "\\\"";
+                    else if (ch == '\'')
+                        os += "\\'";
+                    else os += ch;
+                }
             }
             if (enclose) os += '"';
             os += ' ';

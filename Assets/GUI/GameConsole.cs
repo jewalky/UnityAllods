@@ -238,6 +238,7 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
 
         string[] args = SplitArguments(cmd);
         args[0] = args[0].ToLower();
+        string[] consoleArgs = args.Skip(1).ToArray();
 
         bool cmdFound = false;
         // now, go through ClientConsoleCommands
@@ -250,13 +251,12 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
             {
                 try
                 {
-                    string[] consoleArgs = args.Skip(1).ToArray();
                     List<string> methodArgs = new List<string>();
                     if (parameters.Length > 0) { 
                         for (int j = 0; j < parameters.Length; j++)
                         {
                             string value = parameters[j].DefaultValue.ToString();
-                            if (Array.IndexOf(consoleArgs, j) > -1)
+                            if (consoleArgs.ElementAtOrDefault(j) != null)
                             {
                                 methodArgs.Add(consoleArgs[j]);
                             }

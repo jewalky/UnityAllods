@@ -50,8 +50,8 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
 
         if (UnityEngine.Random.Range(0, 128) < 64) // 1/2 chance every 50ms
         {
-            float rx = UnityEngine.Random.Range(10, 70);
-            float ry = UnityEngine.Random.Range(10, 70);
+            float rx = UnityEngine.Random.Range(10f, 70f) * InvScale;
+            float ry = UnityEngine.Random.Range(10f, 70f) * InvScale;
             MGlowPart newPart = new MGlowPart();
             newPart.x = rx;
             newPart.y = ry;
@@ -113,6 +113,8 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         set { if (_InvHeight == 0) _InvHeight = value; }
     }
 
+    public float InvScale = 1f;
+
     private List<GameObject> TextObjects = new List<GameObject>();
     private List<AllodsTextRenderer> TextRenderers = new List<AllodsTextRenderer>();
 
@@ -125,8 +127,10 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
     {
         UiManager.Instance.Subscribe(this);
 
-        Width = InvWidth * 80;
-        Height = InvHeight * 80;
+        Width = (int)(InvWidth * 80 * InvScale);
+        Height = (int)(InvHeight * 80 * InvScale);
+
+        Debug.LogFormat("width = {0}, height = {1}", Width, Height);
 
         Renderer = gameObject.AddComponent<MeshRenderer>();
         Filter = gameObject.AddComponent<MeshFilter>();
@@ -169,7 +173,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
                     TextObjects.Add(go);
                     TextRenderers.Add(atr);
 
-                    go.transform.localPosition = new Vector3(lx * 80 + 3, ly * 80 + 80 - atr.Font.LineHeight - 3, -0.2f);
+                    go.transform.localPosition = new Vector3((lx * 80 + 8) * InvScale, (ly * 80 + 80 - 3) * InvScale - atr.Font.LineHeight, -0.2f);
                 }
             }
         }
@@ -192,7 +196,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         int y = 0;
         for (int i = start; i < end; i++)
         {
-            Builder.AddQuad(y * InvWidth + x, x * 80, y * 80, 80, 80, new Rect(0, 0, 1, 1));
+            Builder.AddQuad(y * InvWidth + x, (x * 80) * InvScale, (y * 80) * InvScale, 80 * InvScale, 80 * InvScale, new Rect(0, 0, 1, 1));
             // check texture.
             // for now, just put generic background
             Renderer.materials[y * InvWidth + x].mainTexture = img_BackInv;
@@ -218,8 +222,8 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
             Item item = Pack[i];
             if (item.MagicEffects.Count > 0)
             {
-                float baseX = x * 80;
-                float baseY = y * 80;
+                float baseX = x * 80 * InvScale;
+                float baseY = y * 80 * InvScale;
                 Builder.CurrentMesh = InvWidth * InvHeight * 2;
 
                 foreach (MGlowPart part in MGlowParts)
@@ -286,7 +290,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
             Renderer.materials[InvWidth * InvHeight + y * InvWidth + x].mainTexture = item.Class.File_Pack.File.Atlas;
             Renderer.materials[InvWidth * InvHeight + y * InvWidth + x].SetTexture("_Palette", item.Class.File_Pack.File.OwnPalette);
             Color color = new Color(1, 1, 1, (item == UiManager.Instance.DragItem) ? 0.25f : 1); // draw dragged items half transparent
-            Builder.AddQuad(InvWidth * InvHeight + y * InvWidth + x, x * 80, y * 80, 80, 80, item.Class.File_Pack.File.AtlasRects[0], color);
+            Builder.AddQuad(InvWidth * InvHeight + y * InvWidth + x, (x * 80) * InvScale, (y * 80) * InvScale, 80 * InvScale, 80 * InvScale, item.Class.File_Pack.File.AtlasRects[0], color);
 
             x++;
             if (x >= InvWidth)
@@ -325,15 +329,15 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
             Vector2 mPosLocal = new Vector2(mPos.x - transform.position.x,
                                             mPos.y - transform.position.y);
 
-            int itemHoveredX = (int)(mPosLocal.x / 80);
-            int itemHoveredY = (int)(mPosLocal.y / 80);
+            int itemHoveredX = (int)(mPosLocal.x / 80 / InvScale);
+            int itemHoveredY = (int)(mPosLocal.y / 80 / InvScale);
 
             int start = Math.Max(Math.Min(Scroll, Pack.Count - InvWidth * InvHeight - 1), 0);
             int end = Math.Min(start + InvWidth * InvHeight, Pack.Count);
 
             int itemHovered = itemHoveredY * InvWidth + itemHoveredX + start;
             if (itemHovered < 0 || itemHovered >= Pack.Count)
-                return false;
+                return true;
 
             MouseCursor.SetCursor(MouseCursor.CurDefault);
             Item item = Pack[itemHovered];
@@ -375,8 +379,8 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         Vector2 mPosLocal = new Vector2(x - transform.position.x,
                                         y - transform.position.y);
 
-        int itemHoveredX = (int)(mPosLocal.x / 80);
-        int itemHoveredY = (int)(mPosLocal.y / 80);
+        int itemHoveredX = (int)(mPosLocal.x / 80 / InvScale);
+        int itemHoveredY = (int)(mPosLocal.y / 80 / InvScale);
 
         int start = Math.Max(Math.Min(Scroll, Pack.Count - InvWidth * InvHeight - 1), 0);
         int end = Math.Min(start + InvWidth * InvHeight, Pack.Count);
@@ -464,8 +468,8 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         Vector2 mPosLocal = new Vector2(x - transform.position.x,
                                         y - transform.position.y);
 
-        int itemHoveredX = (int)(mPosLocal.x / 80);
-        int itemHoveredY = (int)(mPosLocal.y / 80);
+        int itemHoveredX = (int)(mPosLocal.x / 80 / InvScale);
+        int itemHoveredY = (int)(mPosLocal.y / 80 / InvScale);
 
         int start = Math.Max(Math.Min(Scroll, Pack.Count - InvWidth * InvHeight - 1), 0);
         int end = Math.Min(start + InvWidth * InvHeight, Pack.Count);

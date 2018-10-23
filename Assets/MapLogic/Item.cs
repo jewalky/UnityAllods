@@ -583,7 +583,10 @@ public class Item
     public string ToVisualString()
     {
         List<string> effects_str = new List<string>();
-        effects_str.Add(Class.VisualName);
+        string countstr = "";
+        if (Count > 1)
+            countstr = string.Format(" ({0} {1})", Count, Locale.Main[87]);
+        effects_str.Add(Class.VisualName+countstr);
 
         List<ItemEffect> castEffects = new List<ItemEffect>();
         for (int i = 0; i < Effects.Count; i++)

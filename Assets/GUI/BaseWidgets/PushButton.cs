@@ -45,7 +45,7 @@ public class PushButton : Widget, IUiEventProcessor, IFocusableWidget
         LabelRendererA = new AllodsTextRenderer(Fonts.Font1, Font.Align.Center, Width);
         LabelRendererA.Text = _Text;
         LabelObject = LabelRendererA.GetNewGameObject(0.02f, transform, 100, 1);
-        LabelObject.transform.localPosition = new Vector3(0, 0, 0);
+        LabelObject.transform.localPosition = new Vector3(0, Height / 2 - 9, 0);
         LabelSubObject = LabelObject.transform.GetChild(0).gameObject;
         LabelRenderer = LabelObject.GetComponent<MeshRenderer>();
 

@@ -50,7 +50,7 @@ public class CheckBox : Widget, IUiEventProcessor, IFocusableWidget
         LabelRendererA = new AllodsTextRenderer(Fonts.Font1, Font.Align.Left, Width);
         LabelRendererA.Text = _Text;
         LabelObject = LabelRendererA.GetNewGameObject(0.01f, transform, 100, 1);
-        LabelObject.transform.localPosition = new Vector3(32, 0, 0);
+        LabelObject.transform.localPosition = new Vector3(32, Height / 2 - 8, 0);
         LabelSubObject = LabelObject.transform.GetChild(0).gameObject;
         LabelRenderer = LabelObject.GetComponent<MeshRenderer>();
 

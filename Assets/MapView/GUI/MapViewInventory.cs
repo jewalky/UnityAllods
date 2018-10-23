@@ -18,16 +18,19 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
     private static Texture2D InvArrow2 = null;
     private static Texture2D InvArrow3 = null;
     private static Texture2D InvArrow4 = null;
+
+    private int ItemCount;
     
     public void Awake()
     {
-        int itemCount = (Screen.width - 176 - 64) / 80; // each arrow is 32 in width
+        ItemCount = (Screen.width - 176 - 64) / 80; // each arrow is 32 in width
         View = Utils.CreateObjectWithScript<ItemView>();
         View.transform.parent = transform;
         View.transform.localScale = new Vector3(1, 1, 1);
         View.transform.localPosition = new Vector3(32, 6, -1);
-        View.InvWidth = itemCount;
-        View.InvHeight = 1;
+        View.InvScale = 1;
+        View.InvWidth = (int)(ItemCount / View.InvScale);
+        View.InvHeight = (int)(1 / View.InvScale);
     }
 
     public void Start()
@@ -51,27 +54,33 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
         // generate mesh.
         Utils.MeshBuilder mb = new Utils.MeshBuilder();
         // 3 submeshes: left arrow, right arrow, and background. I'm NOT using the full original inventory view.
-        for (int i = 0; i < View.InvWidth; i++)
+        for (int j = 1; j >= 0; j--)
         {
-            int internalPosition;
-            if (i == 0) internalPosition = 0;
-            else if (i == View.InvWidth - 1) internalPosition = 4;
-            else internalPosition = (i % 3) + 1;
-            Rect internalRect = Utils.DivRect(new Rect(32 + internalPosition * 80, 0, 80, 90), new Vector2(InvFrame.width, InvFrame.height));
-            mb.AddQuad(0, 32 + i * 80, 0, 80, 90, internalRect);
+            for (int i = 0; i < View.InvWidth; i++)
+            {
+                int internalPosition;
+                if (i == 0) internalPosition = 0;
+                else if (i == View.InvWidth - 1) internalPosition = 4;
+                else internalPosition = (i % 3) + 1;
+                int yoffs = 0;
+                if (View.InvScale < 1)
+                    yoffs = (int)(1.5f / View.InvScale);
+                Rect internalRect = Utils.DivRect(new Rect(32 + internalPosition * 80, 0, 80, 90), new Vector2(InvFrame.width, InvFrame.height));
+                mb.AddQuad(0, 32 + i * 80 * View.InvScale, j * 80 * View.InvScale + yoffs, 80 * View.InvScale, 90 * View.InvScale, internalRect);
+            }
         }
 
         // add two quads for unpressed buttons
         mb.AddQuad(0, 0, 0, 32, 90, Utils.DivRect(new Rect(0, 0, 32, 90), new Vector2(InvFrame.width, InvFrame.height)));
-        mb.AddQuad(0, 32 + View.InvWidth * 80, 0, 32, 90, Utils.DivRect(new Rect(432, 0, 32, 90), new Vector2(InvFrame.width, InvFrame.height)));
+        mb.AddQuad(0, 32 + View.InvWidth * 80 * View.InvScale, 0, 32, 90, Utils.DivRect(new Rect(432, 0, 32, 90), new Vector2(InvFrame.width, InvFrame.height)));
 
         mb.AddQuad(1, 0, 2, 32, 88);
-        mb.AddQuad(2, 32 + View.InvWidth * 80, 2, 32, 88);
+        mb.AddQuad(2, 32 + View.InvWidth * 80 * View.InvScale, 2, 32, 88);
 
         Filter.mesh = mb.ToMesh(MeshTopology.Quads, MeshTopology.Quads, MeshTopology.Quads);
 
         transform.localScale = new Vector3(1, 1, 0.01f);
-        transform.localPosition = new Vector3((Screen.width - 176) / 2 - (View.InvWidth * 80 + 64) / 2, Screen.height - 90, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
+        transform.localPosition = new Vector3((Screen.width - 176) / 2 - (View.InvWidth * 80 * View.InvScale + 64) / 2, Screen.height - 90, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
     }
 
     public void OnDestroy()
@@ -85,7 +94,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
             e.rawType == EventType.MouseUp ||
             e.rawType == EventType.MouseMove)
         {
-            int lw = 64 + View.InvWidth * 80;
+            int lw = (int)(64 + View.InvWidth * 80 * View.InvScale);
             int lh = 90;
 
             Vector2 mPos = Utils.GetMousePosition();

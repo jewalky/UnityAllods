@@ -718,4 +718,23 @@ public class Server
             }
         }
     }
+
+    public static void NotifyUnitTeleport(MapUnit unit)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            Player p = MapLogic.Instance.GetNetPlayer(client);
+            if (unit.IsVisibleForNetPlayer(p))
+            {
+                ClientCommands.UnitPosition posCmd;
+                posCmd.Tag = unit.Tag;
+                posCmd.X = unit.X;
+                posCmd.Y = unit.Y;
+                client.SendCommand(posCmd);
+            }
+        }
+    }
 }

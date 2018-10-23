@@ -69,6 +69,8 @@ public class MapObject : IDisposable
     public ulong NetPlayerVisibility = 0;
     public bool IsVisibleForNetPlayer(Player player)
     {
+        if (player == null)
+            return false;
         int netId = player.ID - 16;
         ulong mask = (1ul << netId);
         return (NetPlayerVisibility & mask) != 0;
@@ -76,6 +78,8 @@ public class MapObject : IDisposable
 
     public void SetVisibleForNetPlayer(Player player, bool visible)
     {
+        if (player == null)
+            return;
         int netId = player.ID - 16;
         ulong mask = (1ul << netId);
         if (visible) NetPlayerVisibility |= mask;

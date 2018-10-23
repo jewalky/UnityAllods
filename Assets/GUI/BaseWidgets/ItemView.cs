@@ -130,8 +130,6 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         Width = (int)(InvWidth * 80 * InvScale);
         Height = (int)(InvHeight * 80 * InvScale);
 
-        Debug.LogFormat("width = {0}, height = {1}", Width, Height);
-
         Renderer = gameObject.AddComponent<MeshRenderer>();
         Filter = gameObject.AddComponent<MeshFilter>();
 

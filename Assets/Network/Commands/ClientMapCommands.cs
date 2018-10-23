@@ -1041,4 +1041,32 @@ namespace ClientCommands
         }
     }
 
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.UnitPosition)]
+    public struct UnitPosition : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public int X;
+        [ProtoMember(3)]
+        public int Y;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null)
+            {
+                Debug.LogFormat("Attempted to set position for nonexistent unit {0}", Tag);
+                return true;
+            }
+
+            unit.SetPosition(X, Y);
+
+            return true;
+        }
+    }
 }

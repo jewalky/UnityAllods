@@ -517,6 +517,10 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         if (IsAlive) LinkToWorld();
         CalculateVision();
         DoUpdateView = true;
+
+        UpdateNetVisibility();
+        if (NetworkManager.IsServer)
+            Server.NotifyUnitTeleport(this);
     }
 
     public void CalculateVision()

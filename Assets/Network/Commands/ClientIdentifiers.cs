@@ -28,6 +28,7 @@ public enum ClientIdentifiers
     UnitStatsShort,
     UnitSpells,
     UnitFlags,
+    UnitPosition,
 
     UnitItemPickup,
     SackAt,

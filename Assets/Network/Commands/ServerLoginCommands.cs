@@ -108,16 +108,33 @@ namespace ServerCommands
     [NetworkPacketId(ServerIdentifiers.RequestGamestate)]
     public struct RequestGamestate : IServerCommand
     {
+        [ProtoMember(1)]
+        public string Nickname;
+
+        private string ValidateNickname()
+        {
+            int pv = -1;
+            if (Nickname.StartsWith("Player ") && int.TryParse(Nickname.Substring(7), out pv)) // reserved
+                return "";
+            if (Nickname.Length > 32)
+                return Nickname.Substring(0, 32);
+            return Nickname;
+        }
+
         public bool Process(ServerClient client)
         {
             if (client.State != ClientState.Connected)
                 return false;
+
+            string nick = ValidateNickname();
 
             client.State = ClientState.Playing;
             // give this client a MapLogicPlayer instance.
             if (MapLogic.Instance.GetNetPlayer(client) != null) // there's already a player attached to this client. i.e. player is trying to login twice.
                 return false;
             Player player = new Player(client);
+            if (nick.Length > 0)
+                player.Name = nick;
             MapLogic.Instance.AddNetPlayer(player, false); // I don't really care here, silent affects only clients
             // basic setup
             player.Money = 1000;

@@ -44,6 +44,7 @@ namespace ClientCommands
                 // possibly execute additional init sequences here
                 Client.State = ClientState.Playing;
                 ServerCommands.RequestGamestate reqCmd;
+                reqCmd.Nickname = Config.cl_nickname;
                 ClientManager.SendCommand(reqCmd);
                 MapView.Instance.InitFromFile(actualFilename);
             }

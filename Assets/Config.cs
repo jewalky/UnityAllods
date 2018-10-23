@@ -47,6 +47,21 @@ public class Config
         }
     }
 
+    private static string _cl_nickname = "";
+    public static string cl_nickname
+    {
+        get
+        {
+            return _cl_nickname;
+        }
+
+        set
+        {
+            _cl_nickname = value;
+            Save();
+        }
+    }
+
     public static void Save()
     {
         // write file with current values

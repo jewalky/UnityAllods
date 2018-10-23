@@ -259,7 +259,6 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
                             if (Array.IndexOf(consoleArgs, j) > -1)
                             {
                                 methodArgs.Add(consoleArgs[j]);
-
                             }
                             else if (value.Length > 0)
                             {

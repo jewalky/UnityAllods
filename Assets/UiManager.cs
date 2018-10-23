@@ -202,6 +202,7 @@ public class UiManager : MonoBehaviour
             if (doStartDrag && _CurrentDragDragger.ProcessStartDrag(doStartDragX, doStartDragY))
             {
                 doStartDrag = false;
+                dragProcessed = true;
                 _CurrentDragDragger = null;
                 goto NoDrag;
             }

@@ -245,14 +245,14 @@ public class MapObject : IDisposable
             {
                 // check if invisible
                 // [ZZ] todo: check if this is actually ok in real usage
-                if (this is MapUnit &&
+                /*if (this is MapUnit &&
                     (((MapUnit)this).Flags & UnitFlags.Invisible) != 0 &&
                     ownPlayer != null &&
                     (ownPlayer.Diplomacy[player.ID] & DiplomacyFlags.Vision) == 0)
                 {
                     isVisibleForPlayer = false;
                 }
-                else
+                else*/
                 {
                     foreach (MapObject playerMobj in player.Objects)
                     {

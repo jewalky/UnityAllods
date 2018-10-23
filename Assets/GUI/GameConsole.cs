@@ -266,7 +266,6 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
                             }
                         }
                     }
-                    
                     cmds[i].Invoke(CommandHandler, methodArgs.ToArray());
                     cmdFound = true;
                 }

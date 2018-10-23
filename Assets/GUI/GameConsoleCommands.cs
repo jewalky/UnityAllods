@@ -47,12 +47,12 @@ public class GameConsoleCommands
 
     public void connect(string host = "localhost", string port = "8000")
     {
-        NetworkManager.Instance.InitClient(host, (ushort)int.Parse(port));
+        NetworkManager.Instance.InitClient(host, ushort.Parse(port));
     }
 
     public void host(string port = "8000")
     {
-        NetworkManager.Instance.InitServer((ushort)int.Parse(port));
+        NetworkManager.Instance.InitServer(ushort.Parse(port));
         GameConsole.Instance.WriteLine("Hosting server on port \"{0}\"", port);
     }
 

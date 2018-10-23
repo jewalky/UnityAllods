@@ -991,6 +991,31 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
 
     private void SpawnDamageNumbers(float x, float y, float z, int damage, bool crit, Player p)
     {
+        int fromX = Mathf.FloorToInt(x);
+        int fromY = Mathf.FloorToInt(y);
+        int toX = Mathf.CeilToInt(x);
+        int toY = Mathf.CeilToInt(y);
+
+        // check if any cell around this number is visible
+        bool anyvisible = false;
+        for (int cy = fromY; cy <= toY; cy++)
+        {
+            if (anyvisible) break;
+            for (int cx = fromX; cx <= toX; cx++)
+            {
+                if (cx < 8 || cy < 8 ||
+                    cx >= MapLogic.Instance.Width - 8 ||
+                    cy >= MapLogic.Instance.Height - 8) continue;
+                if ((MapLogic.Instance.Nodes[cx, cy].Flags & MapNodeFlags.Visible) != 0)
+                    continue;
+                anyvisible = true;
+                break;
+            }
+        }
+
+        if (!anyvisible)
+            return;
+
         MapViewNumbers mvn = MapViewNumbers.Create(x, y, z, damage, crit, p);
         mvn.transform.parent = transform;
     }

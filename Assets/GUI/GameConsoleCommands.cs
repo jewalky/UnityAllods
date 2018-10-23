@@ -45,14 +45,15 @@ public class GameConsoleCommands
         MainCamera.Instance.TakeScreenshot();
     }
 
-    public void connect(string host)
+    public void connect(string host = "localhost", string port = "8000")
     {
-        NetworkManager.Instance.InitClient(host, 8000);
+        NetworkManager.Instance.InitClient(host, (ushort)int.Parse(port));
     }
 
-    public void host()
+    public void host(string port = "8000")
     {
-        NetworkManager.Instance.InitServer(8000);
+        NetworkManager.Instance.InitServer((ushort)int.Parse(port));
+        GameConsole.Instance.WriteLine("Hosting server on port \"{0}\"", port);
     }
 
     public void disconnect()

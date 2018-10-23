@@ -244,17 +244,36 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         System.Reflection.MethodInfo[] cmds = CommandHandler.GetType().GetMethods();
         for (int i = 0; i < cmds.Length; i++)
         {
+            ParameterInfo[] parameters = cmds[i].GetParameters();
             if (cmds[i].Name.ToLower() == args[0] &&
                 cmds[i].IsPublic)
             {
                 try
                 {
-                    cmds[i].Invoke(CommandHandler, args.Skip(1).ToArray());
+                    string[] consoleArgs = args.Skip(1).ToArray();
+                    List<string> methodArgs = new List<string>();
+                    if (parameters.Length > 0) { 
+                        for (int j = 0; j < parameters.Length; j++)
+                        {
+                            string value = parameters[j].DefaultValue.ToString();
+                            if (Array.IndexOf(consoleArgs, j) > -1)
+                            {
+                                methodArgs.Add(consoleArgs[j]);
+
+                            }
+                            else if (value.Length > 0)
+                            {
+                                methodArgs.Add(value.ToString());
+                            }
+                        }
+                    }
+                    
+                    cmds[i].Invoke(CommandHandler, methodArgs.ToArray());
                     cmdFound = true;
                 }
                 catch (System.Reflection.TargetParameterCountException)
                 {
-                    if (args.Length - 1 < cmds[i].GetParameters().Length)
+                    if (args.Length - 1 < parameters.Length)
                         WriteLine("{0}: too few arguments.", args[0]);
                     else WriteLine("{0}: too many arguments.", args[0]);
                     cmdFound = true;

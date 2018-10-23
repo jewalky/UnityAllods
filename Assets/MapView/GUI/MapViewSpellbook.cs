@@ -136,7 +136,7 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
             int spx = loc % 12;
             int spy = loc / 12;
             Rect irSpellBlock = Utils.DivRect(new Rect(5 + spx * 38, 5 + spy * 38, 37, 37), new Vector2(SpbFrame.width, SpbFrame.height));
-            Builder.AddQuad(0, 5 + spx * 38 + 1, 5 + spy * 38 + 1, 37, 37, irSpellBlock);
+            Builder.AddQuad(0, 5 + spx * 38 + 1, 5 + spy * 38 + 1, 37, 37, irSpellBlock, new Color(0.5f, 0.5f, 0.5f, 1));
         }
 
         for (int i = 0; i < 24; i++)

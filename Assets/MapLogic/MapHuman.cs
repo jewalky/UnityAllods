@@ -170,7 +170,7 @@ public class MapHuman : MapUnit
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Scale Gauntlets {body=3}"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Plate Boots {body=3}"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Pike {tohit=500,damagemin=10,damagemax=20}"));
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Crossbow"));
+            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Crossbow {damagemax=500}"));
         }
     }
 

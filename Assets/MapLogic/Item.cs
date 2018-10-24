@@ -601,14 +601,31 @@ public class Item
             effects_str.Add(castEffects[i].ToVisualString(Parent!=null?Parent.Parent:null, this));
         }
 
+        ItemEffect cachedNative = null;
+
         // list native effects
         for (int i = 0; i < NativeEffects.Count; i++)
         {
             if (NativeEffects[i].Type1 == ItemEffect.Effects.Price ||
                 NativeEffects[i].Type1 == ItemEffect.Effects.CastSpell ||
                 NativeEffects[i].Type1 == ItemEffect.Effects.TeachSpell) continue;
-            effects_str.Add(NativeEffects[i].ToVisualString(Parent != null ? Parent.Parent : null, this));
+            if (NativeEffects[i].Type1 == ItemEffect.Effects.DamageMin)
+            {
+                cachedNative = NativeEffects[i];
+                continue;
+            }
+            if (NativeEffects[i].Type1 == ItemEffect.Effects.DamageMax && cachedNative != null)
+            {
+                int maxDmg = cachedNative.Value1 + NativeEffects[i].Value1;
+                effects_str.Add(cachedNative.ToVisualString(Parent != null ? Parent.Parent : null, this) + '-' + maxDmg.ToString());
+            } else
+            {
+                effects_str.Add(NativeEffects[i].ToVisualString(Parent != null ? Parent.Parent : null, this));
+            }
+            cachedNative = null;
         }
+
+        ItemEffect cacheMagic = null;
 
         // list magic effects if any
         if (MagicEffects.Count > 0)
@@ -619,6 +636,11 @@ public class Item
                 if (MagicEffects[i].Type1 == ItemEffect.Effects.Price ||
                     MagicEffects[i].Type1 == ItemEffect.Effects.CastSpell ||
                     MagicEffects[i].Type1 == ItemEffect.Effects.TeachSpell) continue;
+                if (MagicEffects[i].Type1 == ItemEffect.Effects.DamageMin)
+                {
+                    cacheMagic = MagicEffects[i];
+                    continue;
+                }
 
                 if (!bmagic)
                 {
@@ -626,8 +648,16 @@ public class Item
                     effects_str.Add(Locale.Main[189]); // Magic:
                     bmagic = true;
                 }
-
-                effects_str.Add(MagicEffects[i].ToVisualString(Parent != null ? Parent.Parent : null, this));
+                if (MagicEffects[i].Type1 == ItemEffect.Effects.DamageMax && cacheMagic != null)
+                {
+                    int maxDmg = cacheMagic.Value1 + MagicEffects[i].Value1;
+                    effects_str.Add(cacheMagic.ToVisualString(Parent != null ? Parent.Parent : null, this) + '-' + maxDmg.ToString());
+                }
+                else
+                {
+                    effects_str.Add(MagicEffects[i].ToVisualString(Parent != null ? Parent.Parent : null, this));
+                }
+                cacheMagic = null;
             }
         }
 

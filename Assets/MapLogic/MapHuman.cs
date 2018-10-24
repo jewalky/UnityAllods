@@ -332,6 +332,7 @@ public class MapHuman : MapUnit
 
         Stats = new UnitStats(CoreStats);
         Stats.MergeStats(ItemStats);
+        Stats.DamageMin += Stats.DamageBonus;
         Stats.DamageMax += Stats.DamageMin; // allods use damagemax this way
 
         // calculate core speed - based on stats
@@ -362,6 +363,7 @@ public class MapHuman : MapUnit
         // merge again
         Stats = new UnitStats(baseStats);
         Stats.MergeStats(ItemStats);
+        Stats.DamageMin += Stats.DamageBonus;
         Stats.DamageMax += Stats.DamageMin; // allods use damagemax this way
 
         if (CoreStats.HealthMax > 0)

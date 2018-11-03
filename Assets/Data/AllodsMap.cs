@@ -1,5 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using UnityEngine;
 
 public class TerrainLighting
 {
@@ -202,6 +205,427 @@ public class AllodsMap
         }
     }
 
+    public class AlmGroup
+    {
+        public enum AlmGroupFlags
+        {
+            AiInstantRnabled = 1, RandomPositions = 2,
+            QuestKill = 4, QuestIntercept = 8 
+        }
+
+        public void LoadFromStream(BinaryReader br)
+        {
+            GroupId = br.ReadUInt32();
+            RepopTime = br.ReadUInt32();
+            GroupFlag = (AlmGroupFlags)br.ReadUInt32();
+            InstanceId = br.ReadUInt32();
+        }
+
+        public uint InstanceId { get; set; }
+        public AlmGroupFlags GroupFlag { get; set; }
+        public uint RepopTime { get; set; }
+        public uint GroupId { get; set; }
+    }
+
+    public class AlmSack
+    {
+        public void LoadFromStream(BinaryReader br)
+        {
+            NumberOfItems = br.ReadUInt32();
+            UnitId = br.ReadUInt32();
+            X = br.ReadUInt32();
+            Y = br.ReadUInt32();
+            Gold = br.ReadUInt32();
+            Items = new AlmSackItem[NumberOfItems];
+            for (int i = 0; i < NumberOfItems; i++)
+            {
+                Items[i] = new AlmSackItem();
+                Items[i].LoadFromStream(br);
+            }
+        }
+
+        public uint Gold { get; set; }
+        public uint Y { get; set; }
+        public uint X { get; set; }
+        public uint UnitId { get; set; }
+        public uint NumberOfItems { get; set; }
+        public AlmSackItem[] Items { get; set; }
+    }
+
+    public class AlmMagazine
+    {
+        public enum AlmMagazineItemMaterial
+        {
+            Iron = 0x00000001,
+            Bronze = 0x00000002,
+            Steel = 0x00000004,
+            Silver = 0x00000008,
+            Gold = 0x00000010,
+            Mithril = 0x00000020,
+            Adamantium = 0x00000040,
+            Meteorite = 0x00000080,
+            Wood = 0x00000100,
+            MagicWood = 0x00000200,
+            Leather = 0x00000400,
+            BigLeather = 0x00000800,
+            DragonLeather = 0x00001000,
+            Crystall = 0x00002000,
+            None	 = 0x00004000
+        }
+
+        public enum AlmMagazineItemType
+        {
+            Weapon = 0x00400000,
+            Shield = 0x00800000,
+            Armor = 0x01000000,
+            ArmorMage = 0x02000000,
+            Other = 0x04000000,
+            Wands = 0x08000000,
+        }
+
+        public enum AlmMagazineItemExtra
+        {
+            Common = 0x10000000,
+            Magic = 0x20000000
+        }
+
+        public enum AlmMagazineItemRareType
+        {
+            Common = 0x00008000,
+            Uncommon = 0x00010000,
+            Rare = 0x00020000,
+            VeryRare = 0x00040000,
+            Elven = 0x00080000,
+            Bad = 0x00100000,
+            Good = 0x00200000,
+        }
+
+        public void LoadFromStream(BinaryReader br)
+        {
+            Id = br.ReadUInt32();
+            ShelfFlags1 = br.ReadUInt32();
+            ShelfFlags2 = br.ReadUInt32();
+            ShelfFlags3 = br.ReadUInt32();
+            ShelfFlags4 = br.ReadUInt32();
+            MinPrice1 = br.ReadUInt32();
+            MinPrice2 = br.ReadUInt32();
+            MinPrice3 = br.ReadUInt32();
+            MinPrice4 = br.ReadUInt32();
+            MaxPrice1 = br.ReadUInt32();
+            MaxPrice2 = br.ReadUInt32();
+            MaxPrice3 = br.ReadUInt32();
+            MaxPrice4 = br.ReadUInt32();
+            NumberOfItems1 = br.ReadUInt32();
+            NumberOfItems2 = br.ReadUInt32();
+            NumberOfItems3 = br.ReadUInt32();
+            NumberOfItems4 = br.ReadUInt32();
+            MaxNumberOneType1 = br.ReadUInt32();
+            MaxNumberOneType2 = br.ReadUInt32();
+            MaxNumberOneType3 = br.ReadUInt32();
+            MaxNumberOneType4 = br.ReadUInt32();
+        }
+
+        public uint MaxNumberOneType4 { get; set; }
+        public uint MaxNumberOneType3 { get; set; }
+        public uint MaxNumberOneType2 { get; set; }
+        public uint MaxNumberOneType1 { get; set; }
+        public uint NumberOfItems4 { get; set; }
+        public uint NumberOfItems3 { get; set; }
+        public uint NumberOfItems2 { get; set; }
+        public uint NumberOfItems1 { get; set; }
+        public uint MaxPrice4 { get; set; }
+        public uint MaxPrice3 { get; set; }
+        public uint MaxPrice2 { get; set; }
+        public uint MaxPrice1 { get; set; }
+        public uint MinPrice4 { get; set; }
+        public uint MinPrice3 { get; set; }
+        public uint MinPrice2 { get; set; }
+        public uint MinPrice1 { get; set; }
+        public uint ShelfFlags4 { get; set; }
+        public uint ShelfFlags3 { get; set; }
+        public uint ShelfFlags2 { get; set; }
+        public uint ShelfFlags1 { get; set; }
+        public uint Id { get; set; }
+    }
+
+    public class AlmOptionPointer
+    {
+        public void LoadFromStream(BinaryReader br)
+        {
+            Id = br.ReadUInt32();
+            InstanceOn = br.ReadUInt32();
+            InstanceId = br.ReadUInt32();
+        }
+
+        public uint InstanceId { get; set; }
+        public uint InstanceOn { get; set; }
+        public uint Id { get; set; }
+    }
+
+    public class AlmTavernInfo
+    {
+        public enum QuestType
+        {
+            Delivery = 0x02,
+            RaiseDead = 0x04,
+            KillAllHumans = 0x10,
+            KillAllMonsters = 0x20,
+            KillAllUndeadNecro = 0x40
+        }
+
+        public void LoadFromStream(BinaryReader br)
+        {
+            Id = br.ReadUInt32();
+            Flag = (QuestType)br.ReadUInt32();
+            DeliveryId = br.ReadUInt32();
+        }
+
+        public uint DeliveryId { get; set; }
+        public QuestType Flag { get; set; }
+        public uint Id { get; set; }
+    }
+
+    public class AlmSackItem
+    {
+        public void LoadFromStream(BinaryReader br)
+        {
+            ItemId = br.ReadUInt32();
+            Wielded = br.ReadUInt16();
+            EffectNumber = br.ReadUInt32();
+        }
+
+        public uint EffectNumber { get; set; }
+        public ushort Wielded { get; set; }
+        public uint ItemId { get; set; }
+    }
+
+    public class AlmMusic
+    {
+        public void LoadFromStream(BinaryReader br)
+        {
+            X = br.ReadUInt32();
+            Y = br.ReadUInt32();
+            Radius = br.ReadUInt32();
+            TypeId1 = br.ReadUInt32();
+            TypeId2 = br.ReadUInt32();
+            TypeId3 = br.ReadUInt32();
+            TypeId4 = br.ReadUInt32();
+        }
+
+        public uint TypeId4 { get; set; }
+        public uint TypeId3 { get; set; }
+        public uint TypeId2 { get; set; }
+        public uint TypeId1 { get; set; }
+        public uint Radius { get; set; }
+        public uint Y { get; set; }
+        public uint X { get; set; }
+    }
+
+    public class AlmEffectModifier
+    {
+        public void LoadFromStream(BinaryReader br)
+        {
+            TypeOfMod = br.ReadUInt16();
+            Value = br.ReadUInt32();
+        }
+
+        public uint Value { get; set; }
+        public ushort TypeOfMod { get; set; }
+    }
+
+    public class AlmEffect
+    {
+        public bool IsItem { get; set; }
+
+        public void LoadFromStream(BinaryReader br)
+        {
+            Id = br.ReadUInt32();
+            X = br.ReadUInt32();
+            Y = br.ReadUInt32();
+            IsItem = X == 0 && Y == 0;
+            MagicOrFlag = br.ReadUInt16();
+            if (!IsItem)
+            {
+                StructureId = br.ReadUInt32();
+            }
+            else
+            {
+                MagicMinDmg = br.ReadUInt16();
+                AvgDmg = br.ReadUInt16();
+            }
+            TypeId = br.ReadUInt16();
+            MagicPower = br.ReadUInt16();
+            CountOfModifier = br.ReadUInt32();
+            EffectModifiers = new AlmEffectModifier[CountOfModifier];
+            for (int i = 0; i < CountOfModifier; i++)
+            {
+                EffectModifiers[i] = new AlmEffectModifier();
+                EffectModifiers[i].LoadFromStream(br);
+            }
+        }
+
+        public uint CountOfModifier { get; set; }
+        public ushort MagicPower { get; set; }
+        public ushort TypeId { get; set; }
+        public ushort AvgDmg { get; set; }
+        public ushort MagicMinDmg { get; set; }
+        public uint StructureId { get; set; }
+        public uint MagicOrFlag { get; set; }
+        public uint Y { get; set; }
+        public uint X { get; set; }
+        public uint Id { get; set; }
+        public AlmEffectModifier[] EffectModifiers { get; set; }
+    }
+
+    public class AlmLogic
+    {
+        public AlmLogicItem[] LogicItems { get; set; }
+        public AlmCheckItem[] CheckItems { get; set; }
+        public AlmTrigger[] TriggerItems { get; set; }
+        public enum InctanceType
+        {
+            Num = 1, Group = 2,
+            Player = 3, Unit = 4,
+            X = 5, Y = 6,
+            Item = 8, Building = 9
+        }
+
+        public void LoadFromStream(BinaryReader br)
+        {
+            NumberOfItems = br.ReadUInt32();
+            LogicItems = new AlmLogicItem[NumberOfItems];
+            for (int i = 0; i < NumberOfItems; i++)
+            {
+                LogicItems[i] = new AlmLogicItem();
+                LogicItems[i].LoadFromStream(br);
+            }
+            NumberOfChecks = br.ReadUInt32();
+            CheckItems = new AlmCheckItem[NumberOfChecks];
+            for (int i = 0; i < NumberOfChecks; i++)
+            {
+                CheckItems[i] = new AlmCheckItem();
+                CheckItems[i].LoadFromStream(br);
+            }
+            NumberOfTriggers = br.ReadUInt32();
+            TriggerItems = new AlmTrigger[NumberOfTriggers];
+            for (int i = 0; i < NumberOfTriggers; i++)
+            {
+                TriggerItems[i] = new AlmTrigger();
+                TriggerItems[i].LoadFromStream(br);
+            }
+        }
+
+        public class AlmLogicItem
+        {
+            public uint ExecOnceFlag { get; set; }
+            public uint TypeId { get; set; }
+            public uint TypeIndex { get; set; }
+            public string Name { get; set; }
+            public LogicVal[] Values { get; set; }
+            public struct LogicVal
+            {
+                public string Name { get; set; }
+                public uint Value { get; set; }
+                public InctanceType InstType { get; set; }
+            }
+
+            public void LoadFromStream(BinaryReader br)
+            {
+                Name = Core.UnpackByteString(1251, br.ReadBytes(0x40));
+                TypeId = br.ReadUInt32();
+                TypeIndex = br.ReadUInt32();
+                ExecOnceFlag = br.ReadUInt32();
+
+                Values = new LogicVal[10];
+                for (int i = 0; i < 10; i++)
+                {
+                    Values[i].Value = br.ReadUInt32();
+                }
+                for (int i = 0; i < 10; i++)
+                {
+                    Values[i].InstType = (InctanceType)br.ReadUInt32();
+                }
+                for (int i = 0; i < 10; i++)
+                {
+                    Values[i].Name = Core.UnpackByteString(1251, br.ReadBytes(0x40));
+                }
+            }
+        }
+
+        public class AlmCheckItem : AlmLogicItem{}
+
+        public class AlmTrigger
+        {
+            public enum TriggerOperator
+            {
+                Equal = 0, NotEqual = 1,
+                MoreThan = 2, LowerThan = 3,
+                MoreOrEq = 4, LowerOrEq = 5
+            }
+
+            public void LoadFromStream(BinaryReader br)
+            {
+                Name = Core.UnpackByteString(1251, br.ReadBytes(0x80));
+
+                Check1 = br.ReadUInt32();
+                Check2 = br.ReadUInt32();
+                Check3 = br.ReadUInt32();
+                Check4 = br.ReadUInt32();
+                Check5 = br.ReadUInt32();
+                Check6 = br.ReadUInt32();
+
+                Instance1 = br.ReadUInt32();
+                Instance2 = br.ReadUInt32();
+                Instance3 = br.ReadUInt32();
+                Instance4 = br.ReadUInt32();
+
+                Operator12 = (TriggerOperator)br.ReadUInt32();
+                Operator34 = (TriggerOperator)br.ReadUInt32();
+                Operator56 = (TriggerOperator)br.ReadUInt32();
+
+                RunOnce = br.ReadUInt32();
+            }
+
+            public string Name { get; set; }
+
+            public uint RunOnce { get; set; }
+            public TriggerOperator Operator56 { get; set; }
+            public TriggerOperator Operator34 { get; set; }
+            public TriggerOperator Operator12 { get; set; }
+            public uint Instance4 { get; set; }
+            public uint Instance3 { get; set; }
+            public uint Instance2 { get; set; }
+            public uint Instance1 { get; set; }
+            public uint Check6 { get; set; }
+            public uint Check5 { get; set; }
+            public uint Check4 { get; set; }
+            public uint Check3 { get; set; }
+            public uint Check2 { get; set; }
+            public uint Check1 { get; set; }
+        }
+
+        public uint NumberOfTriggers { get; set; }
+        public uint NumberOfChecks { get; set; }
+        public uint NumberOfItems { get; set; }
+        
+
+        public Vector2 GetDropLocation()
+        {
+            if (LogicItems != null && LogicItems.Length > 0)
+            {
+                var dropLoc = LogicItems.Where(x => x.Name.ToLower() == "drop location")
+                                        .OrderBy(x => Guid.NewGuid())
+                                        .FirstOrDefault();
+                if (dropLoc != null)
+                {
+                    return new Vector2(dropLoc.Values.Where(x => x.InstType == InctanceType.X).Select(x => x.Value).FirstOrDefault(),
+                                       dropLoc.Values.Where(x => x.InstType == InctanceType.Y).Select(x => x.Value).FirstOrDefault());
+                }
+            }
+            return new Vector2(6,6);
+        }
+    }
+
     public class AlmUnit
     {
         public float X;
@@ -247,6 +671,14 @@ public class AllodsMap
     public AlmPlayer[] Players;
     public AlmStructure[] Structures;
     public AlmUnit[] Units;
+    public AlmLogic Logic;
+    public AlmMusic[] Music;
+    public AlmGroup[] Groups;
+    public AlmSack[] Sacks;
+    public AlmEffect[] Effects;
+    public AlmMagazine[] Magazines;
+    public AlmOptionPointer[] OptionPointers;
+    public AlmTavernInfo[] AlmTavernInfos;
 
     // ====================================
     //  constructors
@@ -295,97 +727,176 @@ public class AllodsMap
 
                 //Debug.Log(string.Format("id = {0}, junk1 = {1}, junk2 = {2}", sec_id, sec_junk1, sec_junk2));
 
-                if (sec_id == 0) // data
+                switch (sec_id)
                 {
-                    alm.Data.LoadFromStream(br);
-                    DataLoaded = true;
-                }
-                else if (sec_id == 1) // tiles
-                {
-                    if (!DataLoaded)
-                    {
-                        ms.Close();
-                        return null;
-                    }
+                    case 0: // data
+                        alm.Data.LoadFromStream(br);
+                        DataLoaded = true;
+                        break;
+                    case 1: // tiles
+                        if (!DataLoaded)
+                        {
+                            ms.Close();
+                            return null;
+                        }
 
-                    alm.Tiles = new ushort[alm.Data.Width * alm.Data.Height];
-                    for (uint j = 0; j < alm.Data.Width * alm.Data.Height; j++)
-                        alm.Tiles[j] = br.ReadUInt16();
-                    TilesLoaded = true;
-                }
-                else if (sec_id == 2) // heights
-                {
-                    if (!TilesLoaded)
-                    {
-                        ms.Close();
-                        return null;
-                    }
+                        alm.Tiles = new ushort[alm.Data.Width * alm.Data.Height];
+                        for (uint j = 0; j < alm.Data.Width * alm.Data.Height; j++)
+                            alm.Tiles[j] = br.ReadUInt16();
+                        TilesLoaded = true;
+                        break;
+                    case 2: // heights
+                        if (!TilesLoaded)
+                        {
+                            ms.Close();
+                            return null;
+                        }
 
-                    alm.Heights = new sbyte[alm.Data.Width * alm.Data.Height];
-                    for (uint j = 0; j < alm.Data.Width * alm.Data.Height; j++)
-                        alm.Heights[j] = br.ReadSByte();
-                    HeightsLoaded = true;
-                }
-                else if (sec_id == 3) // objects (obstacles)
-                {
-                    if (!HeightsLoaded)
-                    {
-                        ms.Close();
-                        return null;
-                    }
+                        alm.Heights = new sbyte[alm.Data.Width * alm.Data.Height];
+                        for (uint j = 0; j < alm.Data.Width * alm.Data.Height; j++)
+                            alm.Heights[j] = br.ReadSByte();
+                        HeightsLoaded = true;
+                        break;
+                    case 3: // objects (obstacles)
+                        if (!HeightsLoaded)
+                        {
+                            ms.Close();
+                            return null;
+                        }
 
-                    alm.Objects = new byte[alm.Data.Width * alm.Data.Height];
-                    for (uint j = 0; j < alm.Data.Width * alm.Data.Height; j++)
-                        alm.Objects[j] = br.ReadByte();
-                }
-                else if (sec_id == 5) // players
-                {
-                    if (!DataLoaded)
-                    {
-                        ms.Close();
-                        return null;
-                    }
+                        alm.Objects = new byte[alm.Data.Width * alm.Data.Height];
+                        for (uint j = 0; j < alm.Data.Width * alm.Data.Height; j++)
+                            alm.Objects[j] = br.ReadByte();
+                        break;
+                    case 4: // structures
+                        if (!DataLoaded)
+                        {
+                            ms.Close();
+                            return null;
+                        }
 
-                    alm.Players = new AlmPlayer[alm.Data.CountPlayers];
-                    for (uint j = 0; j < alm.Data.CountPlayers; j++)
-                    {
-                        alm.Players[j] = new AlmPlayer();
-                        alm.Players[j].LoadFromStream(br);
-                    }
-                }
-                else if (sec_id == 4) // structures
-                {
-                    if (!DataLoaded)
-                    {
-                        ms.Close();
-                        return null;
-                    }
+                        alm.Structures = new AlmStructure[alm.Data.CountStructures];
+                        for (uint j = 0; j < alm.Data.CountStructures; j++)
+                        {
+                            alm.Structures[j] = new AlmStructure();
+                            alm.Structures[j].LoadFromStream(br);
+                        }
+                        break;
+                    case 5: // players
+                        if (!DataLoaded)
+                        {
+                            ms.Close();
+                            return null;
+                        }
 
-                    alm.Structures = new AlmStructure[alm.Data.CountStructures];
-                    for (uint j = 0; j < alm.Data.CountStructures; j++)
-                    {
-                        alm.Structures[j] = new AlmStructure();
-                        alm.Structures[j].LoadFromStream(br);
-                    }
-                }
-                else if (sec_id == 6) // units
-                {
-                    if (!DataLoaded)
-                    {
-                        ms.Close();
-                        return null;
-                    }
+                        alm.Players = new AlmPlayer[alm.Data.CountPlayers];
+                        for (uint j = 0; j < alm.Data.CountPlayers; j++)
+                        {
+                            alm.Players[j] = new AlmPlayer();
+                            alm.Players[j].LoadFromStream(br);
+                        }
+                        break;
+                    case 6: // units
+                        if (!DataLoaded)
+                        {
+                            ms.Close();
+                            return null;
+                        }
 
-                    alm.Units = new AlmUnit[alm.Data.CountUnits];
-                    for (uint j = 0; j < alm.Data.CountUnits; j++)
-                    {
-                        alm.Units[j] = new AlmUnit();
-                        alm.Units[j].LoadFromStream(br);
-                    }
-                }
-                else
-                {
-                    ms.Position += sec_size;
+                        alm.Units = new AlmUnit[alm.Data.CountUnits];
+                        for (uint j = 0; j < alm.Data.CountUnits; j++)
+                        {
+                            alm.Units[j] = new AlmUnit();
+                            alm.Units[j].LoadFromStream(br);
+                        }
+                        break;
+                    case 7: // Logic
+                        if (!DataLoaded)
+                        {
+                            ms.Close();
+                            return null;
+                        }
+                        alm.Logic = new AlmLogic();
+                        alm.Logic.LoadFromStream(br);
+                        break;
+                    case 8: // Sack
+                        if (!DataLoaded)
+                        {
+                            ms.Close();
+                            return null;
+                        }
+                        alm.Sacks = new AlmSack[alm.Data.CountSacks];
+                        for (int j = 0; j < alm.Data.CountSacks; j++)
+                        {
+                            alm.Sacks[j] = new AlmSack();
+                            alm.Sacks[j].LoadFromStream(br);
+                        }
+                        break;
+                    case 9: // Effects
+                        if (!DataLoaded)
+                        {
+                            ms.Close();
+                            return null;
+                        }
+                        var numberOfEffects = br.ReadUInt32();
+                        alm.Effects = new AlmEffect[numberOfEffects];
+                        for (int j = 0; j < numberOfEffects; j++)
+                        {
+                            alm.Effects[j] = new AlmEffect();
+                            alm.Effects[j].LoadFromStream(br);
+                        }
+                        break;
+                    case 10: // Groups 
+                        if (!DataLoaded)
+                        {
+                            ms.Close();
+                            return null;
+                        }
+                        alm.Groups = new AlmGroup[alm.Data.CountGroups];
+                        for (int j = 0; j < alm.Data.CountGroups; j++)
+                        {
+                            alm.Groups[j] = new AlmGroup();
+                            alm.Groups[j].LoadFromStream(br);
+                        }
+                        break;
+                    case 11: // Options
+                        if (!DataLoaded)
+                        {
+                            ms.Close();
+                            return null;
+                        }
+                        alm.AlmTavernInfos = new AlmTavernInfo[alm.Data.CountInns];
+                        for (int j = 0; j < alm.Data.CountInns; j++)
+                        {
+                            alm.AlmTavernInfos[j] = new AlmTavernInfo();
+                            alm.AlmTavernInfos[j].LoadFromStream(br);
+                        }
+                        alm.Magazines = new AlmMagazine[alm.Data.CountShops];
+                        for (int j = 0; j < alm.Data.CountShops; j++)
+                        {
+                            alm.Magazines[j] = new AlmMagazine();
+                            alm.Magazines[j].LoadFromStream(br);
+                        }
+                        alm.OptionPointers = new AlmOptionPointer[alm.Data.CountPointers];
+                        for (int j = 0; j < alm.Data.CountPointers; j++)
+                        {
+                            alm.OptionPointers[j] = new AlmOptionPointer();
+                            alm.OptionPointers[j].LoadFromStream(br);
+                        }
+                        break;
+                    case 12: // Music
+                        alm.Music = new AlmMusic[alm.Data.CountMusic+1];
+                        alm.Music[0] = new AlmMusic();
+                        alm.Music[0].LoadFromStream(br);
+                        for (int j = 0; j < alm.Data.CountMusic; j++)
+                        {
+                            alm.Music[j+1] = new AlmMusic();
+                            alm.Music[j + 1].LoadFromStream(br);
+                        }
+                        break;
+                    default:
+                        ms.Position += sec_size;
+                        break;
                 }
             }
 

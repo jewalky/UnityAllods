@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -207,6 +208,7 @@ public class AllodsMap
 
     public class AlmGroup
     {
+        [Flags]
         public enum AlmGroupFlags
         {
             AiInstantRnabled = 1, RandomPositions = 2,
@@ -215,16 +217,16 @@ public class AllodsMap
 
         public void LoadFromStream(BinaryReader br)
         {
-            GroupId = br.ReadUInt32();
+            GroupID = br.ReadUInt32();
             RepopTime = br.ReadUInt32();
             GroupFlag = (AlmGroupFlags)br.ReadUInt32();
-            InstanceId = br.ReadUInt32();
+            InstanceID = br.ReadUInt32();
         }
 
-        public uint InstanceId { get; set; }
-        public AlmGroupFlags GroupFlag { get; set; }
-        public uint RepopTime { get; set; }
-        public uint GroupId { get; set; }
+        public uint InstanceID;
+        public AlmGroupFlags GroupFlag;
+        public uint RepopTime;
+        public uint GroupID;
     }
 
     public class AlmSack
@@ -232,7 +234,7 @@ public class AllodsMap
         public void LoadFromStream(BinaryReader br)
         {
             NumberOfItems = br.ReadUInt32();
-            UnitId = br.ReadUInt32();
+            UnitID = br.ReadUInt32();
             X = br.ReadUInt32();
             Y = br.ReadUInt32();
             Gold = br.ReadUInt32();
@@ -244,36 +246,38 @@ public class AllodsMap
             }
         }
 
-        public uint Gold { get; set; }
-        public uint Y { get; set; }
-        public uint X { get; set; }
-        public uint UnitId { get; set; }
-        public uint NumberOfItems { get; set; }
-        public AlmSackItem[] Items { get; set; }
+        public uint Gold;
+        public uint Y;
+        public uint X;
+        public uint UnitID;
+        public uint NumberOfItems;
+        public AlmSackItem[] Items;
     }
 
-    public class AlmMagazine
+    public class AlmShop
     {
-        public enum AlmMagazineItemMaterial
+        [Flags]
+        public enum AlmShopItemMaterial
         {
             Iron = 0x00000001,
             Bronze = 0x00000002,
             Steel = 0x00000004,
             Silver = 0x00000008,
             Gold = 0x00000010,
-            Mithril = 0x00000020,
+            Mithrill = 0x00000020,
             Adamantium = 0x00000040,
-            Meteorite = 0x00000080,
+            Meteoric = 0x00000080,
             Wood = 0x00000100,
             MagicWood = 0x00000200,
             Leather = 0x00000400,
-            BigLeather = 0x00000800,
+            HardLeather = 0x00000800,
             DragonLeather = 0x00001000,
-            Crystall = 0x00002000,
+            Crystal = 0x00002000,
             None	 = 0x00004000
         }
 
-        public enum AlmMagazineItemType
+        [Flags]
+        public enum AlmShopItemType
         {
             Weapon = 0x00400000,
             Shield = 0x00800000,
@@ -283,13 +287,15 @@ public class AllodsMap
             Wands = 0x08000000,
         }
 
-        public enum AlmMagazineItemExtra
+        [Flags]
+        public enum AlmShopItemExtra
         {
             Common = 0x10000000,
             Magic = 0x20000000
         }
 
-        public enum AlmMagazineItemRareType
+        [Flags]
+        public enum AlmShopItemClass
         {
             Common = 0x00008000,
             Uncommon = 0x00010000,
@@ -300,69 +306,72 @@ public class AllodsMap
             Good = 0x00200000,
         }
 
-        public void LoadFromStream(BinaryReader br)
+        public class AlmShopShelf
         {
-            Id = br.ReadUInt32();
-            ShelfFlags1 = br.ReadUInt32();
-            ShelfFlags2 = br.ReadUInt32();
-            ShelfFlags3 = br.ReadUInt32();
-            ShelfFlags4 = br.ReadUInt32();
-            MinPrice1 = br.ReadUInt32();
-            MinPrice2 = br.ReadUInt32();
-            MinPrice3 = br.ReadUInt32();
-            MinPrice4 = br.ReadUInt32();
-            MaxPrice1 = br.ReadUInt32();
-            MaxPrice2 = br.ReadUInt32();
-            MaxPrice3 = br.ReadUInt32();
-            MaxPrice4 = br.ReadUInt32();
-            NumberOfItems1 = br.ReadUInt32();
-            NumberOfItems2 = br.ReadUInt32();
-            NumberOfItems3 = br.ReadUInt32();
-            NumberOfItems4 = br.ReadUInt32();
-            MaxNumberOneType1 = br.ReadUInt32();
-            MaxNumberOneType2 = br.ReadUInt32();
-            MaxNumberOneType3 = br.ReadUInt32();
-            MaxNumberOneType4 = br.ReadUInt32();
+            public AlmShopItemMaterial ItemMaterials;
+            public AlmShopItemType ItemTypes;
+            public AlmShopItemExtra ItemExtras;
+            public AlmShopItemClass ItemClasses;
+            public uint PriceMin;
+            public uint PriceMax;
+            public uint MaxItems;
+            public uint MaxSameItems;
         }
 
-        public uint MaxNumberOneType4 { get; set; }
-        public uint MaxNumberOneType3 { get; set; }
-        public uint MaxNumberOneType2 { get; set; }
-        public uint MaxNumberOneType1 { get; set; }
-        public uint NumberOfItems4 { get; set; }
-        public uint NumberOfItems3 { get; set; }
-        public uint NumberOfItems2 { get; set; }
-        public uint NumberOfItems1 { get; set; }
-        public uint MaxPrice4 { get; set; }
-        public uint MaxPrice3 { get; set; }
-        public uint MaxPrice2 { get; set; }
-        public uint MaxPrice1 { get; set; }
-        public uint MinPrice4 { get; set; }
-        public uint MinPrice3 { get; set; }
-        public uint MinPrice2 { get; set; }
-        public uint MinPrice1 { get; set; }
-        public uint ShelfFlags4 { get; set; }
-        public uint ShelfFlags3 { get; set; }
-        public uint ShelfFlags2 { get; set; }
-        public uint ShelfFlags1 { get; set; }
-        public uint Id { get; set; }
+        private static uint GetFlagsMask(Type t)
+        {
+            uint mask = 0;
+            IEnumerable<Enum> values = Enum.GetValues(t).Cast<Enum>();
+            foreach (Enum v in values)
+                mask |= (uint)((int)Enum.ToObject(t, v));
+            return mask;
+        }
+
+        public uint ID;
+        public AlmShopShelf[] Shelves = new AlmShopShelf[4];
+
+        public void LoadFromStream(BinaryReader br)
+        {
+            ID = br.ReadUInt32();
+
+            for (int i = 0; i < 4; i++)
+                Shelves[i] = new AlmShopShelf();
+
+            for (int i = 0; i < 4; i++)
+            {
+                uint flags = br.ReadUInt32();
+                Shelves[i].ItemMaterials = (AlmShopItemMaterial)(flags & GetFlagsMask(typeof(AlmShopItemMaterial)));
+                Shelves[i].ItemTypes = (AlmShopItemType)(flags & GetFlagsMask(typeof(AlmShopItemType)));
+                Shelves[i].ItemExtras = (AlmShopItemExtra)(flags & GetFlagsMask(typeof(AlmShopItemExtra)));
+                Shelves[i].ItemClasses = (AlmShopItemClass)(flags & GetFlagsMask(typeof(AlmShopItemClass)));
+            }
+
+            for (int i = 0; i < 4; i++)
+                Shelves[i].PriceMin = br.ReadUInt32();
+            for (int i = 0; i < 4; i++)
+                Shelves[i].PriceMax = br.ReadUInt32();
+            for (int i = 0; i < 4; i++)
+                Shelves[i].MaxItems = br.ReadUInt32();
+            for (int i = 0; i < 4; i++)
+                Shelves[i].MaxSameItems = br.ReadUInt32();
+        }
     }
 
     public class AlmOptionPointer
     {
         public void LoadFromStream(BinaryReader br)
         {
-            Id = br.ReadUInt32();
+            ID = br.ReadUInt32();
             InstanceOn = br.ReadUInt32();
-            InstanceId = br.ReadUInt32();
+            InstanceID = br.ReadUInt32();
         }
 
-        public uint InstanceId { get; set; }
-        public uint InstanceOn { get; set; }
-        public uint Id { get; set; }
+        public uint InstanceID;
+        public uint InstanceOn;
+        public uint ID;
     }
 
-    public class AlmTavernInfo
+    public class AlmInnInfo
     {
         public enum QuestType
         {
@@ -375,28 +384,28 @@ public class AllodsMap
 
         public void LoadFromStream(BinaryReader br)
         {
-            Id = br.ReadUInt32();
+            ID = br.ReadUInt32();
             Flag = (QuestType)br.ReadUInt32();
-            DeliveryId = br.ReadUInt32();
+            DeliveryID = br.ReadUInt32();
         }
 
-        public uint DeliveryId { get; set; }
-        public QuestType Flag { get; set; }
-        public uint Id { get; set; }
+        public uint DeliveryID;
+        public QuestType Flag;
+        public uint ID;
     }
 
     public class AlmSackItem
     {
         public void LoadFromStream(BinaryReader br)
         {
-            ItemId = br.ReadUInt32();
+            ItemID = br.ReadUInt32();
             Wielded = br.ReadUInt16();
             EffectNumber = br.ReadUInt32();
         }
 
-        public uint EffectNumber { get; set; }
-        public ushort Wielded { get; set; }
-        public uint ItemId { get; set; }
+        public uint EffectNumber;
+        public ushort Wielded;
+        public uint ItemID;
     }
 
     public class AlmMusic
@@ -406,19 +415,14 @@ public class AllodsMap
             X = br.ReadUInt32();
             Y = br.ReadUInt32();
             Radius = br.ReadUInt32();
-            TypeId1 = br.ReadUInt32();
-            TypeId2 = br.ReadUInt32();
-            TypeId3 = br.ReadUInt32();
-            TypeId4 = br.ReadUInt32();
+            for (int i = 0; i < TypeIDs.Length; i++)
+                TypeIDs[i] = br.ReadUInt32();
         }
 
-        public uint TypeId4 { get; set; }
-        public uint TypeId3 { get; set; }
-        public uint TypeId2 { get; set; }
-        public uint TypeId1 { get; set; }
-        public uint Radius { get; set; }
-        public uint Y { get; set; }
-        public uint X { get; set; }
+        public uint[] TypeIDs = new uint[4];
+        public uint Radius;
+        public uint Y;
+        public uint X;
     }
 
     public class AlmEffectModifier
@@ -429,31 +433,31 @@ public class AllodsMap
             Value = br.ReadUInt32();
         }
 
-        public uint Value { get; set; }
-        public ushort TypeOfMod { get; set; }
+        public uint Value;
+        public ushort TypeOfMod;
     }
 
     public class AlmEffect
     {
-        public bool IsItem { get; set; }
+        public bool IsItem;
 
         public void LoadFromStream(BinaryReader br)
         {
-            Id = br.ReadUInt32();
+            ID = br.ReadUInt32();
             X = br.ReadUInt32();
             Y = br.ReadUInt32();
             IsItem = X == 0 && Y == 0;
             MagicOrFlag = br.ReadUInt16();
             if (!IsItem)
             {
-                StructureId = br.ReadUInt32();
+                StructureID = br.ReadUInt32();
             }
             else
             {
                 MagicMinDmg = br.ReadUInt16();
                 AvgDmg = br.ReadUInt16();
             }
-            TypeId = br.ReadUInt16();
+            TypeID = br.ReadUInt16();
             MagicPower = br.ReadUInt16();
             CountOfModifier = br.ReadUInt32();
             EffectModifiers = new AlmEffectModifier[CountOfModifier];
@@ -464,25 +468,25 @@ public class AllodsMap
             }
         }
 
-        public uint CountOfModifier { get; set; }
-        public ushort MagicPower { get; set; }
-        public ushort TypeId { get; set; }
-        public ushort AvgDmg { get; set; }
-        public ushort MagicMinDmg { get; set; }
-        public uint StructureId { get; set; }
-        public uint MagicOrFlag { get; set; }
-        public uint Y { get; set; }
-        public uint X { get; set; }
-        public uint Id { get; set; }
-        public AlmEffectModifier[] EffectModifiers { get; set; }
+        public uint CountOfModifier;
+        public ushort MagicPower;
+        public ushort TypeID;
+        public ushort AvgDmg;
+        public ushort MagicMinDmg;
+        public uint StructureID;
+        public uint MagicOrFlag;
+        public uint Y;
+        public uint X;
+        public uint ID;
+        public AlmEffectModifier[] EffectModifiers;
     }
 
     public class AlmLogic
     {
-        public AlmLogicItem[] LogicItems { get; set; }
-        public AlmCheckItem[] CheckItems { get; set; }
-        public AlmTrigger[] TriggerItems { get; set; }
-        public enum InctanceType
+        public AlmLogicItem[] LogicItems;
+        public AlmCheckItem[] CheckItems;
+        public AlmTrigger[] TriggerItems;
+        public enum InstanceType
         {
             Num = 1, Group = 2,
             Player = 3, Unit = 4,
@@ -517,22 +521,22 @@ public class AllodsMap
 
         public class AlmLogicItem
         {
-            public uint ExecOnceFlag { get; set; }
-            public uint TypeId { get; set; }
-            public uint TypeIndex { get; set; }
-            public string Name { get; set; }
-            public LogicVal[] Values { get; set; }
+            public uint ExecOnceFlag;
+            public uint TypeID;
+            public uint TypeIndex;
+            public string Name;
+            public LogicVal[] Values;
             public struct LogicVal
             {
-                public string Name { get; set; }
-                public uint Value { get; set; }
-                public InctanceType InstType { get; set; }
+                public string Name;
+                public uint Value;
+                public InstanceType InstType;
             }
 
             public void LoadFromStream(BinaryReader br)
             {
                 Name = Core.UnpackByteString(1251, br.ReadBytes(0x40));
-                TypeId = br.ReadUInt32();
+                TypeID = br.ReadUInt32();
                 TypeIndex = br.ReadUInt32();
                 ExecOnceFlag = br.ReadUInt32();
 
@@ -543,7 +547,7 @@ public class AllodsMap
                 }
                 for (int i = 0; i < 10; i++)
                 {
-                    Values[i].InstType = (InctanceType)br.ReadUInt32();
+                    Values[i].InstType = (InstanceType)br.ReadUInt32();
                 }
                 for (int i = 0; i < 10; i++)
                 {
@@ -567,46 +571,29 @@ public class AllodsMap
             {
                 Name = Core.UnpackByteString(1251, br.ReadBytes(0x80));
 
-                Check1 = br.ReadUInt32();
-                Check2 = br.ReadUInt32();
-                Check3 = br.ReadUInt32();
-                Check4 = br.ReadUInt32();
-                Check5 = br.ReadUInt32();
-                Check6 = br.ReadUInt32();
+                for (int i = 0; i < 6; i++)
+                    Checks[i] = br.ReadUInt32();
 
-                Instance1 = br.ReadUInt32();
-                Instance2 = br.ReadUInt32();
-                Instance3 = br.ReadUInt32();
-                Instance4 = br.ReadUInt32();
+                for (int i = 0; i < 4; i++)
+                    Instances[i] = br.ReadUInt32();
 
-                Operator12 = (TriggerOperator)br.ReadUInt32();
-                Operator34 = (TriggerOperator)br.ReadUInt32();
-                Operator56 = (TriggerOperator)br.ReadUInt32();
+                for (int i = 0; i < 3; i++)
+                    Operators[i] = (TriggerOperator)br.ReadUInt32();
 
                 RunOnce = br.ReadUInt32();
             }
 
-            public string Name { get; set; }
+            public string Name;
 
-            public uint RunOnce { get; set; }
-            public TriggerOperator Operator56 { get; set; }
-            public TriggerOperator Operator34 { get; set; }
-            public TriggerOperator Operator12 { get; set; }
-            public uint Instance4 { get; set; }
-            public uint Instance3 { get; set; }
-            public uint Instance2 { get; set; }
-            public uint Instance1 { get; set; }
-            public uint Check6 { get; set; }
-            public uint Check5 { get; set; }
-            public uint Check4 { get; set; }
-            public uint Check3 { get; set; }
-            public uint Check2 { get; set; }
-            public uint Check1 { get; set; }
+            public uint RunOnce;
+            public uint[] Checks = new uint[6];
+            public uint[] Instances = new uint[4];
+            public TriggerOperator[] Operators = new TriggerOperator[3]; // between every 2 Checks
         }
 
-        public uint NumberOfTriggers { get; set; }
-        public uint NumberOfChecks { get; set; }
-        public uint NumberOfItems { get; set; }
+        public uint NumberOfTriggers;
+        public uint NumberOfChecks;
+        public uint NumberOfItems;
         
 
         public Vector2 GetDropLocation()
@@ -618,8 +605,8 @@ public class AllodsMap
                                         .FirstOrDefault();
                 if (dropLoc != null)
                 {
-                    return new Vector2(dropLoc.Values.Where(x => x.InstType == InctanceType.X).Select(x => x.Value).FirstOrDefault(),
-                                       dropLoc.Values.Where(x => x.InstType == InctanceType.Y).Select(x => x.Value).FirstOrDefault());
+                    return new Vector2(dropLoc.Values.Where(x => x.InstType == InstanceType.X).Select(x => x.Value).FirstOrDefault(),
+                                       dropLoc.Values.Where(x => x.InstType == InstanceType.Y).Select(x => x.Value).FirstOrDefault());
                 }
             }
             return new Vector2(6,6);
@@ -676,9 +663,9 @@ public class AllodsMap
     public AlmGroup[] Groups;
     public AlmSack[] Sacks;
     public AlmEffect[] Effects;
-    public AlmMagazine[] Magazines;
-    public AlmOptionPointer[] OptionPointers;
-    public AlmTavernInfo[] AlmTavernInfos;
+    public AlmShop[] Shops;
+    public AlmOptionPointer[] Pointers;
+    public AlmInnInfo[] Inns;
 
     // ====================================
     //  constructors
@@ -816,6 +803,7 @@ public class AllodsMap
                             ms.Close();
                             return null;
                         }
+
                         alm.Logic = new AlmLogic();
                         alm.Logic.LoadFromStream(br);
                         break;
@@ -825,6 +813,7 @@ public class AllodsMap
                             ms.Close();
                             return null;
                         }
+
                         alm.Sacks = new AlmSack[alm.Data.CountSacks];
                         for (int j = 0; j < alm.Data.CountSacks; j++)
                         {
@@ -838,6 +827,7 @@ public class AllodsMap
                             ms.Close();
                             return null;
                         }
+
                         var numberOfEffects = br.ReadUInt32();
                         alm.Effects = new AlmEffect[numberOfEffects];
                         for (int j = 0; j < numberOfEffects; j++)
@@ -852,6 +842,7 @@ public class AllodsMap
                             ms.Close();
                             return null;
                         }
+
                         alm.Groups = new AlmGroup[alm.Data.CountGroups];
                         for (int j = 0; j < alm.Data.CountGroups; j++)
                         {
@@ -865,33 +856,34 @@ public class AllodsMap
                             ms.Close();
                             return null;
                         }
-                        alm.AlmTavernInfos = new AlmTavernInfo[alm.Data.CountInns];
+
+                        alm.Inns = new AlmInnInfo[alm.Data.CountInns];
                         for (int j = 0; j < alm.Data.CountInns; j++)
                         {
-                            alm.AlmTavernInfos[j] = new AlmTavernInfo();
-                            alm.AlmTavernInfos[j].LoadFromStream(br);
+                            alm.Inns[j] = new AlmInnInfo();
+                            alm.Inns[j].LoadFromStream(br);
                         }
-                        alm.Magazines = new AlmMagazine[alm.Data.CountShops];
+
+                        alm.Shops = new AlmShop[alm.Data.CountShops];
                         for (int j = 0; j < alm.Data.CountShops; j++)
                         {
-                            alm.Magazines[j] = new AlmMagazine();
-                            alm.Magazines[j].LoadFromStream(br);
+                            alm.Shops[j] = new AlmShop();
+                            alm.Shops[j].LoadFromStream(br);
                         }
-                        alm.OptionPointers = new AlmOptionPointer[alm.Data.CountPointers];
+
+                        alm.Pointers = new AlmOptionPointer[alm.Data.CountPointers];
                         for (int j = 0; j < alm.Data.CountPointers; j++)
                         {
-                            alm.OptionPointers[j] = new AlmOptionPointer();
-                            alm.OptionPointers[j].LoadFromStream(br);
+                            alm.Pointers[j] = new AlmOptionPointer();
+                            alm.Pointers[j].LoadFromStream(br);
                         }
                         break;
                     case 12: // Music
-                        alm.Music = new AlmMusic[alm.Data.CountMusic+1];
-                        alm.Music[0] = new AlmMusic();
-                        alm.Music[0].LoadFromStream(br);
-                        for (int j = 0; j < alm.Data.CountMusic; j++)
+                        alm.Music = new AlmMusic[alm.Data.CountMusic + 1];
+                        for (int j = 0; j < alm.Music.Length; j++)
                         {
-                            alm.Music[j+1] = new AlmMusic();
-                            alm.Music[j + 1].LoadFromStream(br);
+                            alm.Music[j] = new AlmMusic();
+                            alm.Music[j].LoadFromStream(br);
                         }
                         break;
                     default:

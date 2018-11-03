@@ -33,32 +33,14 @@ public class ScanrangeCalc
         {
             for (int j = 0; j <= 20; ++j)
             {
-                if (j >= (i / 2))
-                {
-                    if (j <= (i * 2))
-                    {
-                        pTablesOffset[20 + i, 20 + j, 0] = -1;
-                        pTablesOffset[20 + i, 20 + j, 1] = -1;
-                        pTablesOffset[20 - i, 20 - j, 0] = 1;
-                        pTablesOffset[20 - i, 20 - j, 1] = 1;
-                        pTablesOffset[20 + i, 20 - j, 0] = -1;
-                        pTablesOffset[20 + i, 20 - j, 1] = 1;
-                        pTablesOffset[20 - i, 20 + j, 0] = 1;
-                        pTablesOffset[20 - i, 20 + j, 1] = -1;
-                    }
-                    else
-                    {
-                        pTablesOffset[20 + i, 20 + j, 0] = 0;
-                        pTablesOffset[20 + i, 20 + j, 1] = -1;
-                        pTablesOffset[20 - i, 20 - j, 0] = 0;
-                        pTablesOffset[20 - i, 20 - j, 1] = 1;
-                        pTablesOffset[20 + i, 20 - j, 0] = 0;
-                        pTablesOffset[20 + i, 20 - j, 1] = 1;
-                        pTablesOffset[20 - i, 20 + j, 0] = 0;
-                        pTablesOffset[20 - i, 20 + j, 1] = -1;
-                    }
-                }
-                else
+                int v1 =  i > 0 || j > 0 ?  (int)(Math.Pow((j * j + i * i), 0.5) / Math.Max(i,j) * ulScanShifted) : 0;
+
+                pTablesCost[20 + i, 20 + j] = v1;
+                pTablesCost[20 + i, 20 - j] = v1;
+                pTablesCost[20 - i, 20 + j] = v1;
+                pTablesCost[20 - i, 20 - j] = v1;
+
+                if (j < (i / 2))
                 {
                     pTablesOffset[20 + i, 20 + j, 0] = -1;
                     pTablesOffset[20 + i, 20 + j, 1] = 0;
@@ -68,17 +50,30 @@ public class ScanrangeCalc
                     pTablesOffset[20 + i, 20 - j, 1] = 0;
                     pTablesOffset[20 - i, 20 + j, 0] = 1;
                     pTablesOffset[20 - i, 20 + j, 1] = 0;
+
+                } 
+                else if (j > (i * 2))
+                {
+                    pTablesOffset[20 + i, 20 + j, 0] = 0;
+                    pTablesOffset[20 + i, 20 + j, 1] = -1;
+                    pTablesOffset[20 - i, 20 - j, 0] = 0;
+                    pTablesOffset[20 - i, 20 - j, 1] = 1;
+                    pTablesOffset[20 + i, 20 - j, 0] = 0;
+                    pTablesOffset[20 + i, 20 - j, 1] = 1;
+                    pTablesOffset[20 - i, 20 + j, 0] = 0;
+                    pTablesOffset[20 - i, 20 + j, 1] = -1;
                 }
-
-                int v4;
-                if (i > j) v4 = i;
-                else v4 = j;
-
-                int v1 = (int)(Math.Sqrt((double)(j * j + i * i)) * ulScanShifted / v4);
-                pTablesCost[20 + i, 20 + j] = v1;
-                pTablesCost[20 + i, 20 - j] = v1;
-                pTablesCost[20 - i, 20 + j] = v1;
-                pTablesCost[20 - i, 20 - j] = v1;
+                else
+                {
+                    pTablesOffset[20 + i, 20 + j, 0] = -1;
+                    pTablesOffset[20 + i, 20 + j, 1] = -1;
+                    pTablesOffset[20 - i, 20 - j, 0] = 1;
+                    pTablesOffset[20 - i, 20 - j, 1] = 1;
+                    pTablesOffset[20 + i, 20 - j, 0] = -1;
+                    pTablesOffset[20 + i, 20 - j, 1] = 1;
+                    pTablesOffset[20 - i, 20 + j, 0] = 1;
+                    pTablesOffset[20 - i, 20 + j, 1] = -1;
+                }
             }
         }
 

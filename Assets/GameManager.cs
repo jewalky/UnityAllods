@@ -64,7 +64,7 @@ public class GameManager : MonoBehaviour
     {
         // system Unity configuration
         QualitySettings.vSyncCount = 0;
-        Application.targetFrameRate = 60;
+        Application.targetFrameRate = Application.isBatchMode ? 10 : 60;
 
         //
         pMainThreadId = Thread.CurrentThread.ManagedThreadId;

@@ -121,7 +121,7 @@ public class Client
         if (cspell == null)
             return;
 
-        if (cspell.Template.SpellTarget == 2)
+        if (cspell.Template.IsAreaSpell)
         {
             if (x <= unit.X+unit.Width && y <= unit.Y+unit.Height &&
                 x >= unit.X && y >= unit.Y)

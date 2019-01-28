@@ -372,6 +372,14 @@ public class Templates
         public int BookCost;
         public string Effects;
 
+        public bool IsAreaSpell
+        {
+            get
+            {
+                return Radius >= 1;
+            }
+        }
+
         public TplSpell(BinaryReader br) : base(br) { }
     }
 

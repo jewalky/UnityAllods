@@ -61,4 +61,20 @@ namespace Spells
             return false;
         }
     }
+
+    [SpellProcId(Spell.Spells.Shield)]
+    public class SpellProcShield : SpellProc
+    {
+        public SpellProcShield(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (TargetUnit == null)
+                return false;
+
+            SpellEffects.Effect eff = new SpellEffects.Shield((int)(20 * Spell.GetDuration()), Spell.GetAbsorbtion());
+            TargetUnit.AddSpellEffects(eff);
+            return false;
+        }
+    }
 }

@@ -148,6 +148,8 @@ public class MapProjectileLogicSimple : IMapProjectileLogic
     {
         AnimationSpeed = animspeed;
         Scale = scale;
+        Start = start;
+        End = end;
     }
 
     public void SetProjectile(MapProjectile proj)
@@ -573,6 +575,21 @@ public class MapProjectile : MapObject, IDynlight
         set
         {
             _ZOffset = value;
+            DoUpdateView = true;
+        }
+    }
+
+    private bool _ZAbsolute;
+    public bool ZAbsolute
+    {
+        get
+        {
+            return _ZAbsolute;
+        }
+
+        set
+        {
+            _ZAbsolute = true;
             DoUpdateView = true;
         }
     }

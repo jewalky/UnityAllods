@@ -809,8 +809,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
             Spell.Spells sp = Spellbook.ActiveSpell;
             Templates.TplSpell spl = TemplateLoader.GetSpellById((int)sp - 1);
 
-            if (spl.SpellTarget == 2 ||
-                (spl.SpellTarget == 1 && HoveredObject != null && (HoveredObject.GetObjectType() == MapObjectType.Human || HoveredObject.GetObjectType() == MapObjectType.Monster)))
+            if (spl.IsAreaSpell ||
+                (!spl.IsAreaSpell && HoveredObject != null && (HoveredObject.GetObjectType() == MapObjectType.Human || HoveredObject.GetObjectType() == MapObjectType.Monster)))
             {
                 return Spellbook.ActiveSpell;
             }

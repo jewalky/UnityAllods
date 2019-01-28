@@ -97,7 +97,10 @@ public class MapProjectileLogicDirectional : IMapProjectileLogic
 
     public bool Update()
     {
-        Projectile.LightLevel = 256;
+        // magic handling: blizzard projectile uses frame 8 for real projectile, and 0-7 for death anim
+        if (Projectile.Class.ID == (int)AllodsProjectile.Blizzard)
+            Projectile.CurrentFrame = 8;
+        else Projectile.LightLevel = 256;
         Vector3 targetCenter = new Vector3(TargetX, TargetY, TargetZ);
         Projectile.Angle = MapObject.FaceVector(targetCenter.x - Projectile.ProjectileX, targetCenter.y - Projectile.ProjectileY);
         Vector3 dir = new Vector3(targetCenter.x - Projectile.ProjectileX, targetCenter.y - Projectile.ProjectileY, targetCenter.z - Projectile.ProjectileZ);
@@ -137,9 +140,11 @@ public class MapProjectileLogicSimple : IMapProjectileLogic
     MapProjectile Projectile = null;
     float AnimationSpeed;
     float Scale;
+    int Start;
+    int End;
     int Timer = 0;
 
-    public MapProjectileLogicSimple(float animspeed = 0.5f, float scale = 1f)
+    public MapProjectileLogicSimple(float animspeed = 0.5f, float scale = 1f, int start = 0, int end = 0)
     {
         AnimationSpeed = animspeed;
         Scale = scale;
@@ -148,6 +153,8 @@ public class MapProjectileLogicSimple : IMapProjectileLogic
     public void SetProjectile(MapProjectile proj)
     {
         Projectile = proj;
+        if (Start == 0 && End == 0)
+            End = Projectile.Class.Phases-1;
     }
 
     public bool Update()
@@ -157,10 +164,12 @@ public class MapProjectileLogicSimple : IMapProjectileLogic
 
         Projectile.Scale = Scale;
 
-        int frame = (int)(Timer * AnimationSpeed);
-        if (frame < 0) frame = 0; // shouldn't happen though
-        if (frame >= Projectile.Class.Phases)
+        float maxProgress = Mathf.Abs(End - Start);
+        float progress = (Timer * AnimationSpeed) / maxProgress;
+        if (progress < 0) progress = 0; // shouldn't happen though
+        if (progress >= 1f)
             return false;
+        int frame = (int)(Start + (End - Start) * progress);
         Projectile.CurrentFrame = frame;
         Projectile.CurrentTics = 0;
         Projectile.DoUpdateView = true;

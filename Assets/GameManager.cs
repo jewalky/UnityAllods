@@ -62,6 +62,11 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
+        // system Unity configuration
+        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = 60;
+
+        //
         pMainThreadId = Thread.CurrentThread.ManagedThreadId;
         _Instance = this; // force set. through this field, other threads will access mapview.
         Locale.InitLocale(); // load locale strings, like main.txt, patch.txt, etc

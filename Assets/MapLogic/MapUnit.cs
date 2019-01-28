@@ -330,8 +330,14 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         UpdateNetVisibility();
 
         // process spell processors
-        while (SpellProcessors.Count > 0 && !SpellProcessors.Last().Process())
-            SpellProcessors.RemoveAt(SpellProcessors.Count - 1);
+        for (int i = 0; i < SpellProcessors.Count; i++)
+        {
+            if (!SpellProcessors[i].Process())
+            {
+                SpellProcessors.RemoveAt(i);
+                i--;
+            }
+        }
 
         // process actions
         while (!Actions.Last().Process())

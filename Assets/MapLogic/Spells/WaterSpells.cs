@@ -33,9 +33,9 @@ namespace Spells
                 return false;
 
             // 5x5, but remove corners
-            for (int y = TargetY-2; y <= TargetY+2; y++)
+            for (int y = TargetY - 2; y <= TargetY + 2; y++)
             {
-                for (int x = TargetX-2; x <= TargetX+2; x++)
+                for (int x = TargetX - 2; x <= TargetX + 2; x++)
                 {
                     // check for corner tiles :)
                     if ((x == TargetX - 2 || x == TargetX + 2) && (y == TargetY - 2 || y == TargetY + 2))
@@ -56,7 +56,7 @@ namespace Spells
                             continue;
 
                         // don't remove if on edge of fire wall
-                        if (new Vector2(mp.ProjectileX - x+0.5f, mp.ProjectileY - y+0.5f).magnitude > 0.8f)
+                        if (new Vector2(mp.ProjectileX - x + 0.5f, mp.ProjectileY - y + 0.5f).magnitude > 0.8f)
                             continue;
 
                         spawnblocked = true;
@@ -102,6 +102,55 @@ namespace Spells
             }
 
             return false;
+        }
+    }
+
+    [SpellProcId(Spell.Spells.Blizzard)]
+    public class SpellProcBlizzard : SpellProc
+    {
+        public SpellProcBlizzard(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        private int TicsSinceLastDrop = -1;
+        private int TicsTotal = 0;
+
+        public override bool Process()
+        {
+            if (NetworkManager.IsClient)
+                return false;
+
+            if (TicsSinceLastDrop < 0 || TicsSinceLastDrop > 6)
+            {
+                TicsSinceLastDrop = 0;
+
+                // spawn random blizzard projectile in 4x4 grid (center at 1,1)
+                float rndX = UnityEngine.Random.Range(-1, 3) + TargetX;
+                float rndY = UnityEngine.Random.Range(-1, 3) + TargetY;
+                if (rndX >= 0 && rndY >= 0 &&
+                    rndX < MapLogic.Instance.Width &&
+                    rndY < MapLogic.Instance.Height)
+                {
+                    Server.SpawnProjectileDirectional(AllodsProjectile.Blizzard, Spell.User, rndX + 0.5f, rndY + 0.5f, 4f, rndX + 0.5f, rndY + 0.5f, 0f, 3f, proj =>
+                    {
+                        Server.SpawnProjectileSimple(AllodsProjectile.Blizzard, Spell.User, rndX + 0.5f, rndY + 0.5f, 0f, 1f, 1f, 0, 7);
+                        // find something to damage in this cell
+                        MapNode node = MapLogic.Instance.Nodes[proj.X, proj.Y];
+                        for (int i = 0; i < node.Objects.Count; i++)
+                        {
+                            MapObject mo = node.Objects[i];
+                            if (!(mo is IVulnerable))
+                                continue;
+                            IVulnerable vul = (IVulnerable)mo;
+                            int dmg = Spell.GetDamage();
+                            vul.TakeDamage(DamageFlags.Water, Spell.User, dmg);
+                        }
+                    });
+                }
+            }
+
+            TicsSinceLastDrop++;
+            TicsTotal++;
+
+            return (TicsTotal < 20*Spell.GetDuration());
         }
     }
 }

@@ -773,7 +773,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             if (itemId != 0 && item.Class.ItemID != itemId)
                 continue;
             Spell sp = item.GetScrollEffect(this, spell);
-            if (sp != null && (topSpell == null || topSpell.Skill < sp.Skill)
+            if (sp != null && (topSpell == null || topSpell.Skill < sp.Skill))
                 topSpell = sp;
         }
 

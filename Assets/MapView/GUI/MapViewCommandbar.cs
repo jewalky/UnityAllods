@@ -37,7 +37,7 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
     }
 
     public Commands EnabledCommands = (Commands)0xFF;
-    private Commands CurrentCommandActual = 0;
+    public Commands CurrentCommandActual { get; private set; }
     public Commands CurrentCommand { get; private set; }
 
     public void Start()
@@ -110,7 +110,14 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
                 {
                     Commands icmd = (Commands)(1 << (bY * 4 + bX));
                     if ((EnabledCommands & icmd) != 0)
+                    {
+                        bool wasCast = (CurrentCommandActual == Commands.Cast);
                         CurrentCommandActual = icmd;
+                        if (CurrentCommandActual == Commands.Cast)
+                            MapView.Instance.SpellbookVisible = true;
+                        else if (wasCast)
+                            MapView.Instance.SpellbookVisible = false;
+                    }
                 }
             }
 

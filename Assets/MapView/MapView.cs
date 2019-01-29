@@ -766,8 +766,12 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                                                       HoveredObject.GetObjectType() == MapObjectType.Human))
                             Client.SendCastToUnit(unit, castSp, (MapUnit)HoveredObject, MouseCellX, MouseCellY);
                         else Client.SendCastToArea(unit, castSp, MouseCellX, MouseCellY);
-                        if (castSp == OneTimeCast)
+                        if (castSp == OneTimeCast || Commandbar.CurrentCommandActual == MapViewCommandbar.Commands.Cast)
+                        {
                             SpellbookVisible = false;
+                            if (Commandbar.CurrentCommandActual == MapViewCommandbar.Commands.Cast)
+                                Commandbar.InitDefault(SelectedObject);
+                        }
                         OneTimeCast = null;
                     }
                     else if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move)

@@ -47,6 +47,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
     private MapViewSpellbook Spellbook;
     private bool SpellbookDecastOnHide;
 
+    public Spell OneTimeCast; // this holds a spell casted from scroll
+
     public MapObject SelectedObject { get; private set; }
     public MapObject HoveredObject { get; private set; }
 
@@ -77,6 +79,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         Spellbook.transform.parent = UiManager.Instance.transform;
         Spellbook.gameObject.SetActive(false);
         SpellbookDecastOnHide = true;
+        OneTimeCast = null;
 
         Chat = Utils.CreateObjectWithScript<MapViewChat>();
         Chat.transform.parent = UiManager.Instance.transform;
@@ -753,12 +756,19 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                     SelectedObject.GetObjectType() == MapObjectType.Human)
                 {
                     MapUnit unit = (MapUnit)SelectedObject;
-                    if (GetCastSpell() != Spell.Spells.NoneSpell && (MapLogic.Instance.Nodes[MouseCellX, MouseCellY].Flags & MapNodeFlags.Visible) != 0)
+                    Spell.Spells castSpId = GetCastSpell();
+                    if (castSpId != Spell.Spells.NoneSpell && (MapLogic.Instance.Nodes[MouseCellX, MouseCellY].Flags & MapNodeFlags.Visible) != 0)
                     {
+                        Spell castSp = GetOneTimeCast();
+                        if (castSp == null)
+                            castSp = unit.GetSpell(castSpId);
                         if (HoveredObject != null && (HoveredObject.GetObjectType() == MapObjectType.Monster ||
                                                       HoveredObject.GetObjectType() == MapObjectType.Human))
-                            Client.SendCastToUnit(unit, GetCastSpell(), (MapUnit)HoveredObject, MouseCellX, MouseCellY);
-                        else Client.SendCastToArea(unit, GetCastSpell(), MouseCellX, MouseCellY);
+                            Client.SendCastToUnit(unit, castSp, (MapUnit)HoveredObject, MouseCellX, MouseCellY);
+                        else Client.SendCastToArea(unit, castSp, MouseCellX, MouseCellY);
+                        if (castSp == OneTimeCast)
+                            SpellbookVisible = false;
+                        OneTimeCast = null;
                     }
                     else if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move)
                     {
@@ -783,6 +793,13 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         }
         else if (e.rawType == EventType.MouseDown && e.button == 1)
         {
+            // logic: if currently casting a scroll, cancel cast from item
+            if (GetOneTimeCast() != null)
+            {
+                OneTimeCast = null;
+                return true;
+            }
+
             // logic: if spellbook is open and some spell is selected, set spell to NoneSpell
             // player clicked somewhere not on the book (presumably over the map)
             if (SpellbookVisible)
@@ -802,19 +819,43 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         return false;
     }
 
-    Spell.Spells GetCastSpell()
+    public Spell GetOneTimeCast()
     {
-        if (SpellbookVisible && Spellbook.Unit == SelectedObject && Spellbook.ActiveSpell != Spell.Spells.NoneSpell)
+        if (OneTimeCast == null || OneTimeCast.User == null ||
+            OneTimeCast.User != SelectedObject ||
+            OneTimeCast.Template == null)
         {
-            Spell.Spells sp = Spellbook.ActiveSpell;
-            Templates.TplSpell spl = TemplateLoader.GetSpellById((int)sp - 1);
-
-            if (spl.IsAreaSpell ||
-                (!spl.IsAreaSpell && HoveredObject != null && (HoveredObject.GetObjectType() == MapObjectType.Human || HoveredObject.GetObjectType() == MapObjectType.Monster)))
-            {
-                return Spellbook.ActiveSpell;
-            }
+            OneTimeCast = null;
+            return null;
         }
+
+        return OneTimeCast;
+    }
+
+    public Spell.Spells GetCastSpell()
+    {
+        Spell.Spells splId = Spell.Spells.NoneSpell;
+        Templates.TplSpell spl = null;
+        Spell itemSp = GetOneTimeCast();
+
+        if (itemSp != null)
+        {
+            splId = itemSp.SpellID;
+            spl = itemSp.Template;
+        }
+        else if (SpellbookVisible && Spellbook.Unit == SelectedObject && Spellbook.ActiveSpell != Spell.Spells.NoneSpell)
+        {
+            splId = Spellbook.ActiveSpell;
+            spl = TemplateLoader.GetSpellById((int)splId - 1);
+        }
+
+        if (spl != null &&
+            (spl.IsAreaSpell ||
+            (!spl.IsAreaSpell && HoveredObject != null && (HoveredObject.GetObjectType() == MapObjectType.Human || HoveredObject.GetObjectType() == MapObjectType.Monster))))
+        {
+            return splId;
+        }
+
         return Spell.Spells.NoneSpell;
     }
 
@@ -822,6 +863,11 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
     {
         if (!MapLogic.Instance.IsLoaded)
             return;
+
+        // we'll just put this here
+        Spell itemSp = GetOneTimeCast();
+        if (itemSp != null && Spellbook != null)
+            Spellbook.ActiveSpell = itemSp.SpellID;
 
         // update mouse x/y
         int oldMouseCellX = MouseCellX;

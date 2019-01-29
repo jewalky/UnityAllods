@@ -141,7 +141,12 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
         CurrentCommandActual &= EnabledCommands;
         CurrentCommand = CurrentCommandActual;
 
-        if (CurrentCommandActual == Commands.Move)
+        Spell.Spells viewCast = MapView.Instance.GetCastSpell();
+        if (viewCast != Spell.Spells.NoneSpell)
+        {
+            CurrentCommand = Commands.Cast;
+        }
+        else if (CurrentCommandActual == Commands.Move)
         {
             // check if ctrl is pressed.
             // if alt is pressed, it's always Move overriding any other command.
@@ -220,7 +225,19 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
              pp.GetObjectType() == MapObjectType.Human))
         {
             EnabledCommands = (Commands.All & ~Commands.Cast);
-            // todo enable cast if object has spells or scrolls
+            // enable cast if object has spells or scrolls
+            bool haveSpells = false;
+            MapUnit mu = (MapUnit)pp;
+            for (int i = 0; i < 32; i++)
+            {
+                if (mu.GetSpell((Spell.Spells)i) != null)
+                {
+                    haveSpells = true;
+                    break;
+                }
+            }
+            if (haveSpells)
+                EnabledCommands |= Commands.Cast;
             CurrentCommandActual = Commands.Move;
         }
     }

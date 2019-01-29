@@ -611,6 +611,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Item item = ItemsBody.TakeItem(ItemsBody.FindItemBySlot(slot), 1);
         UpdateItems();
         DoUpdateInfo = true;
+        DoUpdateView = true;
         return item;
     }
 
@@ -750,15 +751,33 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public virtual string TemplateName { get { return Template.Name; } }
 
     // 
-    public Spell GetSpell(Spell.Spells spell)
+    public Spell GetSpell(Spell.Spells spell, ushort itemId = 0)
     {
-        foreach (Spell cspell in SpellBook)
+        if (itemId == 0)
         {
-            if (cspell.SpellID == spell)
-                return cspell;
+            foreach (Spell cspell in SpellBook)
+            {
+                if (cspell.SpellID == spell)
+                    return cspell;
+            }
         }
 
-        return null;
+        // check scrolls, return highest skill
+        // iterate items to find scrolls
+        // actually, let's just allow any special (one-time) item that has castSpell
+        Spell topSpell = null;
+        foreach (Item item in ItemsPack)
+        {
+            if ((item.Class.ItemID & 0xFFC0) != 0x0E00) // special/scrolls
+                continue;
+            if (itemId != 0 && item.Class.ItemID != itemId)
+                continue;
+            Spell sp = item.GetScrollEffect(this, spell);
+            if (sp != null && (topSpell == null || topSpell.Skill < sp.Skill)
+                topSpell = sp;
+        }
+
+        return topSpell;
     }
 
     //

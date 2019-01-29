@@ -80,6 +80,8 @@ public class Spell
         }
     }
 
+    public bool ItemDisposable = false;
+
     private static List<Spells> AttackSpells = new List<Spells>(new Spells[]
     {
         Spells.Fire_Arrow,

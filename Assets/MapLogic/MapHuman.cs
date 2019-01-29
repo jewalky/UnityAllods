@@ -171,6 +171,10 @@ public class MapHuman : MapUnit
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Plate Boots {body=3}"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Pike {tohit=500,damagemin=10,damagemax=20}"));
             ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Crossbow {damagemax=500}"));
+            for (int i = 0; i < 50; i++)
+                ItemsPack.PutItem(ItemsPack.Count, new Item("SuperScroll Teleport"));
+            for (int i = 0; i < 250; i++)
+                ItemsPack.PutItem(ItemsPack.Count, new Item("Scroll Teleport"));
         }
     }
 
@@ -180,6 +184,8 @@ public class MapHuman : MapUnit
             return false;
         if (!item.IsValid)
             return false;
+        if ((item.Class.ItemID & 0xFF00) == 0x0E00) // special item
+            return true;
         if (((Gender & GenderFlags.Mage) != 0) && !item.Class.UsableMage)
             return false;
         if (((Gender & GenderFlags.Fighter) != 0) && !item.Class.UsableFighter)

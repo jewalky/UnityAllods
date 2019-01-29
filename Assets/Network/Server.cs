@@ -314,15 +314,16 @@ public class Server
             {
                 ClientCommands.UnitPack packCmd;
                 packCmd.Tag = unit.Tag;
-                packCmd.Body = new List<NetItem>();
+                packCmd.Body = new NetItem[unit.ItemsBody.Count];
                 for (int i = 0; i < unit.ItemsBody.Count; i++)
-                    packCmd.Body.Add(new NetItem(unit.ItemsBody[i]));
-                packCmd.Pack = new List<NetItem>();
+                    packCmd.Body[i] = new NetItem(unit.ItemsBody[i]);
+                packCmd.Pack = null;
                 packCmd.Money = 0;
                 if (unit.Player == p)
                 {
+                    packCmd.Pack = new NetItem[unit.ItemsPack.Count];
                     for (int i = 0; i < unit.ItemsPack.Count; i++)
-                        packCmd.Pack.Add(new NetItem(unit.ItemsPack[i]));
+                        packCmd.Pack[i] = new NetItem(unit.ItemsPack[i]);
                     packCmd.Money = unit.ItemsPack.Money;
                 }
                 client.SendCommand(packCmd);

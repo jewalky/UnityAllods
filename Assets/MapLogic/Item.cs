@@ -673,4 +673,29 @@ public class Item
 
         return string.Join("\n", effects_str.ToArray());
     }
+
+    public Spell GetScrollEffect(MapUnit unit = null, Spell.Spells searchFor = Spell.Spells.NoneSpell)
+    {
+        foreach (ItemEffect eff in Effects)
+        {
+            if (eff.Type1 == ItemEffect.Effects.CastSpell)
+            {
+                if (searchFor != Spell.Spells.NoneSpell && eff.Value1 != (int)searchFor)
+                    continue;
+                Spell topSpell = new Spell(eff.Value1, unit);
+                topSpell.Skill = eff.Value2;
+                topSpell.Item = this;
+                topSpell.ItemDisposable = true;
+                return topSpell;
+            }
+        }
+
+        return null;
+    }
+
+    public bool ExtendedEquals(Item other)
+    {
+        return Class == other.Class &&
+               MagicEffects.SequenceEqual(other.MagicEffects);
+    }
 }

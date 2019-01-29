@@ -181,13 +181,14 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
             if (e.rawType == EventType.MouseDown)
             {
                 ActiveSpell = sp;
+                MapView.Instance.OneTimeCast = null;
 
                 float ctime = Time.unscaledTime;
                 if (ctime - LastClickTime < 0.25f && (SpellsMask & (int)ActiveSpell) != 0 && !Spell.IsAttackSpell(ActiveSpell))
                 {
                     MapObject curObject = MapView.Instance.SelectedObject;
                     if (curObject is MapUnit)
-                        Client.SendCastToUnit((MapUnit)curObject, sp, (MapUnit)curObject, curObject.X, curObject.Y);
+                        Client.SendCastToUnit((MapUnit)curObject, new global::Spell((int)sp, (MapUnit)curObject), (MapUnit)curObject, curObject.X, curObject.Y);
                 }
 
                 LastClickTime = ctime;
@@ -218,15 +219,16 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
 
     public void SetSpells(MapUnit unit)
     {
+        uint oldSpellsMask = SpellsMask;
         if (unit != null)
         {
             Unit = unit;
             Spells = unit.SpellBook;
             SpellsMask = 0;
-            foreach (Spell cspell in Spells)
+            for (int i = 0; i < 32; i++)
             {
-                uint sp = 1u << (int)cspell.SpellID;
-                SpellsMask |= sp;
+                if (unit.GetSpell((Spell.Spells)i) != null)
+                    SpellsMask |= 1u << i;
             }
         }
         else
@@ -234,7 +236,9 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
             Spells = null;
             SpellsMask = 0;
         }
-        UpdateMesh();
+
+        if (oldSpellsMask != SpellsMask)
+            UpdateMesh();
     }
 
     public void Update()
@@ -245,5 +249,7 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
         if (MapView.Instance.InventoryVisible)
             dOffset -= 90;
         transform.localPosition = new Vector3((Screen.width - 176) / 2 - 240 + 8, Screen.height - 85 + dOffset, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
+        if (Unit != null)
+            SetSpells(Unit);
     }
 }

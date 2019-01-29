@@ -376,7 +376,7 @@ public class Templates
         {
             get
             {
-                return Radius >= 1;
+                return Radius >= 1 || (SpellTarget == 2 && ApplyMethod == 1);
             }
         }
 

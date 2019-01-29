@@ -381,15 +381,14 @@ public class AttackAction : IUnitAction
                         sp = Spell.Cast(TargetUnit.X + TargetUnit.Width / 2, TargetUnit.Y + TargetUnit.Height / 2, TargetUnit);
                     else sp = Spell.Cast(TargetX, TargetY, null);
                     if (sp != null) Unit.AddSpellProcessors(sp);
+                    castspells.Clear();
                 }
-                else
-                {
-                    foreach (Spell spell in castspells)
-                    {
-                        Spells.SpellProc sp = spell.Cast(TargetUnit.X + TargetUnit.Width / 2, TargetUnit.Y + TargetUnit.Height / 2, TargetUnit);
-                        if (sp != null) Unit.AddSpellProcessors(sp);
-                    }
-                }
+            }
+
+            foreach (Spell spell in castspells)
+            {
+                Spells.SpellProc sp = spell.Cast(TargetUnit.X + TargetUnit.Width / 2, TargetUnit.Y + TargetUnit.Height / 2, TargetUnit);
+                if (sp != null) Unit.AddSpellProcessors(sp);
             }
 
             DamageDone = true;

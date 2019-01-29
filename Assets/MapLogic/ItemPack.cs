@@ -53,19 +53,32 @@ public class ItemPack : IEnumerable<Item>
         }
     }
 
+    private void UpdateParent()
+    {
+        if (Parent != null)
+            Parent.DoUpdateInfo = true;
+    }
+
     public void Clear()
     {
         ItemList.Clear();
+        UpdateParent();
     }
 
     public bool Contains(Item item)
     {
-        return ItemList.Contains(item);
+        for (int i = 0; i < ItemList.Count; i++)
+            if (ItemList[i].ExtendedEquals(item))
+                return true;
+        return false;
     }
 
     public int IndexOf(Item item)
     {
-        return ItemList.IndexOf(item);
+        for (int i = 0; i < ItemList.Count; i++)
+            if (ItemList[i].ExtendedEquals(item))
+                return i;
+        return -1;
     }
 
     public Item FindItemBySlot(MapUnit.BodySlot slot)
@@ -79,7 +92,7 @@ public class ItemPack : IEnumerable<Item>
     public Item TakeItem(Item item, int count)
     {
         for (int i = 0; i < ItemList.Count; i++)
-            if (ItemList[i] == item) return TakeItem(i, count);
+            if (ItemList[i].ExtendedEquals(item)) return TakeItem(i, count);
         return null;
     }
 
@@ -93,11 +106,13 @@ public class ItemPack : IEnumerable<Item>
         if (count >= sourceItem.Count)
         {
             ItemList.RemoveAt(position);
+            UpdateParent();
             return sourceItem;
         }
 
         Item newItem = new Item(sourceItem, count);
         sourceItem.Count -= count;
+        UpdateParent();
         return newItem;
     }
 
@@ -113,12 +128,12 @@ public class ItemPack : IEnumerable<Item>
         // check for already present count
         for (int i = 0; i < ItemList.Count; i++)
         {
-            if (ItemList[i].Class == item.Class &&
-                ItemList[i].MagicEffects.SequenceEqual(item.MagicEffects))
+            if (ItemList[i].ExtendedEquals(item))
             {
                 ItemList[i].Count += item.Count;
                 if (!Passive)
                     ItemList[i].Index = i;
+                UpdateParent();
                 return ItemList[i];
             }
         }
@@ -130,6 +145,7 @@ public class ItemPack : IEnumerable<Item>
         if (!Passive)
             newItem.Index = position;
 
+        UpdateParent();
         return newItem;
     }
 

@@ -61,6 +61,7 @@ public class MapObject : IDisposable
     public readonly int ID = MapLogic.Instance.TopObjectID;
     public bool DoUpdateView = false;
     public bool DoUpdateInfo = false;
+    public bool DoUpdateSpells = false;
     public bool IsLinked { get; private set; }
 
     public virtual MapObjectType GetObjectType() { return MapObjectType.Object; }

@@ -469,9 +469,9 @@ namespace ClientCommands
         [ProtoMember(1)]
         public int Tag;
         [ProtoMember(2)]
-        public List<NetItem> Body;
+        public NetItem[] Body;
         [ProtoMember(3)]
-        public List<NetItem> Pack;
+        public NetItem[] Pack;
         [ProtoMember(4)]
         public long Money;
 
@@ -490,7 +490,7 @@ namespace ClientCommands
             unit.ItemsBody.Clear();
             if (Body != null)
             {
-                for (int i = 0; i < Body.Count; i++)
+                for (int i = 0; i < Body.Length; i++)
                     unit.ItemsBody.PutItem(unit.ItemsBody.Count, new Item(Body[i]));
             }
             unit.UpdateItems();
@@ -498,8 +498,8 @@ namespace ClientCommands
             unit.ItemsPack.Clear();
             if (Pack != null)
             {
-                for (int i = 0; i < Pack.Count; i++)
-                    unit.ItemsPack.PutItem(unit.ItemsBody.Count, new Item(Pack[i]));
+                for (int i = 0; i < Pack.Length; i++)
+                    unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item(Pack[i]));
             }
 
             unit.ItemsPack.Money = Money;

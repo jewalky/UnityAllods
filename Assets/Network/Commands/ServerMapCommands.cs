@@ -283,6 +283,8 @@ namespace ServerCommands
         public int TagTo;
         [ProtoMember(3)]
         public int SpellID;
+        [ProtoMember(4)]
+        public int ItemID;
 
         public bool Process(ServerClient client)
         {
@@ -300,7 +302,7 @@ namespace ServerCommands
 
             MapUnit unitTo = MapLogic.Instance.GetUnitByTag(TagTo);
 
-            Spell cspell = unitFrom.GetSpell((Spell.Spells)SpellID);
+            Spell cspell = unitFrom.GetSpell((Spell.Spells)SpellID, (ushort)ItemID);
             if (cspell == null)
                 return true; // spell not found
 
@@ -321,6 +323,8 @@ namespace ServerCommands
         public int TargetX;
         [ProtoMember(4)]
         public int TargetY;
+        [ProtoMember(5)]
+        public int ItemID;
 
         public bool Process(ServerClient client)
         {
@@ -336,7 +340,7 @@ namespace ServerCommands
             if (unitFrom.Player != player)
                 return true;
 
-            Spell cspell = unitFrom.GetSpell((Spell.Spells)SpellID);
+            Spell cspell = unitFrom.GetSpell((Spell.Spells)SpellID, (ushort)ItemID);
             if (cspell == null)
                 return true; // spell not found
 

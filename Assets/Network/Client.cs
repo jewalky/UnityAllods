@@ -115,9 +115,8 @@ public class Client
         }
     }
 
-    public static void SendCastToUnit(MapUnit unit, Spell.Spells spell, MapUnit target, int x, int y)
+    public static void SendCastToUnit(MapUnit unit, Spell cspell, MapUnit target, int x, int y)
     {
-        Spell cspell = unit.GetSpell(spell);
         if (cspell == null)
             return;
 
@@ -126,13 +125,13 @@ public class Client
             if (x <= unit.X+unit.Width && y <= unit.Y+unit.Height &&
                 x >= unit.X && y >= unit.Y)
             {
-                SendCastToArea(unit, spell, x, y);
+                SendCastToArea(unit, cspell, x, y);
                 return;
             }
 
             // x,y does not match unit coordinates. take unit as priority?
             Vector2i unitCoords = target.Interaction.GetClosestPointTo(unit);
-            SendCastToArea(unit, spell, unitCoords.x, unitCoords.y);
+            SendCastToArea(unit, cspell, unitCoords.x, unitCoords.y);
             return;
         }
 
@@ -140,8 +139,9 @@ public class Client
         {
             ServerCommands.CastToUnit cunitCmd;
             cunitCmd.TagFrom = unit.Tag;
-            cunitCmd.SpellID = (int)spell;
+            cunitCmd.SpellID = (int)cspell.SpellID;
             cunitCmd.TagTo = target.Tag;
+            cunitCmd.ItemID = cspell.Item != null ? cspell.Item.Class.ItemID : 0;
             ClientManager.SendCommand(cunitCmd);
         }
         else
@@ -153,9 +153,8 @@ public class Client
         }
     }
 
-    public static void SendCastToArea(MapUnit unit, Spell.Spells spell, int x, int y)
+    public static void SendCastToArea(MapUnit unit, Spell cspell, int x, int y)
     {
-        Spell cspell = unit.GetSpell(spell);
         if (cspell == null)
             return;
 
@@ -163,9 +162,10 @@ public class Client
         {
             ServerCommands.CastToArea careaCmd;
             careaCmd.TagFrom = unit.Tag;
-            careaCmd.SpellID = (int)spell;
+            careaCmd.SpellID = (int)cspell.SpellID;
             careaCmd.TargetX = x;
             careaCmd.TargetY = y;
+            careaCmd.ItemID = cspell.Item != null ? cspell.Item.Class.ItemID : 0;
             ClientManager.SendCommand(careaCmd);
         }
         else

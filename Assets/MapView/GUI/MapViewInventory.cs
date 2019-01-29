@@ -133,6 +133,16 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
             {
                 if (ArrowClicked != 0)
                 {
+                    if (ArrowClicked == 1) // left arrow
+                    {
+                        if (View.Scroll > 0)
+                            View.Scroll--;
+                    }
+                    else if (ArrowClicked == 2) // right arrow
+                    {
+                        if (View.Scroll < View.Pack.Count - View.InvWidth)
+                            View.Scroll++;
+                    }
                     ArrowClicked = 0;
                     UpdateMaterials();
                 }

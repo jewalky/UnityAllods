@@ -324,11 +324,14 @@ public class CastState : IUnitState
 
             //
             //Debug.LogFormat("ATTACKING");
-            if (Unit.Stats.Mana >= Spell.Template.ManaCost)
+            if ((Spell.Item != null || Unit.Stats.Mana >= Spell.Template.ManaCost) &&
+                (!Spell.ItemDisposable || Unit.ItemsPack.Contains(Spell.Item)))
             {
                 Unit.AddActions(new AttackAction(Unit, TargetUnit, Spell, TargetX, TargetY));
-                if (Unit.Stats.TrySetMana(Unit.Stats.Mana - Spell.Template.ManaCost) && NetworkManager.IsServer)
+                if (Spell.Item == null && Unit.Stats.TrySetMana(Unit.Stats.Mana - Spell.Template.ManaCost) && NetworkManager.IsServer)
                     Server.NotifyUnitStatsShort(Unit);
+                else if (Spell.Item != null && Spell.ItemDisposable && Unit.ItemsPack.TakeItem(Spell.Item, 1) != null)
+                    Server.NotifyUnitPack(Unit);
                 Unit.DoUpdateView = true;
                 Unit.DoUpdateInfo = true;
             }

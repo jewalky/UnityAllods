@@ -442,9 +442,23 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         Client.SendItemMove(from, to, fromIndex, toIndex, item.Count, LogicHuman, MapView.Instance.MouseCellX, MapView.Instance.MouseCellY);
     }
 
+    private bool CheckScroll(Item item)
+    {
+        // check if this item is a scroll. scrolls have special handling on the client, everything else is in IsItemUsable/PutItemToBody
+        if ((item.Class.ItemID & 0xFFC0) == 0x0E00)
+        {
+            MapView.Instance.OneTimeCast = item.GetScrollEffect(LogicHuman);
+            return true;
+        }
+
+        return false;
+    }
+
     public override bool ProcessDrop(Item item, float mousex, float mousey)
     {
         if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
+            return false;
+        if (CheckScroll(item))
             return false;
         if (!LogicHuman.IsItemUsable(item))
             return false;
@@ -473,6 +487,8 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
     public bool ProcessAutoDrop(Item item)
     {
         if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
+            return false;
+        if (CheckScroll(item))
             return false;
         if (!LogicHuman.IsItemUsable(item))
             return false;

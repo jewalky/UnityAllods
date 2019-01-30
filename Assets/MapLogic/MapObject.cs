@@ -40,6 +40,7 @@ public enum DamageFlags
     Pike = 0x0200,
     Shooting = 0x0400,
     Raw = 0x0800,
+    AllowExp = 0x1000,
 
     PhysicalDamage = Blade|Axe|Bludgeon|Pike|Shooting|Raw,
     MagicDamage = Fire|Air|Water|Earth|Astral

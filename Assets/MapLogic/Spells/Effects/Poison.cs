@@ -52,7 +52,10 @@ namespace SpellEffects
             Unit.Flags |= UnitFlags.Poisoned;
             if (MapLogic.Instance.LevelTime % 40 == 0)
             {
-                Unit.TakeDamage(Spells.SpellProc.SphereToDamageFlags(ParentProc.Spell), ParentProc.Spell.User, Damage);
+                DamageFlags spdf = Spells.SpellProc.SphereToDamageFlags(ParentProc.Spell);
+                if (ParentProc.Spell.Item == null)
+                    spdf |= DamageFlags.AllowExp;
+                Unit.TakeDamage(spdf, ParentProc.Spell.User, Damage);
             }
             // This is the various effects unit can have
             return true;

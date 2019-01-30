@@ -63,6 +63,8 @@ namespace Spells
                                                                                             //Debug.LogFormat("spell projectile hit!");
                                                                                             // done, make damage
                                                                                             DamageFlags spdf = SphereToDamageFlags(Spell);
+                                                                                            if (Spell.Item == null)
+                                                                                                spdf |= DamageFlags.AllowExp;
 
                                                                                             // spawn explosion. serverside, since projectile hit callback is serverside as well.
                                                                                             Server.SpawnProjectileSimple(AllodsProjectile.Explosion, null, fproj.ProjectileX, fproj.ProjectileY, fproj.ProjectileZ);
@@ -145,6 +147,8 @@ namespace Spells
                     Server.SpawnProjectileEOT(AllodsProjectile.FireWall, Spell.User, TargetX+rx+0.5f, TargetY+ry+0.5f, 0, (int)(20 * Spell.GetDuration()), 10, 4, 4, 16, proj =>
                     {
                         DamageFlags spdf = SphereToDamageFlags(Spell);
+                        if (Spell.Item == null)
+                            spdf |= DamageFlags.AllowExp;
                         // get projectile cells
                         int axFrom = Mathf.Max(0, Mathf.FloorToInt(proj.ProjectileX));
                         int axTo = Mathf.Min(MapLogic.Instance.Width-1, Mathf.CeilToInt(proj.ProjectileX));

@@ -47,6 +47,8 @@ namespace Spells
                                             (MapProjectile fproj) =>
                                             {
                                                 DamageFlags spdf = SphereToDamageFlags(Spell);
+                                                if (Spell.Item == null)
+                                                    spdf |= DamageFlags.AllowExp;
                                                 target.TakeDamage(spdf, Spell.User, damage);
                                             });
         }

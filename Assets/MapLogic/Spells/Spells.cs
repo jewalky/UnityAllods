@@ -148,6 +148,8 @@ namespace Spells
                                                 //Debug.LogFormat("spell projectile hit!");
                                                 // done, make damage
                                                 DamageFlags spdf = SphereToDamageFlags(Spell);
+                                                if (Spell.Item == null)
+                                                    spdf |= DamageFlags.AllowExp;
 
                                                 TargetUnit.TakeDamage(spdf, Spell.User, damage);
 

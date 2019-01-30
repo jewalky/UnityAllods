@@ -141,7 +141,7 @@ namespace Spells
                                 continue;
                             IVulnerable vul = (IVulnerable)mo;
                             int dmg = Spell.GetDamage();
-                            vul.TakeDamage(DamageFlags.Water, Spell.User, dmg);
+                            vul.TakeDamage(DamageFlags.Water|(Spell.Item==null?DamageFlags.AllowExp:0), Spell.User, dmg);
                         }
                     });
                 }

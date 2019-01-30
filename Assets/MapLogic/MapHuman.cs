@@ -379,6 +379,41 @@ public class MapHuman : MapUnit
         Stats.DamageMin += Stats.DamageBonus;
         Stats.DamageMax += Stats.DamageMin; // allods use damagemax this way
 
+        // multiply damage and attack by skill
+        float fighterSkill = 0;
+        if ((Gender & GenderFlags.Fighter) != 0)
+        {
+            Item weapon = GetItemFromBody(BodySlot.Weapon);
+            if (weapon != null && weapon.Class != null && weapon.Class.Option != null)
+            {
+                ExperienceSkill fsk;
+                switch (weapon.Class.Option.AttackType)
+                {
+                    default:
+                    case 1:
+                        fsk = ExperienceSkill.Blade;
+                        break;
+                    case 2:
+                        fsk = ExperienceSkill.Axe;
+                        break;
+                    case 3:
+                        fsk = ExperienceSkill.Bludgeon;
+                        break;
+                    case 4:
+                        fsk = ExperienceSkill.Pike;
+                        break;
+                    case 5:
+                        fsk = ExperienceSkill.Shooting;
+                        break;
+                }
+                fighterSkill = GetSkill(fsk);
+            }
+        }
+
+        Stats.DamageMin += (short)(Stats.DamageMin * fighterSkill / 10 * Stats.Body / 100f);
+        Stats.DamageMax += (short)(Stats.DamageMax * fighterSkill / 10 * Stats.Body / 100f);
+        Stats.ToHit += (short)(Stats.ToHit * fighterSkill * Stats.Body / 100f);
+
         if (CoreStats.HealthMax > 0)
             Stats.Health = (int)(origHealth * Stats.HealthMax);
         if (CoreStats.ManaMax > 0)
@@ -514,6 +549,28 @@ public class MapHuman : MapUnit
     {
         int exp = GetSkillExperience(sk);
         return GetSkillFromExperience(exp);
+    }
+
+    public override DamageFlags GetDamageType()
+    {
+        Item weapon = GetItemFromBody(BodySlot.Weapon);
+        if (weapon == null || weapon.Class == null || weapon.Class.Option == null)
+            return DamageFlags.Raw | DamageFlags.AllowExp;
+        switch (weapon.Class.Option.AttackType)
+        {
+            case 1:
+                return DamageFlags.Blade | DamageFlags.AllowExp;
+            case 3:
+                return DamageFlags.Bludgeon | DamageFlags.AllowExp;
+            case 4:
+                return DamageFlags.Pike | DamageFlags.AllowExp;
+            case 2:
+                return DamageFlags.Axe | DamageFlags.AllowExp;
+            case 5:
+                return DamageFlags.Shooting | DamageFlags.AllowExp;
+            default:
+                return DamageFlags.Raw;
+        }
     }
 }
  

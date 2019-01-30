@@ -728,7 +728,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 if ((flags & DamageFlags.Astral) == 0)
                     DamageLastVisible = true;
                 // give experience to damager. does not work like in ROM2
-                if (Template != null && source != null && source is MapHuman)
+                if ((flags & DamageFlags.AllowExp) != 0 && Template != null && source != null && source is MapHuman)
                 {
                     int expFactor = (int)((float)damagecount / Stats.HealthMax * Template.Experience * (1f+source.Stats.Mind/100f));
                     if (Stats.Health <= 0)
@@ -853,5 +853,10 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 i--;
             }
         }
+    }
+
+    public virtual DamageFlags GetDamageType()
+    {
+        return DamageFlags.Raw;
     }
 }

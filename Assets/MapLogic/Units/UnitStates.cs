@@ -179,7 +179,9 @@ public class AttackState : IUnitState
             //
             //Debug.LogFormat("ATTACKING");
             int damage = Random.Range(Unit.Stats.DamageMin, Unit.Stats.DamageMax);
-            Unit.AddActions(new AttackAction(Unit, TargetUnit, DamageFlags.Raw, damage));
+            DamageFlags df = Unit.GetDamageType();
+            // we need to compare Option to set damage flags properly here
+            Unit.AddActions(new AttackAction(Unit, TargetUnit, df, damage));
         }
         else
         {

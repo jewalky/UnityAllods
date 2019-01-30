@@ -313,8 +313,37 @@ public class MapHuman : MapUnit
 
         float origHealth = (float)Stats.Health / Stats.HealthMax;
         float origMana = (float)Stats.Mana / Stats.ManaMax;
-        CoreStats.Health = Stats.Health;
-        CoreStats.Mana = Stats.Mana;
+
+        // speed and scanrange
+        CoreStats.RotationSpeed = (byte)Template.RotationSpeed;
+        if (CoreStats.RotationSpeed < 1)
+            CoreStats.RotationSpeed = 1;
+        CoreStats.Speed = (byte)Template.Speed;
+        if (CoreStats.Speed < 1)
+            CoreStats.Speed = 1;
+        CoreStats.ScanRange = Template.ScanRange;
+
+        //
+        CoreStats.HealthRegeneration = 100;
+        CoreStats.ManaRegeneration = 100;
+
+        // skills
+        if ((Gender & GenderFlags.Fighter) != 0)
+        {
+            CoreStats.SkillBlade = (byte)GetSkill(ExperienceSkill.Blade);
+            CoreStats.SkillAxe = (byte)GetSkill(ExperienceSkill.Axe);
+            CoreStats.SkillBludgeon = (byte)GetSkill(ExperienceSkill.Bludgeon);
+            CoreStats.SkillPike = (byte)GetSkill(ExperienceSkill.Pike);
+            CoreStats.SkillShooting = (byte)GetSkill(ExperienceSkill.Shooting);
+        }
+        else if ((Gender & GenderFlags.Mage) != 0)
+        {
+            CoreStats.SkillFire = (byte)GetSkill(ExperienceSkill.Fire);
+            CoreStats.SkillWater = (byte)GetSkill(ExperienceSkill.Water);
+            CoreStats.SkillAir = (byte)GetSkill(ExperienceSkill.Air);
+            CoreStats.SkillEarth = (byte)GetSkill(ExperienceSkill.Earth);
+            CoreStats.SkillAstral = (byte)GetSkill(ExperienceSkill.Astral);
+        }
 
         // 
         // add stats from items
@@ -322,64 +351,41 @@ public class MapHuman : MapUnit
         foreach (Item bodyitem in ItemsBody)
             ItemStats.MergeEffects(bodyitem.Effects);
 
-        UnitStats baseStats = new UnitStats(CoreStats);
-        if ((Gender & GenderFlags.Fighter) != 0)
-        {
-            baseStats.SkillBlade = (byte)GetSkill(ExperienceSkill.Blade);
-            baseStats.SkillAxe = (byte)GetSkill(ExperienceSkill.Axe);
-            baseStats.SkillBludgeon = (byte)GetSkill(ExperienceSkill.Bludgeon);
-            baseStats.SkillPike = (byte)GetSkill(ExperienceSkill.Pike);
-            baseStats.SkillShooting = (byte)GetSkill(ExperienceSkill.Shooting);
-        }
-        else if ((Gender & GenderFlags.Mage) != 0)
-        {
-            baseStats.SkillFire = (byte)GetSkill(ExperienceSkill.Fire);
-            baseStats.SkillWater = (byte)GetSkill(ExperienceSkill.Water);
-            baseStats.SkillAir = (byte)GetSkill(ExperienceSkill.Air);
-            baseStats.SkillEarth = (byte)GetSkill(ExperienceSkill.Earth);
-            baseStats.SkillAstral = (byte)GetSkill(ExperienceSkill.Astral);
-        }
+        Stats.Body = (short)(CoreStats.Body + ItemStats.Body);
+        Stats.Reaction = (short)(CoreStats.Reaction + ItemStats.Reaction);
+        Stats.Mind = (short)(CoreStats.Mind + ItemStats.Mind);
+        Stats.Spirit = (short)(CoreStats.Spirit + ItemStats.Spirit);
 
-        Stats = new UnitStats(CoreStats);
-        Stats.MergeStats(ItemStats);
-        Stats.DamageMin += Stats.DamageBonus;
-        Stats.DamageMax += Stats.DamageMin; // allods use damagemax this way
+        if (Stats.Reaction < 10)
+            Stats.Speed = (byte)Stats.Reaction;
+        else Stats.Speed = (byte)Math.Min((float)Stats.Reaction / 5 + 12, 255f);
+        if (Class.ID == 19 || Class.ID == 21)
+            Stats.Speed += 10;
+        Stats.RotationSpeed = Stats.Speed;
 
-        // calculate core speed - based on stats
-        if (Stats.Reaction < 12)
-            baseStats.Speed = (byte)Stats.Reaction;
-        else baseStats.Speed = (byte)Math.Min(Stats.Reaction / 5 + 12, 255);
-        if (Class.ID == 19 || Class.ID == 21) // horseman
-            baseStats.Speed += 10;
-        baseStats.RotationSpeed = Stats.Speed;
+        Stats.Speed += ItemStats.Speed;
+        Stats.RotationSpeed += ItemStats.RotationSpeed;
 
-        baseStats.HealthRegeneration = 100;
-        baseStats.ManaRegeneration = 100;
-
-        // CoreStats = only BRMS used
+        //
         float experience_total = GetExperience();
         float fighter_mult = (Gender & GenderFlags.Fighter) != 0 ? 2 : 1;
         float mage_mult = (Gender & GenderFlags.Mage) != 0 ? 2 : 1;
 
-        baseStats.HealthMax = (int)(Stats.Body * fighter_mult);
-        baseStats.HealthMax += (int)(Log11(experience_total / 5000f + fighter_mult));
-        baseStats.HealthMax = (int)((Pow11(Stats.Body) / 100f + 1f) * baseStats.HealthMax);
+        CoreStats.HealthMax = (int)(Stats.Body * fighter_mult);
+        CoreStats.HealthMax += (int)(Log11(experience_total / 5000f + fighter_mult));
+        CoreStats.HealthMax = (int)((Pow11(Stats.Body) / 100f + 1f) * CoreStats.HealthMax);
 
         if ((Gender & GenderFlags.Mage) != 0)
         {
-            baseStats.ManaMax = (int)(Stats.Spirit * mage_mult);
-            baseStats.ManaMax += (int)(Log11(experience_total / 5000f + mage_mult));
-            baseStats.ManaMax = (int)((Pow11(Stats.Spirit) / 100f + 1f) * baseStats.ManaMax);
+            CoreStats.ManaMax = (int)(Stats.Spirit * mage_mult);
+            CoreStats.ManaMax += (int)(Log11(experience_total / 5000f + mage_mult));
+            CoreStats.ManaMax = (int)((Pow11(Stats.Spirit) / 100f + 1f) * CoreStats.ManaMax);
         }
-        else baseStats.ManaMax = -1;
+        else CoreStats.ManaMax = -1;
 
-        // merge again
-        Stats = new UnitStats(baseStats);
-        Stats.MergeStats(ItemStats);
-        Stats.DamageMin += Stats.DamageBonus;
-        Stats.DamageMax += Stats.DamageMin; // allods use damagemax this way
+        Stats.HealthMax = CoreStats.HealthMax + ItemStats.HealthMax;
+        Stats.ManaMax = CoreStats.ManaMax + ItemStats.ManaMax;
 
-        // multiply damage and attack by skill
         float fighterSkill = 0;
         if ((Gender & GenderFlags.Fighter) != 0)
         {
@@ -410,17 +416,42 @@ public class MapHuman : MapUnit
             }
         }
 
-        Stats.DamageMin += (short)(Stats.DamageMin * fighterSkill / 10 * Stats.Body / 100f);
-        Stats.DamageMax += (short)(Stats.DamageMax * fighterSkill / 10 * Stats.Body / 100f);
-        Stats.ToHit += (short)(Stats.ToHit * fighterSkill * Stats.Body / 100f);
+        Stats.DamageMax = (short)(Stats.Body / 10);
+        Stats.DamageMin = (short)(Stats.DamageMax / 2);
+        Stats.ToHit = (short)Math.Pow(1f + (Stats.Reaction / 100f) + (fighterSkill / 100f), 9);
 
-        if (CoreStats.HealthMax > 0)
-            Stats.Health = (int)(origHealth * Stats.HealthMax);
-        if (CoreStats.ManaMax > 0)
-            Stats.Mana = (int)(origMana * Stats.ManaMax);
+        Stats.DamageMin += ItemStats.DamageMin;
+        Stats.DamageMax += (short)(ItemStats.DamageMax + Stats.DamageMin);
+        Stats.ToHit += ItemStats.ToHit;
+
+        Stats.DamageMin = (short)(Stats.DamageMin * (1f + fighterSkill / 20 * Stats.Body / 100f));
+        Stats.DamageMax = (short)(Stats.DamageMax * (1f + fighterSkill / 20 * Stats.Body / 100f));
+
+        Stats.DamageMin += ItemStats.DamageBonus;
+        Stats.DamageMax += ItemStats.DamageBonus;
+
+        Stats.Defence = (short)((float)ItemStats.Defence * (Stats.Reaction / 15));
+        Stats.Absorbtion = ItemStats.Absorbtion;
+
+        int minProt = Stats.Spirit / 2;
+        int maxProt = Math.Min(100, (70 + Stats.Spirit / 2));
+        Stats.ProtectionFire = ItemStats.ProtectionFire;
+        Stats.ProtectionWater = ItemStats.ProtectionWater;
+        Stats.ProtectionAir = ItemStats.ProtectionAir;
+        Stats.ProtectionEarth = ItemStats.ProtectionEarth;
+        Stats.ProtectionAstral = ItemStats.ProtectionAstral;
+
+        Stats.ScanRange = 4f + (float)Math.Pow(1f + Stats.Reaction / 100f, Stats.Mind / 10f);
+        Stats.ScanRange += ItemStats.ScanRange;
 
         for (int i = 0; i < SpellEffects.Count; i++)
             SpellEffects[i].ProcessStats(Stats);
+
+        Stats.ProtectionFire = (byte)Math.Min(maxProt, Math.Max(minProt, Stats.ProtectionFire));
+        Stats.ProtectionWater = (byte)Math.Min(maxProt, Math.Max(minProt, Stats.ProtectionWater));
+        Stats.ProtectionAir = (byte)Math.Min(maxProt, Math.Max(minProt, Stats.ProtectionAir));
+        Stats.ProtectionEarth = (byte)Math.Min(maxProt, Math.Max(minProt, Stats.ProtectionEarth));
+        Stats.ProtectionAstral = (byte)Math.Min(maxProt, Math.Max(minProt, Stats.ProtectionAstral));
 
         //Debug.LogFormat("ItemStats = {0}", ItemStats.ToString());
 

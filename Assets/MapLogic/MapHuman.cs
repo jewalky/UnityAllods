@@ -106,6 +106,10 @@ public class MapHuman : MapUnit
             Gender |= GenderFlags.Mage;
         else Gender |= GenderFlags.Fighter; // otherwise its a fighter.
 
+        //
+        CoreStats.HealthRegeneration = 100;
+        CoreStats.ManaRegeneration = 100;
+
         // initial items
         for (int i = 0; i < Template.EquipItems.Length; i++)
         {
@@ -349,8 +353,11 @@ public class MapHuman : MapUnit
             baseStats.Speed += 10;
         baseStats.RotationSpeed = Stats.Speed;
 
+        baseStats.HealthRegeneration = 100;
+        baseStats.ManaRegeneration = 100;
+
         // CoreStats = only BRMS used
-        float experience_total = 7320;
+        float experience_total = GetExperience();
         float fighter_mult = (Gender & GenderFlags.Fighter) != 0 ? 2 : 1;
         float mage_mult = (Gender & GenderFlags.Mage) != 0 ? 2 : 1;
 
@@ -450,7 +457,25 @@ public class MapHuman : MapUnit
     {
         if ((Gender & GenderFlags.Mage | GenderFlags.Fighter) == 0)
             return 0;
-        return (Experience[(int)sk] = value);
+        int oldexp = Experience[(int)sk];
+        int newexp = (Experience[(int)sk] = value);
+        UpdateItems();
+        if (oldexp < newexp)
+        {
+            int oldskill = GetSkillFromExperience(oldexp);
+            int newskill = GetSkillFromExperience(newexp);
+            if (NetworkManager.IsServer)
+                Server.NotifyHumanLevelUp(this, sk, newexp);
+            if (oldskill < newskill && 
+                Player == MapLogic.Instance.ConsolePlayer)
+            {
+                int skillIndex = (int)sk;
+                if ((Gender & GenderFlags.Mage) != 0)
+                    skillIndex += 5;
+                MapViewChat.Instance.AddChatMessage(Player.AllColorsSystem, Locale.Main[130+skillIndex]);
+            }
+        }
+        return newexp;
     }
 
     public int GetSkillExperience(ExperienceSkill sk)
@@ -467,10 +492,8 @@ public class MapHuman : MapUnit
     }
 
     private static int[] ReverseExpTable;
-    public int GetSkill(ExperienceSkill sk)
+    private int GetSkillFromExperience(int exp)
     {
-        int exp = GetSkillExperience(sk);
-
         if (ReverseExpTable == null)
         {
             ReverseExpTable = new int[256];
@@ -485,6 +508,12 @@ public class MapHuman : MapUnit
         }
 
         return 0;
+    }
+
+    public int GetSkill(ExperienceSkill sk)
+    {
+        int exp = GetSkillExperience(sk);
+        return GetSkillFromExperience(exp);
     }
 }
  

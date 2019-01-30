@@ -740,4 +740,23 @@ public class Server
             }
         }
     }
+
+    public static void NotifyHumanLevelUp(MapHuman human, MapHuman.ExperienceSkill sk, int newexp)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            Player p = MapLogic.Instance.GetNetPlayer(client);
+            if (human.IsVisibleForNetPlayer(p))
+            {
+                ClientCommands.HumanLevelUp lvlCmd;
+                lvlCmd.Tag = human.Tag;
+                lvlCmd.ExpAfter = newexp;
+                lvlCmd.Skill = sk;
+                client.SendCommand(lvlCmd);
+            }
+        }
+    }
 }

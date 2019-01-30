@@ -414,14 +414,14 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 {
                     if (Stats.Mana < Stats.ManaMax)
                     {
-                        if (Stats.TrySetMana((int)(Stats.Mana + (float)Stats.ManaMax / 100 * (float)Stats.ManaRegeneration / 100)) &&
+                        if (Stats.TrySetMana((int)(Stats.Mana + Mathf.Max(1, (float)Stats.ManaMax / 20 * Stats.ManaRegeneration / 100))) &&
                             NetworkManager.IsServer) Server.NotifyUnitStatsShort(this);
                         DoUpdateView = true;
                         DoUpdateInfo = true;
                     }
                     if (Stats.Health < Stats.HealthMax)
                     {
-                        if (Stats.TrySetHealth((int)(Stats.Health + (float)Stats.HealthMax / 100 * Stats.HealthRegeneration / 100)) &&
+                        if (Stats.TrySetHealth((int)(Stats.Health + Mathf.Max(1, (float)Stats.HealthMax / 20 * Stats.HealthRegeneration / 100))) &&
                             NetworkManager.IsServer) Server.NotifyUnitStatsShort(this);
                         DoUpdateView = true;
                         DoUpdateInfo = true;
@@ -727,6 +727,34 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 DamageLast += damagecount;
                 if ((flags & DamageFlags.Astral) == 0)
                     DamageLastVisible = true;
+                // give experience to damager. does not work like in ROM2
+                if (Template != null && source != null && source is MapHuman)
+                {
+                    int expFactor = (int)((float)damagecount / Stats.HealthMax * Template.Experience * (1f+source.Stats.Mind/100f));
+                    if (Stats.Health <= 0)
+                        expFactor *= 2;
+                    MapHuman srcHuman = (MapHuman)source;
+                    if ((flags & DamageFlags.Fire) != 0)
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Fire, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Fire) + expFactor);
+                    if ((flags & DamageFlags.Water) != 0)
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Water, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Water) + expFactor);
+                    if ((flags & DamageFlags.Air) != 0)
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Air, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Air) + expFactor);
+                    if ((flags & DamageFlags.Earth) != 0)
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Earth, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Earth) + expFactor);
+                    if ((flags & DamageFlags.Astral) != 0)
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Astral, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Astral) + expFactor);
+                    if ((flags & DamageFlags.Blade) != 0)
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Blade, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Blade) + expFactor);
+                    if ((flags & DamageFlags.Axe) != 0)
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Axe, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Axe) + expFactor);
+                    if ((flags & DamageFlags.Bludgeon) != 0)
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Bludgeon, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Bludgeon) + expFactor);
+                    if ((flags & DamageFlags.Pike) != 0)
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Pike, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Pike) + expFactor);
+                    if ((flags & DamageFlags.Shooting) != 0)
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Shooting, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Shooting) + expFactor);
+                }
             }
             return damagecount;
         }

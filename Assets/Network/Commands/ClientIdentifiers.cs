@@ -30,6 +30,8 @@ public enum ClientIdentifiers
     UnitFlags,
     UnitPosition,
 
+    HumanLevelUp,
+
     UnitItemPickup,
     SackAt,
     NoSackAt,

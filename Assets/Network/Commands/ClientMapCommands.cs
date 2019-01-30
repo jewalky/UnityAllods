@@ -1074,4 +1074,34 @@ namespace ClientCommands
             return true;
         }
     }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.HumanLevelUp)]
+    public struct HumanLevelUp : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public MapHuman.ExperienceSkill Skill;
+        [ProtoMember(3)]
+        public int ExpAfter;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null || !(unit is MapHuman))
+            {
+                Debug.LogFormat("Attempted to set experience for nonexistent human {0}", Tag);
+                return true;
+            }
+
+            MapHuman human = (MapHuman)unit;
+            human.SetSkillExperience(Skill, ExpAfter);
+
+            return true;
+        }
+    }
 }

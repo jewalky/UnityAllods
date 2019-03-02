@@ -56,7 +56,7 @@ namespace Spells
             if (TargetUnit == null)
                 return false;
 
-            SpellEffects.Effect eff = new SpellEffects.Haste((int)(20 * Spell.GetDuration()), Spell.GetSpeed());
+            SpellEffects.Effect eff = new SpellEffects.Haste((int)(MapLogic.TICRATE * Spell.GetDuration()), Spell.GetSpeed());
             TargetUnit.AddSpellEffects(eff);
             return false;
         }
@@ -72,7 +72,7 @@ namespace Spells
             if (TargetUnit == null)
                 return false;
 
-            SpellEffects.Effect eff = new SpellEffects.Shield((int)(20 * Spell.GetDuration()), Spell.GetAbsorbtion());
+            SpellEffects.Effect eff = new SpellEffects.Shield((int)(MapLogic.TICRATE * Spell.GetDuration()), Spell.GetAbsorbtion());
             TargetUnit.AddSpellEffects(eff);
             return false;
         }

@@ -278,6 +278,7 @@ class MapLogic
         }
     }
 
+    public static int TICRATE = 25; // this is the amount of ticks in a second with speed=4
     private int _Speed = 1;
     public int Speed
     {

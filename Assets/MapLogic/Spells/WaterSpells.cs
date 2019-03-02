@@ -66,7 +66,7 @@ namespace Spells
                     if (spawnblocked)
                         continue;
 
-                    Server.SpawnProjectileEOT(AllodsProjectile.PoisonCloud, Spell.User, x + 0.5f, y + 0.5f, 0, (int)(20 * Spell.GetDuration()), 40, 0, 0, 16, proj =>
+                    Server.SpawnProjectileEOT(AllodsProjectile.PoisonCloud, Spell.User, x + 0.5f, y + 0.5f, 0, (int)(MapLogic.TICRATE * Spell.GetDuration()), 40, 0, 0, 16, proj =>
                     {
                         DamageFlags spdf = SphereToDamageFlags(Spell);
                         // get projectile cells
@@ -92,7 +92,7 @@ namespace Spells
                                     if (dmg <= 0)
                                         continue; // don't add null effects
 
-                                    SpellEffects.Effect eff = new SpellEffects.Poison(this, dmg, 40 * 8); // originally 8 seconds
+                                    SpellEffects.Effect eff = new SpellEffects.Poison(this, dmg, MapLogic.TICRATE * 8); // originally 8 seconds
                                     mov.AddSpellEffects(eff);
                                 }
                             }
@@ -150,7 +150,7 @@ namespace Spells
             TicsSinceLastDrop++;
             TicsTotal++;
 
-            return (TicsTotal < 20*Spell.GetDuration());
+            return (TicsTotal < MapLogic.TICRATE * Spell.GetDuration());
         }
     }
 }

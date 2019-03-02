@@ -50,7 +50,7 @@ namespace SpellEffects
                 return false;
 
             Unit.Flags |= UnitFlags.Poisoned;
-            if (MapLogic.Instance.LevelTime % 40 == 0)
+            if (MapLogic.Instance.LevelTime % MapLogic.TICRATE == 0)
             {
                 DamageFlags spdf = Spells.SpellProc.SphereToDamageFlags(ParentProc.Spell);
                 if (ParentProc.Spell.Item == null)

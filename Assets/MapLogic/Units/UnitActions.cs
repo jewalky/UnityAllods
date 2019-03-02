@@ -25,7 +25,7 @@ public class IdleAction : IUnitAction
 
         if (Unit.Actions.Count > actionsBefore) // new actions were added
         {
-            while (!Unit.Actions.Last().Process())
+            while (Unit.Actions.Count > 1 && !Unit.Actions.Last().Process())
                 Unit.Actions.RemoveAt(Unit.Actions.Count - 1);
             return true;
         }

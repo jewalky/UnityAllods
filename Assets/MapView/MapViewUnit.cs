@@ -423,6 +423,32 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 int attackSize = dCls.AttackPhases;
                 int dyingSize = dCls.DyingPhases;
 
+                if (dCls.Flip != LogicUnit.Class.Flip)
+                {
+                    countFull16 = (!dCls.Flip) ? 16 : 9;
+                    countFull8 = (!dCls.Flip) ? 8 : 5;
+
+                    if (dCls.Flip)
+                    {
+                        if (LogicUnit.Angle < 180)
+                        {
+                            actualAngle16 = LogicUnit.Angle * 8 / 180;
+                            actualAngle8 = LogicUnit.Angle * 4 / 180;
+                        }
+                        else
+                        {
+                            actualAngle16 = (180 - (LogicUnit.Angle - 180)) * 8 / 180;
+                            actualAngle8 = (180 - (LogicUnit.Angle - 180)) * 4 / 180;
+                            doFlip = true;
+                        }
+                    }
+                    else
+                    {
+                        actualAngle16 = LogicUnit.Angle * 16 / 360;
+                        actualAngle8 = LogicUnit.Angle * 8 / 360;
+                    }
+                }
+
                 actualFrame = countFull16 + moveSize * countFull8 + attackSize * countFull8 + dyingSize * actualAngle8;
                 actualFrame += LogicUnit.DeathFrame;
             }

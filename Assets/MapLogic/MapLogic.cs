@@ -438,6 +438,7 @@ class MapLogic
                         human.Stats.HealthMax = almunit.HealthMax;
                     if (almunit.Health >= 0)
                         human.Stats.TrySetHealth(almunit.Health);
+                    human.CalculateVision();
 
                     human.LinkToWorld();
                     Objects.Add(human);
@@ -453,6 +454,7 @@ class MapLogic
                         unit.Stats.HealthMax = almunit.HealthMax;
                     if (almunit.Health >= 0)
                         unit.Stats.TrySetHealth(almunit.Health);
+                    unit.CalculateVision();
 
                     unit.LinkToWorld();
                     Objects.Add(unit);

@@ -111,6 +111,7 @@ public class MainCamera : MonoBehaviour
                     sb.Append(string.Format("\nHoveredObject: {0}", ((MapStructure)ho).Class.DescText));
                 else if (ho.GetObjectType() == MapObjectType.Monster || ho.GetObjectType() == MapObjectType.Human)
                     sb.Append(string.Format("\nHoveredObject: {0}", ((MapUnit)ho).TemplateName));
+                sb.Append(string.Format("\nGroupID: {0}", ho.GroupID));
             }
             else sb.Append("\nHoveredObject: <none>");
 
@@ -121,6 +122,7 @@ public class MainCamera : MonoBehaviour
                     sb.Append(string.Format("\nSelectedObject: {0}", ((MapStructure)so).Class.DescText));
                 else if (so.GetObjectType() == MapObjectType.Monster || so.GetObjectType() == MapObjectType.Human)
                     sb.Append(string.Format("\nSelectedObject: {0}", ((MapUnit)so).TemplateName));
+                sb.Append(string.Format("\nGroupID: {0}", so.GroupID));              
             }
             else sb.Append("\nSelectedObject: <none>");
         }

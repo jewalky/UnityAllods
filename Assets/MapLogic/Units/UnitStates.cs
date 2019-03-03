@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
+using System.Linq;
 using System.Collections.Generic;
+using System;
 
 public class IdleState : IUnitState
 {
@@ -19,6 +21,37 @@ public class IdleState : IUnitState
                         (Unit.Player.Flags & PlayerFlags.Dormant) == 0;
 
         if (!doFullAI) return true;
+
+        // check if unit is idle and has visible enemy
+        if (Unit.Actions.Count == 1)
+        {
+            List<MapUnit> allAliveVisibleUnits = MapLogic.Instance.GetAllAliveMapUnits();
+
+            // check if there is nearby ally in combat
+            List<MapUnit> alliesInCombat = allAliveVisibleUnits.FindAll(unit => Unit.GroupID == unit.GroupID && Unit.Actions.Exists(s => s is AttackAction) && Unit.IsOtherUnitVisible(unit));
+            if (alliesInCombat.Count > 0)
+            {
+                alliesInCombat.Sort(MapObject.DistanceComparison);
+                MapUnit closestAllyTarget = ((AttackAction)alliesInCombat[0].Actions.Find(a => a is AttackAction)).TargetUnit;
+                Unit.States.Add(new AttackState(Unit, closestAllyTarget));
+                return true;
+            }
+
+            List<MapUnit> visibleEnemies = allAliveVisibleUnits.FindAll(unit => Unit.GroupID != unit.GroupID && Unit.IsOtherUnitVisible(unit));
+            // find closest enemy and order the whole group to attack him
+            if (visibleEnemies.Count > 0)
+            {
+                visibleEnemies.Sort(MapObject.DistanceComparison);
+                MapUnit closestEnemy = visibleEnemies[0];
+                allAliveVisibleUnits.FindAll(u => u.GroupID == Unit.GroupID).ForEach(u => u.States.Add(new AttackState(u, closestEnemy)));
+                return true;
+            }
+
+            // head back if we are idle and out of place
+            else if (Unit.X != Unit.SpawnX || Unit.Y != Unit.SpawnY)
+                Unit.States.Add(new MoveState(Unit, Unit.SpawnX, Unit.SpawnY));
+        }
+
         // rotate randomly
         if ((UnityEngine.Random.Range(0, 256) < 1) &&
             Unit.Actions.Count == 1) // unit is idle and 1/256 chance returns true
@@ -162,6 +195,9 @@ public class AttackState : IUnitState
         if (!Unit.Interaction.CheckCanAttack(TargetUnit))
             return false;
 
+        bool doFullAI = (Unit.Player.Flags & PlayerFlags.AI) != 0 &&
+                (Unit.Player.Flags & PlayerFlags.Dormant) == 0;
+
         // assume melee attack right now
         // check if in direct proximity
         if (Unit.Interaction.GetClosestDistanceTo(TargetUnit) <= Unit.Interaction.GetAttackRange() + 0.5f)
@@ -178,17 +214,28 @@ public class AttackState : IUnitState
 
             //
             //Debug.LogFormat("ATTACKING");
-            int damage = Random.Range(Unit.Stats.DamageMin, Unit.Stats.DamageMax);
+            int damage = UnityEngine.Random.Range(Unit.Stats.DamageMin, Unit.Stats.DamageMax);
             DamageFlags df = Unit.GetDamageType();
             // we need to compare Option to set damage flags properly here
             Unit.AddActions(new AttackAction(Unit, TargetUnit, df, damage));
+
+			// attack back
+            if (doFullAI && TargetUnit.States.Count == 1 && !TargetUnit.IsDying)
+                TargetUnit.States.Add(new AttackState(TargetUnit, Unit));
         }
-        else
+        else if (!doFullAI && Unit.IsOtherUnitVisible(TargetUnit))
         {
-            // make one step to the target.
             MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, Unit.Interaction.GetAttackRange());
+            return true;
         }
 
+        // check if target is visible for any of the unit's group
+        UnitGroup group = MapLogic.Instance.Groups.Find(g => Unit.GroupID == g.GroupID);
+        if (group != null && group.Units.Any(unit => unit.IsOtherUnitVisible(TargetUnit)))
+            // make one step to the target.
+            MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, Unit.Interaction.GetAttackRange());
+        else
+            Unit.States.Add(new MoveState(Unit, Unit.SpawnX, Unit.SpawnY));
         return true;
     }
 }

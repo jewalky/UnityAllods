@@ -211,8 +211,10 @@ public class AllodsMap
         [Flags]
         public enum AlmGroupFlags
         {
-            AiInstantRnabled = 1, RandomPositions = 2,
-            QuestKill = 4, QuestIntercept = 8 
+            AiInstantEnabled = 0b0001,
+            RandomPositions = 0b0010,
+            QuestKill = 0b0100,
+            QuestIntercept = 0b1000 
         }
 
         public void LoadFromStream(BinaryReader br)
@@ -628,7 +630,7 @@ public class AllodsMap
         public short Health;
         public short HealthMax;
         public int ID;
-        public int Group;
+        public int GroupID;
 
         public void LoadFromStream(BinaryReader br)
         {
@@ -647,7 +649,7 @@ public class AllodsMap
             Health = br.ReadInt16();
             HealthMax = br.ReadInt16();
             ID = br.ReadInt32() & 0xFFFF;
-            Group = br.ReadInt32();
+            GroupID = br.ReadInt32();
         }
     }
 

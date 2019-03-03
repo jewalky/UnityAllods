@@ -89,6 +89,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         }
     }
 
+    public int SpawnX;
+    public int SpawnY;
     public bool IsAlive = true;
     public bool IsDying = false;
     public List<IUnitAction> Actions = new List<IUnitAction>();
@@ -298,8 +300,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             }
         }
 
-        CalculateVision();
         UpdateItems();
+        CalculateVision();
     }
 
     public override void Dispose()
@@ -858,5 +860,12 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public virtual DamageFlags GetDamageType()
     {
         return DamageFlags.Raw;
+    }
+
+    public bool IsOtherUnitVisible(MapUnit otherUnit)
+    {
+        int dX = Math.Abs(X - otherUnit.X) + 20;
+        int dY = Math.Abs(Y - otherUnit.Y) + 20;
+        return !(dX > 40 || dY > 40) && Vision[dX, dY];
     }
 }

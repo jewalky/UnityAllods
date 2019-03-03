@@ -64,6 +64,7 @@ public class MapObject : IDisposable
     public bool DoUpdateInfo = false;
     public bool DoUpdateSpells = false;
     public bool IsLinked { get; private set; }
+    public int GroupID;
 
     public virtual MapObjectType GetObjectType() { return MapObjectType.Object; }
     protected virtual Type GetGameObjectType() { return typeof(MapViewObject); }
@@ -87,6 +88,8 @@ public class MapObject : IDisposable
         if (visible) NetPlayerVisibility |= mask;
         else NetPlayerVisibility &= ~mask;
     }
+
+    public static Comparison<MapUnit> DistanceComparison = (o1, o2) => Math.Abs(o1.X).CompareTo(Math.Abs(o2.X)).CompareTo(Math.Abs(o1.Y).CompareTo(Math.Abs(o2.Y)));
 
     public MapObject()
     {

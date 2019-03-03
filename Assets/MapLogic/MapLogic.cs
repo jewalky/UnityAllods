@@ -42,6 +42,7 @@ class MapLogic
     {
         Objects = new List<MapObject>();
         Players = new List<Player>();
+        Groups = new List<UnitGroup>();
     }
 
     private AllodsMap MapStructure = null;
@@ -53,6 +54,7 @@ class MapLogic
     public List<MapObject> Objects { get; private set; }
     private int _TopObjectID = 0;
     public List<Player> Players { get; private set; }
+    public List<UnitGroup> Groups { get; private set; }
     public const int MaxPlayers = 64;
     public Player ConsolePlayer { get; set; } // the player that we're directly controlling.
 
@@ -122,11 +124,11 @@ class MapLogic
                         {
                             float lightDistF = (float)lval / 256;
                             int lightDist = Mathf.CeilToInt(lightDistF);
-                            for (int ly = y-lightDist; ly <= y+lightDist; ly++)
+                            for (int ly = y - lightDist; ly <= y + lightDist; ly++)
                             {
                                 if (ly < (int)vRec.yMin || ly >= (int)vRec.yMax)
-                                   continue;
-                                for (int lx = x-lightDist; lx <= x+lightDist; lx++)
+                                    continue;
+                                for (int lx = x - lightDist; lx <= x + lightDist; lx++)
                                 {
                                     if (lx < (int)vRec.xMin || lx >= (int)vRec.xMax)
                                         continue;
@@ -181,7 +183,7 @@ class MapLogic
                 count++;
             }
         }
-        return height/count;
+        return height / count;
     }
 
     public Texture2D CheckLightingTexture()
@@ -322,6 +324,7 @@ class MapLogic
             mo.DisposeNoUnlink();
         Objects.Clear();
         Players.Clear();
+        Groups.Clear();
         ConsolePlayer = null;
         FileName = null;
         MapStructure = null;
@@ -423,43 +426,45 @@ class MapLogic
             }
         }
 
+        if (mapStructure.Groups != null)
+        {
+            foreach (AllodsMap.AlmGroup almgroup in mapStructure.Groups)
+            {
+                UnitGroup group = new UnitGroup(almgroup.GroupID);
+                group.InstanceID = almgroup.InstanceID;
+                group.Flags = (UnitGroup.GroupFlags)almgroup.GroupFlag;
+                group.RepopTime = almgroup.RepopTime;
+                Groups.Add(group);
+            }
+        }
+
         // load units
         if (!NetworkManager.IsClient && mapStructure.Units != null)
         {
             foreach (AllodsMap.AlmUnit almunit in mapStructure.Units)
             {
+                MapUnit mapUnit;
                 if ((almunit.Flags & 0x10) != 0)
                 {
-                    MapHuman human = new MapHuman(almunit.ServerID);
-                    human.X = (int)almunit.X;
-                    human.Y = (int)almunit.Y;
-                    human.Tag = almunit.ID;
-                    human.Player = GetPlayerByID(almunit.Player - 1);
-                    if (almunit.HealthMax >= 0)
-                        human.Stats.HealthMax = almunit.HealthMax;
-                    if (almunit.Health >= 0)
-                        human.Stats.TrySetHealth(almunit.Health);
-                    human.CalculateVision();
-
-                    human.LinkToWorld();
-                    Objects.Add(human);
+                    mapUnit = new MapHuman(almunit.ServerID);
                 }
                 else
                 {
-                    MapUnit unit = new MapUnit(almunit.ServerID);
-                    unit.X = (int)almunit.X;
-                    unit.Y = (int)almunit.Y;
-                    unit.Tag = almunit.ID;
-                    unit.Player = GetPlayerByID(almunit.Player - 1);
-                    if (almunit.HealthMax >= 0)
-                        unit.Stats.HealthMax = almunit.HealthMax;
-                    if (almunit.Health >= 0)
-                        unit.Stats.TrySetHealth(almunit.Health);
-                    unit.CalculateVision();
-
-                    unit.LinkToWorld();
-                    Objects.Add(unit);
+                    mapUnit = new MapUnit(almunit.ServerID);
                 }
+                mapUnit.SpawnX = mapUnit.X = (int)almunit.X;
+                mapUnit.SpawnY = mapUnit.Y = (int)almunit.Y;
+                mapUnit.Tag = almunit.ID;
+                mapUnit.Player = GetPlayerByID(almunit.Player - 1);
+                mapUnit.GroupID = almunit.GroupID;
+                if (almunit.HealthMax >= 0)
+                    mapUnit.Stats.HealthMax = almunit.HealthMax;
+                if (almunit.Health >= 0)
+                    mapUnit.Stats.TrySetHealth(almunit.Health);
+                mapUnit.CalculateVision();
+                mapUnit.LinkToWorld();
+                Objects.Add(mapUnit);
+                AddMapUnitToGroup(mapUnit);
             }
         }
 
@@ -506,6 +511,13 @@ class MapLogic
             Objects.Add(proj);
             */
         }
+    }
+
+    private void AddMapUnitToGroup(MapUnit unit)
+    {
+        UnitGroup group = Groups.Find(g => g.GroupID == unit.GroupID);
+        if (group != null)
+            group.Units.Add(unit);
     }
 
     public int GetFreePlayerID(bool ai)
@@ -694,9 +706,30 @@ class MapLogic
             return null;
         unit.Player = player;
         unit.Tag = GetFreeUnitTag(); // this is also used as network ID.
-        unit.SetPosition(16, 16, false);
+        Vector2Int dropLocation = ResolveDropLocation();
+        unit.SetPosition(dropLocation.x, dropLocation.y, false);
         Objects.Add(unit);
         return unit;
+    }
+
+    private Vector2Int ResolveDropLocation()
+    {
+        // We take the drop location if it's not obstructed
+        Vector2 baseDropLocationf = MapStructure.Logic.GetDropLocation();
+        Vector2Int baseDropLocation = new Vector2Int((int)baseDropLocationf.x, (int)baseDropLocationf.y);
+        if (IsLocationFree(baseDropLocation.x, baseDropLocation.y))
+            return baseDropLocation;
+        // otherwise we check in the vicinity
+        for (int x = baseDropLocation.x - 2; x < baseDropLocation.x + 2; x++)
+            for (int y = baseDropLocation.x - 2; y < baseDropLocation.y + 2; y++)
+                if (IsLocationFree(x, y))
+                    return new Vector2Int(x, y);
+        return new Vector2Int(16, 16);
+    }
+
+    private bool IsLocationFree(int x, int y)
+    {
+        return !Objects.Any(unit => x == unit.X && y == unit.Y);
     }
 
     public int GetFreeUnitTag()
@@ -823,4 +856,7 @@ class MapLogic
 
         return existingsack;
     }
+
+    public List<MapUnit> GetAllAliveMapUnits() => Objects.FindAll(obj => (obj.GetObjectType() == MapObjectType.Monster || obj.GetObjectType() == MapObjectType.Human)
+            && ((MapUnit)obj).IsAlive).Cast<MapUnit>().ToList();
 }

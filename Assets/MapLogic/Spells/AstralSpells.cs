@@ -104,6 +104,15 @@ namespace Spells
                 MapUnit u = (MapUnit)o;
                 if (u.IsAlive || u.IsDying || u.IsFlying)
                     continue;
+                if (u.Class.ID == 69 || // ghost
+                   (u.Class.ID >= 89 && u.Class.ID <= 92) || // skeleton fighter
+                   (u.Class.ID >= 93 && u.Class.ID <= 96) || // skeleton archer
+                   (u.Class.ID >= 97 && u.Class.ID <= 98) || // skeleton mage
+                   (u.Class.ID >= 82 && u.Class.ID <= 85) || // zombie fighter
+                   (u.Class.ID >= 86 && u.Class.ID <= 88)) // zombie archer
+                {
+                    continue; // don't allow resurrecting undead
+                }
                 if (u.BoneFrame > 3)
                     continue;
                 if (TargetX >= u.X && TargetX < u.X+u.Width &&

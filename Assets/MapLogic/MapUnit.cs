@@ -447,7 +447,13 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         {
             if (!IsAlive && Actions.Count == 1)
             {
-                if (BoneFrame < 4)
+                // check if we have bones at all
+                UnitClass dCls = Class;
+                while (dCls.Dying != null && dCls.Dying != dCls)
+                    dCls = dCls.Dying;
+                bool haveBones = dCls.BonePhases >= 3;
+
+                if (haveBones && BoneFrame < 4)
                 {
                     BoneTime++;
                     if (BoneTime > MapLogic.TICRATE * 10)
@@ -460,10 +466,13 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                         DoUpdateView = true;
                     }
                 }
-                else
+                else if (BoneFrame != 4)
                 {
                     BoneFrame = 4;
                     BoneTime = 0;
+                    if (NetworkManager.IsServer)
+                        Server.NotifyUnitBoneFrame(this);
+                    DoUpdateView = true;
                 }
             }
             else

@@ -29,6 +29,7 @@ public enum ClientIdentifiers
     UnitSpells,
     UnitFlags,
     UnitPosition,
+    UnitBoneFrame,
 
     HumanLevelUp,
 

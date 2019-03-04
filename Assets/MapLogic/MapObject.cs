@@ -216,7 +216,7 @@ public class MapObject : IDisposable
 
     }
 
-    public int GetVisibility()
+    public virtual int GetVisibility()
     {
         if (!GetVisibityInCamera())
             return 0;

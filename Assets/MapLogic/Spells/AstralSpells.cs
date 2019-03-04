@@ -77,4 +77,87 @@ namespace Spells
             return false;
         }
     }
+
+    [SpellProcId(Spell.Spells.Control_Spirit)]
+    public class SpellProcControlSpirit : SpellProc
+    {
+        public SpellProcControlSpirit(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (NetworkManager.IsClient)
+                return false;
+
+            if (TargetX < 0 || TargetX >= MapLogic.Instance.Width ||
+                TargetY < 0 || TargetY >= MapLogic.Instance.Height) return false;
+
+            // check if this cell is blocked by something
+            MapNode node = MapLogic.Instance.Nodes[TargetX, TargetY];
+
+            // find any corpse at X/Y
+            // we cannot use regular cells for this... because dead unit is unlinked from world
+            for (int i = 0; i < MapLogic.Instance.Objects.Count; i++)
+            {
+                MapObject o = MapLogic.Instance.Objects[i];
+                if (!(o is MapUnit))
+                    continue;
+                MapUnit u = (MapUnit)o;
+                if (u.IsAlive || u.IsDying || u.IsFlying)
+                    continue;
+                if (u.BoneFrame > 3)
+                    continue;
+                if (TargetX >= u.X && TargetX < u.X+u.Width &&
+                    TargetY >= u.Y && TargetY < u.Y+u.Height)
+                {
+                    float raiseHpMult;
+                    string raiseName;
+
+                    switch (u.BoneFrame)
+                    {
+                        case 0:
+                            raiseHpMult = 1f;
+                            raiseName = "F_Zombie.1";
+                            break;
+                        case 1:
+                            raiseHpMult = 0.5f;
+                            raiseName = "F_Zombie.1";
+                            break;
+                        case 2:
+                            raiseHpMult = 0.5f;
+                            raiseName = "F_Skeleton.1";
+                            break;
+                        default:
+                            raiseHpMult = 0.5f;
+                            raiseName = "Ghost";
+                            break;
+                    }
+
+                    MapUnit unit = new MapUnit(raiseName);
+                    if (unit.Class == null)
+                        unit = new MapHuman(raiseName, false);
+                    if (unit.Class == null)
+                    {
+                        Debug.LogFormat("Failed to spawn resurrected unit {0}", raiseName);
+                        return false;
+                    }
+
+                    unit.Player = Spell.User.Player;
+                    unit.Tag = MapLogic.Instance.GetFreeUnitTag();
+                    unit.SetPosition(TargetX, TargetY, false);
+                    unit.CoreStats.HealthMax = (int)(u.CoreStats.HealthMax * raiseHpMult);
+                    unit.UpdateItems();
+                    MapLogic.Instance.Objects.Add(unit);
+
+                    u.BoneFrame = 4; // invisible corpse
+                    u.DoUpdateView = true;
+                    if (NetworkManager.IsServer)
+                        Server.NotifyUnitBoneFrame(u);
+
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
 }

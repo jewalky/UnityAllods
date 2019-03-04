@@ -154,7 +154,7 @@ public class MapHuman : MapUnit
             SetSkill(ExperienceSkill.Astral, Template.SkillShootingAstral);
         }
 
-        CalculateVision();
+        CoreStats.HealthMax = -1;
         UpdateItems();
 
         // fix health and mana
@@ -371,9 +371,12 @@ public class MapHuman : MapUnit
         float fighter_mult = (Gender & GenderFlags.Fighter) != 0 ? 2 : 1;
         float mage_mult = (Gender & GenderFlags.Mage) != 0 ? 2 : 1;
 
-        CoreStats.HealthMax = (int)(Stats.Body * fighter_mult);
-        CoreStats.HealthMax += (int)(Log11(experience_total / 5000f + fighter_mult));
-        CoreStats.HealthMax = (int)((Pow11(Stats.Body) / 100f + 1f) * CoreStats.HealthMax);
+        if (CoreStats.HealthMax == -1 || IsHero)
+        {
+            CoreStats.HealthMax = (int)(Stats.Body * fighter_mult);
+            CoreStats.HealthMax += (int)(Log11(experience_total / 5000f + fighter_mult));
+            CoreStats.HealthMax = (int)((Pow11(Stats.Body) / 100f + 1f) * CoreStats.HealthMax);
+        }
 
         if ((Gender & GenderFlags.Mage) != 0)
         {
@@ -454,6 +457,8 @@ public class MapHuman : MapUnit
         Stats.ProtectionAstral = (byte)Math.Min(maxProt, Math.Max(minProt, Stats.ProtectionAstral));
 
         //Debug.LogFormat("ItemStats = {0}", ItemStats.ToString());
+
+        CalculateVision();
 
         DoUpdateInfo = true;
         DoUpdateView = true;

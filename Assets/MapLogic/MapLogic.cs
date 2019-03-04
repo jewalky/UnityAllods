@@ -436,7 +436,10 @@ class MapLogic
                     human.Tag = almunit.ID;
                     human.Player = GetPlayerByID(almunit.Player - 1);
                     if (almunit.HealthMax >= 0)
-                        human.Stats.HealthMax = almunit.HealthMax;
+                    {
+                        human.CoreStats.HealthMax = almunit.HealthMax;
+                        human.UpdateItems();
+                    }
                     if (almunit.Health >= 0)
                         human.Stats.TrySetHealth(almunit.Health);
                     human.CalculateVision();
@@ -452,7 +455,10 @@ class MapLogic
                     unit.Tag = almunit.ID;
                     unit.Player = GetPlayerByID(almunit.Player - 1);
                     if (almunit.HealthMax >= 0)
-                        unit.Stats.HealthMax = almunit.HealthMax;
+                    {
+                        unit.CoreStats.HealthMax = almunit.HealthMax;
+                        unit.UpdateItems();
+                    }
                     if (almunit.Health >= 0)
                         unit.Stats.TrySetHealth(almunit.Health);
                     unit.CalculateVision();

@@ -318,10 +318,17 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             if (HpRenderer != null) HpRenderer.enabled = LogicUnit.IsAlive;
             if (PlayerNickObject != null) PlayerNickObject.SetActive(LogicUnit.IsAlive);
 
-            Images.AllodsSpriteSeparate sprites = LogicUnit.Class.File.File;
+            UnitClass dCls = LogicUnit.Class;
+            if (!LogicUnit.IsAlive)
+            {
+                while (dCls.Dying != null && dCls.Dying != dCls)
+                    dCls = dCls.Dying;
+            }
 
-            LogicUnit.Class.File.UpdateSprite();
-            sprites = LogicUnit.Class.File.File;
+            Images.AllodsSpriteSeparate sprites = dCls.File.File;
+
+            dCls.File.UpdateSprite();
+            sprites = dCls.File.File;
 
             if (!spriteSet)
             {
@@ -342,19 +349,23 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 ShadowRenderer.material.color = new Color(0, 0, 0, 0.5f);
             }
 
-            int actualFrame = LogicUnit.Class.Index; // draw frame 0 of each unit
+            int actualFrame = dCls.Index; // draw frame 0 of each unit
 
             UnitVisualState actualVState = LogicUnit.VState;
             if (!bAlive && actualVState == UnitVisualState.Idle)
             {
-                actualVState = UnitVisualState.Dying;
-                UnitClass dCls = LogicUnit.Class;
-                while (dCls.Dying != null && dCls.Dying != dCls)
-                    dCls = dCls.Dying;
-                LogicUnit.DeathFrame = dCls.DyingPhases - 1;
+                if (LogicUnit.BoneFrame == 0 || dCls.BonePhases < 3)
+                {
+                    actualVState = UnitVisualState.Dying;
+                    LogicUnit.DeathFrame = dCls.DyingPhases - 1;
+                }
+                else
+                {
+                    actualVState = UnitVisualState.Bone;
+                }
             }
 
-            Renderer.material.SetTexture("_Palette", GetPalette());
+            Renderer.material.SetTexture("_Palette", GetDeathPalette(dCls.File));
             // first (idle) state is 0..8 frames. frames 1 to 7 are flipped. frames 0 and 8 aren't.
             //  135 180 225
             //  90      270
@@ -362,10 +373,10 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             bool doFlip = false;
             int actualAngle16 = 0;
             int actualAngle8 = 0;
-            int countFull16 = (!LogicUnit.Class.Flip) ? 16 : 9;
-            int countFull8 = (!LogicUnit.Class.Flip) ? 8 : 5;
+            int countFull16 = (!dCls.Flip) ? 16 : 9;
+            int countFull8 = (!dCls.Flip) ? 8 : 5;
 
-            if (LogicUnit.Class.Flip)
+            if (dCls.Flip)
             {
                 if (LogicUnit.Angle < 180)
                 {
@@ -385,72 +396,49 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 actualAngle8 = LogicUnit.Angle * 8 / 360;
             }
 
-            if (actualVState == UnitVisualState.Rotating || (actualVState == UnitVisualState.Idle && LogicUnit.Class.IdlePhases <= 1))
+            if (actualVState == UnitVisualState.Rotating || (actualVState == UnitVisualState.Idle && dCls.IdlePhases <= 1))
             {
                 actualFrame = actualAngle16;
             }
             else if (actualVState == UnitVisualState.Idle)
             {
-                actualFrame = sprites.Frames.Length - LogicUnit.Class.IdlePhases * countFull8 + LogicUnit.Class.IdlePhases * actualAngle8;
-                actualFrame += LogicUnit.Class.IdleFrames[LogicUnit.IdleFrame].Frame;
+                actualFrame = sprites.Frames.Length - dCls.IdlePhases * countFull8 + dCls.IdlePhases * actualAngle8;
+                actualFrame += dCls.IdleFrames[LogicUnit.IdleFrame].Frame;
             }
             else if (actualVState == UnitVisualState.Moving)
             {
-                int moveSize = LogicUnit.Class.MoveBeginPhases + LogicUnit.Class.MovePhases;
+                int moveSize = dCls.MoveBeginPhases + dCls.MovePhases;
 
                 actualFrame = countFull16 + moveSize * actualAngle8;
-                actualFrame += LogicUnit.Class.MoveBeginPhases; // movebeginphases, we don't animate this yet
-                actualFrame += LogicUnit.Class.MoveFrames[LogicUnit.MoveFrame].Frame;
+                actualFrame += dCls.MoveBeginPhases; // movebeginphases, we don't animate this yet
+                actualFrame += dCls.MoveFrames[LogicUnit.MoveFrame].Frame;
             }
             else if (actualVState == UnitVisualState.Attacking)
             {
-                int moveSize = LogicUnit.Class.MoveBeginPhases + LogicUnit.Class.MovePhases;
-                int attackSize = LogicUnit.Class.AttackPhases;
+                int moveSize = dCls.MoveBeginPhases + dCls.MovePhases;
+                int attackSize = dCls.AttackPhases;
 
                 actualFrame = countFull16 + moveSize * countFull8 + attackSize * actualAngle8;
-                actualFrame += LogicUnit.Class.AttackFrames[LogicUnit.AttackFrame].Frame;
+                actualFrame += dCls.AttackFrames[LogicUnit.AttackFrame].Frame;
             }
             else if (actualVState == UnitVisualState.Dying)
             {
-                UnitClass dCls = LogicUnit.Class;
-                while (dCls.Dying != null && dCls.Dying != dCls)
-                    dCls = dCls.Dying;
-                dCls.File.UpdateSprite();
-                sprites = dCls.File.File;
-                Renderer.material.SetTexture("_Palette", GetDeathPalette(dCls.File));
-
                 int moveSize = dCls.MoveBeginPhases + dCls.MovePhases;
                 int attackSize = dCls.AttackPhases;
                 int dyingSize = dCls.DyingPhases;
 
-                if (dCls.Flip != LogicUnit.Class.Flip)
-                {
-                    countFull16 = (!dCls.Flip) ? 16 : 9;
-                    countFull8 = (!dCls.Flip) ? 8 : 5;
-
-                    if (dCls.Flip)
-                    {
-                        if (LogicUnit.Angle < 180)
-                        {
-                            actualAngle16 = LogicUnit.Angle * 8 / 180;
-                            actualAngle8 = LogicUnit.Angle * 4 / 180;
-                        }
-                        else
-                        {
-                            actualAngle16 = (180 - (LogicUnit.Angle - 180)) * 8 / 180;
-                            actualAngle8 = (180 - (LogicUnit.Angle - 180)) * 4 / 180;
-                            doFlip = true;
-                        }
-                    }
-                    else
-                    {
-                        actualAngle16 = LogicUnit.Angle * 16 / 360;
-                        actualAngle8 = LogicUnit.Angle * 8 / 360;
-                    }
-                }
-
                 actualFrame = countFull16 + moveSize * countFull8 + attackSize * countFull8 + dyingSize * actualAngle8;
                 actualFrame += LogicUnit.DeathFrame;
+            }
+            else if (actualVState == UnitVisualState.Bone)
+            {
+                int moveSize = dCls.MoveBeginPhases + dCls.MovePhases;
+                int attackSize = dCls.AttackPhases;
+                int dyingSize = dCls.DyingPhases;
+                int boneSize = dCls.BonePhases;
+
+                actualFrame = countFull16 + moveSize * countFull8 + attackSize * countFull8 + dyingSize * countFull8 + boneSize * actualAngle8;
+                actualFrame += LogicUnit.BoneFrame-1;
             }
 
             Vector2 xP = MapView.Instance.MapToScreenCoords(LogicUnit.X + LogicUnit.FracX + (float)LogicUnit.Width / 2,

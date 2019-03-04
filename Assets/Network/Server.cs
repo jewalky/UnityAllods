@@ -135,6 +135,8 @@ public class Server
             unitCmd.Player = unit.Player.ID;
             unitCmd.ServerID = unit.ServerID;
             unitCmd.CurrentStats = unit.Stats;
+            unitCmd.HealthMax = unit.CoreStats.HealthMax;
+            unitCmd.ManaMax = unit.CoreStats.ManaMax;
             unitCmd.IsAvatar = (unit == unit.Player.Avatar);
             unitCmd.VState = unit.VState;
             unitCmd.IdleFrame = unit.IdleFrame;
@@ -147,6 +149,7 @@ public class Server
             unitCmd.AttackTime = unit.AttackTime;
             unitCmd.DeathFrame = unit.DeathFrame;
             unitCmd.DeathTime = unit.DeathTime;
+            unitCmd.BoneFrame = unit.BoneFrame;
             unitCmd.IsAlive = unit.IsAlive;
             unitCmd.IsDying = unit.IsDying;
             unitCmd.IsHuman = (unit.GetObjectType() == MapObjectType.Human);
@@ -737,6 +740,24 @@ public class Server
                 posCmd.X = unit.X;
                 posCmd.Y = unit.Y;
                 client.SendCommand(posCmd);
+            }
+        }
+    }
+
+    public static void NotifyUnitBoneFrame(MapUnit unit)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            Player p = MapLogic.Instance.GetNetPlayer(client);
+            if (unit.IsVisibleForNetPlayer(p))
+            {
+                ClientCommands.UnitBoneFrame boneCmd;
+                boneCmd.Tag = unit.Tag;
+                boneCmd.BoneFrame = unit.BoneFrame;
+                client.SendCommand(boneCmd);
             }
         }
     }

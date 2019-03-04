@@ -20,7 +20,8 @@ public enum UnitVisualState
     Rotating,
     Moving,
     Attacking,
-    Dying
+    Dying,
+    Bone
 }
 
 
@@ -106,6 +107,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public int AttackTime = 0;
     public int DeathFrame = 0;
     public int DeathTime = 0;
+    public int BoneFrame = 0;
+    public int BoneTime = 0;
     // for visual state stuff
     public float FracX = 0;
     public float FracY = 0;
@@ -298,7 +301,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             }
         }
 
-        CalculateVision();
         UpdateItems();
     }
 
@@ -313,10 +315,19 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     // this is called when on-body items or effects are modified
     public virtual void UpdateItems()
     {
+        // 
+        float origHealth = (float)Stats.Health / Stats.HealthMax;
+        float origMana = (float)Stats.Mana / Stats.ManaMax;
+
         // set stats from effects
         Stats = new UnitStats(CoreStats);
         for (int i = 0; i < SpellEffects.Count; i++)
             SpellEffects[i].ProcessStats(Stats);
+
+        Stats.Health = (int)(origHealth * Stats.HealthMax);
+        Stats.Mana = (int)(origMana * Stats.ManaMax);
+
+        CalculateVision();
 
         DoUpdateView = true;
         DoUpdateInfo = true;
@@ -388,6 +399,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         if (IsAlive)
         {
+            BoneTime = 0;
+            BoneFrame = 0;
+
             if (Stats.Health <= -10)
             {
                 IsAlive = false;
@@ -429,6 +443,35 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 }
             }
         }
+        else if (!NetworkManager.IsClient)
+        {
+            if (!IsAlive && Actions.Count == 1)
+            {
+                if (BoneFrame < 4)
+                {
+                    BoneTime++;
+                    if (BoneTime > MapLogic.TICRATE * 10)
+                    {
+                        BoneFrame++;
+                        BoneTime = 0;
+                        // notify clients of bone phase change
+                        if (NetworkManager.IsServer)
+                            Server.NotifyUnitBoneFrame(this);
+                        DoUpdateView = true;
+                    }
+                }
+                else
+                {
+                    BoneFrame = 4;
+                    BoneTime = 0;
+                }
+            }
+            else
+            {
+                BoneTime = 0;
+                BoneFrame = 0;
+            }
+        }
 
         if (!NetworkManager.IsClient && DamageLast > 0)
         {
@@ -438,6 +481,13 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             DamageLast = 0;
             DamageLastVisible = false;
         }
+    }
+
+    public override int GetVisibility()
+    {
+        if (BoneFrame > 3)
+            return 0;
+        return base.GetVisibility();
     }
 
     public override MapNodeFlags GetNodeLinkFlags(int x, int y)

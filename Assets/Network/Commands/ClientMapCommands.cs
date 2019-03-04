@@ -174,6 +174,12 @@ namespace ClientCommands
         public uint SpellBook;
         [ProtoMember(27)]
         public global::UnitFlags Flags;
+        [ProtoMember(28)]
+        public int BoneFrame;
+        [ProtoMember(29)]
+        public int HealthMax;
+        [ProtoMember(30)]
+        public int ManaMax;
 
         public bool Process()
         {
@@ -222,6 +228,9 @@ namespace ClientCommands
             unit.AttackTime = AttackTime;
             unit.DeathFrame = DeathFrame;
             unit.DeathTime = DeathTime;
+            unit.BoneFrame = BoneFrame;
+            unit.CoreStats.HealthMax = HealthMax;
+            unit.CoreStats.ManaMax = ManaMax;
 
             unit.ItemsBody.Clear();
             if (ItemsBody != null)
@@ -1070,6 +1079,35 @@ namespace ClientCommands
             }
 
             unit.SetPosition(X, Y, true);
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.UnitBoneFrame)]
+    public struct UnitBoneFrame : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public int BoneFrame;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null)
+            {
+                Debug.LogFormat("Attempted to set bone frame for nonexistent unit {0}", Tag);
+                return true;
+            }
+
+            unit.BoneFrame = BoneFrame;
+            unit.BoneTime = 0;
+            unit.DoUpdateView = true;
 
             return true;
         }

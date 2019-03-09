@@ -180,6 +180,10 @@ namespace ClientCommands
         public int HealthMax;
         [ProtoMember(30)]
         public int ManaMax;
+        [ProtoMember(31)]
+        public int SummonTimeMax;
+        [ProtoMember(32)]
+        public int SummonTime;
 
         public bool Process()
         {
@@ -231,6 +235,8 @@ namespace ClientCommands
             unit.BoneFrame = BoneFrame;
             unit.CoreStats.HealthMax = HealthMax;
             unit.CoreStats.ManaMax = ManaMax;
+            unit.SummonTimeMax = SummonTimeMax;
+            unit.SummonTime = SummonTime;
 
             unit.ItemsBody.Clear();
             if (ItemsBody != null)
@@ -1107,6 +1113,37 @@ namespace ClientCommands
 
             unit.BoneFrame = BoneFrame;
             unit.BoneTime = 0;
+            unit.DoUpdateView = true;
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.UnitSummonTime)]
+    public struct UnitSummonTime : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public int SummonTimeMax;
+        [ProtoMember(3)]
+        public int SummonTime;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null)
+            {
+                Debug.LogFormat("Attempted to set summon time for nonexistent unit {0}", Tag);
+                return true;
+            }
+
+            unit.SummonTimeMax = SummonTimeMax;
+            unit.SummonTime = SummonTime;
             unit.DoUpdateView = true;
 
             return true;

@@ -153,6 +153,8 @@ public class Server
             unitCmd.IsAlive = unit.IsAlive;
             unitCmd.IsDying = unit.IsDying;
             unitCmd.IsHuman = (unit.GetObjectType() == MapObjectType.Human);
+            unitCmd.SummonTime = unit.SummonTime;
+            unitCmd.SummonTimeMax = unit.SummonTimeMax;
 
             if (unitCmd.IsHuman)
             {
@@ -777,6 +779,25 @@ public class Server
                 lvlCmd.ExpAfter = newexp;
                 lvlCmd.Skill = sk;
                 client.SendCommand(lvlCmd);
+            }
+        }
+    }
+
+    public static void NotifyUnitSummonTime(MapUnit unit)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            Player p = MapLogic.Instance.GetNetPlayer(client);
+            if (unit.IsVisibleForNetPlayer(p))
+            {
+                ClientCommands.UnitSummonTime summonCmd;
+                summonCmd.Tag = unit.Tag;
+                summonCmd.SummonTimeMax = unit.SummonTimeMax;
+                summonCmd.SummonTime = unit.SummonTime;
+                client.SendCommand(summonCmd);
             }
         }
     }

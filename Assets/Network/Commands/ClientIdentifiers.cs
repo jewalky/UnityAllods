@@ -30,6 +30,7 @@ public enum ClientIdentifiers
     UnitFlags,
     UnitPosition,
     UnitBoneFrame,
+    UnitSummonTime,
 
     HumanLevelUp,
 

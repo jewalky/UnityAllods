@@ -345,6 +345,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         if (SummonTimeMax > 0 && (MapLogic.Instance.LevelTime % MapLogic.TICRATE == 0))
         {
             SummonTime++;
+            if (NetworkManager.IsServer)
+                Server.NotifyUnitSummonTime(this);
             DoUpdateView = true;
             // todo update summon time to client
             if (SummonTime > SummonTimeMax)

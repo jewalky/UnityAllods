@@ -61,7 +61,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         if (HpMat2 == null) HpMat2 = new Material(MainCamera.MainShader);
 
         int hpHeight = 4;
-        if (LogicUnit.Stats.ManaMax > 0)
+        if (LogicUnit.Stats.ManaMax > 0 || LogicUnit.SummonTimeMax > 0)
             hpHeight += 4;
 
         if (HpObject == null)
@@ -82,7 +82,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
         HpMesh.Clear();
         int vcnt = 4 * 8; // 
-        if (LogicUnit.Stats.ManaMax > 0)
+        if (LogicUnit.Stats.ManaMax > 0 || LogicUnit.SummonTimeMax > 0)
             vcnt += 4 * 8; // 
 
         Vector3[] qv = new Vector3[vcnt];
@@ -98,12 +98,24 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         if (PlayerNickObject != null && PlayerNick != null)
             PlayerNickObject.transform.localPosition = new Vector3(x, y - PlayerNick.Height - 1 - hpHeight, -64);
 
+        float row1 = (float)LogicUnit.Stats.Health / LogicUnit.Stats.HealthMax;
+        float row2 = 0;
+        bool row2alternate = false;
+
         Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x, y, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
         Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x + w - 4, y, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
         if (LogicUnit.Stats.ManaMax > 0)
         {
             Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x, y + 4, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
             Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x + w - 4, y + 4, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
+            row2 = (float)LogicUnit.Stats.Mana / LogicUnit.Stats.ManaMax;
+        }
+        else if (LogicUnit.SummonTimeMax > 0)
+        {
+            Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x, y + 4, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
+            Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, x + w - 4, y + 4, 4, 4, new Rect(0, 0, 1, 1), new Color(1, 1, 1, 1));
+            row2 = 1f - ((float)LogicUnit.SummonTime / LogicUnit.SummonTimeMax);
+            row2alternate = true;
         }
 
         for (int i = 0; i < vcnt; i += 4 * 8)
@@ -122,10 +134,10 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             qc[lppc++] = new Color(0.3f, 0.3f, 0.3f, 0.5f);
             qc[lppc++] = new Color(0.3f, 0.3f, 0.3f, 0.5f);
 
-            float lcnt = (i >= 4 * 8) ? (float)LogicUnit.Stats.Mana / LogicUnit.Stats.ManaMax : (float)LogicUnit.Stats.Health / LogicUnit.Stats.HealthMax;
+            float lcnt = (i >= 4 * 8) ? row2 : row1;
             if (lcnt < 0) lcnt = 0;
             Color clBase = new Color(0, 1, 0, 1);
-            if (i >= 4 * 8) clBase = new Color(0, 0, 1, 1);
+            if (i >= 4 * 8) clBase = row2alternate ? new Color(1, 0, 1, 1) : new Color(0, 0, 1, 1);
             else if (lcnt < 0.33) clBase = new Color(1, 0, 0, 1);
             else if (lcnt < 0.66) clBase = new Color(1, 1, 0, 1);
             Color clDk1 = clBase / 2;

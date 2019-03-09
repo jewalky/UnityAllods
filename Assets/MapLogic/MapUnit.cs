@@ -115,6 +115,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     // for damage calculation per tick
     private bool DamageLastVisible = false;
     private int DamageLast = 0;
+    // for summoned units
+    public int SummonTime = 0;
+    public int SummonTimeMax = 0;
 
     private UnitFlags _Flags = UnitFlags.None;
     public UnitFlags Flags
@@ -337,6 +340,19 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     {
         if (Class == null)
             return;
+
+        // check summon timer
+        if (SummonTimeMax > 0 && (MapLogic.Instance.LevelTime % MapLogic.TICRATE == 0))
+        {
+            SummonTime++;
+            DoUpdateView = true;
+            // todo update summon time to client
+            if (SummonTime > SummonTimeMax)
+            {
+                Dispose();
+                return;
+            }
+        }
 
         UpdateNetVisibility();
 
@@ -589,6 +605,45 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             if (NetworkManager.IsServer)
                 Server.NotifyUnitTeleport(this);
         }
+    }
+
+    // sets random position for the unit. returns true if valid space was found
+    public bool RandomizePosition(int x, int y, int radius, bool netupdate)
+    {
+        if (radius < 0) radius = 0;
+        if (radius == 0)
+        {
+            SetPosition(x, y, netupdate);
+            return Interaction.CheckWalkableForUnit(x, y, false);
+        }
+
+        int minX = Mathf.Max(x - radius - (Width - 1), 0);
+        int maxX = Mathf.Min(x + radius, MapLogic.Instance.Width - 1);
+        int minY = Mathf.Max(y - radius - (Height - 1), 0);
+        int maxY = Mathf.Min(y + radius, MapLogic.Instance.Height - 1);
+
+        List<Vector2i> coords = new List<Vector2i>();
+
+        for (int tryY = minY; tryY <= maxY; tryY++)
+        {
+            for (int tryX = minX; tryX <= maxX; tryX++)
+            {
+                if (Interaction.CheckWalkableForUnit(tryX, tryY, false))
+                    coords.Add(new Vector2i(tryX, tryY));
+            }
+        }
+
+        // if no valid coords found, use center
+        if (coords.Count == 0)
+        {
+            SetPosition(x, y, netupdate);
+            return false;
+        }
+
+        // 
+        Vector2i coord = coords[UnityEngine.Random.Range(0, coords.Count)];
+        SetPosition(coord.x, coord.y, netupdate);
+        return true;
     }
 
     public void CalculateVision()

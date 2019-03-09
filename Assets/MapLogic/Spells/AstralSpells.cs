@@ -143,8 +143,6 @@ namespace Spells
 
                     MapUnit unit = new MapUnit(raiseName);
                     if (unit.Class == null)
-                        unit = new MapHuman(raiseName, false);
-                    if (unit.Class == null)
                     {
                         Debug.LogFormat("Failed to spawn resurrected unit {0}", raiseName);
                         return false;
@@ -153,6 +151,17 @@ namespace Spells
                     unit.Player = Spell.User.Player;
                     unit.Tag = MapLogic.Instance.GetFreeUnitTag();
                     unit.SetPosition(TargetX, TargetY, false);
+                    if (!unit.Interaction.CheckWalkableForUnit(TargetX, TargetY, false))
+                    {
+                        // invalid position, don't add unit
+                        // (but still delete bone)
+                        u.BoneFrame = 4;
+                        u.DoUpdateView = true;
+                        if (NetworkManager.IsServer)
+                            Server.NotifyUnitBoneFrame(u);
+                        unit.Dispose();
+                        return false;
+                    }
                     unit.CoreStats.HealthMax = (int)(u.CoreStats.HealthMax * raiseHpMult);
                     unit.UpdateItems();
                     MapLogic.Instance.Objects.Add(unit);
@@ -166,7 +175,46 @@ namespace Spells
                 }
             }
 
-            return true;
+            return false;
+        }
+    }
+
+    [SpellProcId(Spell.Spells.Summon)]
+    public class SpellProcSummon : SpellProc
+    {
+        public SpellProcSummon(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (NetworkManager.IsClient)
+                return false;
+
+            // find unit to spawn
+            string[] baseUnits = new string[] { "Squirrel", "Turtle", "Foot_Animated" };
+            int level = Mathf.Max(1, Mathf.Min(4, (Spell.Skill / 4) + 1));
+            string unitName = baseUnits[UnityEngine.Random.Range(0, 3)] + ((level > 1) ? string.Format(".{0}", level) : "");
+
+            MapUnit unit = new MapUnit(unitName);
+            if (unit.Class == null)
+            {
+                Debug.LogFormat("Failed to spawn summoned unit {0}", unitName);
+                return false;
+            }
+
+            unit.Player = Spell.User.Player;
+            unit.Tag = MapLogic.Instance.GetFreeUnitTag();
+            if (!unit.RandomizePosition(Spell.User.X, Spell.User.Y, 2, false))
+            {
+                // invalid position, don't add unit
+                unit.Dispose();
+                return false;
+            }
+
+            unit.SummonTimeMax = 30;
+            unit.SummonTime = 0;
+
+            MapLogic.Instance.Objects.Add(unit);
+            return false;
         }
     }
 }

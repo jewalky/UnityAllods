@@ -43,7 +43,7 @@ public class IdleState : IUnitState
             {
                 visibleEnemies.Sort(MapObject.DistanceComparison);
                 MapUnit closestEnemy = visibleEnemies[0];
-                allAliveVisibleUnits.FindAll(u => u.GroupID == Unit.GroupID).ForEach(u => u.States.Add(new AttackState(u, closestEnemy)));
+                allAliveVisibleUnits.FindAll(u => u.GroupID == Unit.GroupID && u.States.Count == 1).ForEach(u => u.States.Add(new AttackState(u, closestEnemy)));
                 return true;
             }
 
@@ -219,11 +219,13 @@ public class AttackState : IUnitState
             // we need to compare Option to set damage flags properly here
             Unit.AddActions(new AttackAction(Unit, TargetUnit, df, damage));
 
-			// attack back
-            if (doFullAI && TargetUnit.States.Count == 1 && !TargetUnit.IsDying)
+            bool isTargetAI = (TargetUnit.Player.Flags & PlayerFlags.AI) != 0 && (TargetUnit.Player.Flags & PlayerFlags.Dormant) == 0;
+            // attack back
+            if (isTargetAI && TargetUnit.States.Count == 1 && !TargetUnit.IsDying)
                 TargetUnit.States.Add(new AttackState(TargetUnit, Unit));
+            return true;
         }
-        else if (!doFullAI && Unit.IsOtherUnitVisible(TargetUnit))
+        else if (Unit.IsOtherUnitVisible(TargetUnit))
         {
             MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, Unit.Interaction.GetAttackRange());
             return true;
@@ -231,9 +233,9 @@ public class AttackState : IUnitState
 
         // check if target is visible for any of the unit's group
         UnitGroup group = MapLogic.Instance.Groups.Find(g => Unit.GroupID == g.GroupID);
-        if (group != null && group.Units.Any(unit => unit.IsOtherUnitVisible(TargetUnit)))
-            // make one step to the target.
-            MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, Unit.Interaction.GetAttackRange());
+        if (Unit.IsOtherUnitVisible(TargetUnit) || group != null && group.Units.Any(unit => unit.IsOtherUnitVisible(TargetUnit)) && Unit.States.Count == 1)
+            Unit.States.Add(new AttackState(Unit, TargetUnit));
+            // MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, Unit.Interaction.GetAttackRange());
         else
             Unit.States.Add(new MoveState(Unit, Unit.SpawnX, Unit.SpawnY));
         return true;

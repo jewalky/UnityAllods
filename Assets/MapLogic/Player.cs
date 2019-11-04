@@ -63,6 +63,15 @@ public class Player
     // only for human players
     public ServerClient NetClient { get; private set; }
 
+    //
+    public bool DoFullAI
+    {
+        get
+        {
+            return Flags.HasFlag(PlayerFlags.AI) && !Flags.HasFlag(PlayerFlags.Dormant);
+        }
+    }
+
     public Player(AllodsMap.AlmPlayer almp)
     {
         Diplomacy = new Dictionary<int, DiplomacyFlags>();

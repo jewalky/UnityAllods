@@ -51,6 +51,8 @@ public class UnitInteraction
     {
         if (other.IsFlying && !Unit.IsFlying && GetAttackRange() <= 1)
             return false;
+        if (!Unit.CanDetectUnit(other))
+            return false;
         return true;
     }
 

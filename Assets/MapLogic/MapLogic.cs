@@ -42,6 +42,7 @@ class MapLogic
     {
         Objects = new List<MapObject>();
         Players = new List<Player>();
+        Groups = new List<Group>();
     }
 
     private AllodsMap MapStructure = null;
@@ -55,6 +56,7 @@ class MapLogic
     public List<Player> Players { get; private set; }
     public const int MaxPlayers = 64;
     public Player ConsolePlayer { get; set; } // the player that we're directly controlling.
+    public List<Group> Groups { get; private set; }
 
     public bool IsLoaded
     {
@@ -278,7 +280,7 @@ class MapLogic
         }
     }
 
-    public static int TICRATE = 25; // this is the amount of ticks in a second with speed=4
+    public const int TICRATE = 25; // this is the amount of ticks in a second with speed=4
     private int _Speed = 1;
     public int Speed
     {
@@ -305,6 +307,14 @@ class MapLogic
     {
         _LevelTime++;
 
+        // process group AI
+        for (int i = 0; i < Groups.Count; i++)
+        {
+            Group g = Groups[i];
+            g.Update();
+        }
+
+        // process object AI
         for (int i = 0; i < Objects.Count; i++)
         {
             MapObject mobj = Objects[i];
@@ -322,6 +332,7 @@ class MapLogic
             mo.DisposeNoUnlink();
         Objects.Clear();
         Players.Clear();
+        Groups.Clear();
         ConsolePlayer = null;
         FileName = null;
         MapStructure = null;
@@ -423,6 +434,23 @@ class MapLogic
             }
         }
 
+        // load groups
+        if (!NetworkManager.IsClient && mapStructure.Groups != null)
+        {
+            foreach (AllodsMap.AlmGroup almgroup in mapStructure.Groups)
+            {
+                Group grp = FindNewGroup((int)almgroup.GroupID);
+                grp.RepopDelay = (int)almgroup.RepopTime * MapLogic.TICRATE;
+                grp.Flags = 0;
+                if (almgroup.GroupFlag.HasFlag(AllodsMap.AlmGroup.AlmGroupFlags.RandomPositions))
+                    grp.Flags |= GroupFlags.RandomPositions;
+                if (almgroup.GroupFlag.HasFlag(AllodsMap.AlmGroup.AlmGroupFlags.QuestKill))
+                    grp.Flags |= GroupFlags.QuestKill;
+                if (almgroup.GroupFlag.HasFlag(AllodsMap.AlmGroup.AlmGroupFlags.QuestIntercept))
+                    grp.Flags |= GroupFlags.QuestIntercept;
+            }
+        }
+
         // load units
         if (!NetworkManager.IsClient && mapStructure.Units != null)
         {
@@ -431,8 +459,8 @@ class MapLogic
                 if ((almunit.Flags & 0x10) != 0)
                 {
                     MapHuman human = new MapHuman(almunit.ServerID);
-                    human.X = (int)almunit.X;
-                    human.Y = (int)almunit.Y;
+                    human.X = human.SpawnX = human.LastSpawnX = (int)almunit.X;
+                    human.Y = human.SpawnY = human.LastSpawnY = (int)almunit.Y;
                     human.Tag = almunit.ID;
                     human.Player = GetPlayerByID(almunit.Player - 1);
                     if (almunit.HealthMax >= 0)
@@ -443,6 +471,7 @@ class MapLogic
                     if (almunit.Health >= 0)
                         human.Stats.TrySetHealth(almunit.Health);
                     human.CalculateVision();
+                    human.Group = FindNewGroup(almunit.Group);
 
                     human.LinkToWorld();
                     Objects.Add(human);
@@ -450,8 +479,8 @@ class MapLogic
                 else
                 {
                     MapUnit unit = new MapUnit(almunit.ServerID);
-                    unit.X = (int)almunit.X;
-                    unit.Y = (int)almunit.Y;
+                    unit.X = unit.SpawnX = unit.LastSpawnX = (int)almunit.X;
+                    unit.Y = unit.SpawnY = unit.LastSpawnY = (int)almunit.Y;
                     unit.Tag = almunit.ID;
                     unit.Player = GetPlayerByID(almunit.Player - 1);
                     if (almunit.HealthMax >= 0)
@@ -462,6 +491,7 @@ class MapLogic
                     if (almunit.Health >= 0)
                         unit.Stats.TrySetHealth(almunit.Health);
                     unit.CalculateVision();
+                    unit.Group = FindNewGroup(almunit.Group);
 
                     unit.LinkToWorld();
                     Objects.Add(unit);
@@ -512,6 +542,22 @@ class MapLogic
             Objects.Add(proj);
             */
         }
+    }
+
+    private Group FindNewGroup(int groupId)
+    {
+        for (int i = 0; i < Groups.Count; i++)
+        {
+            Group g = Groups[i];
+            if (g.ID == groupId)
+                return g;
+        }
+
+        Group newGroup = new Group();
+        newGroup.RepopDelay = 120 * MapLogic.TICRATE; // default
+        newGroup.ID = groupId;
+        Groups.Add(newGroup);
+        return newGroup;
     }
 
     public int GetFreePlayerID(bool ai)
@@ -586,10 +632,10 @@ class MapLogic
                     int yOrigin = unit.Y - 20;
                     for (int ly = yOrigin; ly < yOrigin + 41; ly++)
                     {
-                        if (ly < 8 || ly > Height) continue;
+                        if (ly < 8 || ly >= Height-8) continue;
                         for (int lx = xOrigin; lx < xOrigin + 41; lx++)
                         {
-                            if (lx < 8 || lx > Width) continue;
+                            if (lx < 8 || lx >= Width-8) continue;
                             if (unit.Vision[lx - xOrigin, ly - yOrigin])
                                 Nodes[lx, ly].Flags |= MapNodeFlags.Visible | MapNodeFlags.Discovered;
                         }

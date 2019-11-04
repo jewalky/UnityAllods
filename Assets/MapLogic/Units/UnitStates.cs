@@ -12,21 +12,6 @@ public class IdleState : IUnitState
 
     public bool Process()
     {
-        if (Unit.Stats.Health <= 0)
-            return true;
-
-        bool doFullAI = (Unit.Player.Flags & PlayerFlags.AI) != 0 &&
-                        (Unit.Player.Flags & PlayerFlags.Dormant) == 0;
-
-        if (!doFullAI) return true;
-        // rotate randomly
-        if ((UnityEngine.Random.Range(0, 256) < 1) &&
-            Unit.Actions.Count == 1) // unit is idle and 1/256 chance returns true
-        {
-            int angle = UnityEngine.Random.Range(0, 36) * 10;
-            Unit.AddActions(new RotateAction(Unit, angle));
-        }
-
         return true;
     }
 }

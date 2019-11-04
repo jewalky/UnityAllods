@@ -211,7 +211,7 @@ public class AllodsMap
         [Flags]
         public enum AlmGroupFlags
         {
-            AiInstantRnabled = 1, RandomPositions = 2,
+            AiInstantEnabled = 1, RandomPositions = 2,
             QuestKill = 4, QuestIntercept = 8 
         }
 

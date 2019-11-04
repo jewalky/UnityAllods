@@ -41,6 +41,35 @@ public enum UnitFlags
     Curse           = 0x0200
 }
 
+public class MapUnitAggro
+{
+    public MapUnit Target;
+    public int LastDamage;
+    public int LastSeen;
+    public int CountDamage;
+    public float Damage;
+    public float Factor;
+
+    public MapUnitAggro(MapUnit target)
+    {
+        Target = target;
+        LastDamage = LastSeen = MapLogic.Instance.LevelTime;
+        CountDamage = 0;
+        Damage = 0;
+        Factor = 1f;
+    }
+
+    public float GetAggro()
+    {
+        float baseAggro = (CountDamage > 0) ? (Damage / CountDamage) : 0;
+        // rougly 10 seconds for 0.5 aggro factor here. defined by /5 at the end of timeFac
+        int curTime = MapLogic.Instance.LevelTime;
+        float timeFac = Mathf.Min(1f / ((curTime - LastDamage) / MapLogic.TICRATE / 5), 1f);
+        float fac = Mathf.Max(Factor, 1f); // increasing factor. not used right now, later may be used for tank mechanics
+        return baseAggro * fac * timeFac;
+    }
+}
+
 public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 {
     public override MapObjectType GetObjectType() { return MapObjectType.Monster; }
@@ -118,6 +147,11 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     // for summoned units
     public int SummonTime = 0;
     public int SummonTimeMax = 0;
+    // for respawn
+    public int SpawnX = -1;
+    public int SpawnY = -1;
+    public int LastSpawnX = -1;
+    public int LastSpawnY = -1;
 
     private UnitFlags _Flags = UnitFlags.None;
     public UnitFlags Flags
@@ -169,6 +203,33 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public readonly List<MapProjectile> TargetedBy = new List<MapProjectile>();
 
     public readonly List<Spell> SpellBook = new List<Spell>();
+
+    // AI stuff
+    public MapUnit Target { get; set; }
+    public readonly List<MapUnitAggro> Aggro = new List<MapUnitAggro>();
+    private Group _Group = null;
+    public Group Group
+    {
+        get
+        {
+            return _Group;
+        }
+
+        set
+        {
+            if (_Group != null)
+            {
+                if (_Group.Units.Contains(this))
+                    _Group.Units.Remove(this);
+            }
+            _Group = value;
+            if (_Group != null)
+            {
+                if (!_Group.Units.Contains(this))
+                    _Group.Units.Add(this);
+            }
+        }
+    }
 
     public MapUnit()
     {
@@ -336,6 +397,123 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         DoUpdateInfo = true;
     }
 
+    public bool CanDetectUnit(MapUnit other)
+    {
+        if (!MapLogic.Instance.Objects.Contains(other))
+            return false;
+        if (other.Flags.HasFlag(UnitFlags.Invisible) && !other.Player.Diplomacy[Player.ID].HasFlag(DiplomacyFlags.Vision))
+            return false;
+        return true;
+    }
+
+    // 0=cant see, 1=can see but not in vision, 2=can fully see
+    public int CanSeeUnit(MapUnit other)
+    {
+        if (!CanDetectUnit(other))
+            return 0;
+        // check x/y coords
+        int offsX = other.X - X;
+        int offsY = other.Y - Y;
+        if (offsX < -20 || offsX > 20 || offsY < -20 || offsY > 20)
+            return 1;
+        offsX += 20;
+        offsY += 20;
+        if (Vision[offsX, offsY])
+            return 2;
+        return 1;
+    }
+
+    public void UpdateAggro()
+    {
+        // pick group target if we don't have our own, as lowest priority
+        if (Aggro.Count <= 0 && Group != null)
+        {
+            if (Group.SharedTarget != null && Group.SharedTarget.IsAlive && MapLogic.Instance.Objects.Contains(Group.SharedTarget))
+            {
+                MapUnitAggro newAg = new MapUnitAggro(Group.SharedTarget);
+                Aggro.Add(newAg);
+            }
+        }
+        // first off, slowly tick aggro factors down
+        // and remove dead/unlinked units
+        for (int i = 0; i < Aggro.Count; i++)
+        {
+            MapUnitAggro ag = Aggro[i];
+            if (ag.Target == null || !ag.Target.IsAlive || !MapLogic.Instance.Objects.Contains(ag.Target))
+            {
+                // remove item
+                Aggro.RemoveAt(i);
+                i--;
+                continue;
+            }
+            if (ag.Factor > 1f)
+            {
+                ag.Factor = Mathf.Max(1f, ag.Factor - 0.5f / MapLogic.TICRATE); // factor falls by 0.5 per second, cannot be under 1
+            }
+            int sight = CanSeeUnit(ag.Target);
+            if (sight == 0)
+            {
+                // cannot target invisible units...
+                Aggro.RemoveAt(i);
+                i--;
+                continue;
+            }
+            if (sight == 2)
+            {
+                // unit is in sight area
+                ag.LastSeen = MapLogic.Instance.LevelTime;
+            }
+            // check if last seen a lot of time ago ( > 5 seconds for now)
+            if (MapLogic.Instance.LevelTime - ag.LastSeen > MapLogic.TICRATE * 5)
+            {
+                Aggro.RemoveAt(i);
+                i--;
+                continue;
+            }
+        }
+        Aggro.Sort((MapUnitAggro a1, MapUnitAggro a2) =>
+        {
+            float f1 = a1.GetAggro();
+            float f2 = a2.GetAggro();
+            if (f1 > f2) return -1;
+            if (f1 < f2) return 1;
+            return 0;
+        });
+        // check current target
+        Target = null;
+        if (Aggro.Count > 0)
+            Target = Aggro[0].Target;
+    }
+
+    public void UpdateAI()
+    {
+        if (!IsAlive || IsDying || !MapLogic.Instance.Objects.Contains(this))
+            return;
+
+        // if there is a target, chase and attack it
+        if (Target != null)
+        {
+            // check if we are currently doing attack state
+            SetState(new AttackState(this, Target));
+        }
+        else
+        {
+            // check if we are at our respawn point
+            if (X != LastSpawnX || Y != LastSpawnY)
+            {
+                SetState(new MoveState(this, LastSpawnX, LastSpawnY));
+            }
+        }
+
+        // rotate randomly
+        if ((UnityEngine.Random.Range(0, 256) < 1) &&
+            Actions.Count == 1) // unit is idle and 1/256 chance returns true
+        {
+            int angle = UnityEngine.Random.Range(0, 36) * 10;
+            AddActions(new RotateAction(this, angle));
+        }
+    }
+
     public override void Update()
     {
         if (Class == null)
@@ -366,6 +544,13 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 SpellProcessors.RemoveAt(i);
                 i--;
             }
+        }
+
+        if (!NetworkManager.IsClient && Player.DoFullAI)
+        {
+            // process aggro list, pick new target if needed
+            UpdateAggro();
+            UpdateAI();
         }
 
         // process actions
@@ -607,16 +792,22 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             if (NetworkManager.IsServer)
                 Server.NotifyUnitTeleport(this);
         }
+
+        if (SpawnX < 0 || SpawnY < 0)
+        {
+            SpawnX = LastSpawnX = x;
+            SpawnY = LastSpawnY = y;
+        }
     }
 
-    // sets random position for the unit. returns true if valid space was found
-    public bool RandomizePosition(int x, int y, int radius, bool netupdate)
+    // finds random position for the unit
+    public Vector2i FindRandomPosition(int x, int y, int radius)
     {
         if (radius < 0) radius = 0;
         if (radius == 0)
         {
-            SetPosition(x, y, netupdate);
-            return Interaction.CheckWalkableForUnit(x, y, false);
+            if (!Interaction.CheckWalkableForUnit(x, y, false))
+                return null;
         }
 
         int minX = Mathf.Max(x - radius - (Width - 1), 0);
@@ -638,13 +829,23 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         // if no valid coords found, use center
         if (coords.Count == 0)
         {
-            SetPosition(x, y, netupdate);
-            return false;
+            if (!Interaction.CheckWalkableForUnit(x, y, false))
+                return null;
+            return new Vector2i(x, y);
         }
 
         // 
         Vector2i coord = coords[UnityEngine.Random.Range(0, coords.Count)];
-        SetPosition(coord.x, coord.y, netupdate);
+        return coord;
+    }
+
+    // sets random position for the unit. returns true if valid space was found
+    public bool RandomizePosition(int x, int y, int radius, bool netupdate)
+    {
+        Vector2i coord = FindRandomPosition(x, y, radius);
+        if (coord == null)
+            return false;
+        SetPosition(x, y, netupdate);
         return true;
     }
 
@@ -674,8 +875,22 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public void AddActions(params IUnitAction[] states)
     {
+        // hack: adding death action removes all other actions abruptly
+        bool isDeath = false;
+
+        int hadActions = Actions.Count;
         for (int i = 0; i < states.Length; i++)
+        {
+            if (states[i] is DeathAction)
+                isDeath = true;
             Actions.Add(states[i]);
+        }
+        
+        if (isDeath)
+        {
+            Actions.RemoveRange(1, hadActions - 1);
+        }
+
         if (NetworkManager.IsServer)
             Server.NotifyAddUnitActions(this, states);
     }
@@ -773,10 +988,36 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         DoUpdateInfo = true;
     }
 
+    public void ValidatePosition(bool netupdate)
+    {
+        if (!Interaction.CheckWalkableForUnit(X, Y, false))
+        {
+            for (int radius = 1; radius < 6; radius++)
+            {
+                for (int lx = -radius; lx <= radius; lx++)
+                {
+                    for (int ly = -radius; ly <= radius; ly++)
+                    {
+                        if ((lx == -radius || lx == radius) && (ly == -radius || ly == radius))
+                        {
+                            if (Interaction.CheckWalkableForUnit(X + lx, Y + ly, false))
+                            {
+                                SetPosition(X + lx, Y + ly, netupdate);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public void Respawn(int x, int y)
     {
+        // if cannot stand directly at these coordinates, try to find better ones
         X = x;
         Y = y;
+        ValidatePosition(false);
         Stats.Health = Stats.HealthMax;
         IsAlive = true;
         IsDying = false;
@@ -789,6 +1030,39 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public int TakeDamage(DamageFlags flags, MapUnit source, int damagecount)
     {
+        MapUnitAggro ag = null;
+        // validate diplomacy: alliance will not attack even if attacked
+        if (!NetworkManager.IsClient && !Player.Diplomacy[source.Player.ID].HasFlag(DiplomacyFlags.Ally))
+        {
+            if (Player.DoFullAI)
+            {
+                for (int i = 0; i < Aggro.Count; i++)
+                {
+                    if (Aggro[i].Target == source)
+                    {
+                        ag = Aggro[i];
+                        break;
+                    }
+                }
+
+                if (ag == null)
+                {
+                    ag = new MapUnitAggro(source);
+                    Aggro.Add(ag);
+                }
+            }
+
+            // additionally, if this player is neutral, it will switch to Enemy if attacked
+            // and the attacking player will start being enemy as well
+            if (!Player.Diplomacy[source.Player.ID].HasFlag(DiplomacyFlags.Enemy))
+                Player.Diplomacy[source.Player.ID] |= DiplomacyFlags.Enemy;
+            if (!source.Player.Diplomacy[Player.ID].HasFlag(DiplomacyFlags.Ally))
+                source.Player.Diplomacy[Player.ID] |= DiplomacyFlags.Enemy;
+        }
+
+        if (ag != null)
+            ag.LastDamage = MapLogic.Instance.LevelTime;
+
         if (damagecount <= 0)
             return 0;
 
@@ -832,6 +1106,13 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             damagecount -= damagecount * Stats.ProtectionPike / 100;
         if ((flags & DamageFlags.Shooting) != 0)
             damagecount -= damagecount * Stats.ProtectionShooting / 100;
+
+        // apply damage to aggro
+        if (ag != null)
+        {
+            ag.CountDamage++;
+            ag.Damage += damagecount;
+        }
 
         if (Stats.TrySetHealth(Stats.Health - damagecount))
         {

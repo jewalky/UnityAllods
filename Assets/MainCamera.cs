@@ -108,9 +108,9 @@ public class MainCamera : MonoBehaviour
             if (ho != null)
             {
                 if (ho.GetObjectType() == MapObjectType.Structure)
-                    sb.Append(string.Format("\nHoveredObject: {0}", ((MapStructure)ho).Class.DescText));
+                    sb.Append(string.Format("\nHoveredObject: {0} (ID={1})", ((MapStructure)ho).Class.DescText, ((MapStructure)ho).ID));
                 else if (ho.GetObjectType() == MapObjectType.Monster || ho.GetObjectType() == MapObjectType.Human)
-                    sb.Append(string.Format("\nHoveredObject: {0}", ((MapUnit)ho).TemplateName));
+                    sb.Append(string.Format("\nHoveredObject: {0} (ID={1},Group={2})", ((MapUnit)ho).TemplateName, ((MapUnit)ho).ID, (((MapUnit)ho).Group != null) ? ((MapUnit)ho).Group.ID : -1));
             }
             else sb.Append("\nHoveredObject: <none>");
 
@@ -118,9 +118,9 @@ public class MainCamera : MonoBehaviour
             if (so != null)
             {
                 if (so.GetObjectType() == MapObjectType.Structure)
-                    sb.Append(string.Format("\nSelectedObject: {0}", ((MapStructure)so).Class.DescText));
+                    sb.Append(string.Format("\nSelectedObject: {0} (ID={1})", ((MapStructure)so).Class.DescText, ((MapStructure)so).ID));
                 else if (so.GetObjectType() == MapObjectType.Monster || so.GetObjectType() == MapObjectType.Human)
-                    sb.Append(string.Format("\nSelectedObject: {0}", ((MapUnit)so).TemplateName));
+                    sb.Append(string.Format("\nSelectedObject: {0} (ID={1},Group={2})", ((MapUnit)so).TemplateName, ((MapUnit)so).ID, (((MapUnit)so).Group != null) ? ((MapUnit)so).Group.ID : -1));
             }
             else sb.Append("\nSelectedObject: <none>");
         }

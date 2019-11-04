@@ -34,16 +34,12 @@ public class Group
         // order checks by performance
         if (!from.Player.Diplomacy[target.Player.ID].HasFlag(DiplomacyFlags.Enemy))
             return false;
-        float timeToChaseDirect = (new Vector2i(target.X, target.Y) - new Vector2i(from.X, from.Y)).magnitude / (from.Stats.Speed / 20f);
-        // now, if we need to chase more than 10 seconds, it's a shitty target. ignore it
-        if (timeToChaseDirect > 10)
-            return false;
         if (from.CanSeeUnit(target) < 2)
             return false;
         return true;
     }
 
-    public void UpdateSight()
+    public void UpdateSight(bool onlyUnits)
     {
         // so, UpdateSight is called when we don't have a suitable target, and cannot guess it from group units aggro lists.
         // so we have to look at every unit's sight for enemies
@@ -53,8 +49,12 @@ public class Group
         for (int i = 0; i < Units.Count; i++)
         {
             MapUnit unit = Units[i];
+            float unitMinDist = 65536f;
+            MapUnit unitMinTarget = null;
             if (!unit.IsAlive || !MapLogic.Instance.Objects.Contains(unit))
                 continue;
+            bool hasAggro = unit.Aggro.Count > 0 && unit.Aggro[0].GetAggro() > 0;
+            if (hasAggro && onlyUnits) continue;
             // sight table is 41x41. -20 to +20 from x/y
             for (int y = -20; y <= 20; y++)
             {
@@ -80,10 +80,22 @@ public class Group
                         float dist = (new Vector2i(checkUnit.X, checkUnit.Y) - new Vector2i(unit.X, unit.Y)).magnitude;
                         if (dist < minDist || minTarget == null)
                             minTarget = checkUnit;
+                        if (dist < unitMinDist || unitMinTarget == null)
+                            unitMinTarget = checkUnit;
                     }
                 }
             }
+            
+            // set unit target, if it's aggro is 0 (no damage seen)
+            if (unitMinTarget != null && (unit.Aggro.Count <= 0 || unit.Aggro[0].GetAggro() <= 0))
+            {
+                unit.Aggro.Clear();
+                unit.Aggro.Add(new MapUnitAggro(unitMinTarget));
+            }
         }
+
+        if (onlyUnits)
+            return;
 
         if (minTarget != null)
             SharedTarget = minTarget;
@@ -176,14 +188,13 @@ public class Group
             {
                 SharedTarget = possibleTarget;
             }
-            else // if there is no target...
+        }
+
+        if (anyAlive)
+        {
+            if (((MapLogic.Instance.LevelTime + SightOffset) % SCAN_RATE) == 0)
             {
-                // look at unit sight! but try to not check all groups at the same time, as this operation is a bit more costly than usual
-                // for this we use a randomized time offset created at group init
-                if (((MapLogic.Instance.LevelTime + SightOffset) % SCAN_RATE) == 0)
-                {
-                    UpdateSight();
-                }
+                UpdateSight(SharedTarget != null);
             }
         }
     }

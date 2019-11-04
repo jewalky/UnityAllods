@@ -61,7 +61,9 @@ public class MapUnitAggro
 
     public float GetAggro()
     {
-        float baseAggro = (CountDamage > 0) ? (Damage / CountDamage) : 0;
+        if (CountDamage == 0)
+            return 0;
+        float baseAggro = Damage / CountDamage;
         // rougly 10 seconds for 0.5 aggro factor here. defined by /5 at the end of timeFac
         int curTime = MapLogic.Instance.LevelTime;
         float timeFac = Mathf.Min(1f / ((curTime - LastDamage) / MapLogic.TICRATE / 5), 1f);
@@ -428,15 +430,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public void UpdateAggro()
     {
-        // pick group target if we don't have our own, as lowest priority
-        if (Aggro.Count <= 0 && Group != null)
-        {
-            if (Group.SharedTarget != null && Group.SharedTarget.IsAlive && MapLogic.Instance.Objects.Contains(Group.SharedTarget))
-            {
-                MapUnitAggro newAg = new MapUnitAggro(Group.SharedTarget);
-                Aggro.Add(newAg);
-            }
-        }
         // first off, slowly tick aggro factors down
         // and remove dead/unlinked units
         for (int i = 0; i < Aggro.Count; i++)
@@ -467,11 +460,20 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 ag.LastSeen = MapLogic.Instance.LevelTime;
             }
             // check if last seen a lot of time ago ( > 5 seconds for now)
-            if (MapLogic.Instance.LevelTime - ag.LastSeen > MapLogic.TICRATE * 5)
+            if (MapLogic.Instance.LevelTime - ag.LastSeen > MapLogic.TICRATE * 2)
             {
                 Aggro.RemoveAt(i);
                 i--;
                 continue;
+            }
+        }
+        // pick group target if we don't have our own, as lowest priority
+        if (Aggro.Count <= 0 && Group != null)
+        {
+            if (Group.SharedTarget != null && Group.SharedTarget.IsAlive && MapLogic.Instance.Objects.Contains(Group.SharedTarget))
+            {
+                MapUnitAggro newAg = new MapUnitAggro(Group.SharedTarget);
+                Aggro.Add(newAg);
             }
         }
         Aggro.Sort((MapUnitAggro a1, MapUnitAggro a2) =>

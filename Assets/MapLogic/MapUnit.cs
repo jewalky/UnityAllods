@@ -152,6 +152,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public int SpawnY = -1;
     public int LastSpawnX = -1;
     public int LastSpawnY = -1;
+    // for AI
+    public int TargetX = -1;
+    public int TargetY = -1;
 
     private UnitFlags _Flags = UnitFlags.None;
     public UnitFlags Flags
@@ -780,8 +783,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public void SetPosition(int x, int y, bool netupdate)
     {
         UnlinkFromWorld();
-        X = x;
-        Y = y;
+        TargetX = X = x;
+        TargetY = Y = y;
         if (IsAlive) LinkToWorld();
         CalculateVision();
         DoUpdateView = true;

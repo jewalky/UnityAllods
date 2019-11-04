@@ -144,6 +144,9 @@ public class MoveAction : IUnitAction
         if (!NetworkManager.IsClient && !Unit.Interaction.CheckWalkableForUnit(TargetX, TargetY, false))
             return false; // stop this state. possibly try to pathfind again. otherwise idle.
 
+        Unit.TargetX = TargetX;
+        Unit.TargetY = TargetY;
+
         //Debug.LogFormat("walk state: moving to {0},{1} ({2})", TargetX, TargetY, Frac);
         if (Frac >= 1)
         {

@@ -459,8 +459,8 @@ class MapLogic
                 if ((almunit.Flags & 0x10) != 0)
                 {
                     MapHuman human = new MapHuman(almunit.ServerID);
-                    human.X = human.SpawnX = human.LastSpawnX = (int)almunit.X;
-                    human.Y = human.SpawnY = human.LastSpawnY = (int)almunit.Y;
+                    human.X = human.TargetX = human.SpawnX = human.LastSpawnX = (int)almunit.X;
+                    human.Y = human.TargetY = human.SpawnY = human.LastSpawnY = (int)almunit.Y;
                     human.Tag = almunit.ID;
                     human.Player = GetPlayerByID(almunit.Player - 1);
                     if (almunit.HealthMax >= 0)
@@ -479,8 +479,8 @@ class MapLogic
                 else
                 {
                     MapUnit unit = new MapUnit(almunit.ServerID);
-                    unit.X = unit.SpawnX = unit.LastSpawnX = (int)almunit.X;
-                    unit.Y = unit.SpawnY = unit.LastSpawnY = (int)almunit.Y;
+                    unit.X = unit.TargetX = unit.SpawnX = unit.LastSpawnX = (int)almunit.X;
+                    unit.Y = unit.TargetY = unit.SpawnY = unit.LastSpawnY = (int)almunit.Y;
                     unit.Tag = almunit.ID;
                     unit.Player = GetPlayerByID(almunit.Player - 1);
                     if (almunit.HealthMax >= 0)

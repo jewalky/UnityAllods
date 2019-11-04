@@ -82,7 +82,7 @@ public class UnitInteraction
 
     public Vector2i GetClosestPointTo(MapUnit other)
     {
-        return GetClosestPointTo(other.X, other.Y);
+        return GetClosestPointTo(other.TargetX, other.TargetY);
     }
 
     public float GetClosestDistanceTo(MapUnit other)
@@ -91,16 +91,34 @@ public class UnitInteraction
             return 0;
 
         Vector2i cPt1 = new Vector2i(Unit.X, Unit.Y);
-        Vector2i cPt2 = new Vector2i(other.X, other.Y);
+        Vector2i cPt2 = new Vector2i(other.TargetX, other.TargetY);
         int cX = 256;
         int cY = 256;
         for (int ly = Unit.Y; ly < Unit.Y + Unit.Height; ly++)
         {
             for (int lx = Unit.X; lx < Unit.X + Unit.Width; lx++)
             {
+                // check current coords
                 for (int lly = other.Y; lly < other.Y + other.Height; lly++)
                 {
                     for (int llx = other.X; llx < other.X + other.Width; llx++)
+                    {
+                        int xDist = Math.Abs(llx - lx);
+                        int yDist = Math.Abs(lly - ly);
+
+                        if (xDist < cX || yDist < cY)
+                        {
+                            cPt1 = new Vector2i(lx, ly);
+                            cPt2 = new Vector2i(llx, lly);
+                            cX = xDist;
+                            cY = yDist;
+                        }
+                    }
+                }
+                // check target coords
+                for (int lly = other.TargetY; lly < other.TargetY + other.Height; lly++)
+                {
+                    for (int llx = other.TargetX; llx < other.TargetX + other.Width; llx++)
                     {
                         int xDist = Math.Abs(llx - lx);
                         int yDist = Math.Abs(lly - ly);

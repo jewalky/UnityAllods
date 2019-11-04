@@ -515,6 +515,7 @@ class MapLogic
             else ConsolePlayer = Self;
             if (ConsolePlayer != null)
             {
+                ConsolePlayer.Name = Config.cl_nickname.Length == 0 ? "Self" : Config.cl_nickname;
                 ConsolePlayer.Flags = 0;
                 ConsolePlayer.Diplomacy[ConsolePlayer.ID] = DiplomacyFlags.Ally | DiplomacyFlags.Vision;
                 GameManager.Instance.CallDelegateOnNextFrame(() =>

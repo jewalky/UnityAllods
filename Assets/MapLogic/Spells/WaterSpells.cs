@@ -82,9 +82,8 @@ namespace Spells
                                 float pdst = 1f - Mathf.Min(1f, new Vector2(px + 0.5f - proj.ProjectileX, py + 0.5f - proj.ProjectileY).magnitude);
                                 // 0..1 effect power
                                 MapNode node = MapLogic.Instance.Nodes[px, py];
-                                for (int i = 0; i < node.Objects.Count; i++)
+                                foreach (MapObject mo in node.Objects)
                                 {
-                                    MapObject mo = node.Objects[i];
                                     if (!(mo is MapUnit))
                                         continue;
                                     MapUnit mov = (MapUnit)mo;
@@ -134,9 +133,8 @@ namespace Spells
                         Server.SpawnProjectileSimple(AllodsProjectile.Blizzard, Spell.User, rndX + 0.5f, rndY + 0.5f, 0f, 1f, 1f, 0, 7);
                         // find something to damage in this cell
                         MapNode node = MapLogic.Instance.Nodes[proj.X, proj.Y];
-                        for (int i = 0; i < node.Objects.Count; i++)
+                        foreach (MapObject mo in node.Objects)
                         {
-                            MapObject mo = node.Objects[i];
                             if (!(mo is IVulnerable))
                                 continue;
                             IVulnerable vul = (IVulnerable)mo;

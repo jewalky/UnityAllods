@@ -21,11 +21,12 @@ public class UnitInteraction
         {
             for (int lx = x; lx < x + Unit.Width; lx++)
             {
+                MapNode node = MapLogic.Instance.Nodes[lx, ly];
                 // skip cells currently taken
-                if (MapLogic.Instance.Nodes[lx, ly].Objects.Contains(Unit))
+                if (node.Objects.Contains(Unit))
                     continue; // if we are already on this cell, skip it as passible
-                uint tile = MapLogic.Instance.Nodes[lx, ly].Tile;
-                MapNodeFlags flags = MapLogic.Instance.Nodes[lx, ly].Flags;
+                uint tile = node.Tile;
+                MapNodeFlags flags = node.Flags;
                 if (Unit.IsWalking && (flags & MapNodeFlags.Unblocked) == 0 && (tile >= 0x1C0 && tile <= 0x2FF))
                     return false;
                 MapNodeFlags bAir = staticOnly ? MapNodeFlags.BlockedAir : MapNodeFlags.BlockedAir | MapNodeFlags.DynamicAir;

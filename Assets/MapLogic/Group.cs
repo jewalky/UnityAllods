@@ -51,7 +51,7 @@ public class Group
             MapUnit unit = Units[i];
             float unitMinDist = 65536f;
             MapUnit unitMinTarget = null;
-            if (!unit.IsAlive || !MapLogic.Instance.Objects.Contains(unit))
+            if (!unit.IsAlive || !unit.IsLinked)
                 continue;
             bool hasAggro = unit.Aggro.Count > 0 && unit.Aggro[0].GetAggro() > 0;
             if (hasAggro && onlyUnits) continue;
@@ -67,9 +67,8 @@ public class Group
                     if (!unit.Vision[x + 20, y + 20])
                         continue;
                     MapNode node = MapLogic.Instance.Nodes[x+unit.X, y+unit.Y];
-                    for (int j = 0; j < node.Objects.Count; j++)
+                    foreach (MapObject mobj in node.Objects)
                     {
-                        MapObject mobj = node.Objects[j];
                         if (!(mobj is MapUnit))
                             continue;
                         MapUnit checkUnit = (MapUnit)mobj;
@@ -109,7 +108,7 @@ public class Group
     public void Update()
     {
         // check if shared target is not valid
-        if (SharedTarget != null && (!SharedTarget.IsAlive || !MapLogic.Instance.Objects.Contains(SharedTarget)))
+        if (SharedTarget != null && (!SharedTarget.IsAlive || !SharedTarget.IsLinked))
             SharedTarget = null;
 
         bool anyAlive = false;
@@ -122,7 +121,7 @@ public class Group
                 continue;
 
             anyAlive = true;
-            if (!MapLogic.Instance.Objects.Contains(unit))
+            if (!unit.IsLinked)
                 continue;
 
             if (!currentTargetIsOk && SharedTarget != null)

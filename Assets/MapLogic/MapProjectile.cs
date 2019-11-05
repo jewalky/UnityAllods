@@ -39,7 +39,7 @@ public class MapProjectileLogicHoming : IMapProjectileLogic
     {
         // calculate target direction!
         // check if target is gone
-        if (!Target.IsAlive || !MapLogic.Instance.Objects.Contains(Target))
+        if (!Target.IsAlive || !Target.IsLinked)
             Target = null;
 
         if (Target != null)
@@ -235,7 +235,7 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
     {
         // calculate target direction!
         // check if target is gone
-        if (Target != null && (!Target.IsAlive || !MapLogic.Instance.Objects.Contains(Target)))
+        if (Target != null && (!Target.IsAlive || !Target.IsLinked))
             Target = null;
 
         Projectile.Alpha = 0;

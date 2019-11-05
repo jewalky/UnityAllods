@@ -141,7 +141,7 @@ public class AttackState : IUnitState
         if (Unit.Stats.Health <= 0)
             return false;
 
-        if (TargetUnit == Unit || !TargetUnit.IsAlive || !MapLogic.Instance.Objects.Contains(TargetUnit))
+        if (TargetUnit == Unit || !TargetUnit.IsAlive || !TargetUnit.IsLinked)
             return false;
 
         if (!Unit.Interaction.CheckCanAttack(TargetUnit))
@@ -252,7 +252,7 @@ public class CastState : IUnitState
         TargetUnit = targetUnit;
         TargetX = TargetY = -1;
         Executed = false;
-        IsAttack = global::Spell.IsAttackSpell(spell.SpellID);
+        IsAttack = Spell.IsAttackSpell(spell.SpellID);
     }
 
     public CastState(MapUnit unit, Spell spell, int targetX, int targetY)
@@ -285,7 +285,7 @@ public class CastState : IUnitState
         if (Unit.Stats.Health <= 0)
             return false;
 
-        if ((IsAttack && TargetUnit == Unit) || (TargetUnit != null && (!TargetUnit.IsAlive || !MapLogic.Instance.Objects.Contains(TargetUnit))))
+        if ((IsAttack && TargetUnit == Unit) || (TargetUnit != null && (!TargetUnit.IsAlive || !TargetUnit.IsLinked)))
             return false;
 
         if (TargetUnit != null && !Unit.Interaction.CheckCanAttack(TargetUnit))

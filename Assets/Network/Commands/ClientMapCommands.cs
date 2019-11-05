@@ -983,13 +983,13 @@ namespace ClientCommands
                     return false;
 
             MapNode node = MapLogic.Instance.Nodes[X, Y];
-            for (int i = 0; i < node.Objects.Count; i++)
+            foreach (MapObject mobj in node.Objects)
             {
                 // check object type.
-                if (node.Objects[i].GetObjectType() != MapObjectType.Obstacle)
+                if (mobj.GetObjectType() != MapObjectType.Obstacle)
                     continue;
 
-                MapObstacle ob = (MapObstacle)node.Objects[i];
+                MapObstacle ob = (MapObstacle)mobj;
                 ob.SetDead(false);
             }
 

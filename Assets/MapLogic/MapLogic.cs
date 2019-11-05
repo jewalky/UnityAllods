@@ -22,7 +22,7 @@ public class MapNode
     public int DynLight = 0;
     public ushort Tile = 0;
     public MapNodeFlags Flags = 0;
-    public List<MapObject> Objects = new List<MapObject>();
+    public HashSet<MapObject> Objects = new HashSet<MapObject>();
 }
 
 class MapLogic
@@ -454,6 +454,8 @@ class MapLogic
         // load units
         if (!NetworkManager.IsClient && mapStructure.Units != null)
         {
+            int c = 0;
+            System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
             foreach (AllodsMap.AlmUnit almunit in mapStructure.Units)
             {
                 if ((almunit.Flags & 0x10) != 0)
@@ -749,6 +751,25 @@ class MapLogic
         unit.Tag = GetFreeUnitTag(); // this is also used as network ID.
         unit.SetPosition(16, 16, false);
         Objects.Add(unit);
+
+        // add items for testing
+        unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Meteoric Amulet {skillfire=100,skillwater=100,skillair=100,skillearth=100,skillastral=100,manamax=16000}")); // for testing mage
+        unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Crystal Ring {body=3,scanrange=1,spirit=1}"));
+        unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Crystal Amulet {body=3,scanrange=1,spirit=1}"));
+        unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Dragon Leather Large Shield {body=3,protectionearth=20,damagebonus=20}"));
+        unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Crystal Plate Helm {body=3,scanrange=2}"));
+        unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Crystal Plate Cuirass {body=3}"));
+        unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Crystal Plate Bracers {body=3}"));
+        unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Crystal Scale Gauntlets {body=3}"));
+        unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Crystal Plate Boots {body=3}"));
+        unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Crystal Pike {tohit=500,damagemin=10,damagemax=20}"));
+        unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Meteoric Crossbow {damagemax=500}"));
+        for (int i = 0; i < 50; i++)
+            unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("SuperScroll Teleport"));
+        for (int i = 0; i < 250; i++)
+            unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Scroll Teleport"));
+
+
         return unit;
     }
 
@@ -829,14 +850,15 @@ class MapLogic
             return;
 
         MapNode node = Nodes[x, y];
-        for (int i = 0; i < node.Objects.Count; i++)
+        List<MapObject> mobjs = new List<MapObject>();
+        foreach (MapObject mobj in node.Objects)
         {
-            MapObject mobj = node.Objects[i];
             if (mobj.GetObjectType() != MapObjectType.Sack) continue;
-            mobj.Dispose();
-            Objects.Remove(mobj); // remove from the list
-            i--;
+            mobjs.Add(mobj);
         }
+
+        for (int i = 0; i < mobjs.Count; i++)
+            mobjs[i].Dispose();
 
         if (NetworkManager.IsServer)
             Server.NotifyNoSack(x, y);

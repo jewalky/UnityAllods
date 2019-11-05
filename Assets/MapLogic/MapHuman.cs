@@ -160,26 +160,6 @@ public class MapHuman : MapUnit
         // fix health and mana
         Stats.TrySetHealth(Stats.HealthMax);
         Stats.TrySetMana(Stats.ManaMax);
-
-        // add item for testing
-        if (!NetworkManager.IsClient)
-        {
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Amulet {skillfire=100,skillwater=100,skillair=100,skillearth=100,skillastral=100,manamax=16000}")); // for testing mage
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Ring {body=3,scanrange=1,spirit=1}"));
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Amulet {body=3,scanrange=1,spirit=1}"));
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Dragon Leather Large Shield {body=3,protectionearth=20,damagebonus=20}"));
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Plate Helm {body=3,scanrange=2}"));
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Plate Cuirass {body=3}"));
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Plate Bracers {body=3}"));
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Scale Gauntlets {body=3}"));
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Plate Boots {body=3}"));
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Crystal Pike {tohit=500,damagemin=10,damagemax=20}"));
-            ItemsPack.PutItem(ItemsPack.Count, new Item("Very Rare Meteoric Crossbow {damagemax=500}"));
-            for (int i = 0; i < 50; i++)
-                ItemsPack.PutItem(ItemsPack.Count, new Item("SuperScroll Teleport"));
-            for (int i = 0; i < 250; i++)
-                ItemsPack.PutItem(ItemsPack.Count, new Item("Scroll Teleport"));
-        }
     }
 
     public override bool IsItemUsable(Item item)

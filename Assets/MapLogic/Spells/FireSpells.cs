@@ -80,9 +80,9 @@ namespace Spells
                                                                                                     int dmg = (int)((2f-(new Vector2(x-fproj.X, y-fproj.Y).magnitude)) * ballDamage);
                                                                                                     // damage in the center is approximately 1.4 or 1.6
                                                                                                     MapNode node = MapLogic.Instance.Nodes[x, y];
-                                                                                                    for (int i = 0; i < node.Objects.Count; i++)
+                                                                                                    List<MapObject> toRemove = new List<MapObject>();
+                                                                                                    foreach (MapObject mo in node.Objects)
                                                                                                     {
-                                                                                                        MapObject mo = node.Objects[i];
                                                                                                         if (!(mo is IVulnerable))
                                                                                                         {
                                                                                                             // aoe fire effect: remove cloud effects if any
@@ -97,8 +97,7 @@ namespace Spells
                                                                                                             if (new Vector2(mp.ProjectileX - fproj.ProjectileX, mp.ProjectileY - fproj.ProjectileY).magnitude > 1.5f)
                                                                                                                 continue;
 
-                                                                                                            mp.Dispose();
-                                                                                                            i--;
+                                                                                                            toRemove.Add(mp);
                                                                                                             continue;
                                                                                                         }
                                                                                                         else
@@ -107,6 +106,8 @@ namespace Spells
                                                                                                             mov.TakeDamage(spdf, Spell.User, dmg);
                                                                                                         }
                                                                                                     }
+                                                                                                    for (int i = 0; i < toRemove.Count; i++)
+                                                                                                        toRemove[i].Dispose();
                                                                                                 }
                                                                                             }
 
@@ -162,9 +163,9 @@ namespace Spells
                                 float pdst = 1f - Mathf.Min(1f, new Vector2(px + 0.5f - proj.ProjectileX, py + 0.5f - proj.ProjectileY).magnitude);
                                 // 0..1 effect power
                                 MapNode node = MapLogic.Instance.Nodes[px, py];
-                                for (int i = 0; i < node.Objects.Count; i++)
+                                List<MapObject> toRemove = new List<MapObject>();
+                                foreach (MapObject mo in node.Objects)
                                 {
-                                    MapObject mo = node.Objects[i];
                                     if (!(mo is IVulnerable))
                                     {
                                         // aoe fire effect: remove cloud effects if any
@@ -179,8 +180,7 @@ namespace Spells
                                         if (new Vector2(mp.ProjectileX - proj.ProjectileX, mp.ProjectileY - proj.ProjectileY).magnitude > 0.8f)
                                             continue;
 
-                                        mp.Dispose();
-                                        i--;
+                                        toRemove.Add(mp);
                                         continue;
                                     }
                                     else
@@ -190,6 +190,8 @@ namespace Spells
                                         mov.TakeDamage(spdf, Spell.User, dmg);
                                     }
                                 }
+                                for (int i = 0; i < toRemove.Count; i++)
+                                    toRemove[i].Dispose();
                             }
                         }
                     });

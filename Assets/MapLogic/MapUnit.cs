@@ -404,7 +404,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public bool CanDetectUnit(MapUnit other)
     {
-        if (!MapLogic.Instance.Objects.Contains(other))
+        if (!other.IsLinked)
             return false;
         if (other.Flags.HasFlag(UnitFlags.Invisible) && !other.Player.Diplomacy[Player.ID].HasFlag(DiplomacyFlags.Vision))
             return false;
@@ -435,7 +435,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         for (int i = 0; i < Aggro.Count; i++)
         {
             MapUnitAggro ag = Aggro[i];
-            if (ag.Target == null || !ag.Target.IsAlive || !MapLogic.Instance.Objects.Contains(ag.Target))
+            if (ag.Target == null || !ag.Target.IsAlive || !ag.Target.IsLinked)
             {
                 // remove item
                 Aggro.RemoveAt(i);
@@ -470,7 +470,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         // pick group target if we don't have our own, as lowest priority
         if (Aggro.Count <= 0 && Group != null)
         {
-            if (Group.SharedTarget != null && Group.SharedTarget.IsAlive && MapLogic.Instance.Objects.Contains(Group.SharedTarget))
+            if (Group.SharedTarget != null && Group.SharedTarget.IsAlive && Group.SharedTarget.IsLinked)
             {
                 MapUnitAggro newAg = new MapUnitAggro(Group.SharedTarget);
                 Aggro.Add(newAg);
@@ -492,7 +492,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public void UpdateAI()
     {
-        if (!IsAlive || IsDying || !MapLogic.Instance.Objects.Contains(this))
+        if (!IsAlive || IsDying || !IsLinked)
             return;
 
         // if there is a target, chase and attack it
@@ -753,6 +753,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         try
         {
+            System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
             List<Vector2i> nodes = AstarSearcher.GetShortestPath(new Vector2i(X, Y), new Vector2i(targetX, targetY));
             if (nodes == null)
                 return null;

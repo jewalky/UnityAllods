@@ -712,7 +712,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         return IsFlying ? MapNodeFlags.DynamicAir : MapNodeFlags.DynamicGround;
     }
 
-    private int AstarNodesWalked = 0;
+    /*private int AstarNodesWalked = 0;
     private int AstarLastX = -1;
     private int AstarLastY = -1;
     private List<Vector2i> AstarLastSolution;
@@ -768,7 +768,34 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         {
             return null;
         }
+    }*/
+
+    //* WarBeginner *//
+    public List<Vector2i> DecideNextMove(int targetX, int targetY, bool staticOnly, float distance = 1)
+    {
+
+        if (distance < 1)
+            distance = 1;
+
+        // if targetX,targetY is blocked, refuse to pathfind.
+        if (!Interaction.CheckWalkableForUnit(targetX, targetY, staticOnly) && distance < 2)
+            return null;
+
+        try
+        {
+            //System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+            List<Vector2i> nodes = MapLogic.Instance.Wizard.GetShortestPath(this, staticOnly, distance, new Vector2i(X, Y), new Vector2i(targetX, targetY));
+            if (nodes == null)
+                return null;
+            return nodes;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
+    //* end *//
+
 
     public int FaceCell(int x, int y)
     {

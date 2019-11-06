@@ -67,8 +67,9 @@ public class Group
                     if (!unit.Vision[x + 20, y + 20])
                         continue;
                     MapNode node = MapLogic.Instance.Nodes[x+unit.X, y+unit.Y];
-                    foreach (MapObject mobj in node.Objects)
+                    for (int j = 0; j < node.Objects.Count; j++)
                     {
+                        MapObject mobj = node.Objects[j];
                         if (!(mobj is MapUnit))
                             continue;
                         MapUnit checkUnit = (MapUnit)mobj;

@@ -22,7 +22,7 @@ public class MapNode
     public int DynLight = 0;
     public ushort Tile = 0;
     public MapNodeFlags Flags = 0;
-    public HashSet<MapObject> Objects = new HashSet<MapObject>();
+    public List<MapObject> Objects = new List<MapObject>();
 }
 
 class MapLogic
@@ -850,15 +850,14 @@ class MapLogic
             return;
 
         MapNode node = Nodes[x, y];
-        List<MapObject> mobjs = new List<MapObject>();
-        foreach (MapObject mobj in node.Objects)
+        for (int i = 0; i < node.Objects.Count; i++)
         {
+            MapObject mobj = node.Objects[i];
             if (mobj.GetObjectType() != MapObjectType.Sack) continue;
-            mobjs.Add(mobj);
+            mobj.Dispose();
+            Objects.Remove(mobj); // remove from the list
+            i--;
         }
-
-        for (int i = 0; i < mobjs.Count; i++)
-            mobjs[i].Dispose();
 
         if (NetworkManager.IsServer)
             Server.NotifyNoSack(x, y);

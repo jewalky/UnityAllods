@@ -27,6 +27,20 @@ public class MapNode
 
 class MapLogic
 {
+
+//* WarBeginner *//
+	private MapWizard _Wizard = null;
+	public MapWizard Wizard
+	{
+		get
+		{
+			if (_Wizard == null)
+				_Wizard = new MapWizard();
+			return _Wizard;
+		}
+	}
+//* end *//
+
     private static MapLogic _Instance = null;
     public static MapLogic Instance
     {
@@ -337,6 +351,9 @@ class MapLogic
         FileName = null;
         MapStructure = null;
         GameManager.Instance.MapView.Unload();
+//* WarBeginner *//
+	Wizard.Unload();
+//* end *//
     }
 
     private void InitGeneric()
@@ -545,6 +562,11 @@ class MapLogic
             Objects.Add(proj);
             */
         }
+
+//* WarBeginner *//
+	Wizard.LoadMap(this);
+//* end *//
+
     }
 
     private Group FindNewGroup(int groupId)

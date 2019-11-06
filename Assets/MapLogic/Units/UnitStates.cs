@@ -21,16 +21,20 @@ public class MoveState : IUnitState
     private MapUnit Unit;
     private int WalkX;
     private int WalkY;
+    private int WalkWidth;
+    private int WalkHeight;
 
-    public MoveState(MapUnit unit, int x, int y)
+    public MoveState(MapUnit unit, int x, int y, int width, int height)
     {
         Unit = unit;
         WalkX = x;
         WalkY = y;
+        WalkWidth = width;
+        WalkHeight = height;
     }
 
     // made static because it's also used by other actions
-    public static bool TryWalkTo(MapUnit unit, int walkX, int walkY, float distance = 1)
+    public static bool TryWalkTo(MapUnit unit, int walkX, int walkY, int walkWidth, int walkHeight, float distance = 1)
     {
         // check if target is walkable for us (statically)
         if (distance < 1)
@@ -68,11 +72,11 @@ public class MoveState : IUnitState
             return true;
 
         // try to pathfind
-        List<Vector2i> path = unit.DecideNextMove(walkX, walkY, true, distance);
-        if (path == null)
+        Vector2i point = unit.DecideNextMove(walkX, walkY, walkWidth, walkHeight, distance);
+        if (point == null)
             return false;
 
-        int sbd = 32;
+        /*int sbd = 32;
         if (sbd > path.Count) sbd = path.Count;
         for (int i = 0; i < sbd; i++)
         {
@@ -96,14 +100,14 @@ public class MoveState : IUnitState
 
                 break;
             }
-        }
+        }*/
 
         // if NEXT node is not walkable, we drop into idle state.
-        if (unit.Interaction.CheckWalkableForUnit(path[0].x, path[0].y, false))
+        if (unit.Interaction.CheckWalkableForUnit(point.x, point.y, false))
         {
             // next path node found
             // notify clients
-            unit.AddActions(new MoveAction(unit, path[0].x, path[0].y), new RotateAction(unit, unit.FaceCell(path[0].x, path[0].y)));
+            unit.AddActions(new MoveAction(unit, point.x, point.y), new RotateAction(unit, unit.FaceCell(point.x, point.y)));
             return true;
         }
 
@@ -118,7 +122,7 @@ public class MoveState : IUnitState
         if (Unit.X == WalkX && Unit.Y == WalkY)
             return false;
 
-        if (!TryWalkTo(Unit, WalkX, WalkY))
+        if (!TryWalkTo(Unit, WalkX, WalkY, WalkWidth, WalkHeight ))
             return false;
 
         return true;
@@ -171,7 +175,7 @@ public class AttackState : IUnitState
         else
         {
             // make one step to the target.
-            MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, Unit.Interaction.GetAttackRange());
+            MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, TargetUnit.Width, TargetUnit.Height, Unit.Interaction.GetAttackRange());
         }
 
         return true;
@@ -229,7 +233,7 @@ public class PickupState : IUnitState
         }
         else
         {
-            MoveState.TryWalkTo(Unit, TargetX, TargetY);
+            MoveState.TryWalkTo(Unit, TargetX, TargetY, 0, 0 );
             return true;
         }
     }
@@ -329,8 +333,8 @@ public class CastState : IUnitState
         {
             // make one step to the target.
             if (TargetUnit != null)
-                MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, Spell.GetDistance());
-            else MoveState.TryWalkTo(Unit, TargetX, TargetY, Spell.GetDistance());
+                MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, 0, 0, Spell.GetDistance());
+            else MoveState.TryWalkTo(Unit, TargetX, TargetY, 0, 0, Spell.GetDistance());
         }
 
         return true;

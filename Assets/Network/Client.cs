@@ -73,7 +73,7 @@ public class Client
         {
             if (MapLogic.Instance.ConsolePlayer == unit.Player)
             {
-                unit.SetState(new MoveState(unit, x, y));
+                unit.SetState(new MoveState(unit, x, y, 0, 0));
             }
         }
     }

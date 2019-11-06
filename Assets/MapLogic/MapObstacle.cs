@@ -11,6 +11,9 @@ public class MapObstacle : MapObject, IVulnerable
     public int CurrentTime = 0;
     public bool IsDead = false;
 
+    private bool WasDead = false;
+    private bool NeedDeathSFX = false;
+
     public MapObstacle(int typeId)
     {
         Class = ObstacleClassLoader.GetObstacleClassById(typeId);
@@ -40,6 +43,15 @@ public class MapObstacle : MapObject, IVulnerable
         if (Class == null)
             return;
 
+        if (!WasDead && IsDead)
+        {
+            if (!NetworkManager.IsClient && NeedDeathSFX)
+            {
+                Server.SpawnProjectileSimple(AllodsProjectile.FireWall, null, X + 0.5f, Y + 0.5f, 0, 1);
+            }
+            WasDead = IsDead;
+        }
+
         UpdateNetVisibility(); // :( ?
 
         // do not animate if visibility != 2, also do not render at all if visibility == 0
@@ -67,10 +79,8 @@ public class MapObstacle : MapObject, IVulnerable
             return false;
 
         IsDead = true;
-
-        // spawn dead sfx.
-        if (sfx)
-            Server.SpawnProjectileSimple(AllodsProjectile.FireWall, null, X + 0.5f, Y + 0.5f, 0, 1);
+        NeedDeathSFX = sfx;
+        WasDead = false;
 
         // set current class id to deadobject.
         ObstacleClass deadClass = ObstacleClassLoader.GetObstacleClassById(Class.DeadObject);

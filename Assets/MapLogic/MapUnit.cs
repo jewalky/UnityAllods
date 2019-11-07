@@ -771,10 +771,10 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     }*/
 
     //* WarBeginner *//
-    public Vector2i DecideNextMove(int targetX, int targetY, int targetWidth, int targetHeight, float distance = 1)
+    public Vector2i DecideNextMove(int targetX, int targetY, int targetWidth, int targetHeight, float distance = 0)
     {
-        if (distance < 1)
-            distance = 1;
+        if (distance < 0)
+            distance = 0;
 
         // if targetX,targetY is blocked, refuse to pathfind.
         if (!Interaction.CheckWalkableForUnit(targetX, targetY, true) && distance < 2)

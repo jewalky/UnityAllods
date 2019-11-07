@@ -34,8 +34,7 @@ class AstarPathfinder
 
     private int Heuristic(int x, int y, int targetX, int targetY)
     {
-        // use manhattan distance here
-        return Math.Abs(x - targetX) + Math.Abs(y - targetY);
+        return (int)(new Vector2i(x - targetX, y - targetY).magnitude*10);
     }
 
     private LinkedList<Vector2i> GetPath(AstarNode node)
@@ -79,15 +78,19 @@ class AstarPathfinder
         // deviation from origin allowed: 128000 / size of traversed nodes
 
         // add start node
+        int checkedNodes = 0;
         while (openNodes.First != null)
         {
+            checkedNodes++;
             LinkedListNode<AstarNode> node = openNodes.First;
             // first node is guaranteed to have lowest heuristic
             // check if this node is Goal
             AstarNode val = node.Value;
             if ((val.X >= toStartX && val.X <= toEndX && val.Y >= toStartY && val.Y <= toEndY) || // if path is directly contained in the goal list
                 (new Vector2i(val.X - toCenterX, val.Y - toCenterY).magnitude <= distance)) // or distance is enough
+            {
                 return GetPath(val);
+            }
 
             // not goal, advance the list
             openNodes.RemoveFirst();

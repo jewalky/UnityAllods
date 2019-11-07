@@ -30,11 +30,11 @@ public class MoveState : IUnitState
     }
 
     // made static because it's also used by other actions
-    public static bool TryWalkTo(MapUnit unit, int walkX, int walkY, int walkWidth, int walkHeight, float distance = 1)
+    public static bool TryWalkTo(MapUnit unit, int walkX, int walkY, int walkWidth, int walkHeight, float distance = 0)
     {
         // check if target is walkable for us (statically)
-        if (distance < 1)
-            distance = 1;
+        if (distance < 0)
+            distance = 0;
 
         // note: 0x0 = specific cell
         // more than 0x0 = unit

@@ -506,7 +506,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             // check if we are at our respawn point
             if (X != LastSpawnX || Y != LastSpawnY)
             {
-                SetState(new MoveState(this, LastSpawnX, LastSpawnY, 0, 0 ));
+                SetState(new MoveState(this, LastSpawnX, LastSpawnY));
             }
         }
 
@@ -773,7 +773,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     //* WarBeginner *//
     public Vector2i DecideNextMove(int targetX, int targetY, int targetWidth, int targetHeight, float distance = 1)
     {
-
         if (distance < 1)
             distance = 1;
 
@@ -783,7 +782,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         try
         {
-            //System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+            /*
             List<Vector2i> nodes = MapLogic.Instance.Wizard.GetShortestPath(this, true, distance, X, Y, targetX, targetY, targetWidth, targetHeight, 1);
             if (nodes == null)
                 return null;
@@ -791,7 +790,35 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 nodes = MapLogic.Instance.Wizard.GetShortestPath(this, false, distance, X, Y, targetX, targetY, targetWidth, targetHeight, 1);
             if (nodes == null)
                 return null;
-            return nodes[0];
+            return nodes[0];*/
+            int left = targetX;
+            int top = targetY;
+            int right = targetX;
+            int bottom = targetY;
+            if (targetWidth > 0 || targetHeight > 0)
+            {
+                left -= 1;
+                top -= 1;
+                right += targetWidth;
+                bottom += targetHeight;
+            }
+            AstarPathfinder astar = new AstarPathfinder();
+            //System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+            LinkedList<Vector2i> nodes = astar.FindPath(this, X, Y, left, top, right, bottom, distance, true);
+            //Debug.LogFormat("Pathfinding took {0}ms, result = {1}", sw.ElapsedMilliseconds, nodes);
+            if (nodes == null || nodes.First == null)
+                return null;
+            Vector2i nextNode = nodes.First.Value;
+            if (!Interaction.CheckWalkableForUnit(nextNode.x, nextNode.y, false))
+            {
+                //sw.Restart();
+                nodes = astar.FindPath(this, X, Y, left, top, right, bottom, distance, false);
+                //Debug.LogFormat("Pathfinding(dynamic) took {0}ms, result = {1}", sw.ElapsedMilliseconds, nodes);
+                if (nodes == null || nodes.First == null)
+                    return null;
+                nextNode = nodes.First.Value;
+            }
+            return nextNode;
         }
         catch (Exception)
         {

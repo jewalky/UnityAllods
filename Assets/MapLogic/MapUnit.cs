@@ -782,6 +782,20 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         try
         {
+            int left = targetX;
+            int top = targetY;
+            int right = targetX;
+            int bottom = targetY;
+            if (targetWidth > 0 || targetHeight > 0)
+            {
+                /*left -= 1;
+                top -= 1;*/
+                left -= this.Width;
+                top -= this.Height;
+                right += targetWidth;
+                bottom += targetHeight;
+            }
+
             /*
             List<Vector2i> nodes = MapLogic.Instance.Wizard.GetShortestPath(this, true, distance, X, Y, targetX, targetY, targetWidth, targetHeight, 1);
             if (nodes == null)
@@ -790,18 +804,12 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 nodes = MapLogic.Instance.Wizard.GetShortestPath(this, false, distance, X, Y, targetX, targetY, targetWidth, targetHeight, 1);
             if (nodes == null)
                 return null;
-            return nodes[0];*/
-            int left = targetX;
-            int top = targetY;
-            int right = targetX;
-            int bottom = targetY;
-            if (targetWidth > 0 || targetHeight > 0)
-            {
-                left -= 1;
-                top -= 1;
-                right += targetWidth;
-                bottom += targetHeight;
-            }
+            return nodes[0]; */
+            List<Vector2i> result = MapLogic.Instance.Wizard.GetShortestPath(this, false, distance, X, Y, left, top, right, bottom);
+            if (result != null)
+                return result[0];
+            return null;
+
             AstarPathfinder astar = new AstarPathfinder();
             //System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
             LinkedList<Vector2i> nodes = astar.FindPath(this, X, Y, left, top, right, bottom, distance, true);

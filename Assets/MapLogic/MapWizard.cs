@@ -49,14 +49,13 @@ class MapWizard
 
 	private bool CheckWalkable(int x, int y)
 	{
-			MapNode node = MapLogic.Instance.Nodes[x, y];
-			uint tile = node.Tile;
-			MapNodeFlags flags = node.Flags;
-			if ((flags & MapNodeFlags.Unblocked) == 0 && (tile >= 0x1C0 && tile <= 0x2FF)
-				|| ((flags & MapNodeFlags.BlockedGround) != 0)
-				)
-				return false;
-        	return true;
+		MapNode node = MapLogic.Instance.Nodes[x, y];
+		uint tile = node.Tile;
+		MapNodeFlags flags = node.Flags;
+        if ((!flags.HasFlag(MapNodeFlags.Unblocked) && (tile >= 0x1C0 && tile <= 0x2FF)) // blocked by ground terrain
+            || flags.HasFlag(MapNodeFlags.BlockedGround)) // or blocked explicitly
+                return false; // not walkable
+        return true; // walkable
 	}
 
 	/*private UnitType[] unitTypes;
@@ -246,15 +245,15 @@ class MapWizard
 		int BestCost = _CostMax;
 		int BestAddr = 0;
 
-		Path_TakePoint(Addr-0x100-1,ref BestAddr,ref BestCost);
-		Path_TakePoint(Addr-0x100  ,ref BestAddr,ref BestCost);
-		Path_TakePoint(Addr-0x100+1,ref BestAddr,ref BestCost);
-		Path_TakePoint(Addr      -1,ref BestAddr,ref BestCost);
-	//	Path_TakePoint(Addr        ,ref BestAddr,ref BestCost);
-		Path_TakePoint(Addr      +1,ref BestAddr,ref BestCost);
-		Path_TakePoint(Addr+0x100-1,ref BestAddr,ref BestCost);
-		Path_TakePoint(Addr+0x100  ,ref BestAddr,ref BestCost);
-		Path_TakePoint(Addr+0x100+1,ref BestAddr,ref BestCost);
+		Path_TakePoint(Addr-0x100-1,ref BestAddr,ref BestCost); // -1,-1
+		Path_TakePoint(Addr-0x100  ,ref BestAddr,ref BestCost); //  0,-1
+		Path_TakePoint(Addr-0x100+1,ref BestAddr,ref BestCost); // +1,-1
+		Path_TakePoint(Addr      -1,ref BestAddr,ref BestCost); // -1, 0
+	//	Path_TakePoint(Addr        ,ref BestAddr,ref BestCost); //  0, 0
+		Path_TakePoint(Addr      +1,ref BestAddr,ref BestCost); // +1, 0
+		Path_TakePoint(Addr+0x100-1,ref BestAddr,ref BestCost); // -1,+1
+		Path_TakePoint(Addr+0x100  ,ref BestAddr,ref BestCost); //  0,+1
+		Path_TakePoint(Addr+0x100+1,ref BestAddr,ref BestCost); // +1,+1
 
 		if (BestAddr != 0)
 			return AddrAsVector(BestAddr);
@@ -344,8 +343,8 @@ class MapWizard
 
 		//**//**//**//
 		//Debug.LogFormat("path find target: {0}, {1} = {2} (cell={3})", TargetX,TargetY, TargetCost[CellAddr(TargetX,TargetY)], CellCost[0,CellAddr(TargetX,TargetY)]);
-		int TargetMaxX = TargetX; if (TargetWidth  > 0) TargetMaxX += TargetWidth - 1;
-		int TargetMaxY = TargetY; if (TargetHeight > 0) TargetMaxY += TargetHeight- 1;
+		int TargetMaxX = TargetX; if (TargetWidth  > 0) TargetMaxX += TargetWidth-1;
+		int TargetMaxY = TargetY; if (TargetHeight > 0) TargetMaxY += TargetHeight-1;
 		int MinX = (int)(TargetX    - Distance); if (MinX < LowX) MinX = LowX;
 		int MinY = (int)(TargetY    - Distance); if (MinY < LowY) MinY = LowY;
 		int MaxX = (int)(TargetMaxX + Distance); if (MaxX > HighX) MaxX = HighX;
@@ -405,16 +404,19 @@ class MapWizard
 		{
 			List<Vector2i> result = new List<Vector2i>();
 			result.Insert(0,BestPoint);
-		//**//**//**//
-		if (!Unit.Interaction.CheckWalkableForUnit(BestPoint.x,BestPoint.y, StaticOnly)) {
-		Debug.LogFormat("path find bad: start={0},{1}  target={2},{3}  result={4},{5} Dist={6} static={7}",
-				StartX,StartY, TargetX,TargetY, BestPoint.x,BestPoint.y, Distance,StaticOnly
-				);
-		Dump(TargetX,TargetY);
+		    //**//**//**//
+		    if (!Unit.Interaction.CheckWalkableForUnit(BestPoint.x,BestPoint.y, StaticOnly)) {
+		        Debug.LogFormat("path find bad: start={0},{1}  target={2},{3}  result={4},{5} Dist={6} static={7}",
+				        StartX,StartY, TargetX,TargetY, BestPoint.x,BestPoint.y, Distance,StaticOnly
+				        );
+		        Dump(TargetX,TargetY);
+		    }
+
+	        return result;
 		}
 
-	                return result;
-		}
+        Debug.LogFormat("ID {0} BESTPOINT FROM {1},{2} IS NULL", Unit.ID, StartX, StartY);
+
 		//**//**//**//
 		//Debug.LogFormat("path find start: {0}, {1} = {2}", StartX,StartY, TargetCost[CellAddr(StartX,StartY)]);
 		//Debug.LogFormat("path find target : {0}, {1} = {2}", TargetX,TargetY, TargetCost[CellAddr(TargetX,TargetY)]);

@@ -21,16 +21,12 @@ public class MoveState : IUnitState
     private MapUnit Unit;
     private int WalkX;
     private int WalkY;
-    private int WalkWidth;
-    private int WalkHeight;
 
-    public MoveState(MapUnit unit, int x, int y, int width, int height)
+    public MoveState(MapUnit unit, int x, int y)
     {
         Unit = unit;
         WalkX = x;
         WalkY = y;
-        WalkWidth = width;
-        WalkHeight = height;
     }
 
     // made static because it's also used by other actions
@@ -40,41 +36,16 @@ public class MoveState : IUnitState
         if (distance < 1)
             distance = 1;
 
-        if (!unit.Interaction.CheckWalkableForUnit(walkX, walkY, false) && distance < 2)
-        {
-            List<Vector2i> switchNodes = new List<Vector2i>();
-            for (int ly = walkY - unit.Height; ly < walkY + unit.Height; ly++)
-                for (int lx = walkX - unit.Width; lx < walkX + unit.Width; lx++)
-                    if (unit.Interaction.CheckWalkableForUnit(lx, ly, false))
-                        switchNodes.Add(new Vector2i(lx, ly));
-
-            switchNodes.Sort((a, b) => 
-            {
-                Vector2i own1 = unit.Interaction.GetClosestPointTo(a.x, a.y);
-                Vector2i own2 = unit.Interaction.GetClosestPointTo(b.x, b.y);
-                float d1 = (a - own1).magnitude;
-                float d2 = (b - own2).magnitude;
-                if (d1 > d2)
-                    return 1;
-                else if (d1 < d2)
-                    return -1;
-                return 0;
-            });
-
-            if (switchNodes.Count <= 0)
-                return false;
-
-            walkX = switchNodes[0].x;
-            walkY = switchNodes[0].y;
-        }
-
-        if (walkX == unit.X && walkY == unit.Y)
-            return true;
+        // note: 0x0 = specific cell
+        // more than 0x0 = unit
+        // for now just call pathfinding here
 
         // try to pathfind
         Vector2i point = unit.DecideNextMove(walkX, walkY, walkWidth, walkHeight, distance);
         if (point == null)
+        {
             return false;
+        }
 
         /*int sbd = 32;
         if (sbd > path.Count) sbd = path.Count;
@@ -122,7 +93,7 @@ public class MoveState : IUnitState
         if (Unit.X == WalkX && Unit.Y == WalkY)
             return false;
 
-        if (!TryWalkTo(Unit, WalkX, WalkY, WalkWidth, WalkHeight ))
+        if (!TryWalkTo(Unit, WalkX, WalkY, 0, 0))
             return false;
 
         return true;
@@ -166,7 +137,7 @@ public class AttackState : IUnitState
             }
 
             //
-            //Debug.LogFormat("ATTACKING");
+            //Debug.LogFormat("ID {0} ATTACKING", Unit.ID);
             int damage = Random.Range(Unit.Stats.DamageMin, Unit.Stats.DamageMax);
             DamageFlags df = Unit.GetDamageType();
             // we need to compare Option to set damage flags properly here
@@ -174,6 +145,7 @@ public class AttackState : IUnitState
         }
         else
         {
+            //Debug.LogFormat("ID {0} TRY WALK TO", Unit.ID);
             // make one step to the target.
             MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, TargetUnit.Width, TargetUnit.Height, Unit.Interaction.GetAttackRange());
         }
@@ -233,7 +205,7 @@ public class PickupState : IUnitState
         }
         else
         {
-            MoveState.TryWalkTo(Unit, TargetX, TargetY, 0, 0 );
+            MoveState.TryWalkTo(Unit, TargetX, TargetY, 0, 0);
             return true;
         }
     }
@@ -333,7 +305,7 @@ public class CastState : IUnitState
         {
             // make one step to the target.
             if (TargetUnit != null)
-                MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, 0, 0, Spell.GetDistance());
+                MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, TargetUnit.Width, TargetUnit.Height, Spell.GetDistance());
             else MoveState.TryWalkTo(Unit, TargetX, TargetY, 0, 0, Spell.GetDistance());
         }
 

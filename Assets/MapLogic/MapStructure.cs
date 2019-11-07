@@ -136,7 +136,7 @@ public class MapStructure : MapObject, IDynlight, IPlayerPawn, IVulnerable, IDis
         bool canNotPass = ((1 << (y * Width + x)) & Template.CanNotPass) != 0;
         bool canPass = ((1 << (y * Width + x)) & Template.CanPass) != 0;
         if (!canPass) return MapNodeFlags.Unblocked;
-        if (canNotPass) return MapNodeFlags.DynamicGround;
+        if (canNotPass) return MapNodeFlags.BlockedGround;
         return 0;
     }
 

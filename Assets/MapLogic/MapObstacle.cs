@@ -69,7 +69,7 @@ public class MapObstacle : MapObject, IVulnerable
 
     public override MapNodeFlags GetNodeLinkFlags(int x, int y)
     {
-        return MapNodeFlags.DynamicGround;
+        return MapNodeFlags.BlockedGround;
     }
 
     public bool SetDead(bool sfx)

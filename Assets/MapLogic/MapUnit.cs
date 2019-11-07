@@ -773,7 +773,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     //* WarBeginner *//
     public Vector2i DecideNextMove(int targetX, int targetY, int targetWidth, int targetHeight, float distance = 1)
     {
-
         if (distance < 1)
             distance = 1;
 

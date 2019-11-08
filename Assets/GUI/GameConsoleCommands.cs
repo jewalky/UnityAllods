@@ -90,6 +90,39 @@ public class GameConsoleCommands
         }
     }
 
+    public void spawn(string unitName)
+    {
+        if (NetworkManager.IsClient || MapLogic.Instance.ConsolePlayer == null)
+            return;
+
+        MapUnit consoleMainChar = MapLogic.Instance.ConsolePlayer.Avatar;
+        if (consoleMainChar == null)
+            return;
+
+        MapUnit unit = new MapHuman(unitName);
+        if (unit.Class == null)
+            unit = new MapUnit(unitName);
+
+        if (unit.Class == null)
+        {
+            GameConsole.Instance.WriteLine("Failed to spawn summoned unit {0}", unitName);
+            return;
+        }
+
+        unit.Player = MapLogic.Instance.ConsolePlayer;
+        unit.Tag = MapLogic.Instance.GetFreeUnitTag();
+
+        if (!unit.RandomizePosition(consoleMainChar.X, consoleMainChar.Y, 2, false))
+        {
+            // invalid position, don't add unit
+            unit.Dispose();
+            GameConsole.Instance.WriteLine("No space for summoned unit {0}", unitName);
+            return;
+        }
+
+        MapLogic.Instance.Objects.Add(unit);
+    }
+
     public void rcon(params string[] args)
     {
         //string toSend = GameConsole.JoinArguments(args);

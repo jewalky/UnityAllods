@@ -21,12 +21,16 @@ public class MoveState : IUnitState
     private MapUnit Unit;
     private int WalkX;
     private int WalkY;
+    private int LastGoodPath;
+    private int LastBadPath;
 
     public MoveState(MapUnit unit, int x, int y)
     {
         Unit = unit;
         WalkX = x;
         WalkY = y;
+        LastBadPath = 0;
+        LastGoodPath = MapLogic.Instance.LevelTime;
     }
 
     // made static because it's also used by other actions
@@ -93,8 +97,15 @@ public class MoveState : IUnitState
         if (Unit.X == WalkX && Unit.Y == WalkY)
             return false;
 
+        if (MapLogic.Instance.LevelTime - LastGoodPath > 5 * MapLogic.TICRATE && LastBadPath > LastGoodPath)
+            return false; // if last good path was found more time ago, and last path was bad... break out, but wait for 5 seconds
+
         if (!TryWalkTo(Unit, WalkX, WalkY, 0, 0))
-            return false;
+        {
+            LastBadPath = MapLogic.Instance.LevelTime;
+            return true;
+        }
+        else LastGoodPath = MapLogic.Instance.LevelTime;
 
         return true;
     }

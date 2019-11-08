@@ -722,7 +722,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     {
         AstarPathfinder p = new AstarPathfinder();
         // for now generate astar path once
-        //Debug.LogFormat("Pathfind: Started at {0}, {1}", X, Y);
+        bool logPathfind = false;
+
+        if (logPathfind) Debug.LogFormat("Pathfind({2}): Started at {0}, {1}", X, Y, ID);
         bool doRestart;
         do
         {
@@ -740,7 +742,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             {
                 Vector2i node = nodes[i];
 
-                //Debug.LogFormat("Pathfind: Continued at {0}, {1}", node.x, node.y);
+                if (logPathfind) Debug.LogFormat("Pathfind({2}): Continued at {0}, {1}", node.x, node.y, ID);
 
                 // check if static node is not walkable
                 if (!Interaction.CheckWalkableForUnit(node.x, node.y, false))
@@ -753,13 +755,15 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                     do
                     {
                         lastFreeNode = -1;
-                        int lastNode = i + 1;
+                        int lastNode = i;
                         while (lastNode < nodes.Count && Math.Abs(nodes[lastNode].x - X) < 16 && Math.Abs(nodes[lastNode].y - Y) < 16)
                         {
                             if (Interaction.CheckWalkableForUnit(nodes[lastNode].x, nodes[lastNode].y, false))
                                 lastFreeNode = lastNode;
                             lastNode++;
                         }
+
+                        if (logPathfind) Debug.LogFormat("Pathfind({3}): Trying to Find Node after {0}, {1} = {2}", node.x, node.y, lastFreeNode, ID);
 
                         if (lastFreeNode < 0)
                         {
@@ -768,7 +772,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                     }
                     while (lastFreeNode < 0);
 
-                    //Debug.LogFormat("Pathfind: Choose Dynamic to Static at {0}, {1} (to {2}, {3})", node.x, node.y, nodes[lastFreeNode].x, nodes[lastFreeNode].y);
+                    if (logPathfind) Debug.LogFormat("Pathfind({4}): Choose Dynamic to Static at {0}, {1} (to {2}, {3})", node.x, node.y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, ID);
 
                     // find path...
                     // if not found, then we are blocked. try finding again until unblocked
@@ -805,9 +809,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
                             if (altNodes == null)
                             {
-                                altDoRestart = true;
-                                yield return null; // skip frame
-                                continue; // try again
+                                doRestart = true;
+                                yield return null; // pause for a bit to avoid infinite recursion
+                                break; // lost static
                             }
                         }
 
@@ -815,13 +819,13 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                         {
                             Vector2i altNode = altNodes[j];
 
-                            //Debug.LogFormat("Pathfind: Dynamic to Static at {0}, {1}", altNode.x, altNode.y);
+                            if (logPathfind) Debug.LogFormat("Pathfind({2}): Dynamic to Static at {0}, {1}", altNode.x, altNode.y, ID);
 
                             // path is not walkable, update dynamic
                             if (!Interaction.CheckWalkableForUnit(altNode.x, altNode.y, true))
                             {
-                                //Debug.LogFormat("Pathfind: Dynamic to Static Obsolete at {0}, {1}", altNode.x, altNode.y);
-                                altDoRestart = true;
+                                if (logPathfind) Debug.LogFormat("Pathfind({2}): Dynamic to Static Obsolete at {0}, {1}", altNode.x, altNode.y, ID);
+                                doRestart = true;
                                 break;
                             }
 
@@ -830,7 +834,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                             // Next node mismatch, unit teleported or otherwise broke
                             if (X != altNode.x || Y != altNode.y)
                             {
-                                //Debug.LogFormat("Pathfind: Dynamic to Static Restarted ({0}!={1} or {2}!={3})", X, altNode.x, Y, altNode.y);
+                                if (logPathfind) Debug.LogFormat("Pathfind({4}): Dynamic to Static Restarted ({0}!={1} or {2}!={3})", X, altNode.x, Y, altNode.y, ID);
                                 doRestart = true;
                                 break;
                             }
@@ -840,7 +844,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                         {
                             // we walked up to lastFreeNode
                             i = lastFreeNode;
-                            //Debug.LogFormat("Pathfind: Drop Back To Static at {0}, {1}", nodes[i].x, nodes[i].y);
+                            if (logPathfind) Debug.LogFormat("Pathfind({2}): Drop Back To Static at {0}, {1}", nodes[i].x, nodes[i].y, ID);
                             pathfindSuccess = true;
                         }
 
@@ -865,7 +869,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 // Next node mismatch, unit teleported or otherwise broke
                 if (X != node.x || Y != node.y)
                 {
-                    //Debug.LogFormat("Pathfind: Restarted ({0}!={1} or {2}!={3})", X, node.x, Y, node.y);
+                    if (logPathfind) Debug.LogFormat("Pathfind({4}): Restarted ({0}!={1} or {2}!={3})", X, node.x, Y, node.y, ID);
                     doRestart = true;
                     break;
                 }
@@ -911,8 +915,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             Vector2i node = LastPath.Current;
             return node;
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            Debug.LogError(e);
             return null;
         }
     }

@@ -38,3 +38,5 @@ LinuxClientBuild
 # configs
 unityallods.cfg
 server.cfg
+
+*.meta

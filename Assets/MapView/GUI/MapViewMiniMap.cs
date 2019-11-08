@@ -13,6 +13,8 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
     private int MapWidth = 0;
     private int MapHeight = 0;
 
+    private bool IsDragging = false;
+
     private static Color[] MiniMapData;
 
     private static Texture2D CrystalL;
@@ -24,6 +26,9 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
     private MeshRenderer CrystalLRenderer;
     private GameObject TexObject;
     private MeshRenderer TexRenderer;
+
+    private GameObject BoundsObject;
+    private MeshRenderer BoundsRenderer;
 
     public void OnDestroy()
     {
@@ -93,6 +98,49 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
             MiniMapData = mmData.GetPixels();
             DestroyImmediate(mmData);
         }
+
+        // update bounds object
+        Utils.MeshBuilder mb = new Utils.MeshBuilder();
+
+        mb.CurrentPosition = new Vector2(-0.00390625f, 0);
+        mb.CurrentColor = new Color(1, 1, 1, 1);
+        mb.NextVertex();
+        mb.CurrentPosition = new Vector2(1, 0);
+        mb.CurrentColor = new Color(1, 1, 1, 1);
+        mb.NextVertex();
+
+        mb.CurrentPosition = new Vector2(1, 0);
+        mb.CurrentColor = new Color(1, 1, 1, 1);
+        mb.NextVertex();
+        mb.CurrentPosition = new Vector2(1, 1);
+        mb.CurrentColor = new Color(1, 1, 1, 1);
+        mb.NextVertex();
+
+        mb.CurrentPosition = new Vector2(1, 1);
+        mb.CurrentColor = new Color(1, 1, 1, 1);
+        mb.NextVertex();
+        mb.CurrentPosition = new Vector2(0, 1);
+        mb.CurrentColor = new Color(1, 1, 1, 1);
+        mb.NextVertex();
+
+        mb.CurrentPosition = new Vector2(0, 1);
+        mb.CurrentColor = new Color(1, 1, 1, 1);
+        mb.NextVertex();
+        mb.CurrentPosition = new Vector2(0, -0.00390625f);
+        mb.CurrentColor = new Color(1, 1, 1, 1);
+        mb.NextVertex();
+
+        Mesh boundsMesh = mb.ToMesh(MeshTopology.Lines);
+        BoundsObject = new GameObject();
+        BoundsObject.name = "ScreenBounds";
+        BoundsObject.transform.parent = transform;
+        BoundsObject.transform.localPosition = new Vector3(0, 0, -2f);
+        BoundsObject.transform.localScale = new Vector2(0, 0);
+        MeshFilter boundsFilter = BoundsObject.AddComponent<MeshFilter>();
+        boundsFilter.mesh = boundsMesh;
+        BoundsRenderer = BoundsObject.AddComponent<MeshRenderer>();
+        BoundsRenderer.material = new Material(MainCamera.MainShader);
+        BoundsRenderer.enabled = false;
     }
 
     float miniMapTimer = 0;
@@ -100,6 +148,7 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
     {
         if (!MapLogic.Instance.IsLoaded)
             return;
+
         float timeReload = Mathf.Sqrt(MapWidth * MapHeight) / 480;
         miniMapTimer += Time.unscaledDeltaTime;
         if (miniMapTimer > timeReload)
@@ -107,6 +156,33 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
             UpdateTexture(false);
             miniMapTimer = 0;
         }
+
+        UpdateBounds();
+    }
+
+    public void UpdateBounds()
+    {
+        //
+        int mapLeft = 8;
+        int mapTop = 8;
+        float sW = MapLogic.Instance.Width - 16;
+        float sH = MapLogic.Instance.Height - 16;
+        float aspect = sW / sH;
+        float w = 128;
+        float h = 128;
+        // handle uneven map sizes
+        if (sW > sH)
+            h /= aspect;
+        else if (sH > sW)
+            w *= aspect;
+        float cX = 90 - w / 2;
+        float cY = 83 - h / 2;
+        Rect vrec = MapView.Instance.UnpaddedVisibleRect;
+        vrec.x -= mapLeft;
+        vrec.y -= mapTop;
+        BoundsObject.transform.localPosition = new Vector3(Mathf.Floor(cX + vrec.xMin / sW * w), Mathf.Floor(cY + vrec.yMin / sH * h), -2f);
+        BoundsObject.transform.localScale = new Vector2(vrec.width / sW * w, vrec.height / sH * h);
+        BoundsRenderer.enabled = true;
     }
 
     public void UpdateTexture(bool inplace)
@@ -124,8 +200,8 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
             return;
         }
 
-        int newW = MapLogic.Instance.Width-16;
-        int newH = MapLogic.Instance.Height-16;
+        int newW = MapLogic.Instance.Width - 16;
+        int newH = MapLogic.Instance.Height - 16;
         if (newW <= 0 || newH <= 0)
             return;
 
@@ -151,7 +227,7 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
             MapHeight = newH;
             Array.Resize<Color>(ref MapTextureColors, newW * newH);
         }
-        
+
         for (int y = 0; y < MapHeight; y++)
         {
             for (int x = 0; x < MapWidth; x++)
@@ -202,6 +278,9 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
 
     public bool ProcessEvent(Event e)
     {
+        if (e.rawType == EventType.MouseUp)
+            IsDragging = false;
+
         if (e.rawType == EventType.MouseDown ||
             e.rawType == EventType.MouseUp ||
             e.rawType == EventType.MouseMove)
@@ -212,7 +291,45 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
                 mPos.x < transform.position.x + 176 &&
                 mPos.y < transform.position.y + 158)
             {
+                mPos -= new Vector2(transform.position.x, transform.position.y);
+                // check cursor specifically
+                int mapLeft = 8;
+                int mapTop = 8;
+                float sW = MapLogic.Instance.Width - 16;
+                float sH = MapLogic.Instance.Height - 16;
+                float aspect = sW / sH;
+                float w = 128;
+                float h = 128;
+                // handle uneven map sizes
+                if (sW > sH)
+                    h /= aspect;
+                else if (sH > sW)
+                    w *= aspect;
+                float cX = 90 - w / 2;
+                float cY = 83 - h / 2;
+                float cXCur = 90 - 64;
+                float cYCur = 83 - 64;
+                Rect vrec = MapView.Instance.UnpaddedVisibleRect;
+                vrec.x -= mapLeft;
+                vrec.y -= mapTop;
+
                 MouseCursor.SetCursor(MouseCursor.CurDefault);
+                if (mPos.x >= cXCur && mPos.x < cXCur+128 &&
+                    mPos.y >= cYCur && mPos.y < cYCur+128)
+                {
+                    MouseCursor.SetCursor(MouseCursor.CurSmallDefault);
+                    if (e.rawType == EventType.MouseDown)
+                        IsDragging = true;
+
+                    if (IsDragging)
+                    {
+                        // find map coordinates from cursor
+                        float offsX = (mPos.x - cX) / w * sW + 8 - vrec.width / 2;
+                        float offsY = (mPos.y - cY) / h * sH + 8 - vrec.height / 2;
+                        MapView.Instance.SetScroll((int)offsX, (int)offsY);
+                    }
+                }
+
                 return true;
             }
         }

@@ -90,6 +90,7 @@ public class MouseCursor : MonoBehaviour {
     public static MapCursorSettings CurCantPut = null; // cursor for when item drag-drop is impossible
     public static MapCursorSettings CurPickup = null;
     public static MapCursorSettings CurCast = null;
+    public static MapCursorSettings CurSmallDefault = null;
 
     // pseudo-cursor for items
     private static MapCursorSettings CurItem = null;
@@ -117,6 +118,7 @@ public class MouseCursor : MonoBehaviour {
         CurCantPut = CreateCursor("graphics/cursors/cantput/sprites.16a", 40, 40, 0);
         CurPickup = CreateCursor("graphics/cursors/pickup/sprites.16a", 13, 13, 0.08f);
         CurCast = CreateCursor("graphics/cursors/cast/sprites.16a", 13, 13, 0.08f);
+        CurSmallDefault = CreateCursor("graphics/cursors/sdefault/sprites.16a", 2, 2, 0);
         SetCursor(CurDefault);
 
         CurItem = new MapCursorSettings();

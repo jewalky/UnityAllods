@@ -85,6 +85,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         Chat.transform.parent = UiManager.Instance.transform;
     }
 
+    public Rect UnpaddedVisibleRect { get; private set; }
     private Rect _VisibleRect = new Rect(0, 0, 0, 0);
     public Rect VisibleRect
     {
@@ -524,6 +525,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
             _ScrollY = y;
 
             _VisibleRect = new Rect(_ScrollX, _ScrollY, screenWB, screenHB);
+            UnpaddedVisibleRect = new Rect(_VisibleRect);
             _VisibleRect.xMin -= 4;
             _VisibleRect.yMin -= 4;
             _VisibleRect.xMax += 4;

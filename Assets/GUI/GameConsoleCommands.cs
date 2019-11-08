@@ -75,6 +75,21 @@ public class GameConsoleCommands
         MapView.Instance.GridEnabled = !MapView.Instance.GridEnabled;
     }
 
+    public void showmap()
+    {
+        if (NetworkManager.IsClient)
+            return;
+        
+        // for easier pathfinding testing
+        for (int y = 0; y < MapLogic.Instance.Height; y++)
+        {
+            for (int x = 0; x < MapLogic.Instance.Width; x++)
+            {
+                MapLogic.Instance.Nodes[x, y].Flags |= MapNodeFlags.Discovered;
+            }
+        }
+    }
+
     public void rcon(params string[] args)
     {
         //string toSend = GameConsole.JoinArguments(args);

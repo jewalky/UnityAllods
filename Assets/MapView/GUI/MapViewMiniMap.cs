@@ -324,8 +324,8 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
                     if (IsDragging)
                     {
                         // find map coordinates from cursor
-                        float offsX = (mPos.x - cX) / w * sW + 8 - vrec.width / 2;
-                        float offsY = (mPos.y - cY) / h * sH + 8 - vrec.height / 2;
+                        float offsX = Mathf.Round((mPos.x - cX) / w * sW + 8 - vrec.width / 2);
+                        float offsY = Mathf.Round((mPos.y - cY) / h * sH + 8 - vrec.height / 2);
                         MapView.Instance.SetScroll((int)offsX, (int)offsY);
                     }
                 }

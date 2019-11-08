@@ -770,55 +770,258 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         }
     }*/
 
-    //* WarBeginner *//
+    private int LastMoveTargetX = -1;
+    private int LastMoveTargetY = -1;
+    private int LastMoveTargetWidth = -1;
+    private int LastMoveTargetHeight = -1;
+    private float LastMoveDistance = 0;
+    private IEnumerator<Vector2i> LastPath = null;
+    private IEnumerator<Vector2i> Pathfind(int left, int top, int right, int bottom, float distance)
+    {
+        AstarPathfinder p = new AstarPathfinder();
+        // for now generate astar path once
+        //Debug.LogFormat("Pathfind: Started at {0}, {1}", X, Y);
+        bool doRestart;
+        do
+        {
+            doRestart = false;
+            // main check: static only
+            List<Vector2i> nodes = p.FindPath(this, X, Y, left, top, right, bottom, distance, true);
+            if (nodes == null)
+            {
+                while (true)
+                    yield return null;
+            }
+
+            // top loop: move along static list
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                Vector2i node = nodes[i];
+
+                //Debug.LogFormat("Pathfind: Continued at {0}, {1}", node.x, node.y);
+
+                // check if static node is not walkable
+                if (!Interaction.CheckWalkableForUnit(node.x, node.y, false))
+                {
+                    // try 1: find limited astar to target, ignoring blocked cells
+                    List<Vector2i> altNodes = p.FindPath(this, X, Y, left, top, right, bottom, distance, false, 16);
+                    if (altNodes != null)
+                    {
+                        //Debug.LogFormat("Pathfind: Choose Dynamic to Goal at {0}, {1}", node.x, node.y);
+
+                        bool altDoRestart;
+                        do
+                        {
+                            altDoRestart = false;
+
+                            if (altNodes == null)
+                            {
+                                altNodes = p.FindPath(this, X, Y, left, top, right, bottom, distance, false, 16);
+                                if (altNodes == null)
+                                {
+                                    altDoRestart = true;
+                                    yield return null; // skip one frame
+                                    continue; // try again
+                                }
+                            }
+
+                            for (int j = 0; j < altNodes.Count; j++)
+                            {
+                                Vector2i altNode = altNodes[j];
+
+                                //Debug.LogFormat("Pathfind: Dynamic to Goal at {0}, {1}", altNode.x, altNode.y);
+
+                                // path is not walkable, update dynamic
+                                if (!Interaction.CheckWalkableForUnit(altNode.x, altNode.y, true))
+                                {
+                                    //Debug.LogFormat("Pathfind: Dynamic to Goal Obsolete at {0}, {1}", altNode.x, altNode.y);
+                                    altDoRestart = true;
+                                    break;
+                                }
+
+                                yield return altNode;
+
+                                // Next node mismatch, unit teleported or otherwise broke
+                                if (X != altNode.x || Y != altNode.y)
+                                {
+                                    //Debug.LogFormat("Pathfind: Dynamic to Goal Restarted ({0}!={1} or {2}!={3})", X, altNode.x, Y, altNode.y);
+                                    altDoRestart = true;
+                                    break;
+                                }
+                            }
+
+                            altNodes = null;
+                        }
+                        while (altDoRestart && !doRestart);
+                    }
+                    else
+                    {
+                        // end try 1
+                        // try 2: find limited astar to next unblocked static cell
+                        // find LAST unblocked node that is contained inside 16x16 radius.
+                        // do same pathfinding as above then
+                        int lastFreeNode;
+                        do
+                        {
+                            lastFreeNode = -1;
+                            int lastNode = i + 1;
+                            while (lastNode < nodes.Count && Math.Abs(nodes[lastNode].x - X) < 16 && Math.Abs(nodes[lastNode].y - Y) < 16)
+                            {
+                                if (Interaction.CheckWalkableForUnit(nodes[lastNode].x, nodes[lastNode].y, false))
+                                    lastFreeNode = lastNode;
+                                lastNode++;
+                            }
+
+                            if (lastFreeNode < 0)
+                            {
+                                yield return null;
+                            }
+                        }
+                        while (lastFreeNode < 0);
+
+                        //Debug.LogFormat("Pathfind: Choose Dynamic to Static at {0}, {1} (to {2}, {3})", node.x, node.y, nodes[lastFreeNode].x, nodes[lastFreeNode].y);
+
+                        // find path...
+                        // if not found, then we are blocked. try finding again until unblocked
+                        List<Vector2i> alt2Nodes = p.FindPath(this, X, Y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, 0, false, 16);
+                        bool pathfindSuccess = false;
+                        bool alt2DoRestart;
+                        do
+                        {
+                            alt2DoRestart = false;
+
+                            if (alt2Nodes == null)
+                            {
+                                // find next node
+                                int nextFreeNode = -1;
+                                int lastNode = lastFreeNode + 1;
+                                while (lastNode < nodes.Count && Math.Abs(nodes[lastNode].x - X) < 16 && Math.Abs(nodes[lastNode].y - Y) < 16)
+                                {
+                                    if (Interaction.CheckWalkableForUnit(nodes[lastNode].x, nodes[lastNode].y, false))
+                                        nextFreeNode = lastNode;
+                                    lastNode++;
+                                }
+
+                                alt2Nodes = p.FindPath(this, X, Y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, 0, false, 16);
+                                if (alt2Nodes == null && nextFreeNode >= 0)
+                                {
+                                    // try with updated free node
+                                    alt2Nodes = p.FindPath(this, X, Y, nodes[nextFreeNode].x, nodes[nextFreeNode].y, nodes[nextFreeNode].x, nodes[nextFreeNode].y, 0, false, 16);
+                                    if (alt2Nodes != null)
+                                    {
+                                        // if found path with nextFreeNode, but not with lastFreeNode, continue path this way...
+                                        lastFreeNode = nextFreeNode;
+                                    }
+                                }
+
+                                if (alt2Nodes == null)
+                                {
+                                    alt2DoRestart = true;
+                                    yield return null; // skip frame
+                                    continue; // try again
+                                }
+                            }
+
+                            for (int j = 0; j < alt2Nodes.Count; j++)
+                            {
+                                Vector2i alt2Node = alt2Nodes[j];
+
+                                //Debug.LogFormat("Pathfind: Dynamic to Static at {0}, {1}", alt2Node.x, alt2Node.y);
+
+                                // path is not walkable, update dynamic
+                                if (!Interaction.CheckWalkableForUnit(alt2Node.x, alt2Node.y, true))
+                                {
+                                    //Debug.LogFormat("Pathfind: Dynamic to Static Obsolete at {0}, {1}", alt2Node.x, alt2Node.y);
+                                    alt2DoRestart = true;
+                                    break;
+                                }
+
+                                yield return alt2Node;
+
+                                // Next node mismatch, unit teleported or otherwise broke
+                                if (X != alt2Node.x || Y != alt2Node.y)
+                                {
+                                    //Debug.LogFormat("Pathfind: Dynamic to Static Restarted ({0}!={1} or {2}!={3})", X, alt2Node.x, Y, alt2Node.y);
+                                    doRestart = true;
+                                    break;
+                                }
+                            }
+
+                            if (!alt2DoRestart)
+                            {
+                                // we walked up to lastFreeNode
+                                i = lastFreeNode;
+                                //Debug.LogFormat("Pathfind: Drop Back To Static at {0}, {1}", nodes[i].x, nodes[i].y);
+                                pathfindSuccess = true;
+                            }
+
+                            alt2Nodes = null;
+                                
+                        }
+                        while (alt2DoRestart && !doRestart);
+
+                        if (pathfindSuccess)
+                        {
+                            // just do next I node directly
+                            continue;
+                        }
+                    }
+                }
+
+                // if something broke really seriously
+                if (doRestart)
+                    break;
+
+                yield return node; // use this node as next
+
+                // Next node mismatch, unit teleported or otherwise broke
+                if (X != node.x || Y != node.y)
+                {
+                    //Debug.LogFormat("Pathfind: Restarted ({0}!={1} or {2}!={3})", X, node.x, Y, node.y);
+                    doRestart = true;
+                    break;
+                }
+            }
+        }
+        while (doRestart);
+
+        // return null path until changed
+        while (true)
+            yield return null;
+    }
+
+    /* WarBeginner */
     public Vector2i DecideNextMove(int targetX, int targetY, int targetWidth, int targetHeight, float distance = 0)
     {
         if (distance < 0)
             distance = 0;
 
-        // if targetX,targetY is blocked, refuse to pathfind.
-        if (!Interaction.CheckWalkableForUnit(targetX, targetY, true) && distance < 2)
-            return null;
+        int left = targetX;
+        int top = targetY;
+        int right = targetX;
+        int bottom = targetY;
+
+        // start or restart pathfinding.
+        // or continue, if same path is being looked for
+        if (!(LastPath != null &&
+                targetX == LastMoveTargetX && targetY == LastMoveTargetY &&
+                targetWidth == LastMoveTargetWidth && targetHeight == LastMoveTargetHeight &&
+                distance == LastMoveDistance))
+        {
+            // generate new pathfinder enumerator
+            LastPath = Pathfind(left, top, right, bottom, distance);
+            LastMoveTargetX = targetX;
+            LastMoveTargetY = targetY;
+            LastMoveTargetWidth = targetWidth;
+            LastMoveTargetHeight = targetHeight;
+            LastMoveDistance = distance;
+        }
 
         try
         {
-            /*
-            List<Vector2i> nodes = MapLogic.Instance.Wizard.GetShortestPath(this, true, distance, X, Y, targetX, targetY, targetWidth, targetHeight, 1);
-            if (nodes == null)
-                return null;
-            if (!Interaction.CheckWalkableForUnit(nodes[0].x, nodes[0].y, false))
-                nodes = MapLogic.Instance.Wizard.GetShortestPath(this, false, distance, X, Y, targetX, targetY, targetWidth, targetHeight, 1);
-            if (nodes == null)
-                return null;
-            return nodes[0];*/
-            int left = targetX;
-            int top = targetY;
-            int right = targetX;
-            int bottom = targetY;
-            if (targetWidth > 0 || targetHeight > 0)
-            {
-                left -= 1;
-                top -= 1;
-                right += targetWidth;
-                bottom += targetHeight;
-            }
-            AstarPathfinder astar = new AstarPathfinder();
-            //System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
-            LinkedList<Vector2i> nodes = astar.FindPath(this, X, Y, left, top, right, bottom, distance, true);
-            //Debug.LogFormat("Pathfinding took {0}ms, result = {1}", sw.ElapsedMilliseconds, nodes);
-            if (nodes == null || nodes.First == null)
-                return null;
-            Vector2i nextNode = nodes.First.Value;
-            if (!Interaction.CheckWalkableForUnit(nextNode.x, nextNode.y, false))
-            {
-                //sw.Restart();
-                nodes = astar.FindPath(this, X, Y, left, top, right, bottom, distance, false);
-                //Debug.LogFormat("Pathfinding(dynamic) took {0}ms, result = {1}", sw.ElapsedMilliseconds, nodes);
-                if (nodes == null || nodes.First == null)
-                    return null;
-                nextNode = nodes.First.Value;
-            }
-            return nextNode;
+            LastPath.MoveNext();
+            Vector2i node = LastPath.Current;
+            return node;
         }
         catch (Exception)
         {

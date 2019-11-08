@@ -37,15 +37,15 @@ class AstarPathfinder
         return (int)(new Vector2i(x - targetX, y - targetY).magnitude*10);
     }
 
-    private LinkedList<Vector2i> GetPath(AstarNode node)
+    private List<Vector2i> GetPath(AstarNode node)
     {
-        LinkedList<Vector2i> path = new LinkedList<Vector2i>();
+        List<Vector2i> path = new List<Vector2i>();
         AstarNode parent = node;
         while (true)
         {
             if (parent.Parent == null)
                 break; // don't add first node
-            path.AddFirst(new Vector2i(parent.X, parent.Y));
+            path.Insert(0, new Vector2i(parent.X, parent.Y));
             parent = parent.Parent;
         }
         return path;
@@ -62,8 +62,18 @@ class AstarPathfinder
     {
         return unit.Interaction.CheckWalkableForUnit(x, y, staticOnly);
     }
+    
+    // Note: should be the same as the expression above Getpath() call
+    // it's duplicated here so that we don't calculate toCenterX, toCenterY every iteration
+    public static bool IsFinalNode(int x, int y, int toStartX, int toStartY, int toEndX, int toEndY, float distance)
+    {
+        int toCenterX = (toEndX + toStartX) / 2;
+        int toCenterY = (toEndY + toStartY) / 2;
+        return ((x >= toStartX && x <= toEndX && y >= toStartY && y <= toEndY) || // if path is directly contained in the goal list
+                (new Vector2i(x - toCenterX, y - toCenterY).magnitude <= distance)); // or distance is enough
+    }
 
-    public LinkedList<Vector2i> FindPath(MapUnit unit, int x, int y, int toStartX, int toStartY, int toEndX, int toEndY, float distance, bool staticOnly)
+    public List<Vector2i> FindPath(MapUnit unit, int x, int y, int toStartX, int toStartY, int toEndX, int toEndY, float distance, bool staticOnly, int limit = -1)
     {
         int toCenterX = (toEndX + toStartX) / 2;
         int toCenterY = (toEndY + toStartY) / 2;
@@ -74,6 +84,19 @@ class AstarPathfinder
         int numOpenNodes = 1;
 
         openNodes.AddFirst(new AstarNode(null, x, y, 0, Heuristic(x, y, toCenterX, toCenterY)));
+
+        int searchFromX = 0;
+        int searchFromY = 0;
+        int searchToX = 256;
+        int searchToY = 256;
+
+        if (limit >= 0)
+        {
+            searchFromX = x - limit;
+            searchFromY = y - limit;
+            searchToX = x + limit;
+            searchToY = y + limit;
+        }
 
         // deviation from origin allowed: 128000 / size of traversed nodes
 
@@ -98,7 +121,7 @@ class AstarPathfinder
 
             // check deviation
             int dev = Math.Max(Math.Abs(val.X-x), Math.Abs(val.Y-y));
-            if (dev > 64000 / numOpenNodes)
+            if (dev > 256000 / numOpenNodes)
                 continue; // do not traverse this node at all
 
             // find neighbor nodes
@@ -109,9 +132,15 @@ class AstarPathfinder
                     if (nx == 0 && ny == 0)
                         continue;
 
-                    // check closed list
+                    // get coords
                     int offsX = val.X + nx;
                     int offsY = val.Y + ny;
+
+                    // check limit
+                    if (offsX < searchFromX || offsX > searchToX ||
+                        offsY < searchFromY || offsY > searchToY) continue;
+
+                    // check closed list
                     if (closedNodes.Contains(AstarNode.XYToUint(offsX, offsY)))
                         continue;
 

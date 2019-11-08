@@ -712,64 +712,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         return IsFlying ? MapNodeFlags.DynamicAir : MapNodeFlags.DynamicGround;
     }
 
-    /*private int AstarNodesWalked = 0;
-    private int AstarLastX = -1;
-    private int AstarLastY = -1;
-    private List<Vector2i> AstarLastSolution;
-    private ShortestPathGraphSearch<Vector2i, Vector2i> AstarSearcher = null;
-    private UnitAstarHelper AstarSearcherH = null;
-    public List<Vector2i> DecideNextMove(int targetX, int targetY, bool staticOnly, float distance = 1)
-    {
-        if (AstarNodesWalked < 16 &&
-            AstarLastX == targetX && AstarLastY == targetY && AstarLastSolution != null &&
-            AstarNodesWalked+1 < AstarLastSolution.Count &&
-            AstarLastSolution.Count > 0 && Interaction.CheckWalkableForUnit(AstarLastSolution[AstarNodesWalked+1].x, AstarLastSolution[AstarNodesWalked+1].y, staticOnly))
-        {
-            if (AstarLastSolution[AstarNodesWalked].x == X &&
-                AstarLastSolution[AstarNodesWalked].y == Y)
-            {
-                AstarNodesWalked++;
-                List<Vector2i> npath = AstarLastSolution.Skip(AstarNodesWalked).ToList();
-                return npath;
-            }
-        }
-
-        AstarNodesWalked = 16;
-
-        if (distance < 1)
-            distance = 1;
-
-        // if targetX,targetY is blocked, refuse to pathfind.
-        if (!Interaction.CheckWalkableForUnit(targetX, targetY, staticOnly) && distance < 2)
-            return null;
-
-        // init astar searcher
-        if (AstarSearcherH == null)
-            AstarSearcherH = new UnitAstarHelper(this);
-        if (AstarSearcher == null)
-            AstarSearcher = new ShortestPathGraphSearch<Vector2i, Vector2i>(AstarSearcherH);
-        AstarSearcherH.StaticLookup = staticOnly;
-        AstarSearcherH.Distance = distance;
-
-        try
-        {
-            System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
-            List<Vector2i> nodes = AstarSearcher.GetShortestPath(new Vector2i(X, Y), new Vector2i(targetX, targetY));
-            if (nodes == null)
-                return null;
-            nodes.Add(new Vector2i(targetX, targetY));
-            AstarNodesWalked = 0;
-            AstarLastX = targetX;
-            AstarLastY = targetY;
-            AstarLastSolution = nodes;
-            return nodes;
-        }
-        catch (Exception)
-        {
-            return null;
-        }
-    }*/
-
     private int LastMoveTargetX = -1;
     private int LastMoveTargetY = -1;
     private int LastMoveTargetWidth = -1;

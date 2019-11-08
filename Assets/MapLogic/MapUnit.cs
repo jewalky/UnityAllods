@@ -1000,7 +1000,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Vector2i coord = FindRandomPosition(x, y, radius);
         if (coord == null)
             return false;
-        SetPosition(x, y, netupdate);
+        SetPosition(coord.x, coord.y, netupdate);
         return true;
     }
 

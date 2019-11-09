@@ -66,6 +66,18 @@ public class MapViewNumbers : MapViewObject
 
     public void Update()
     {
+        if (!MapLogic.Instance.IsLoaded)
+        {
+            Renderer.enabled = false;
+            ShadowRenderer.enabled = false;
+            return;
+        }
+        else
+        {
+            Renderer.enabled = true;
+            ShadowRenderer.enabled = true;
+        }
+
         transform.localPosition = new Vector3(transform.localPosition.x - 0.2f, transform.localPosition.y - 0.4f, transform.localPosition.z);
         Renderer.material.color = new Vector4(Renderer.material.color.r, Renderer.material.color.g, Renderer.material.color.b, Renderer.material.color.a-0.01f);
         ShadowRenderer.material.color = new Vector4(ShadowRenderer.material.color.r, ShadowRenderer.material.color.g, ShadowRenderer.material.color.b, ShadowRenderer.material.color.a-0.01f);

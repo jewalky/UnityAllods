@@ -353,7 +353,12 @@ class MapLogic
         ConsolePlayer = null;
         FileName = null;
         MapStructure = null;
-        GameManager.Instance.MapView.Unload();
+
+        GameManager.Instance.CallDelegateOnNextFrame(() =>
+        {
+            MapView.Instance.OnMapUnloaded();
+            return false;
+        });
 //* WarBeginner *//
 	Wizard.Unload();
 //* end *//

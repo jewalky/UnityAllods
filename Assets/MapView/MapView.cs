@@ -101,11 +101,14 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         Chat.Show();
     }
 
-    public void Unload()
+    public void OnMapUnloaded()
     {
         Infowindow.Viewer = null;
         Commandbar.EnabledCommands = 0;
         UnloadMeshes();
+        // delete all child objects that we have
+        foreach (Transform child in transform)
+            Destroy(child.gameObject);
     }
 
     public void UnloadMeshes()

@@ -9,6 +9,7 @@ public class MapViewNumbers : MapViewObject
     private GameObject GObject;
     private AllodsTextRenderer TextRenderer;
     private MeshRenderer Renderer;
+    private MeshRenderer ShadowRenderer;
 
     public float X { get; private set; }
     public float Y { get; private set; }
@@ -26,7 +27,7 @@ public class MapViewNumbers : MapViewObject
     {
         AllodsTextRenderer textRenderer = new AllodsTextRenderer(Fonts.Font2, Font.Align.Center);
         textRenderer.Text = crit?"CRIT ":""+(-damage).ToString();
-        GameObject gObject = textRenderer.GetNewGameObject(0, null, 100);
+        GameObject gObject = textRenderer.GetNewGameObject(0.01f, null, 100);
         MapViewNumbers mvn = gObject.AddComponent<MapViewNumbers>();
 
         mvn.X = x;
@@ -52,8 +53,14 @@ public class MapViewNumbers : MapViewObject
     {
         //
         Vector2 coords = MapView.Instance.MapToScreenCoords(X, Y, 1, 1);
-        transform.localPosition = new Vector3(coords.x+OffsX, coords.y+OffsY, MakeZFromY(coords.y+OffsY));
+        transform.localPosition = new Vector3(coords.x+OffsX, coords.y+OffsY, -10240);
         Renderer = GObject.GetComponent<MeshRenderer>();
+        foreach (Transform child in GObject.transform)
+        {
+            ShadowRenderer = child.gameObject.GetComponent<MeshRenderer>();
+            if (ShadowRenderer != null)
+                break;
+        }
         Renderer.material.color = Player.AllColors[Player.Color];
     }
 
@@ -61,6 +68,7 @@ public class MapViewNumbers : MapViewObject
     {
         transform.localPosition = new Vector3(transform.localPosition.x - 0.2f, transform.localPosition.y - 0.4f, transform.localPosition.z);
         Renderer.material.color = new Vector4(Renderer.material.color.r, Renderer.material.color.g, Renderer.material.color.b, Renderer.material.color.a-0.01f);
+        ShadowRenderer.material.color = new Vector4(ShadowRenderer.material.color.r, ShadowRenderer.material.color.g, ShadowRenderer.material.color.b, ShadowRenderer.material.color.a-0.01f);
 
         //
         Count++;

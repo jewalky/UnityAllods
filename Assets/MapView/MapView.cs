@@ -170,7 +170,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         // run generic load
         Load();
 
-        this.transform.localScale = new Vector3(1, 1, 0.01f);
+        this.transform.localScale = new Vector3(1, 1, 0.005f);
     }
 
     GameObject[] MeshChunks = new GameObject[0];

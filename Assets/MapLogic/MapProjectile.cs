@@ -100,6 +100,8 @@ public class MapProjectileLogicDirectional : IMapProjectileLogic
         // magic handling: blizzard projectile uses frame 8 for real projectile, and 0-7 for death anim
         if (Projectile.Class.ID == (int)AllodsProjectile.Blizzard)
             Projectile.CurrentFrame = 8;
+        else if (Projectile.Class.ID == 7) // bat_sonic attack
+            Projectile.LightLevel = 0;
         else Projectile.LightLevel = 256;
         Vector3 targetCenter = new Vector3(TargetX, TargetY, TargetZ);
         Projectile.Angle = MapObject.FaceVector(targetCenter.x - Projectile.ProjectileX, targetCenter.y - Projectile.ProjectileY);

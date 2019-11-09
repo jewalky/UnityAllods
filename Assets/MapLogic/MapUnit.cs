@@ -630,7 +630,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
             // health and mana regeneration
             // 1% per second * mana regeneration?
-            if (!NetworkManager.IsClient)
+            if (!NetworkManager.IsClient && !IsDying && IsAlive)
             {
                 if (MapLogic.Instance.LevelTime % 40 == 0)
                 {

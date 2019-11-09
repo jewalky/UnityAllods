@@ -637,7 +637,11 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
     public bool ProcessEvent(Event e)
     {
         if (!MapLogic.Instance.IsLoaded)
+        {
+            if (MapLogic.Instance.IsLoading)
+                MouseCursor.SetCursor(MouseCursor.CurWait);
             return false;
+        }
 
         if (e.type == EventType.KeyDown)
         {

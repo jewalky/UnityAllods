@@ -90,12 +90,19 @@ public class MapObject : IDisposable
 
     public MapObject()
     {
-        GameManager.Instance.CallDelegateOnNextFrame(() =>
-        {
-            GameObject = MapView.Instance.CreateObject(GetGameObjectType(), this);
-            GameScript = (MonoBehaviour)GameObject.GetComponent(GetGameObjectType());
-            return false;
-        });
+    }
+
+    public void AllocateObject()
+    {
+        if (GameObject != null)
+            return;
+        GameObject = MapView.Instance.CreateObject(GetGameObjectType(), this);
+        GameScript = (MonoBehaviour)GameObject.GetComponent(GetGameObjectType());
+    }
+
+    public virtual void CheckAllocateObject()
+    {
+        AllocateObject();
     }
 
     public void DisposeNoUnlink()

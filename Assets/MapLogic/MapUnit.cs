@@ -700,6 +700,12 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         }
     }
 
+    public override void CheckAllocateObject()
+    {
+        if (GetVisibility() == 2)
+            AllocateObject();
+    }
+
     public override int GetVisibility()
     {
         if (BoneFrame > 3)

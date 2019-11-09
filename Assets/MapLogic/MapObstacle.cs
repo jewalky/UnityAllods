@@ -38,6 +38,12 @@ public class MapObstacle : MapObject, IVulnerable
         DoUpdateView = true;
     }
 
+    public override void CheckAllocateObject()
+    {
+        if (GetVisibility() >= 1)
+            AllocateObject();
+    }
+
     public override void Update()
     {
         if (Class == null)

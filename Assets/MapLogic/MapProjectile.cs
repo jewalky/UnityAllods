@@ -666,6 +666,12 @@ public class MapProjectile : MapObject, IDynlight
             Callback = null;
     }
 
+    public override void CheckAllocateObject()
+    {
+        if (GetVisibility() == 2)
+            AllocateObject();
+    }
+
     public override void Update()
     {
         if (Logic != null)

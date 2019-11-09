@@ -97,6 +97,12 @@ public class MapStructure : MapObject, IDynlight, IPlayerPawn, IVulnerable, IDis
         DoUpdateView = true;
     }
 
+    public override void CheckAllocateObject()
+    {
+        if (GetVisibility() >= 1)
+            AllocateObject();
+    }
+
     public override void Update()
     {
         if (Class == null)

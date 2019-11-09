@@ -504,7 +504,7 @@ public class MapHuman : MapUnit
         return 0;
     }
 
-    public int SetSkillExperience(ExperienceSkill sk, int value)
+    public int SetSkillExperience(ExperienceSkill sk, int value, bool message)
     {
         if ((Gender & GenderFlags.Mage | GenderFlags.Fighter) == 0)
             return 0;
@@ -516,9 +516,10 @@ public class MapHuman : MapUnit
             int oldskill = GetSkillFromExperience(oldexp);
             int newskill = GetSkillFromExperience(newexp);
             if (NetworkManager.IsServer)
-                Server.NotifyHumanLevelUp(this, sk, newexp);
+                Server.NotifyHumanLevelUp(this, sk, newexp, message);
             if (oldskill < newskill && 
-                Player == MapLogic.Instance.ConsolePlayer)
+                Player == MapLogic.Instance.ConsolePlayer &&
+                message)
             {
                 int skillIndex = (int)sk;
                 if ((Gender & GenderFlags.Mage) != 0)
@@ -539,7 +540,7 @@ public class MapHuman : MapUnit
     public void SetSkill(ExperienceSkill sk, int value)
     {
         int exp = value > 0 ? (int)((Mathf.Pow(1.1f, value) - 1f) * 1000f) : 0;
-        SetSkillExperience(sk, exp);
+        SetSkillExperience(sk, exp, false);
     }
 
     private static int[] ReverseExpTable;

@@ -1160,6 +1160,8 @@ namespace ClientCommands
         public MapHuman.ExperienceSkill Skill;
         [ProtoMember(3)]
         public int ExpAfter;
+        [ProtoMember(4)]
+        public bool Message;
 
         public bool Process()
         {
@@ -1174,7 +1176,7 @@ namespace ClientCommands
             }
 
             MapHuman human = (MapHuman)unit;
-            human.SetSkillExperience(Skill, ExpAfter);
+            human.SetSkillExperience(Skill, ExpAfter, Message);
 
             return true;
         }

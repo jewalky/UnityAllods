@@ -156,7 +156,11 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                 DestroyImmediate(tex);
         }
 
-        MapLogic.Instance.InitFromFile(filename);
+        MapLogic.Instance.InitFromFile(filename, false);
+    }
+
+    public void OnMapLoaded()
+    {
         Debug.LogFormat("map = {0} ({1}x{2})", MapLogic.Instance.Title, MapLogic.Instance.Width - 16, MapLogic.Instance.Height - 16);
 
         InitMeshes();
@@ -591,6 +595,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         Spellbook.gameObject.SetActive(SpellbookVisible);
 
         if (!MapLogic.Instance.IsLoaded)
+            return;
+
+        if (GridMeshMaterial == null || FOWMeshMaterial == null || MeshMaterial == null)
             return;
 
         if (GridEnabled) GridMeshMaterial.color = new Color(1, 0, 0, 0.5f);

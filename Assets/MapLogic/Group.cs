@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 [Flags]
 public enum GroupFlags
@@ -21,10 +20,13 @@ public class Group
     public readonly List<MapUnit> Units = new List<MapUnit>();
     private int LastUnitAlive = 0;
     private int SightOffset = 0;
+    private static Random Random = null;
 
     public Group()
     {
-        SightOffset = UnityEngine.Random.Range(0, SCAN_RATE);
+        if (Random == null)
+            Random = new Random();
+        SightOffset = Random.Next(0, SCAN_RATE);
     }
 
     private bool CheckSharedTarget(MapUnit from, MapUnit target)

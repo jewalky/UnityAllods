@@ -52,7 +52,8 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
             msg.TimeLeft -= Time.unscaledDeltaTime;
             if (msg.TimeLeft <= 0)
             {
-                msg.Renderer.DestroyImmediate();
+                if (msg.Renderer != null)
+                    msg.Renderer.DestroyImmediate();
                 Messages.Remove(msg);
                 i--;
                 continue;

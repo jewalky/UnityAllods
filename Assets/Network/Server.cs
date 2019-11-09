@@ -764,7 +764,7 @@ public class Server
         }
     }
 
-    public static void NotifyHumanLevelUp(MapHuman human, MapHuman.ExperienceSkill sk, int newexp)
+    public static void NotifyHumanLevelUp(MapHuman human, MapHuman.ExperienceSkill sk, int newexp, bool message)
     {
         foreach (ServerClient client in ServerManager.Clients)
         {
@@ -778,6 +778,7 @@ public class Server
                 lvlCmd.Tag = human.Tag;
                 lvlCmd.ExpAfter = newexp;
                 lvlCmd.Skill = sk;
+                lvlCmd.Message = message;
                 client.SendCommand(lvlCmd);
             }
         }

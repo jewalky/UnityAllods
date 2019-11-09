@@ -1292,25 +1292,25 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                         expFactor *= 2;
                     MapHuman srcHuman = (MapHuman)source;
                     if ((flags & DamageFlags.Fire) != 0)
-                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Fire, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Fire) + expFactor);
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Fire, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Fire) + expFactor, true);
                     if ((flags & DamageFlags.Water) != 0)
-                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Water, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Water) + expFactor);
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Water, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Water) + expFactor, true);
                     if ((flags & DamageFlags.Air) != 0)
-                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Air, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Air) + expFactor);
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Air, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Air) + expFactor, true);
                     if ((flags & DamageFlags.Earth) != 0)
-                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Earth, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Earth) + expFactor);
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Earth, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Earth) + expFactor, true);
                     if ((flags & DamageFlags.Astral) != 0)
-                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Astral, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Astral) + expFactor);
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Astral, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Astral) + expFactor, true);
                     if ((flags & DamageFlags.Blade) != 0)
-                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Blade, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Blade) + expFactor);
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Blade, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Blade) + expFactor, true);
                     if ((flags & DamageFlags.Axe) != 0)
-                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Axe, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Axe) + expFactor);
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Axe, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Axe) + expFactor, true);
                     if ((flags & DamageFlags.Bludgeon) != 0)
-                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Bludgeon, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Bludgeon) + expFactor);
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Bludgeon, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Bludgeon) + expFactor, true);
                     if ((flags & DamageFlags.Pike) != 0)
-                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Pike, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Pike) + expFactor);
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Pike, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Pike) + expFactor, true);
                     if ((flags & DamageFlags.Shooting) != 0)
-                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Shooting, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Shooting) + expFactor);
+                        srcHuman.SetSkillExperience(MapHuman.ExperienceSkill.Shooting, srcHuman.GetSkillExperience(MapHuman.ExperienceSkill.Shooting) + expFactor, true);
                 }
             }
             return damagecount;

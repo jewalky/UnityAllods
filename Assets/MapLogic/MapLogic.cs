@@ -2,6 +2,7 @@
 using System.Linq;
 using UnityEngine;
 using System;
+using System.Threading;
 
 [Flags]
 public enum MapNodeFlags
@@ -71,12 +72,14 @@ class MapLogic
     public const int MaxPlayers = 64;
     public Player ConsolePlayer { get; set; } // the player that we're directly controlling.
     public List<Group> Groups { get; private set; }
+    public bool IsLoading { get; private set; }
+    private Thread LoadingThread;
 
     public bool IsLoaded
     {
         get
         {
-            return (MapStructure != null);
+            return (MapStructure != null && !IsLoading);
         }
     }
 
@@ -362,210 +365,261 @@ class MapLogic
         MapFOWNeedsUpdate = true;
     }
 
-    public void InitFromFile(string filename)
+    private void InitFromFileWorker(string filename)
     {
+        try
+        {
+            AllodsMap mapStructure = AllodsMap.LoadFrom(filename);
+            if (mapStructure == null)
+            {
+                //Core.Abort("Couldn't load \"{0}\"", filename);
+                GameConsole.Instance.WriteLine("Couldn't load \"{0}\"", filename);
+                Unload();
+                return;
+            }
+
+            Width = (int)mapStructure.Data.Width;
+            Height = (int)mapStructure.Data.Height;
+
+            Nodes = new MapNode[Width, Height];
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    Nodes[x, y] = new MapNode();
+                    Nodes[x, y].Tile = (ushort)(mapStructure.Tiles[y * Width + x] & 0x3FF);
+                    Nodes[x, y].Height = mapStructure.Heights[y * Width + x];
+                    Nodes[x, y].Flags = 0;
+                    Nodes[x, y].Light = 255;
+                }
+            }
+
+            // load players
+            foreach (AllodsMap.AlmPlayer almplayer in mapStructure.Players)
+            {
+                Player player = new Player(almplayer);
+                Players.Add(player);
+                //Debug.Log(string.Format("player ID={2} {0} (flags {1})", player.Name, player.Flags, player.ID));
+            }
+
+            GameManager.Instance.CallDelegateOnNextFrame(() =>
+            {
+                Speed = 5;
+                return false;
+            });
+
+            _TopObjectID = 0;
+
+            // load obstacles
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    int typeId = mapStructure.Objects[y * Width + x];
+                    if (typeId <= 0) continue;
+                    typeId -= 1;
+                    MapObstacle mob = new MapObstacle(typeId);
+                    mob.X = x;
+                    mob.Y = y;
+                    mob.LinkToWorld();
+                    Objects.Add(mob);
+                }
+            }
+
+            // load structures
+            if (mapStructure.Structures != null)
+            {
+                foreach (AllodsMap.AlmStructure almstruc in mapStructure.Structures)
+                {
+                    MapStructure struc;
+                    struc = new MapStructure(almstruc.TypeID);
+                    struc.X = (int)almstruc.X;
+                    struc.Y = (int)almstruc.Y;
+                    struc.Health = almstruc.Health;
+                    struc.Tag = almstruc.ID;
+                    struc.Player = GetPlayerByID(almstruc.Player - 1);
+                    if (almstruc.IsBridge)
+                    {
+                        struc.Width = almstruc.Width;
+                        struc.Height = almstruc.Height;
+                        // also this crutch is apparently done by ROM2
+                        if (struc.Width < 2) struc.Width = 2;
+                        if (struc.Height < 2) struc.Height = 2;
+                        struc.IsBridge = true;
+                    }
+
+                    struc.LinkToWorld();
+                    Objects.Add(struc);
+                }
+            }
+
+            // load groups
+            if (!NetworkManager.IsClient && mapStructure.Groups != null)
+            {
+                foreach (AllodsMap.AlmGroup almgroup in mapStructure.Groups)
+                {
+                    Group grp = FindNewGroup((int)almgroup.GroupID);
+                    grp.RepopDelay = (int)almgroup.RepopTime * TICRATE;
+                    grp.Flags = 0;
+                    if (almgroup.GroupFlag.HasFlag(AllodsMap.AlmGroup.AlmGroupFlags.RandomPositions))
+                        grp.Flags |= GroupFlags.RandomPositions;
+                    if (almgroup.GroupFlag.HasFlag(AllodsMap.AlmGroup.AlmGroupFlags.QuestKill))
+                        grp.Flags |= GroupFlags.QuestKill;
+                    if (almgroup.GroupFlag.HasFlag(AllodsMap.AlmGroup.AlmGroupFlags.QuestIntercept))
+                        grp.Flags |= GroupFlags.QuestIntercept;
+                }
+            }
+
+            // load units
+            if (!NetworkManager.IsClient && mapStructure.Units != null)
+            {
+                int c = 0;
+                System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+                foreach (AllodsMap.AlmUnit almunit in mapStructure.Units)
+                {
+                    if ((almunit.Flags & 0x10) != 0)
+                    {
+                        MapHuman human = new MapHuman(almunit.ServerID);
+                        human.X = human.TargetX = human.SpawnX = human.LastSpawnX = (int)almunit.X;
+                        human.Y = human.TargetY = human.SpawnY = human.LastSpawnY = (int)almunit.Y;
+                        human.Tag = almunit.ID;
+                        human.Player = GetPlayerByID(almunit.Player - 1);
+                        if (almunit.HealthMax >= 0)
+                        {
+                            human.CoreStats.HealthMax = almunit.HealthMax;
+                            human.UpdateItems();
+                        }
+                        if (almunit.Health >= 0)
+                            human.Stats.TrySetHealth(almunit.Health);
+                        human.CalculateVision();
+                        human.Group = FindNewGroup(almunit.Group);
+
+                        human.LinkToWorld();
+                        Objects.Add(human);
+                    }
+                    else
+                    {
+                        MapUnit unit = new MapUnit(almunit.ServerID);
+                        unit.X = unit.TargetX = unit.SpawnX = unit.LastSpawnX = (int)almunit.X;
+                        unit.Y = unit.TargetY = unit.SpawnY = unit.LastSpawnY = (int)almunit.Y;
+                        unit.Tag = almunit.ID;
+                        unit.Player = GetPlayerByID(almunit.Player - 1);
+                        if (almunit.HealthMax >= 0)
+                        {
+                            unit.CoreStats.HealthMax = almunit.HealthMax;
+                            unit.UpdateItems();
+                        }
+                        if (almunit.Health >= 0)
+                            unit.Stats.TrySetHealth(almunit.Health);
+                        unit.CalculateVision();
+                        unit.Group = FindNewGroup(almunit.Group);
+
+                        unit.LinkToWorld();
+                        Objects.Add(unit);
+                    }
+                }
+            }
+
+            // only if loaded
+            MapStructure = mapStructure;
+            FileName = filename;
+            FileMD5 = ResourceManager.CalcMD5(FileName);
+            MapLighting = new TerrainLighting(Width, Height);
+            CalculateLighting(180);
+
+            // postprocessing
+            // if we are playing in singleplayer, then console player is Self.
+            if (!NetworkManager.IsClient && !NetworkManager.IsServer)
+            {
+                Player Self = GetPlayerByName("Self");
+                if (Self == null) GameConsole.Instance.WriteLine("Error: couldn't set ConsolePlayer: Self not found!");
+                else ConsolePlayer = Self;
+                if (ConsolePlayer != null)
+                {
+                    ConsolePlayer.Name = Config.cl_nickname.Length == 0 ? "Self" : Config.cl_nickname;
+                    ConsolePlayer.Flags = 0;
+                    ConsolePlayer.Diplomacy[ConsolePlayer.ID] = DiplomacyFlags.Ally | DiplomacyFlags.Vision;
+                    GameManager.Instance.CallDelegateOnNextFrame(() =>
+                    {
+                        ConsolePlayer.Avatar = CreateAvatar(ConsolePlayer);
+                        // center view on avatar.
+                        MapView.Instance.CenterOnObject(ConsolePlayer.Avatar);
+                        return false;
+                    });
+                }
+            }
+
+            if (!NetworkManager.IsClient)
+            {
+                // testing
+                /*
+                ItemPack testpack = new ItemPack();
+                testpack.PutItem(0, new Item("Very Rare Crystal Ring"));
+                PutSackAt(16, 16, testpack, false);
+                */
+
+                /*
+                MapProjectile proj = new MapProjectile(15);
+                proj.SetPosition(16, 16, 0);
+                Objects.Add(proj);
+                */
+            }
+
+            /* WarBeginner */
+            Wizard.LoadMap(this);
+
+            GameManager.Instance.CallDelegateOnNextFrame(() =>
+            {
+                MapView.Instance.OnMapLoaded();
+                return false;
+            });
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(e);
+            GameConsole.Instance.WriteLine("Failed to load {0}: {1}: {2}", filename, e.GetType().Name, e.Message);
+            MapStructure = null;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public void InitFromFile(string filename, bool abortPrevious)
+    {
+        lock (this)
+        {
+            if (IsLoading && !abortPrevious)
+            {
+                GameConsole.Instance.WriteLine("MapLogic: Already loading a different map, aborted.");
+                return;
+            }
+
+            if (LoadingThread != null)
+            {
+                try
+                {
+                    LoadingThread.Abort(); // may leave things in incomplete state... not sure if this is ok really
+                }
+                catch (Exception)
+                {
+                    /* ignore */
+                }
+            }
+
+            LoadingThread = null;
+            IsLoading = true;
+        }
+
         Unload();
         InitGeneric();
 
-        AllodsMap mapStructure = AllodsMap.LoadFrom(filename);
-        if (mapStructure == null)
-        {
-            //Core.Abort("Couldn't load \"{0}\"", filename);
-            GameConsole.Instance.WriteLine("Couldn't load \"{0}\"", filename);
-            Unload();
-            return;
-        }
-
-        Width = (int)mapStructure.Data.Width;
-        Height = (int)mapStructure.Data.Height;
-
-        Nodes = new MapNode[Width, Height];
-        for (int y = 0; y < Height; y++)
-        {
-            for (int x = 0; x < Width; x++)
-            {
-                Nodes[x, y] = new MapNode();
-                Nodes[x, y].Tile = (ushort)(mapStructure.Tiles[y * Width + x] & 0x3FF);
-                Nodes[x, y].Height = mapStructure.Heights[y * Width + x];
-                Nodes[x, y].Flags = 0;
-                Nodes[x, y].Light = 255;
-            }
-        }
-
-        // load players
-        foreach (AllodsMap.AlmPlayer almplayer in mapStructure.Players)
-        {
-            Player player = new Player(almplayer);
-            Players.Add(player);
-            //Debug.Log(string.Format("player ID={2} {0} (flags {1})", player.Name, player.Flags, player.ID));
-        }
-
-        GameManager.Instance.CallDelegateOnNextFrame(() =>
-        {
-            Speed = 5;
-            return false;
+        LoadingThread = new Thread(() => {
+            InitFromFileWorker(filename);
         });
 
-        _TopObjectID = 0;
-
-        // load obstacles
-        for (int y = 0; y < Height; y++)
-        {
-            for (int x = 0; x < Width; x++)
-            {
-                int typeId = mapStructure.Objects[y * Width + x];
-                if (typeId <= 0) continue;
-                typeId -= 1;
-                MapObstacle mob = new MapObstacle(typeId);
-                mob.X = x;
-                mob.Y = y;
-                mob.LinkToWorld();
-                Objects.Add(mob);
-            }
-        }
-
-        // load structures
-        if (mapStructure.Structures != null)
-        {
-            foreach (AllodsMap.AlmStructure almstruc in mapStructure.Structures)
-            {
-                MapStructure struc;
-                struc = new MapStructure(almstruc.TypeID);
-                struc.X = (int)almstruc.X;
-                struc.Y = (int)almstruc.Y;
-                struc.Health = almstruc.Health;
-                struc.Tag = almstruc.ID;
-                struc.Player = GetPlayerByID(almstruc.Player - 1);
-                if (almstruc.IsBridge)
-                {
-                    struc.Width = almstruc.Width;
-                    struc.Height = almstruc.Height;
-                    // also this crutch is apparently done by ROM2
-                    if (struc.Width < 2) struc.Width = 2;
-                    if (struc.Height < 2) struc.Height = 2;
-                    struc.IsBridge = true;
-                }
-
-                struc.LinkToWorld();
-                Objects.Add(struc);
-            }
-        }
-
-        // load groups
-        if (!NetworkManager.IsClient && mapStructure.Groups != null)
-        {
-            foreach (AllodsMap.AlmGroup almgroup in mapStructure.Groups)
-            {
-                Group grp = FindNewGroup((int)almgroup.GroupID);
-                grp.RepopDelay = (int)almgroup.RepopTime * MapLogic.TICRATE;
-                grp.Flags = 0;
-                if (almgroup.GroupFlag.HasFlag(AllodsMap.AlmGroup.AlmGroupFlags.RandomPositions))
-                    grp.Flags |= GroupFlags.RandomPositions;
-                if (almgroup.GroupFlag.HasFlag(AllodsMap.AlmGroup.AlmGroupFlags.QuestKill))
-                    grp.Flags |= GroupFlags.QuestKill;
-                if (almgroup.GroupFlag.HasFlag(AllodsMap.AlmGroup.AlmGroupFlags.QuestIntercept))
-                    grp.Flags |= GroupFlags.QuestIntercept;
-            }
-        }
-
-        // load units
-        if (!NetworkManager.IsClient && mapStructure.Units != null)
-        {
-            int c = 0;
-            System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
-            foreach (AllodsMap.AlmUnit almunit in mapStructure.Units)
-            {
-                if ((almunit.Flags & 0x10) != 0)
-                {
-                    MapHuman human = new MapHuman(almunit.ServerID);
-                    human.X = human.TargetX = human.SpawnX = human.LastSpawnX = (int)almunit.X;
-                    human.Y = human.TargetY = human.SpawnY = human.LastSpawnY = (int)almunit.Y;
-                    human.Tag = almunit.ID;
-                    human.Player = GetPlayerByID(almunit.Player - 1);
-                    if (almunit.HealthMax >= 0)
-                    {
-                        human.CoreStats.HealthMax = almunit.HealthMax;
-                        human.UpdateItems();
-                    }
-                    if (almunit.Health >= 0)
-                        human.Stats.TrySetHealth(almunit.Health);
-                    human.CalculateVision();
-                    human.Group = FindNewGroup(almunit.Group);
-
-                    human.LinkToWorld();
-                    Objects.Add(human);
-                }
-                else
-                {
-                    MapUnit unit = new MapUnit(almunit.ServerID);
-                    unit.X = unit.TargetX = unit.SpawnX = unit.LastSpawnX = (int)almunit.X;
-                    unit.Y = unit.TargetY = unit.SpawnY = unit.LastSpawnY = (int)almunit.Y;
-                    unit.Tag = almunit.ID;
-                    unit.Player = GetPlayerByID(almunit.Player - 1);
-                    if (almunit.HealthMax >= 0)
-                    {
-                        unit.CoreStats.HealthMax = almunit.HealthMax;
-                        unit.UpdateItems();
-                    }
-                    if (almunit.Health >= 0)
-                        unit.Stats.TrySetHealth(almunit.Health);
-                    unit.CalculateVision();
-                    unit.Group = FindNewGroup(almunit.Group);
-
-                    unit.LinkToWorld();
-                    Objects.Add(unit);
-                }
-            }
-        }
-
-        // only if loaded
-        MapStructure = mapStructure;
-        FileName = filename;
-        FileMD5 = ResourceManager.CalcMD5(FileName);
-        MapLighting = new TerrainLighting(Width, Height);
-        CalculateLighting(180);
-
-        // postprocessing
-        // if we are playing in singleplayer, then console player is Self.
-        if (!NetworkManager.IsClient && !NetworkManager.IsServer)
-        {
-            Player Self = GetPlayerByName("Self");
-            if (Self == null) GameConsole.Instance.WriteLine("Error: couldn't set ConsolePlayer: Self not found!");
-            else ConsolePlayer = Self;
-            if (ConsolePlayer != null)
-            {
-                ConsolePlayer.Name = Config.cl_nickname.Length == 0 ? "Self" : Config.cl_nickname;
-                ConsolePlayer.Flags = 0;
-                ConsolePlayer.Diplomacy[ConsolePlayer.ID] = DiplomacyFlags.Ally | DiplomacyFlags.Vision;
-                GameManager.Instance.CallDelegateOnNextFrame(() =>
-                {
-                    ConsolePlayer.Avatar = CreateAvatar(ConsolePlayer);
-                    // center view on avatar.
-                    MapView.Instance.CenterOnObject(ConsolePlayer.Avatar);
-                    return false;
-                });
-            }
-        }
-
-        if (!NetworkManager.IsClient)
-        {
-            // testing
-            /*
-            ItemPack testpack = new ItemPack();
-            testpack.PutItem(0, new Item("Very Rare Crystal Ring"));
-            PutSackAt(16, 16, testpack, false);
-            */
-
-            /*
-            MapProjectile proj = new MapProjectile(15);
-            proj.SetPosition(16, 16, 0);
-            Objects.Add(proj);
-            */
-        }
-
-//* WarBeginner *//
-	Wizard.LoadMap(this);
-//* end *//
+        LoadingThread.Start();
 
     }
 
@@ -579,7 +633,7 @@ class MapLogic
         }
 
         Group newGroup = new Group();
-        newGroup.RepopDelay = 120 * MapLogic.TICRATE; // default
+        newGroup.RepopDelay = 120 * TICRATE; // default
         newGroup.ID = groupId;
         Groups.Add(newGroup);
         return newGroup;

@@ -152,8 +152,11 @@ public class Font
         return line_wd;
     }
 
-    internal void RenderToExistingMesh(Mesh mesh, string text, Align align, int width, int height, bool wrapping, out int realwidth, out int realheight)
+    internal void RenderToExistingMesh(Mesh mesh, string text, Align align, int width, int height, bool wrapping, int overrideLineHeight, out int realwidth, out int realheight)
     {
+        if (overrideLineHeight < 0)
+            overrideLineHeight = LineHeight;
+
         // todo: wrap text / output
         string text2 = "";
         for (int i = 0; i < text.Length; i++)
@@ -250,7 +253,7 @@ public class Font
                     realwidth = (int)x;
             }
 
-            y += LineHeight;
+            y += overrideLineHeight;
         }
 
         realheight = (int)y;
@@ -265,18 +268,18 @@ public class Font
         mesh.SetIndices(qt, MeshTopology.Quads, 0);
     }
 
-    public GameObject Render(string text, Align align, int width, int height, bool wrapping)
+    public GameObject Render(string text, Align align, int width, int height, bool wrapping, int overrideLineHeight)
     {
         int tmp;
-        return Render(text, align, width, height, wrapping, out tmp, out tmp);
+        return Render(text, align, width, height, wrapping, overrideLineHeight, out tmp, out tmp);
     }
 
-    public GameObject Render(string text, Align align, int width, int height, bool wrapping, out int realwidth, out int realheight)
+    public GameObject Render(string text, Align align, int width, int height, bool wrapping, int overrideLineHeight, out int realwidth, out int realheight)
     {
         GameObject go = Utils.CreateObject();
 
         Mesh mesh = new Mesh();
-        RenderToExistingMesh(mesh, text, align, width, height, wrapping, out realwidth, out realheight);
+        RenderToExistingMesh(mesh, text, align, width, height, wrapping, overrideLineHeight, out realwidth, out realheight);
 
         MeshFilter mf = go.AddComponent<MeshFilter>();
         MeshRenderer mr = go.AddComponent<MeshRenderer>();
@@ -299,8 +302,9 @@ public class AllodsTextRenderer
     private bool _Wrapping;
     private Mesh _Mesh;
     private Material _Material;
+    private int _OverrideLineHeight;
 
-    public AllodsTextRenderer(Font font, Font.Align align = Font.Align.Left, int width = 0, int height = 0, bool wrapping = false)
+    public AllodsTextRenderer(Font font, Font.Align align = Font.Align.Left, int width = 0, int height = 0, bool wrapping = false, int overrideLineHeight = -1)
     {
         _Font = font;
         _Mesh = new Mesh();
@@ -310,11 +314,12 @@ public class AllodsTextRenderer
         _Width = width;
         _Height = height;
         _Wrapping = wrapping;
+        _OverrideLineHeight = overrideLineHeight;
     }
     
     private void UpdateMesh()
     {
-        _Font.RenderToExistingMesh(_Mesh, _Text, _Align, _Width, _Height, _Wrapping, out _ActualWidth, out _Height);
+        _Font.RenderToExistingMesh(_Mesh, _Text, _Align, _Width, _Height, _Wrapping, _OverrideLineHeight, out _ActualWidth, out _Height);
     }
 
     public string Text

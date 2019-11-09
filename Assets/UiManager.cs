@@ -273,7 +273,7 @@ public class UiManager : MonoBehaviour
     {
         if (Tooltip == null)
         {
-            TooltipRendererA = new AllodsTextRenderer(Fonts.Font2, Font.Align.Left, 0, 0, false);
+            TooltipRendererA = new AllodsTextRenderer(Fonts.Font2, Font.Align.Left, 0, 0, false, 12);
             Tooltip = Utils.CreateObject();
             Tooltip.transform.parent = transform;
             TooltipRenderer = Tooltip.AddComponent<MeshRenderer>();
@@ -319,12 +319,12 @@ public class UiManager : MonoBehaviour
         TooltipBuilder.Reset();
         TooltipBuilder.AddQuad(0, 0, 0, 4, 4);
         TooltipBuilder.AddQuad(0, TooltipRendererA.ActualWidth + 8, 0, 4, 4);
-        TooltipBuilder.AddQuad(0, TooltipRendererA.ActualWidth + 8, TooltipRendererA.Height + 8, 4, 4);
-        TooltipBuilder.AddQuad(0, 0, TooltipRendererA.Height + 8, 4, 4);
+        TooltipBuilder.AddQuad(0, TooltipRendererA.ActualWidth + 8, TooltipRendererA.Height + 6, 4, 4);
+        TooltipBuilder.AddQuad(0, 0, TooltipRendererA.Height + 6, 4, 4);
 
         // now render border quads
         float bw = TooltipRendererA.ActualWidth + 6;
-        float bh = TooltipRendererA.Height + 6;
+        float bh = TooltipRendererA.Height + 6 - 2; // 2 = difference between "LineHeight" and our custom LineHeight of 12
         // top border bright
         TooltipBuilder.CurrentMesh = 1;
         TooltipBuilder.CurrentColor = new Color32(165, 121, 49, 255);

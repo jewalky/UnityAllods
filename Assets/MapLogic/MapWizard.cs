@@ -43,6 +43,54 @@ class MapWizard
         return true;
     }
 
+    const byte HZ = 0;
+	private byte[] _CellMoveCostMixType = new byte[0x40]  //char a540A6[0x40] =
+	{ 2, 3, 2, 4, 3, 4, 2, 2, 2, 2, 4, 4, 4, 4, HZ, HZ,
+	  3, 5, 3, 3, 1, 3, 2, 4, 2, 2, 4, 2, 4, 4, HZ, HZ,
+	  2, 3, 2, 4, 3, 4, 2, 4, 2, 2, 4, 2, 4, 4, HZ, HZ,
+	  5, 5, 5, 5, 5, 5, 2, 2, 2, 2, 4, 4, 4, 4, HZ, HZ };
+	private byte[][] _CellMoveCostMixValues = new byte[0x10][]  //char a54126[0x10][2] =
+	{ {2, 1}, {5, 1}, {4, 1}, {7, 1}, {6, 1}, {5, 6}, {3, 7}, {8, 6},
+	  {HZ,HZ},{HZ,HZ},{HZ,HZ},{HZ,HZ},{HZ,HZ},{HZ,HZ},{HZ,HZ},{HZ,HZ}
+	};	
+	private byte[] _CellCostBase = new byte[0x10]  //must be reloaded from map.reg !!!
+	{
+	0,	//dummy
+	0x8,	//1: land
+	0x8,	//2: grass
+	0x9,	//3: flowers
+	0xE,	//4: sand
+	0x6,    //5: cracked
+	0xC,	//6: stones
+	0xB,	//7: savanna
+	0x10,	//8: mountain
+	0x8,	//9: water
+	0x6,	//A: road
+	0,	//dummy
+	0,	//dummy
+	0,	//dummy
+	0	//dummy
+	};
+
+	public int CellMoveCost(int tile) { // 0 == unwalkable tile
+		if (tile >= 0x1C0 && tile <= 0x2FF)
+			return 0;
+		int MixType = _CellMoveCostMixType[tile & 0x3F];
+		int Mix = (tile >> 6) & 0x3;
+		if      (MixType == 1)
+			return (CellMoveCostMixValues[Mix][1] * 4 + _CellMoveCostMixValues[Mix][0] * 0 ) >> 2;
+		else if (MixType == 2)
+			return (CellMoveCostMixValues[Mix][1] * 3 + _CellMoveCostMixValues[Mix][0] * 1 ) >> 2;
+		else if (MixType == 3)
+			return (CellMoveCostMixValues[Mix][1] * 2 + _CellMoveCostMixValues[Mix][0] * 2 ) >> 2;
+		else if (MixType == 4)
+			return (CellMoveCostMixValues[Mix][1] * 1 + _CellMoveCostMixValues[Mix][0] * 3 ) >> 2;
+		else if (MixType == 5)
+			return (CellMoveCostMixValues[Mix][1] * 0 + _CellMoveCostMixValues[Mix][0] * 4 ) >> 2;
+		else
+			return 0;
+	}
+
 class TFindTask {
 	public MapUnit Unit;
 	public int TargetX, TargetY, TargetMaxX, TargetMaxY;

@@ -82,7 +82,7 @@ namespace SpellEffects
                 MapLogic.Instance.Objects.Add(item);
                 Grid.Add(item);
             }
-            for (int i = 0; i < Scalar*16 *2; i++)
+            for (int i = 0; i < Scalar*16*2; i++)
             {
                 MapProjectile item = new MapProjectile(AllodsProjectile.Shield, Unit);
                 MapLogic.Instance.Objects.Add(item);

@@ -4,30 +4,34 @@ using UnityEngine;
 
 namespace SpellEffects
 {
-    class Heal : TimedEffect
+    class Drain : TimedEffect
     {
         bool Attached = false;
         int Power = 0;
+        MapUnit Source = null;
 
-        public Heal(int duration, int power) : base(duration)
+        public Drain(int duration, int power, MapUnit source) : base(duration)
         {
             Attached = false;
             Power = power;
+            Source = source;
         }
 
         public override bool OnAttach(MapUnit unit)
         {
-            // always replace existing heal effects
-            List<Heal> heals = unit.GetSpellEffects<Heal>();
-            foreach (Heal h in heals)
+            // always replace existing drain effects
+            List<Drain> drains = unit.GetSpellEffects<Drain>();
+            foreach (Drain h in drains)
                 unit.RemoveSpellEffect(h);
-            unit.Stats.TrySetHealth(unit.Stats.Health + Power);
+            int dmg = unit.TakeDamage(DamageFlags.Astral, Source, Power);
+            if (dmg > 0 && Source != null)
+                Source.Stats.TrySetHealth(Source.Stats.Health + dmg);
             return true;
         }
 
         public override void OnDetach()
         {
-            Unit.Flags &= ~UnitFlags.Healing;
+            Unit.Flags &= ~UnitFlags.Draining;
         }
 
         public override bool Process()
@@ -35,7 +39,7 @@ namespace SpellEffects
             if (!base.Process())
                 return false;
 
-            Unit.Flags |= UnitFlags.Healing;
+            Unit.Flags |= UnitFlags.Draining;
 
             if (!Attached)
             {
@@ -46,12 +50,12 @@ namespace SpellEffects
         }
     }
 
-    [SpellIndicatorFlags(UnitFlags.Healing)]
-    public class HealingIndicator : EffectIndicator
+    [SpellIndicatorFlags(UnitFlags.Draining)]
+    public class DrainingIndicator : EffectIndicator
     {
-        public HealingIndicator(MapUnit unit) : base(unit) { }
+        public DrainingIndicator(MapUnit unit) : base(unit) { }
 
-        private class HealingProjectileLogic : IMapProjectileLogic
+        private class DrainingProjectileLogic : IMapProjectileLogic
         {
             MapProjectile Projectile;
             MapUnit Unit;
@@ -61,7 +65,7 @@ namespace SpellEffects
             float Z;
             float Frac = 0;
 
-            public HealingProjectileLogic(float height, float x, float y, float z, MapUnit unit)
+            public DrainingProjectileLogic(float height, float x, float y, float z, MapUnit unit)
             {
                 Height = height;
                 X = x;
@@ -84,9 +88,10 @@ namespace SpellEffects
                 float zatUnit = MapLogic.Instance.GetHeightAt(Unit.X + Unit.FracX + (float)Unit.Width / 2,
                                                               Unit.Y + Unit.FracY + (float)Unit.Height / 2,
                                                               Unit.Width, Unit.Height) / 32;
-                Frac += 5f / MapLogic.TICRATE;
-                Projectile.SetPosition(cX+X, cY+Y, zatUnit + Z + Frac * Height);
-                Projectile.CurrentFrame = Math.Min(7, (int)(Frac * 8));
+                Frac += 3f / MapLogic.TICRATE;
+                float animFrac = (1f - Frac);
+                Projectile.SetPosition(cX+X, cY+Y, zatUnit + Z + animFrac * Height);
+                Projectile.CurrentFrame = Math.Min(8, (int)(Frac * 9));
                 if (Frac > 1f)
                     return false;
                 return true;
@@ -100,19 +105,16 @@ namespace SpellEffects
             for (int i = 0; i < meanWh * 2; i++)
             {
                 float rX = Unit.Width / 2f;
-                float rY = Unit.Height / 4f;
+                float rY = Unit.Height / 3f;
 
                 float randRad = UnityEngine.Random.Range(0.0f, 1.0f) * Mathf.PI * 2;
 
                 float pX = -(Mathf.Cos(randRad) * rX);
                 float pY = -(Mathf.Sin(randRad) * rY);
 
-                float cZ = -(meanWh / 2f);
+                float cZ = -(meanWh / 3f);
 
-                MapProjectile item = new MapProjectile(AllodsProjectile.Healing, Unit, new HealingProjectileLogic((Unit.Width+Unit.Height)/2f, pX, pY, cZ, Unit));
-                item.ZOffset = 128;
-                if (Unit.IsFlying)
-                    item.ZOffset += 128;
+                MapProjectile item = new MapProjectile(AllodsProjectile.Drain, Unit, new DrainingProjectileLogic((Unit.Width+Unit.Height)/2f, pX, pY, cZ, Unit));
                 item.SetPosition(pX, pY, 0);
                 item.ZAbsolute = true;
                 MapLogic.Instance.Objects.Add(item);

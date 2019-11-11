@@ -40,7 +40,7 @@ public enum UnitFlags
     Bless           = 0x0100,
     Curse           = 0x0200,
     Healing         = 0x0400,
-    Vampiric        = 0x0800
+    Draining        = 0x0800
 }
 
 public class MapUnitAggro

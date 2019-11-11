@@ -228,7 +228,23 @@ namespace Spells
             if (TargetUnit == null)
                 return false;
 
-            SpellEffects.Effect eff = new SpellEffects.Heal(MapLogic.TICRATE, Spell.GetDamageMax());
+            SpellEffects.Effect eff = new SpellEffects.Heal(MapLogic.TICRATE, Spell.GetDamage());
+            TargetUnit.AddSpellEffects(eff);
+            return false;
+        }
+    }
+
+    [SpellProcId(Spell.Spells.Drain_Life)]
+    public class SpellProcDrainLife : SpellProc
+    {
+        public SpellProcDrainLife(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (TargetUnit == null)
+                return false;
+
+            SpellEffects.Effect eff = new SpellEffects.Drain(MapLogic.TICRATE, Spell.GetDamage(), Spell.User);
             TargetUnit.AddSpellEffects(eff);
             return false;
         }

@@ -845,6 +845,7 @@ class MapLogic
         unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Crystal Plate Boots {body=3}"));
         unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Crystal Pike {tohit=500,damagemin=10,damagemax=20}"));
         unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Meteoric Crossbow {damagemax=500}"));
+        unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Magic Wood Staff {castSpell=Drain_Life:100}"));
         for (int i = 0; i < 50; i++)
             unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("SuperScroll Teleport"));
         for (int i = 0; i < 250; i++)

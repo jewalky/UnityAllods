@@ -129,7 +129,7 @@ public class MapStructure : MapObject, IDynlight, IPlayerPawn, IVulnerable, IDis
                 {
                     LightFrame++;
                     LightValue = (int)(Mathf.Sin((float)LightFrame / 3) * 64 + 128);
-                    MapLogic.Instance.CalculateDynLighting();
+                    MapLogic.Instance.MarkDynLightingForUpdate();
                 }
             }
         }

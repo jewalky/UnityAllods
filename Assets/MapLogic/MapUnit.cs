@@ -38,7 +38,9 @@ public enum UnitFlags
     ProtectionAstral= 0x0040,
     Shield          = 0x0080,
     Bless           = 0x0100,
-    Curse           = 0x0200
+    Curse           = 0x0200,
+    Healing         = 0x0400,
+    Draining        = 0x0800
 }
 
 public class MapUnitAggro
@@ -1163,7 +1165,12 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         Item currentItem = GetItemFromBody(slot);
         if (currentItem != null)
-            ItemsPack.PutItem(ItemsPack.Count, ItemsBody.TakeItem(currentItem, 1));
+        {
+            int putAtOffset = ItemsPack.Count;
+            if (item.Parent == ItemsPack)
+                putAtOffset = Math.Min(item.Index, putAtOffset);
+            ItemsPack.PutItem(putAtOffset, ItemsBody.TakeItem(currentItem, 1));
+        }
 
         if (item.Class.Option.TwoHanded == 2)
         {

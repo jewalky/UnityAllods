@@ -393,7 +393,11 @@ public class UiManager : MonoBehaviour
 
     public void UnsetTooltip()
     {
-        if (Tooltip != null) Tooltip.SetActive(false);
+        if (Tooltip != null)
+        {
+            Tooltip.SetActive(false);
+            lastMouseChange = 0f;
+        }
     }
 
     // ITEM DRAGGING RELATED

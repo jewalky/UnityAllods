@@ -355,6 +355,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
                     Item newItem = Pack.TakeItem(itemHovered, 1);
                     if (!AutoDropTarget.ProcessAutoDrop(newItem))
                         Pack.PutItem(itemHovered, newItem);
+                    else UiManager.Instance.UnsetTooltip(); // remove tooltip if item was changed
                 }
             }
 
@@ -382,7 +383,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         int itemHoveredX = (int)(mPosLocal.x / 80 / InvScale);
         int itemHoveredY = (int)(mPosLocal.y / 80 / InvScale);
 
-        int start = Math.Max(Math.Min(Scroll, Pack.Count - InvWidth * InvHeight - 1), 0);
+        int start = Math.Max(Math.Min(Scroll, Pack.Count - InvWidth * InvHeight), 0);
         int end = Math.Min(start + InvWidth * InvHeight, Pack.Count);
 
         int itemHovered = itemHoveredY * InvWidth + itemHoveredX + start;
@@ -471,7 +472,8 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         int itemHoveredX = (int)(mPosLocal.x / 80 / InvScale);
         int itemHoveredY = (int)(mPosLocal.y / 80 / InvScale);
 
-        int start = Math.Max(Math.Min(Scroll, Pack.Count - InvWidth * InvHeight - 1), 0);
+        // "Drop" happens after removing item from source pack. this means, that pack is one item less here...
+        int start = Math.Max(Math.Min(Scroll, Pack.Count - InvWidth * InvHeight + ((item.Parent == Pack) ? 1 : 0)), 0);
         int end = Math.Min(start + InvWidth * InvHeight, Pack.Count);
 
         int itemHovered = itemHoveredY * InvWidth + itemHoveredX + start;

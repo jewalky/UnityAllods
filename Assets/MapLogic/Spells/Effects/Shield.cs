@@ -19,7 +19,7 @@ namespace SpellEffects
 
         public override bool OnAttach(MapUnit unit)
         {
-            // always replace existing haste effects
+            // always replace existing shield effects
             List<Shield> shields = unit.GetSpellEffects<Shield>();
 
             foreach (Shield s in shields)
@@ -82,7 +82,7 @@ namespace SpellEffects
                 MapLogic.Instance.Objects.Add(item);
                 Grid.Add(item);
             }
-            for (int i = 0; i < Scalar*16 *2; i++)
+            for (int i = 0; i < Scalar*16*2; i++)
             {
                 MapProjectile item = new MapProjectile(AllodsProjectile.Shield, Unit);
                 MapLogic.Instance.Objects.Add(item);

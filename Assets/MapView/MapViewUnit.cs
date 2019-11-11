@@ -331,7 +331,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             if (PlayerNickObject != null) PlayerNickObject.SetActive(LogicUnit.IsAlive);
 
             UnitClass dCls = LogicUnit.Class;
-            if (!LogicUnit.IsAlive)
+            if (!LogicUnit.IsAlive || LogicUnit.IsDying)
             {
                 while (dCls.Dying != null && dCls.Dying != dCls)
                     dCls = dCls.Dying;

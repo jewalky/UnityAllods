@@ -106,6 +106,7 @@ class MapLogic
     private Texture2D MapLightingTex = null;
     private Color MapLightingColor = new Color(1, 1, 1, 1);
     private bool MapLightingUpdated = false;
+    public bool MapDynLightingNeedsUpdate { get; private set; }
 
     public void CalculateLighting(float SolarAngle)
     {
@@ -114,6 +115,11 @@ class MapLogic
             for (int x = 0; x < Width; x++)
                 Nodes[x, y].Light = MapLighting.Result[y * Width + x];
         MapLightingNeedsUpdate = true;
+    }
+
+    public void MarkDynLightingForUpdate()
+    {
+        MapDynLightingNeedsUpdate = true;
     }
 
     public void CalculateDynLighting()
@@ -170,9 +176,9 @@ class MapLogic
 
     public float GetHeightAt(int x, int y)
     {
-        if (x >= 0 && x < MapLogic.Instance.Width &&
-            y >= 0 && y < MapLogic.Instance.Height)
-            return MapLogic.Instance.Nodes[x, y].Height;
+        if (x >= 0 && x < Width &&
+            y >= 0 && y < Height)
+            return Nodes[x, y].Height;
         return 0;
     }
 
@@ -322,6 +328,13 @@ class MapLogic
 
     public void Update()
     {
+        // update dynlights if needed
+        if (MapDynLightingNeedsUpdate)
+        {
+            CalculateDynLighting();
+            MapDynLightingNeedsUpdate = false;
+        }
+
         _LevelTime++;
 
         // process group AI

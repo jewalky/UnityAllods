@@ -484,7 +484,7 @@ public class MapProjectile : MapObject, IDynlight
         DoUpdateView = true;
 
         if (bDoCalcLight)
-            MapLogic.Instance.CalculateDynLighting();
+            MapLogic.Instance.MarkDynLightingForUpdate();
     }
 
     private int _LightLevel;
@@ -500,7 +500,7 @@ public class MapProjectile : MapObject, IDynlight
             if (_LightLevel != value)
             {
                 _LightLevel = value;
-                MapLogic.Instance.CalculateDynLighting();
+                MapLogic.Instance.MarkDynLightingForUpdate();
             }
         }
     }

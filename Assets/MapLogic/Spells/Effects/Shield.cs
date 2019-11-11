@@ -19,7 +19,7 @@ namespace SpellEffects
 
         public override bool OnAttach(MapUnit unit)
         {
-            // always replace existing haste effects
+            // always replace existing shield effects
             List<Shield> shields = unit.GetSpellEffects<Shield>();
 
             foreach (Shield s in shields)

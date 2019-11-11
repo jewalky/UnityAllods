@@ -250,18 +250,9 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
             }
 
             // always centered
-            if (LogicProjectile.Class.ID == 7) // bat sonic boom
-            {
-                transform.localPosition = new Vector3(xP.x - 16 * LogicProjectile.Scale,
-                                                      xP.y - 16 * LogicProjectile.Scale,
-                                                      MakeZFromY(xP.y) - LogicProjectile.ZOffset); // order sprites by y coordinate basically
-            }
-            else
-            {
-                transform.localPosition = new Vector3(xP.x - sprites.Sprites[actualFrame].rect.width * 0.5f * LogicProjectile.Scale,
-                                                      xP.y - sprites.Sprites[actualFrame].rect.height * 0.5f * LogicProjectile.Scale,
-                                                      MakeZFromY(xP.y) - LogicProjectile.ZOffset); // order sprites by y coordinate basically
-            }
+            transform.localPosition = new Vector3(xP.x - LogicProjectile.Class.Width * 0.5f * LogicProjectile.Scale,
+                                                    xP.y - LogicProjectile.Class.Height * 0.5f * LogicProjectile.Scale,
+                                                    MakeZFromY(xP.y) - LogicProjectile.ZOffset - LogicProjectile.ProjectileZ * 32); // order sprites by y coordinate basically
 
             transform.localScale = new Vector3(LogicProjectile.Scale, LogicProjectile.Scale, LogicProjectile.Scale);
             ShadowObject.transform.localScale = new Vector3(LogicProjectile.Scale, LogicProjectile.Scale, LogicProjectile.Scale);

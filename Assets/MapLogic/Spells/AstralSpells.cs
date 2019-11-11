@@ -217,4 +217,20 @@ namespace Spells
             return false;
         }
     }
+
+    [SpellProcId(Spell.Spells.Heal)]
+    public class SpellProcHeal : SpellProc
+    {
+        public SpellProcHeal(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (TargetUnit == null)
+                return false;
+
+            SpellEffects.Effect eff = new SpellEffects.Heal(MapLogic.TICRATE, Spell.GetDamageMax());
+            TargetUnit.AddSpellEffects(eff);
+            return false;
+        }
+    }
 }

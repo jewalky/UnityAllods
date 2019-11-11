@@ -38,7 +38,9 @@ public enum UnitFlags
     ProtectionAstral= 0x0040,
     Shield          = 0x0080,
     Bless           = 0x0100,
-    Curse           = 0x0200
+    Curse           = 0x0200,
+    Healing         = 0x0400,
+    Vampiric        = 0x0800
 }
 
 public class MapUnitAggro

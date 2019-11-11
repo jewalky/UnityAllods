@@ -172,12 +172,21 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
         else Renderer.materials[2].color = new Color(0, 0, 0, 0);
     }
 
+    public void Update()
+    {
+        if (View.Pack != null && View.AutoDropTarget == null &&
+            View.Pack.Parent != null && View.Pack.Parent.Player == MapLogic.Instance.ConsolePlayer)
+        {
+            View.AutoDropTarget = (IUiItemAutoDropper)View.Pack.Parent.GameScript;
+        }
+    }
+
     public void SetPack(MapHuman human)
     {
         if (human != null && human.Player == MapLogic.Instance.ConsolePlayer)
         {
             View.Pack = human.ItemsPack;
-            View.AutoDropTarget = (IUiItemAutoDropper)human.GameScript;
+            View.AutoDropTarget = (IUiItemAutoDropper)human.GameScript; // may be null at this point
         }
         else
         {

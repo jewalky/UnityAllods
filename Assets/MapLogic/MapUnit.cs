@@ -1141,7 +1141,12 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         Item currentItem = GetItemFromBody(slot);
         if (currentItem != null)
-            ItemsPack.PutItem(ItemsPack.Count, ItemsBody.TakeItem(currentItem, 1));
+        {
+            int putAtOffset = ItemsPack.Count;
+            if (item.Parent == ItemsPack)
+                putAtOffset = Math.Min(item.Index, putAtOffset);
+            ItemsPack.PutItem(putAtOffset, ItemsBody.TakeItem(currentItem, 1));
+        }
 
         if (item.Class.Option.TwoHanded == 2)
         {

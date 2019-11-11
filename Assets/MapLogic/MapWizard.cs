@@ -1,14 +1,11 @@
-﻿//Debug.LogFormat("path find err: {0}, {1} =", X, Y);
+//Debug.LogFormat("path find err: {0}, {1} =", X, Y);
 
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using System;
 
-struct UnitType {
-	int Num,Value;
-	MapUnit UnitExample;
-}
+//подумать насчет сохранения карт доступности
 
 class MapWizard
 {
@@ -16,72 +13,10 @@ class MapWizard
 //	размеры карты не больше 256*256
 //	карта по краям ограничена для всех непроходимыми клетками
 
-	//**//**//**//
-	System.Diagnostics.Stopwatch _StopWatch = System.Diagnostics.Stopwatch.StartNew();
-	int _ErrCount = 0;
-	int _TimeCount = 0;
-	int _RunCount = 0;
-	long _TickCount = 0;
-	long _LastTick = 0;
 
-	const int _CostBad = 0;
-	const int _Cost0 = _CostBad+1;
-	const int _CostMax = 0xFFFFFF;
-	const int LowX = 0;
-	const int LowY = 0;
-	private int HighX,HighY;
-	private byte[,] CellCost = new byte[1,0x10000];
-	private int[] TargetCost = new int[0x10000];
-
-	//path searching
-	private float TargetRadius2;
-	Vector2 TargetCenter;
-	private int StartAddr;
-	private ushort[] Queue = new ushort[0x10000];
-	private ushort Qin,Qout;
-	//
-
-	public MapWizard(){
-		//**//**//**//
-		_StopWatch.Start();
-	}
-
-	public void Unload() {
-		//**//**//**//
-	}
-
-	private bool CheckWalkable(int x, int y)
-	{
-		MapNode node = MapLogic.Instance.Nodes[x, y];
-		uint tile = node.Tile;
-		MapNodeFlags flags = node.Flags;
-		if ((!flags.HasFlag(MapNodeFlags.Unblocked) && (tile >= 0x1C0 && tile <= 0x2FF)) // blocked by ground terrain
-			|| flags.HasFlag(MapNodeFlags.BlockedGround)) // or blocked explicitly
-			return false; // not walkable
-	        return true; // walkable
-	}
-
-	/*private UnitType[] unitTypes;
-	public GetUnitType(MapUnit unit){
-		int Num=
-		найти среди UnitType по типу
-		return Num;
-	}*/
-
-	/*public UnitMovingType(MapUnit unit){
-        for (int ly = y; ly < y + Unit.Height; ly++)
-        {
-            for (int lx = x; lx < x + Unit.Width; lx++)
-		if (unit.IsWalking && (flags & MapNodeFlags.Unblocked) == 0 && (tile >= 0x1C0 && tile <= 0x2FF))
-			 return false;
-		MapNodeFlags bAir = staticOnly ? MapNodeFlags.BlockedAir : MapNodeFlags.BlockedAir | MapNodeFlags.DynamicAir;
-		MapNodeFlags bGround = staticOnly ? MapNodeFlags.BlockedGround : MapNodeFlags.BlockedGround | MapNodeFlags.DynamicGround;
-		if (Unit.IsFlying && (flags & bAir) != 0) return false;
-			else if (!Unit.IsFlying && (flags & bGround) != 0)
-		if unit.
-	};
-	
-    public bool CheckWalkableForUnit(int x, int y, bool staticOnly)
+//////////////////////////////////////////////////////////
+// возможно будет использовано когда нибудь
+    public bool _CheckWalkableForUnit(MapUnit Unit, int x, int y, bool staticOnly)
     {
         if (x < 8 || x > MapLogic.Instance.Width - 8 ||
             y < 8 || y > MapLogic.Instance.Height - 8) return false;
@@ -108,7 +43,134 @@ class MapWizard
         return true;
     }
 
-	*/
+class TFindTask {
+	public MapUnit Unit;
+	public int TargetX, TargetY, TargetMaxX, TargetMaxY;
+	public float Distance;
+	public bool StaticOnly;
+	public int[] TargetCost;
+
+	public TFindTask() {
+		TargetCost = new int[0x10000];
+	}
+
+	~TFindTask() {
+		TargetCost = null;
+	}
+
+} // TFindTask
+
+//////////////////////////////////////////////////////////
+
+
+    //**//**//**//
+    // Math
+	private float sqr(float Value) {
+		return Value*Value;
+	} // sqr
+
+	private int abs(int A) {
+		if (A < 0) return -A;
+		return A;
+	} // abs
+
+	private int min(int X, int Y) {
+		if (X > Y) return Y;
+		return X;
+	} // max
+
+	private int max(int X, int Y) {
+		if (X < Y) return Y;
+		return X;
+	} // max
+
+	private int DistToPoint(int X1, int Y1, int X2, int Y2) {
+		return abs(X1-X2) + abs(Y1-Y2);
+	} // DistToPoint
+
+	private int DistToRange(int X, int Y, int MinX, int MinY, int MaxX, int MaxY) {
+		if      (X < MinX) X = MinX - X;
+		else if (X > MaxX) X = X - MaxX;
+		else               X = 0;
+
+		if      (Y < MinY) Y = MinY - Y;
+		else if (Y > MaxY) Y = Y - MaxY;
+		else               Y = 0;
+
+		return max( X, Y );
+	} // DistToRange
+	// end Math
+
+
+	//**//**//**//
+	System.Diagnostics.Stopwatch _StopWatch = System.Diagnostics.Stopwatch.StartNew();
+	int _ErrCount = 0;
+	int _TimeCount = 0;
+	int _RunCount = 0;
+	long _TickCount = 0;
+	long _LastTick = 0;
+	long _CheckTime1 = 0;
+	long _CheckTime2 = 0;
+	long _CheckTime3 = 0;
+	DateTime _TimeToLog = DateTime.Now;
+
+
+	/////////////////////////////
+	// MapWizard interface
+	/////////////////////////////
+
+
+struct TUnitData {
+	public MapUnit Unit;
+	public int TypeNum;
+	public int UpdatedX,UpdatedY;
+	public int UpdateNum;
+} // TUnitData
+struct TUnitType {
+	public int Width,Height;
+	public bool IsWalking,IsFlying;
+	public MapUnit ExampleUnit;
+} // TUnitType
+
+
+	const int _CostBad      = 0;
+	const int _Cost0        = _CostBad+1;
+	const int _CostMax      = 0xFFFFFF;
+	const int LowX = 0;
+	const int LowY = 0;
+	private int HighX,HighY,MapWidth,MapHeight;
+
+
+	/////////////////////////////
+	// map cache
+	int LastUnitType = -1;
+	private TUnitType[] UnitTypes;
+	private byte[][][] CellCosts; // [range(UnitTypeNum)][bool][word]
+
+
+	/////////////////////////////
+	// finds cache
+	private TFindTask[] FindTasks;
+
+	//path searching. parameters
+	private MapUnit FindingUnit;
+	private int FindingUnitTypeNum;
+	private int CheckWalkable_Width, CheckWalkable_Height;
+	private bool CheckWalkable_IsWalking, CheckWalkable_IsFlying;
+	private int StartAddr;
+	private Vector2 TargetCenter;
+	private float TargetRadius2;
+
+	//path searching. map data
+	private ushort[] QueueAddr = new ushort[0x10000]; // [word]
+	private int[] QueueCost = new int[0x10000]; // [word]
+	private ushort Qin,Qout;
+	private int[] TargetCost = new int[0x10000]; // [word]
+	private byte[] CellCost; // [word]
+	//
+
+	///////////////////////////////
+	// service
 
 	private ushort CellAddr(int X, int Y) {
 		//return (ushort) (((Y+LowY) << 8) + X+LowX);
@@ -131,48 +193,359 @@ class MapWizard
 		return result;
 	}
 
-	public void LoadMap(MapLogic Logic) {
-	int X,Y;
-	int AddrY;
-		//обеспечение непроходимой границы
-		//LowX = 0; 
-		HighX = Logic.Width-1;
-		//if (HighX<254) { LowX++; HighX+=2; }
-		//LowY = 0; 
-		HighY = Logic.Height-1;
-		//if (HighY<254) { LowY++; HighY+=2; }
-		//загрузка проходимости
-		//пока только один слой
-		//**//**//**//
-		AddrY = 0;//CellAddr(0,0);
-		for (Y = 0; Y < Logic.Height; Y++){
-			for (X = 0; X < Logic.Width; X++){
-			if (CheckWalkable(X,Y))
-				CellCost[0,AddrY+X] = (byte)_Cost0;
-			else	CellCost[0,AddrY+X] = (byte)_CostBad;
-			//**//**//**//
-			//if (X==17 && Y==15)
-			//	Debug.LogFormat("cell cost: {0},{1} = {2}", X,Y, CellCost[0,CellAddr(X,Y)]);
-			}
-			AddrY += 0x100;
+	//speed-up starting cost filling
+	const uint _MaxCellFreshID = uint.MaxValue-1;
+	private uint CellFreshValue = _MaxCellFreshID;
+	private uint[] CellFresh;
+
+	private void StartRefreshingCost() {
+		if (CellFreshValue == _MaxCellFreshID) {
+			CellFreshValue = 0;
+			CellFresh = new uint[0x10000]; // fills by 0
+			InitTargetCost();
 		}
+		CellFreshValue++;
+	}
+
+	private void RefreshCost(int Addr) {
+		if (CellFresh[Addr] == CellFreshValue) return;
+		if (CellFresh[Addr] > _MaxCellFreshID) return;
+		//if (FindingUnit.Interaction.CheckWalkableForUnit(Addr & 0xFF, Addr >> 8, FindingMode)) { // X,Y,StaticOnly
+		if (CellCost[Addr] != _CostBad) {
+
+			//CellCost[Addr] = (byte)_Cost0;
+			TargetCost[Addr] = _CostMax;
+
+		} else {
+
+			//CellCost[Addr] = (byte)_CostBad;
+			TargetCost[Addr] = _CostBad;
+
+		}
+		CellFresh[Addr] = CellFreshValue;
+	} // RefreshCost
+
+	private void SetCheckWalkableForUnit(MapUnit Unit) {
+		FindingUnit = Unit;
+		FindingUnitTypeNum = FindUnitTypeNum(Unit);
+		CheckWalkable_Width		= Unit.Width;
+		CheckWalkable_Height	= Unit.Height;
+		CheckWalkable_IsWalking	= Unit.IsWalking;
+		CheckWalkable_IsFlying	= Unit.IsFlying;
+	} // SetCheckWalkableForUnit
+	private void SetCheckWalkableForUnitTypeNum(int UnitTypeNum) {
+		FindingUnit = UnitTypes[UnitTypeNum].ExampleUnit;
+		FindingUnitTypeNum = UnitTypeNum;
+		CheckWalkable_Width		= UnitTypes[UnitTypeNum].Width;
+		CheckWalkable_Height	= UnitTypes[UnitTypeNum].Height;
+		CheckWalkable_IsWalking	= UnitTypes[UnitTypeNum].IsWalking;
+		CheckWalkable_IsFlying	= UnitTypes[UnitTypeNum].IsFlying;
+	} // SetCheckWalkableForUnitTypeNum
+
+	private bool CheckWalkable(int x, int y, bool staticOnly, MapUnit ExcludeUnit) {
+		//Unit.Interaction.CheckWalkableForUnit(X, Y, false);
+//		if (x < 8 || x > MapLogic.Instance.Width - 8 ||
+//		y < 8 || y > MapLogic.Instance.Height - 8) return false;
+		for (int ly = y; ly < y + CheckWalkable_Height; ly++) {
+			for (int lx = x; lx < x + CheckWalkable_Width; lx++) {
+				MapNode node = MapLogic.Instance.Nodes[lx, ly];
+				uint tile = node.Tile;
+				// skip cells currently taken
+				if (ExcludeUnit != null && node.Objects.Contains(ExcludeUnit))
+					continue; // if we are already on this cell, skip it as passible
+				MapNodeFlags flags = node.Flags;
+				if (CheckWalkable_IsWalking && (flags & MapNodeFlags.Unblocked) == 0 && (tile >= 0x1C0 && tile <= 0x2FF))
+					return false;
+				MapNodeFlags bAir = staticOnly ? MapNodeFlags.BlockedAir : MapNodeFlags.BlockedAir | MapNodeFlags.DynamicAir;
+				MapNodeFlags bGround = staticOnly ? MapNodeFlags.BlockedGround : MapNodeFlags.BlockedGround | MapNodeFlags.DynamicGround;
+				if (CheckWalkable_IsFlying && (flags & bAir) != 0)
+					return false;
+				else if (!CheckWalkable_IsFlying && (flags & bGround) != 0)
+					return false;
+			}
+		}
+		return true;
+	} // CheckWalkable
+
+
+	public MapWizard() {
+		//**//**//**//
+		_StopWatch.Start();
+	}
+
+	/////////////////////////////
+	// units cache
+	private int LastUnit = -1;
+	private TUnitData[] UnitsData;
+	private int LastUnitToUpdate = -1;
+	private int[] UnitsToUpdate;
+
+	private void AddUnitUpdate(int WizardID) {
+		UnitsData[WizardID].UpdateNum = ++LastUnitToUpdate;
+		if (UnitsToUpdate == null)
+			UnitsToUpdate = new int[64];
+		int Size = UnitsToUpdate.Count();
+		if (Size <= LastUnitToUpdate) {
+			Array.Resize(ref UnitsToUpdate, Size + (Size >> 1) );
+		}
+		UnitsToUpdate[LastUnitToUpdate] = WizardID;
+	} // AddUnitUpdate
+
+	public void UpdateUnit(MapUnit Unit, ref int WizardID) {
+		if (Unit == null && WizardID < 0)
+			return;
+
+		if (WizardID < 0) {
+			WizardID = ++LastUnit;
+			if (UnitsData == null)
+				UnitsData = new TUnitData[256];
+			int Size = UnitsData.Count();
+			if (Size <= LastUnit) {
+				Array.Resize(ref UnitsData, Size + (Size >> 1) );
+			}
+			UnitsData[WizardID].Unit = Unit;
+			UnitsData[WizardID].TypeNum = -1;
+			UnitsData[WizardID].UpdatedX = -1;
+			UnitsData[WizardID].UpdatedY = -1;
+			UnitsData[WizardID].UpdateNum = -1;
+		}
+		if (UnitsData[WizardID].UpdateNum < 0) AddUnitUpdate(WizardID);
+			
+		if (Unit == null) {
+			UnitsData[WizardID].Unit = null;
+		}
+
+		return;
+
+	} // UpdateUnit
+
+	private int FindUnitTypeNum(MapUnit Unit) {
+		int result = UnitsData[Unit.WizardID].TypeNum;
+		if (result >= 0)
+			return result;
+
+		for (result = 0; result <= LastUnitType; result++) {
+			if (
+					UnitTypes[result].Width		== Unit.Width
+				&&	UnitTypes[result].Height	== Unit.Height
+				&&	UnitTypes[result].IsWalking	== Unit.IsWalking
+				&&	UnitTypes[result].IsFlying	== Unit.IsFlying
+			)
+				goto FoundType;
+		}
+		result = ++LastUnitType;
+		if (UnitTypes == null)
+			UnitTypes = new TUnitType[1];
+		else
+			Array.Resize(ref UnitTypes, LastUnitType+1);
+		UnitTypes[result].Width			= Unit.Width;
+		UnitTypes[result].Height		= Unit.Height;
+		UnitTypes[result].IsWalking		= Unit.IsWalking;
+		UnitTypes[result].IsFlying		= Unit.IsFlying;
+		UnitTypes[result].ExampleUnit	= Unit;
+	FoundType:
+		UnitsData[Unit.WizardID].TypeNum = result;
+
+		return result;
+
+	} // FindUnitTypeNum
+
+	private void UpdateCellCostByUnit(MapUnit Unit, int UpdateX, int UpdateY, ref byte[] CellCostWithUnits, ref byte[] CellCostMapOnly, bool ExcludeFindingUnit) {
+
+		if (UpdateX < 0) return;
+
+		MapUnit ExcludeUnit;
+		if (ExcludeFindingUnit)
+			ExcludeUnit = FindingUnit;
+		else
+			ExcludeUnit = null;
+
+		int MinX,MinY,MaxX,MaxY;
+
+		MinX = max(UpdateX + 1 - CheckWalkable_Width , LowX);
+		MinY = max(UpdateY + 1 - CheckWalkable_Height, LowY);
+		MaxX = min(UpdateX + Unit.Width  - 1, HighX - CheckWalkable_Width );
+		MaxY = min(UpdateY + Unit.Height - 1, HighY - CheckWalkable_Height);
+
+		for (int Y = MinY; Y <= MaxY; Y++) {
+			int Addr = CellAddr(MinX,Y);
+			for (int X = MinX; X <= MaxX; X++) {
+				if (CellCostMapOnly[Addr] != (byte)_CostBad
+					&& CheckWalkable(X, Y, false, ExcludeUnit)
+					)
+					CellCostWithUnits[Addr] = (byte)_Cost0;
+				else
+					CellCostWithUnits[Addr] = (byte)_CostBad;
+				Addr++;
+			}
+		}
+	} // UpdateCellCostByUnit
+
+	private void ApplyUpdatingUnitData(ref TUnitData UnitData, MapUnit Unit) {
+		if (UnitData.TypeNum < 0)
+			FindUnitTypeNum(Unit);
+
+		for (int UnitTypeNum = UnitTypes.Count(); --UnitTypeNum >= 0; ) {
+			SetCheckWalkableForUnitTypeNum(UnitTypeNum);
+
+			UpdateCellCostByUnit(Unit, UnitData.UpdatedX, UnitData.UpdatedY, ref CellCosts[UnitTypeNum][1], ref CellCosts[UnitTypeNum][0], false );
+
+			UpdateCellCostByUnit(Unit, Unit.X, Unit.Y, ref CellCosts[UnitTypeNum][1], ref CellCosts[UnitTypeNum][0], false);
+		}
+
+		UnitData.UpdatedX = Unit.X;
+		UnitData.UpdatedY = Unit.Y;
+		UnitData.UpdateNum = -1;
+	} // ApplyUpdatingUnitData
+
+	private void ApplyUpdatingUnits() {
+		int SaveUnitTypeNum = FindingUnitTypeNum;
+
+		for (int UpdateNum = 0; UpdateNum <= LastUnitToUpdate; UpdateNum++) {
+			ApplyUpdatingUnitData(ref UnitsData[UnitsToUpdate[UpdateNum]], UnitsData[UnitsToUpdate[UpdateNum]].Unit);
+		}
+		LastUnitToUpdate = -1;
+
+		SetCheckWalkableForUnitTypeNum(SaveUnitTypeNum);
+	} // ApplyUpdatingUnits
+
+	private void CreateUnitTypes() {
+		for (int UnitNum = 0; UnitNum <= LastUnit; UnitNum++) {
+			FindUnitTypeNum(UnitsData[UnitNum].Unit);
+		}
+	} // CreateUnitTypes
+ 	//////
+
+	public void Unload() {
+		LastUnitType = -1;
+		LastUnit = -1;
+		UnitsData = null;
+		LastUnitToUpdate = -1;
+		UnitsToUpdate = null;
+		HighX = -1;
+		HighY = -1;
+		if (UnitTypes != null) {
+			for (int NType=0; NType < UnitTypes.Count(); NType++) {
+				UnitTypes[NType].ExampleUnit = null;
+			}
+		}
+		UnitTypes = null;
+		if (FindTasks != null) {
+			for (int NTask=0; NTask < FindTasks.Count(); NTask++) {
+				FindTasks[NTask] = null;
+			}
+		}
+		CellFreshValue = _MaxCellFreshID;
+		CellFresh = null;
+		FindTasks = null;
+		CellCosts = null;
+		//TargetCost = null;
+		//Queue = null;
+	} // Unload
+
+
+	///////////////////////////////
+	// Path finding initializing
+
+	public void InitTargetCost() {
+	int AddrY = 0;
+	int X,Y;
 		//заполнение непроходимой границы
-		AddrY = 0;
 		for (Y = 0; Y <= HighY; Y++) {
-			CellCost[0,AddrY+0    ] = (byte)_CostBad;
-			CellCost[0,AddrY+HighX] = (byte)_CostBad;
-			TargetCost[AddrY+0    ] = _CostBad;
-			TargetCost[AddrY+HighX] = _CostBad;
+			TargetCost[AddrY+0    ] = _CostBad; CellFresh[AddrY+0    ] = _MaxCellFreshID+1;
+			TargetCost[AddrY+HighX] = _CostBad; CellFresh[AddrY+HighX] = _MaxCellFreshID+1;
 			AddrY += 0x100;
 		}
 		AddrY = HighY << 8;
 		for (X = 0; X <= HighX; X++) {
-			CellCost[0,00000+X] = (byte)_CostBad;
-			CellCost[0,AddrY+X] = (byte)_CostBad;
-			TargetCost[00000+X] = _CostBad;
-			TargetCost[AddrY+X] = _CostBad;
+			TargetCost[00000+X] = _CostBad; CellFresh[00000+X] = _MaxCellFreshID+1;
+			TargetCost[AddrY+X] = _CostBad; CellFresh[AddrY+X] = _MaxCellFreshID+1;
 		}
-	}
+	} // InitTargetCost
+
+	public void CreateCellCost(ref byte[][] _CellCosts2) {
+		_CellCosts2 = new byte[2][];
+		for (int SeeMapOnlyNum = 0; SeeMapOnlyNum <= 1; SeeMapOnlyNum++) {
+			_CellCosts2[SeeMapOnlyNum] = new byte[0x10000];
+		}
+	} // CreateCellCost
+
+	public void LoadCellCost(ref byte [] CellCost, MapUnit Unit, bool SeeMapOnly) {
+	int X,Y,MaxX,MaxY;
+	int AddrX,AddrY;
+		//загрузка проходимости
+
+		SetCheckWalkableForUnit(Unit);
+
+		MaxX = MapWidth  - CheckWalkable_Width;
+		MaxY = MapHeight - CheckWalkable_Height;
+		AddrY = CellAddr(1,1);
+		for (Y = 1; Y <= MaxY; Y++) {
+			AddrX = AddrY;
+			for (X = 1; X <= MaxX; X++) {
+				if (CheckWalkable(X, Y, SeeMapOnly, null))
+					CellCost[AddrX] = (byte)_Cost0;
+				else
+					CellCost[AddrX] = (byte)_CostBad;
+				AddrX++;
+			}
+			AddrY += 0x100;
+		}
+		//заполнение непроходимой границы
+		for (Y = 0; Y <= HighY; Y++) {
+			for (X = 0; X < CheckWalkable_Width; X++) {
+				CellCost[CellAddr(X         , Y)] = (byte)_CostBad;
+				CellCost[CellAddr(HighX - X , Y)] = (byte)_CostBad;
+			}
+		}
+		for (Y = 0; Y < CheckWalkable_Height; Y++) {
+			for (X = 0; X <= HighX; X++) {
+				CellCost[CellAddr(X ,         Y)] = (byte)_CostBad;
+				CellCost[CellAddr(X , HighY - Y)] = (byte)_CostBad;
+			}
+		}
+	} // LoadCellCost
+
+	public void LoadCellCostByTypeNum(int UnitTypeNum) {
+
+		if (UnitTypeNum>=CellCosts.Count()) {
+			Array.Resize(ref CellCosts,UnitTypeNum+1);
+			CreateCellCost(ref CellCosts[UnitTypeNum]);
+		}
+
+		LoadCellCost(ref CellCosts[UnitTypeNum][0], UnitTypes[UnitTypeNum].ExampleUnit, true); // parallel
+		LoadCellCost(ref CellCosts[UnitTypeNum][1], UnitTypes[UnitTypeNum].ExampleUnit, false);
+
+	} // LoadCellCostByTypeNum
+
+	public void LoadMap(MapLogic Logic) {
+		//**//**//**//
+		_LastTick = _StopWatch.ElapsedTicks;
+
+		MapWidth = Logic.Width;
+		MapHeight = Logic.Height;
+		//LowX = 0;
+		HighX = MapWidth-1;
+		//if (HighX<254) { LowX++; HighX+=2; }
+		//LowY = 0; 
+		HighY = MapHeight-1;
+		//if (HighY<254) { LowY++; HighY+=2; }
+
+		CreateUnitTypes();
+
+		CellCosts = new byte[UnitTypes.Count()][][];
+		for (int UnitTypeNum = 0; UnitTypeNum < UnitTypes.Count(); UnitTypeNum++) {
+			CreateCellCost(ref CellCosts[UnitTypeNum]);
+			LoadCellCostByTypeNum(UnitTypeNum); // parallel
+		}
+
+		//**//**//**//
+		_LastTick = _StopWatch.ElapsedTicks - _LastTick;
+		_TickCount += _LastTick;
+		Debug.LogFormat("WB:Time:Load map: {0}*{1}   ticks={2}, freq={3}",
+				Logic.Width, Logic.Height, _LastTick, System.Diagnostics.Stopwatch.Frequency
+				);
+	} // LoadMap
 
 
 	///////////////////////////////
@@ -185,14 +558,26 @@ class MapWizard
 		int DY = TargetY - StartY;
 		if (DX < 0) DX = -1; else if (DX > 0) DX = +1;
 		if (DY < 0) DY = -1; else if (DY > 0) DY = +1;
-		if (Unit.Interaction.CheckWalkableForUnit(StartX+DX, StartY+DY, StaticOnly))
-		{
-			List<Vector2i> result = new List<Vector2i>();
-			result.Insert(0,new Vector2i(StartX+DX, StartY+DY));
-	                return result;
-		}
-		return null;
-	}
+		if                 (Unit.Interaction.CheckWalkableForUnit(StartX+DX, StartY+DY, StaticOnly))
+			;//ok
+		else if	(DX != 0 && Unit.Interaction.CheckWalkableForUnit(StartX+DX, StartY   , StaticOnly))
+			DY = 0;
+		else if (DY != 0 && Unit.Interaction.CheckWalkableForUnit(StartX   , StartY+DY, StaticOnly))
+			DX = 0;
+		else if (DX == 0 && Unit.Interaction.CheckWalkableForUnit(StartX-1 , StartY+DY, StaticOnly))
+			DX = -1;
+		else if (DX == 0 && Unit.Interaction.CheckWalkableForUnit(StartX+1 , StartY+DY, StaticOnly))
+			DX = +1;
+		else if	(DY == 0 && Unit.Interaction.CheckWalkableForUnit(StartX+DX, StartY-1 , StaticOnly))
+			DY = -1;
+		else if (DY == 0 && Unit.Interaction.CheckWalkableForUnit(StartX+DX, StartY+1 , StaticOnly))
+			DY = +1;
+		else
+			return null;
+		List<Vector2i> result = new List<Vector2i>();
+		result.Insert(0,new Vector2i(StartX+DX, StartY+DY));
+		return result;
+	} // PathFind_Dumb
 
 
 	///////////////////////////////
@@ -200,49 +585,32 @@ class MapWizard
 	// Flood version = Fastest path to target
 	// debugging //**//
 
-	private float sqr(float Value) {
-		return Value*Value;
-	}
-
-	private int abs(int A) {
-		if (A < 0) return -A;
-		return A;
-	}
-
-	private int max(int X, int Y) {
-		if (X < Y) return Y;
-		return X;
-	}
-
-	private int DistToPoint(int X1, int Y1, int X2, int Y2) {
-		return abs(X1-X2) + abs(Y1-Y2);
-	}
-
-	private int DistToRange(int X, int Y, int MinX, int MinY, int MaxX, int MaxY) {
-		if      (X < MinX) X = MinX - X;
-		else if (X > MaxX) X = X - MaxX;
-		else               X = 0;
-
-		if      (Y < MinY) Y = MinY - Y;
-		else if (Y > MaxY) Y = Y - MaxY;
-		else               Y = 0;
-
-		return max( X, Y );
-	}
+	private void FreeCellCostForUnit(MapUnit Unit) {
+		UpdateCellCostByUnit(Unit, Unit.X, Unit.Y, ref CellCosts[FindingUnitTypeNum][1], ref CellCosts[FindingUnitTypeNum][0], true );
+	} // FreeCellCostForUnit
 
 	private void Path_AddCell(int Addr, int Cost) {
+	//int Qbest;
+		RefreshCost(Addr);
 		if (TargetCost[Addr] <= Cost) return;
 		TargetCost[Addr] = Cost;
-		Queue[Qin++] = (ushort)Addr;
-	}
+		//while
+		QueueAddr[Qin] = (ushort)Addr;
+		QueueCost[Qin] = Cost;
+		Qin++;
+		return;
+	} // Path_AddCell
 
 	private void Path_FillCost() {
 	int Addr;
 	int Cost;
 		while (Qin != Qout) {
-			Addr = Queue[Qout++];
-			Cost = TargetCost[Addr]+CellCost[0,Addr];
-			if (StartAddr == Addr) break;//**//**//**// //can found not fastest way if use different move-costs
+			Addr = QueueAddr[Qout];
+			if (Addr == StartAddr) break;
+			QueueCost[Qout] = 0;
+			Qout++;
+
+			Cost = TargetCost[Addr] + CellCost[Addr];
 			Path_AddCell(Addr-0x100-1,Cost);
 			Path_AddCell(Addr-0x100  ,Cost);
 			Path_AddCell(Addr-0x100+1,Cost);
@@ -253,18 +621,20 @@ class MapWizard
 			Path_AddCell(Addr+0x100  ,Cost);
 			Path_AddCell(Addr+0x100+1,Cost);
 		}
-	}
+	} // Path_FillCost
 
 	private void Path_TakePoint(int Addr, ref int BestAddr, ref int BestCost) {
+		RefreshCost(Addr);
 		int Cost = TargetCost[Addr];
 		if ( Cost != _CostBad  &&  BestCost > Cost) {
 			BestCost = Cost;
 			BestAddr = Addr;
 		}
-	}
+	} // Path_TakePoint
 
 	private List<Vector2i> Path_TakeBestPath(int StartX, int StartY) {
 		int Addr = CellAddr(StartX,StartY);
+		RefreshCost(Addr);
 		if ( TargetCost[Addr] == _CostBad  ||  TargetCost[Addr] == _CostMax )
 			return null;
 		int BestCost;
@@ -286,15 +656,11 @@ class MapWizard
 			result.Add(AddrAsVector(BestAddr));
 			Addr = BestAddr;
 
-		//**//**//**//
-		//if (result.Count>1000) {
-		//	Debug.LogFormat("path find bad take {0},{1}  cost={2}", StartX,StartY, TargetCost[BestAddr]);
-		//	return null;
-		//}
 		}
-
+		if (result.Count() == 0)
+			result = null;
 		return result;
-	}
+	} // Path_TakeBestPath
 
 
 	private void Dump(int X,int Y) {
@@ -307,11 +673,14 @@ class MapWizard
 				TargetCost[Addr+0x200-2],TargetCost[Addr+0x200-1],TargetCost[Addr+0x200  ],TargetCost[Addr+0x200+1],TargetCost[Addr+0x200+2],
 				X,Y
 				);
-	}
+	} // Dump
 
 	private List<Vector2i> PathFind_Flood(MapUnit Unit, int StartX, int StartY, int TMinX, int TMinY, int TMaxX, int TMaxY, float Distance, bool StaticOnly)
 	{
 	int X,Y,AddrX,AddrY,MinX,MinY,MaxX,MaxY;
+		//**//**//**//
+		if (Unit.WizardID < 0 || Unit.WizardID >= UnitsData.Count())
+			throw new Exception("MapWizard: bad unit WizardID");
 		//**//**//**//
 		_RunCount++;
 		_LastTick = _StopWatch.ElapsedTicks;
@@ -336,46 +705,25 @@ class MapWizard
 		)
 			return PointAsPath(StartX,StartY);
 
+		ApplyUpdatingUnits();
 
-		//**//**//**//
-		//if (StartX==18 && StartY==16)
-		//	Debug.LogFormat("find cell cost: {0},{1} = {2}", 17,15, CellCost[0,CellAddr(17,15)]);
-		AddrY = CellAddr(LowX,LowY);
-		for (Y = LowY; Y <= HighY; Y++) {
-			AddrX = AddrY;
-			for (X = LowX; X <= HighX; X++) {
-				//TargetCost[Addr+X] = CellCost[0,Addr+X];
-				if (Unit.Interaction.CheckWalkableForUnit(X,Y, StaticOnly))
-					{ TargetCost[AddrX] = _CostMax; CellCost[0,AddrX] = _Cost0; }
-				else	{ TargetCost[AddrX] = _CostBad; CellCost[0,AddrX] = _CostBad; }
-				/*if (CellCost[0,Addr+X] != (byte)_CostBad)
-					TargetCost[Addr+X] = _CostMax;
-				else	TargetCost[Addr+X] = _CostBad;*/
-				//**//**//**//
-				//if (Addr+X == CellAddr(TargetX,TargetY))
-				//	Debug.LogFormat("path find init target: {0}, {1} = {2} (cell={3})", TargetX,TargetY, TargetCost[CellAddr(TargetX,TargetY)], CellCost[0,CellAddr(TargetX,TargetY)]);
+		SetCheckWalkableForUnit(Unit);
 
-				//уточнить по виду Unit
-				//**//**//**//
-				AddrX++;
-			}
-			AddrY += 0x100;
+		//написать поиск недавних задач поиска
+		//private TFindTask[] FindTasks = new TFindTask[2];
+		//0/0
+		//Array.Copy(UnitTypes[FindingUnitTypeNum],TargetCost);
+
+		if (StaticOnly)
+			CellCost = CellCosts[FindingUnitTypeNum][0];
+		else	{
+			CellCost = CellCosts[FindingUnitTypeNum][1];
+			FreeCellCostForUnit(Unit);
 		}
-		long _Last1 = _StopWatch.ElapsedTicks;
 
-		//**//**//**//
-		//if (StartX==18 && StartY==16)
-		//	Debug.LogFormat("find cell cost: {0},{1} = {2} walkable={3}", 17,15, CellCost[0,CellAddr(17,15)], Unit.Interaction.CheckWalkableForUnit(17,15, true));
+		StartRefreshingCost();
 
-		Qin=0; Qout=0;
-
-		//**//**//**//
-		//Debug.LogFormat("path find target: {0}, {1} = {2} (cell={3})", TargetX,TargetY, TargetCost[CellAddr(TargetX,TargetY)], CellCost[0,CellAddr(TargetX,TargetY)]);
-		//int TargetMaxX = TargetX + TargetWidth-1;
-		//int TargetMaxY = TargetY + TargetHeight-1;
-
-		//Distance -= 1f;
-		//if (Distance < 0) Distance = 0;
+		Qin = Qout = 0;
 
 		AddrY = CellAddr(MinX,MinY);
 		for (Y = MinY; Y <= MaxY; Y++) {
@@ -393,19 +741,60 @@ class MapWizard
 			AddrY += 0x100;
 		}
 		//**//**//**//
-		//bool _DoDebug = (TargetX >= 22 && TargetX <= 22 && TargetY >= 20 && TargetY <= 20);
-		//if (_DoDebug ) {
-		//Debug.LogFormat("start finding" );
-		//Dump(TMinX+1,TMinY+1);
-		//}
+		long _Last1 = _StopWatch.ElapsedTicks;
 
-		Path_FillCost();//StartX==15 && StartY==17 && TMinX==16 && TMinY==17 && TMaxX==18 && TMaxY==19
+		Path_FillCost();
 		long _Last2 = _StopWatch.ElapsedTicks;
 
 		List<Vector2i> BestPath = Path_TakeBestPath(StartX,StartY);
+
+		{
+		int DummyWizardID = Unit.WizardID;
+		UpdateUnit(Unit, ref DummyWizardID);
+		}
+
 		//**//**//**//
-		//if ((BestPoint.x==StartX)&&(BestPoint.y==StartY))
-		//	Debug.LogFormat("path find stupid");
+		long _Last3 = _StopWatch.ElapsedTicks;
+		_Last3 = _Last3-_Last2;
+		_Last2 = _Last2-_Last1;
+		_Last1 = _Last1-_LastTick;
+		_LastTick = _StopWatch.ElapsedTicks - _LastTick;
+		_TickCount += _LastTick;
+		_CheckTime1 += _Last1;
+		_CheckTime2 += _Last2;
+		_CheckTime3 += _Last3;
+		if (_TimeToLog <= DateTime.Now ) {
+			Debug.LogFormat("runs: count= {0}  ticks={1} > {2}  freq={3},  1st={4}  2st={5}  3st={6}",
+				_RunCount, _LastTick, _TickCount, System.Diagnostics.Stopwatch.Frequency,
+				_CheckTime1/_RunCount, _CheckTime2/_RunCount, _CheckTime3/_RunCount
+			);
+			_RunCount = 0;
+			_CheckTime1 = 0;
+			_CheckTime2 = 0;
+			_CheckTime3 = 0;
+			_TimeToLog = DateTime.Now;
+			_TimeToLog = _TimeToLog.Add(new TimeSpan(0,0,1));
+		}
+		//
+
+		if (BestPath != null)
+		{
+		//**//**//**//
+		//Debug.LogFormat("find path for ID {0}  to {1},{2}  dist={3}  static={4}   result={5},{6}",
+		//		Unit.ID,  TargetX,TargetY, Distance,StaticOnly, BestPoint.x,BestPoint.y
+		//		);
+		//Dump(TargetX,TargetY);
+		//**//**//**//
+		//if (!Unit.Interaction.CheckWalkableForUnit(BestPath[0].x,BestPath[0].y, StaticOnly)) {
+		//Debug.LogFormat("path find bad: start={0},{1}  target={2},{3}  result={4},{5} Dist={6} static={7}",
+		//		StartX,StartY, TMinX,TMinY, BestPath[0].x,BestPath[0].y, Distance,StaticOnly
+		//		);
+		//Dump(StartX,StartY);
+		//Dump(TMinX+1,TMinY+1);
+		//}
+
+	                return BestPath;
+		}
 
 		//**//**//**//
 		//Debug.LogFormat("path find: start={0},{1}  target={2},{3}  result={4},{5} Dist={6} static={7}",
@@ -427,47 +816,9 @@ class MapWizard
 		//Dump(TargetX,TargetY);
 		//}
 
-		//**//**//**//
-		long _Last3 = _StopWatch.ElapsedTicks;
-		_Last3 = _Last3-_Last2;
-		_Last2 = _Last2-_Last1;
-		_Last1 = _Last1-_LastTick;
-		_LastTick = _StopWatch.ElapsedTicks - _LastTick;
-		_TickCount += _LastTick;
-		//Debug.LogFormat("runs: count= {0}  ticks={1} > {2}  freq={3},  1st={4}  2st={5}  3st={6}",
-		//		_RunCount, _LastTick, _TickCount, System.Diagnostics.Stopwatch.Frequency,
-		//		_Last1, _Last2, _Last3
-		//		);
-
-		if (BestPath != null)
-		{
-		//**//**//**//
-		//Debug.LogFormat("find path for ID {0}  to {1},{2}  dist={3}  static={4}   result={5},{6}",
-		//		Unit.ID,  TargetX,TargetY, Distance,StaticOnly, BestPoint.x,BestPoint.y
-		//		);
-		//Dump(TargetX,TargetY);
-		//**//**//**//
-		if (!Unit.Interaction.CheckWalkableForUnit(BestPath[0].x,BestPath[0].y, StaticOnly)) {
-		//Debug.LogFormat("path find bad: start={0},{1}  target={2},{3}  result={4},{5} Dist={6} static={7}",
-		//		StartX,StartY, TMinX,TMinY, BestPath[0].x,BestPath[0].y, Distance,StaticOnly
-		//		);
-		//Dump(StartX,StartY);
-		//Dump(TMinX+1,TMinY+1);
-		}
-
-	                return BestPath;
-		}
-		//**//**//**//
-		//Debug.LogFormat("path find start: {0}, {1} = {2}", StartX,StartY, TargetCost[CellAddr(StartX,StartY)]);
-		//Debug.LogFormat("path find target : {0}, {1} = {2}", TargetX,TargetY, TargetCost[CellAddr(TargetX,TargetY)]);
-		//Debug.LogFormat("path find result: {0}, {1}", BestPoint.x,BestPoint.y);
-		//Debug.LogFormat("ID {0} BESTPOINT FROM {1},{2} IS NULL", Unit.ID, StartX, StartY);
-		//Dump(StartX,StartY);
-		//Dump(TMinX+1,TMinY+1);
-
 		return PathFind_Dumb(Unit, StartX, StartY, TMinX, TMinY, TMaxX, TMaxY, Distance, StaticOnly);//**//**//**//
 		//return null;
-	}
+	} // PathFind_Flood
 
 
 	///////////////////////////////
@@ -480,6 +831,6 @@ class MapWizard
 
 	return PathFind_Flood(Unit, StartX, StartY, TargetX, TargetY, TargetWidth, TargetHeight, Distance, StaticOnly);
 
-	}
+	} // GetShortestPath
 	
-}
+} // MapWizard

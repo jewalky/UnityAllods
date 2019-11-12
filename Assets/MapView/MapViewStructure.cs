@@ -198,13 +198,15 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
 
         Renderer.materials[0].mainTexture = sTex;
         OverlayRenderer.materials[0].mainTexture = sTex;
-        ShadowRenderer.materials[0].mainTexture = sTex;
+        if (ShadowRenderer != null)
+            ShadowRenderer.materials[0].mainTexture = sTex;
 
         if (spriteB != null)
         {
             Renderer.materials[1].mainTexture = sTexB;
             OverlayRenderer.materials[1].mainTexture = sTexB;
-            ShadowRenderer.materials[1].mainTexture = sTexB;
+            if (ShadowRenderer != null)
+                ShadowRenderer.materials[1].mainTexture = sTexB;
         }
 
         return mesh;

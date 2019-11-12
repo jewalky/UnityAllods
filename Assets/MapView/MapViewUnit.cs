@@ -300,7 +300,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 qv[i] -= new Vector3(cxB, cyB, 0);
         }
 
-        mesh.subMeshCount = 0;
+        mesh.subMeshCount = (spriteB != null) ? 2 : 1;
 
         mesh.vertices = qv;
         mesh.uv = quv;
@@ -310,8 +310,6 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         if (spriteB != null)
             qc[4] = qc[5] = qc[6] = qc[7] = new Color(1, 1, 1, 0.5f);
         mesh.colors = qc;
-
-        mesh.subMeshCount = (spriteB != null) ? 2 : 1;
 
         int[] qt = new int[4];
         for (int i = 0; i < qt.Length; i++)

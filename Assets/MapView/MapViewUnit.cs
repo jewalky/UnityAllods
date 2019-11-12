@@ -180,27 +180,55 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
     private Vector2 CurrentPoint;
 
-    private Mesh UpdateMesh(Images.AllodsSpriteSeparate sprite, int frame, Mesh mesh, float shadowOffs, bool first, bool flip)
+    private Mesh UpdateMesh(Images.AllodsSpriteSeparate sprite, Images.AllodsSpriteSeparate spriteB, int frame, Mesh mesh, float shadowOffs, bool first, bool flip)
     {
+        // main
         Texture2D sTex = sprite.Frames[frame].Texture;
         float sW = sprite.Frames[frame].Width;
         float sH = sprite.Frames[frame].Height;
         float tMaxX = sW / sTex.width;
         float tMaxY = sH / sTex.height;
 
+        // additional
+        Texture2D sTexB = (spriteB != null) ? spriteB.Frames[frame].Texture : null;
+        float sWB = (spriteB != null) ? spriteB.Frames[frame].Width : 0;
+        float sHB = (spriteB != null) ? spriteB.Frames[frame].Height : 0;
+        float tMaxXB = (spriteB != null) ? (sWB / sTexB.width) : 0;
+        float tMaxYB = (spriteB != null) ? (sHB / sTexB.height) : 0;
+
+        //
         bool flying = LogicUnit.IsFlying;
 
+        // main
         float shadowOffsReal = shadowOffs * sH;
         float shadowOffsXLeft = -shadowOffsReal * (1f - LogicUnit.Class.CenterY);
 
-        Vector3[] qv = new Vector3[4];
+        // additional
+        float shadowOffsRealB = shadowOffs * sHB;
+        float shadowOffsXLeftB = -shadowOffsRealB * (1f - LogicUnit.Class.CenterY);
+
+        //
+        int vertexCount = (spriteB != null) ? 8 : 4;
+
+        Vector3[] qv = new Vector3[vertexCount];
         int pp = 0;
         if (!flying || (shadowOffs == 0))
         {
+            // main sprite
             qv[pp++] = new Vector3(shadowOffsReal, 0, 0);
             qv[pp++] = new Vector3(shadowOffsReal + sW, 0, 0);
             qv[pp++] = new Vector3(shadowOffsXLeft + sW, sH, 0);
             qv[pp++] = new Vector3(shadowOffsXLeft, sH, 0);
+            
+            // calculate offset for spriteB, if it's not the same size
+            if (spriteB != null)
+            {
+                // additional sprite
+                qv[pp++] = new Vector3(shadowOffsRealB, 0, 0);
+                qv[pp++] = new Vector3(shadowOffsRealB + sWB, 0, 0);
+                qv[pp++] = new Vector3(shadowOffsXLeftB + sWB, sHB, 0);
+                qv[pp++] = new Vector3(shadowOffsXLeftB, sHB, 0);
+            }
         }
         else
         {
@@ -211,15 +239,35 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             qv[pp++] = new Vector3(shadowOffs2, shadowOffs, 0);
             qv[pp++] = new Vector3(shadowOffs2, shadowOffs + sH, 0);
             qv[pp++] = new Vector3(shadowOffs1, shadowOffs + sH, 0);
+
+            // calculate offset for spriteB, if it's not the same size
+            if (spriteB != null)
+            {
+                float shadowOffs1B = shadowOffs * 64;
+                float shadowOffs2B = shadowOffs1B + sWB;
+                // additional sprite
+                qv[pp++] = new Vector3(shadowOffs1B, shadowOffs, 0);
+                qv[pp++] = new Vector3(shadowOffs2B, shadowOffs, 0);
+                qv[pp++] = new Vector3(shadowOffs2B, shadowOffs + sHB, 0);
+                qv[pp++] = new Vector3(shadowOffs1B, shadowOffs + sHB, 0);
+            }
         }
 
-        Vector2[] quv = new Vector2[4];
+        Vector2[] quv = new Vector2[vertexCount];
         if (!flip)
         {
             quv[0] = new Vector2(0, 0);
             quv[1] = new Vector2(tMaxX, 0);
             quv[2] = new Vector2(tMaxX, tMaxY);
             quv[3] = new Vector2(0, tMaxY);
+
+            if (spriteB != null)
+            {
+                quv[4] = new Vector2(0, 0);
+                quv[5] = new Vector2(tMaxXB, 0);
+                quv[6] = new Vector2(tMaxXB, tMaxYB);
+                quv[7] = new Vector2(0, tMaxYB);
+            }
         }
         else
         {
@@ -227,30 +275,65 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             quv[1] = new Vector2(0, 0);
             quv[2] = new Vector2(0, tMaxY);
             quv[3] = new Vector2(tMaxX, tMaxY);
+
+            if (spriteB != null)
+            {
+                quv[4] = new Vector2(tMaxXB, 0);
+                quv[5] = new Vector2(0, 0);
+                quv[6] = new Vector2(0, tMaxYB);
+                quv[7] = new Vector2(tMaxXB, tMaxYB);
+            }
         }
 
         float cx = (float)sprite.Frames[frame].Width * LogicUnit.Class.CenterX;
         float cy = (float)sprite.Frames[frame].Height * LogicUnit.Class.CenterY;
-        for (int i = 0; i < qv.Length; i++)
+        for (int i = 0; i < 4; i++)
             qv[i] -= new Vector3(cx, cy, 0);
+
+        if (spriteB != null)
+        {
+            float cxB = (float)spriteB.Frames[frame].Width * LogicUnit.Class.CenterX;
+            float cyB = (float)spriteB.Frames[frame].Height * LogicUnit.Class.CenterY;
+            cxB += (spriteB.Frames[frame].Width - sprite.Frames[frame].Width) / 2;
+            cyB += (spriteB.Frames[frame].Height - sprite.Frames[frame].Height) / 2;
+            for (int i = 4; i < 8; i++)
+                qv[i] -= new Vector3(cxB, cyB, 0);
+        }
+
+        mesh.subMeshCount = 0;
 
         mesh.vertices = qv;
         mesh.uv = quv;
 
-        if (first)
-        {
-            Color[] qc = new Color[4];
-            qc[0] = qc[1] = qc[2] = qc[3] = new Color(1, 1, 1, 1);
-            mesh.colors = qc;
+        Color[] qc = new Color[vertexCount];
+        qc[0] = qc[1] = qc[2] = qc[3] = new Color(1, 1, 1, 1);
+        if (spriteB != null)
+            qc[4] = qc[5] = qc[6] = qc[7] = new Color(1, 1, 1, 0.5f);
+        mesh.colors = qc;
 
-            int[] qt = new int[4];
-            for (int i = 0; i < qt.Length; i++)
-                qt[i] = i;
-            mesh.SetIndices(qt, MeshTopology.Quads, 0);
+        mesh.subMeshCount = (spriteB != null) ? 2 : 1;
+
+        int[] qt = new int[4];
+        for (int i = 0; i < qt.Length; i++)
+            qt[i] = i;
+        mesh.SetIndices(qt, MeshTopology.Quads, 0);
+            
+        if (spriteB != null)
+        {
+            int[] qtB = new int[4];
+            for (int i = 0; i < qtB.Length; i++)
+                qtB[i] = i + 4;
+            mesh.SetIndices(qtB, MeshTopology.Quads, 1);
         }
 
-        Renderer.material.mainTexture = sTex;
-        ShadowRenderer.material.mainTexture = sTex;
+        Renderer.materials[0].mainTexture = sTex;
+        ShadowRenderer.materials[0].mainTexture = sTex;
+
+        if (spriteB != null)
+        {
+            Renderer.materials[1].mainTexture = sTexB;
+            ShadowRenderer.materials[1].mainTexture = sTexB;
+        }
 
         return mesh;
     }
@@ -338,27 +421,47 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             }
 
             Images.AllodsSpriteSeparate sprites = dCls.File.File;
+            Images.AllodsSpriteSeparate spritesB = dCls.File.FileB;
 
             dCls.File.UpdateSprite();
             sprites = dCls.File.File;
+            spritesB = dCls.File.FileB;
 
-            if (!spriteSet)
+            if (!MapView.Instance.SpritesBEnabled)
+                spritesB = null;
+
+            int newMaterialCount = (spritesB != null) ? 2 : 1;
+
+            if (!spriteSet || (Renderer.materials.Length != newMaterialCount))
             {
-                Renderer.material = new Material(MainCamera.MainShaderPaletted);
-                ShadowRenderer.material = Renderer.material;
+                List<Material> newMats = new List<Material>();
+                List<Material> newMatsShadow = new List<Material>();
+                for (int i = 0; i < newMaterialCount; i++)
+                {
+                    newMats.Add(new Material(MainCamera.MainShaderPaletted));
+                    newMatsShadow.Add(new Material(MainCamera.MainShaderPaletted));
+                }
+                Renderer.materials = newMats.ToArray();
+                ShadowRenderer.materials = newMats.ToArray();
                 spriteSet = true;
             }
 
             // handle invisiblity flag
             if ((LogicUnit.Flags & UnitFlags.Invisible) != 0)
             {
-                Renderer.material.color = new Color(1, 1, 1, 0.5f);
-                ShadowRenderer.material.color = new Color(0, 0, 0, 0.25f);
+                for (int i = 0; i < newMaterialCount; i++)
+                {
+                    Renderer.materials[i].color = new Color(1, 1, 1, 0.5f);
+                    ShadowRenderer.materials[i].color = new Color(0, 0, 0, 0.25f);
+                }
             }
             else
             {
-                Renderer.material.color = new Color(1, 1, 1, 1);
-                ShadowRenderer.material.color = new Color(0, 0, 0, 0.5f);
+                for (int i = 0; i < newMaterialCount; i++)
+                {
+                    Renderer.materials[i].color = new Color(1, 1, 1, 1);
+                    ShadowRenderer.materials[i].color = new Color(0, 0, 0, 0.5f);
+                }
             }
 
             int actualFrame = dCls.Index; // draw frame 0 of each unit
@@ -377,7 +480,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
                 }
             }
 
-            Renderer.material.SetTexture("_Palette", GetDeathPalette(dCls.File));
+            for (int i = 0; i < newMaterialCount; i++)
+                Renderer.materials[i].SetTexture("_Palette", GetDeathPalette(dCls.File));
             // first (idle) state is 0..8 frames. frames 1 to 7 are flipped. frames 0 and 8 aren't.
             //  135 180 225
             //  90      270
@@ -465,8 +569,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             transform.localPosition = new Vector3(xP.x, xP.y, MakeZFromY(xP.y) + zInv); // order sprites by y coordinate basically
             //Debug.Log(string.Format("{0} {1} {2}", xP.x, sprites.Sprites[0].rect.width, LogicUnit.Class.CenterX));
             //Renderer.sprite = sprites.Sprites[actualFrame];
-            UnitMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (UnitMesh == null), doFlip);
-            ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null), doFlip); // 0.3 of sprite height
+            UnitMesh = UpdateMesh(sprites, spritesB, actualFrame, Filter.mesh, 0, (UnitMesh == null), doFlip);
+            ShadowMesh = UpdateMesh(sprites, spritesB, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null), doFlip); // 0.3 of sprite height
             UpdateHpMesh();
 
             LogicUnit.DoUpdateView = false;

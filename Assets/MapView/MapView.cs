@@ -556,6 +556,28 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
 
     public bool GridEnabled = false;
 
+    private bool _SpritesBEnabled = true;
+    public bool SpritesBEnabled
+    {
+        get
+        {
+            return _SpritesBEnabled;
+        }
+
+        set
+        {
+            if (_SpritesBEnabled != value)
+            {
+                _SpritesBEnabled = value;
+                if (MapLogic.Instance.IsLoaded)
+                {
+                    for (int i = 0; i < MapLogic.Instance.Objects.Count; i++)
+                        MapLogic.Instance.Objects[i].DoUpdateView = true;
+                }
+            }
+        }
+    }
+
     int ScrollDeltaX = 0;
     int ScrollDeltaY = 0;
     int WaterAnimFrame = 0;

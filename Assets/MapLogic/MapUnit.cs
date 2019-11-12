@@ -759,45 +759,43 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             }
 
             // top loop: move along static list
-            for (int i = 0; i < nodes.Count; i++)
+            for (int i = 1; i < nodes.Count; i++)
             {
                 Vector2i node = nodes[i];
 
                 if (logPathfind) Debug.LogFormat("Pathfind({2}): Continued at {0}, {1}", node.x, node.y, ID);
 
                 // check if static node is not walkable
-                if (!Interaction.CheckWalkableForUnit(node.x, node.y, false))
+                if (!Interaction.CheckWalkableForUnit(node.x, node.y, false) || Interaction.CheckDangerous(node.x, node.y))
                 {
+                    i--;
+                    node = nodes[i];
                     // end try 1
                     // try 2: find limited astar to next unblocked static cell
                     // find LAST unblocked node that is contained inside 16x16 radius.
                     // do same pathfinding as above then
-                    int lastFreeNode;
-                    do
+                    int lastFreeNode = -1;
+                    int lastNode = i + 1;
+                    while (lastNode < nodes.Count && Math.Abs(nodes[lastNode].x - X) < 16 && Math.Abs(nodes[lastNode].y - Y) < 16)
                     {
-                        lastFreeNode = -1;
-                        int lastNode = i;
-                        while (lastNode < nodes.Count && Math.Abs(nodes[lastNode].x - X) < 16 && Math.Abs(nodes[lastNode].y - Y) < 16)
-                        {
-                            if (Interaction.CheckWalkableForUnit(nodes[lastNode].x, nodes[lastNode].y, false))
-                                lastFreeNode = lastNode;
-                            lastNode++;
-                        }
-
-                        if (logPathfind) Debug.LogFormat("Pathfind({3}): Trying to Find Node after {0}, {1} = {2}", node.x, node.y, lastFreeNode, ID);
-
-                        if (lastFreeNode < 0)
-                        {
-                            yield return null;
-                        }
+                        if (Interaction.CheckWalkableForUnit(nodes[lastNode].x, nodes[lastNode].y, false))
+                            lastFreeNode = lastNode;
+                        lastNode++;
                     }
-                    while (lastFreeNode < 0);
+
+                    if (logPathfind) Debug.LogFormat("Pathfind({3}): Trying to Find Node after {0}, {1} = {2}", node.x, node.y, lastFreeNode, ID);
+
+                    if (lastFreeNode < 0)
+                        lastFreeNode = nodes.Count - 1; // try final node
 
                     if (logPathfind) Debug.LogFormat("Pathfind({4}): Choose Dynamic to Static at {0}, {1} (to {2}, {3})", node.x, node.y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, ID);
 
                     // find path...
                     // if not found, then we are blocked. try finding again until unblocked
-                    List<Vector2i> altNodes = p.FindPath(this, X, Y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, 0, false, 16);
+                    List<Vector2i> altNodes = (lastFreeNode == nodes.Count-1) ?
+                        p.FindPath(this, X, Y, left, top, right, bottom, 0, false, 16)
+                        :
+                        p.FindPath(this, X, Y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, 0, false, 16);
                     bool pathfindSuccess = false;
                     bool altDoRestart;
                     do
@@ -808,7 +806,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                         {
                             // find next node
                             int nextFreeNode = -1;
-                            int lastNode = lastFreeNode + 1;
+                            lastNode = lastFreeNode + 1;
                             while (lastNode < nodes.Count && Math.Abs(nodes[lastNode].x - X) < 16 && Math.Abs(nodes[lastNode].y - Y) < 16)
                             {
                                 if (Interaction.CheckWalkableForUnit(nodes[lastNode].x, nodes[lastNode].y, false))
@@ -816,11 +814,21 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                                 lastNode++;
                             }
 
-                            altNodes = p.FindPath(this, X, Y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, 0, false, 16);
+                            if (lastFreeNode < 0)
+                                lastFreeNode = nodes.Count - 1;
+
+                            altNodes = (lastFreeNode == nodes.Count-1) ?
+                                p.FindPath(this, X, Y, left, top, right, bottom, 0, false, 16)
+                                :
+                                p.FindPath(this, X, Y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, 0, false, 16);
+
                             if (altNodes == null && nextFreeNode >= 0)
                             {
                                 // try with updated free node
-                                altNodes = p.FindPath(this, X, Y, nodes[nextFreeNode].x, nodes[nextFreeNode].y, nodes[nextFreeNode].x, nodes[nextFreeNode].y, 0, false, 16);
+                                altNodes = (nextFreeNode == nodes.Count-1) ?
+                                    p.FindPath(this, X, Y, left, top, right, bottom, 0, false, 16)
+                                    :
+                                    p.FindPath(this, X, Y, nodes[nextFreeNode].x, nodes[nextFreeNode].y, nodes[nextFreeNode].x, nodes[nextFreeNode].y, 0, false, 16);
                                 if (altNodes != null)
                                 {
                                     // if found path with nextFreeNode, but not with lastFreeNode, continue path this way...
@@ -830,38 +838,48 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
                             if (altNodes == null)
                             {
-                                doRestart = true;
                                 yield return null; // pause for a bit to avoid infinite recursion
-                                break; // lost static
+
+                                if (X != node.x || Y != node.y) // if we lost dynamic path at some random point
+                                {
+                                    doRestart = true;
+                                    break;
+                                }
+
+                                // otherwise restart
+                                altDoRestart = true;
                             }
                         }
 
-                        for (int j = 0; j < altNodes.Count; j++)
+                        if (altNodes != null)
                         {
-                            Vector2i altNode = altNodes[j];
-
-                            if (logPathfind) Debug.LogFormat("Pathfind({2}): Dynamic to Static at {0}, {1}", altNode.x, altNode.y, ID);
-
-                            // path is not walkable, update dynamic
-                            if (!Interaction.CheckWalkableForUnit(altNode.x, altNode.y, true))
+                            for (int j = 1; j < altNodes.Count; j++)
                             {
-                                if (logPathfind) Debug.LogFormat("Pathfind({2}): Dynamic to Static Obsolete at {0}, {1}", altNode.x, altNode.y, ID);
-                                doRestart = true;
-                                break;
-                            }
+                                Vector2i altNode = altNodes[j];
 
-                            yield return altNode;
+                                if (logPathfind) Debug.LogFormat("Pathfind({2}): Dynamic to Static at {0}, {1}", altNode.x, altNode.y, ID);
 
-                            // Next node mismatch, unit teleported or otherwise broke
-                            if (X != altNode.x || Y != altNode.y)
-                            {
-                                if (logPathfind) Debug.LogFormat("Pathfind({4}): Dynamic to Static Restarted ({0}!={1} or {2}!={3})", X, altNode.x, Y, altNode.y, ID);
-                                doRestart = true;
-                                break;
+                                // path is not walkable, update dynamic
+                                if (!Interaction.CheckWalkableForUnit(altNode.x, altNode.y, true))
+                                {
+                                    if (logPathfind) Debug.LogFormat("Pathfind({2}): Dynamic to Static Obsolete at {0}, {1}", altNode.x, altNode.y, ID);
+                                    doRestart = true;
+                                    break;
+                                }
+
+                                yield return altNode;
+
+                                // Next node mismatch, unit teleported or otherwise broke
+                                if (X != altNode.x || Y != altNode.y)
+                                {
+                                    if (logPathfind) Debug.LogFormat("Pathfind({4}): Dynamic to Static Restarted ({0}!={1} or {2}!={3})", X, altNode.x, Y, altNode.y, ID);
+                                    doRestart = true;
+                                    break;
+                                }
                             }
                         }
 
-                        if (!altDoRestart)
+                        if (!altDoRestart && !doRestart)
                         {
                             // we walked up to lastFreeNode
                             i = lastFreeNode;
@@ -876,7 +894,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
                     if (pathfindSuccess)
                     {
-                        // just do next I node directly
+                        // just do next 'i' node directly
                         continue;
                     }
                 }
@@ -912,19 +930,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         int top = targetY;
         int right = targetX;
         int bottom = targetY;
-
-        /* WarBeginner */
-        if (targetWidth > 0 || targetHeight > 0) {
-                left -= this.Width;
-                top -= this.Height;
-                right += targetWidth;
-                bottom += targetHeight;
-        }
-        List<Vector2i> result = MapLogic.Instance.Wizard.GetShortestPath(this, false, distance, X, Y, left, top, right, bottom);
-        if (result != null)
-            return result[0];
-        return null;
-        /* end */
 
         // start or restart pathfinding.
         // or continue, if same path is being looked for

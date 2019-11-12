@@ -23,6 +23,7 @@ public class MapNode
     public int DynLight = 0;
     public ushort Tile = 0;
     public MapNodeFlags Flags = 0;
+    public byte BaseWalkCost = 0;
     public List<MapObject> Objects = new List<MapObject>();
 }
 
@@ -399,16 +400,66 @@ class MapLogic
             Width = (int)mapStructure.Data.Width;
             Height = (int)mapStructure.Data.Height;
 
+            // load in map.reg
+            // for base terrain costs here
+            Registry reg = null;
+            try
+            {
+                reg = new Registry("world/data/map.reg");
+            }
+            catch (Exception)
+            {
+                reg = new Registry();
+            }
+
+            int[] NodeCosts = new int[]
+            {
+                reg.GetInt("Terrain", "CostLand", 8),
+                reg.GetInt("Terrain", "CostGrass", 8),
+                reg.GetInt("Terrain", "CostFlowers", 9),
+                reg.GetInt("Terrain", "CostSand", 14),
+                reg.GetInt("Terrain", "CostCracked", 6),
+                reg.GetInt("Terrain", "CostStones", 12),
+                reg.GetInt("Terrain", "CostSavanna", 11),
+                reg.GetInt("Terrain", "CostMountain", 16),
+                reg.GetInt("Terrain", "CostWater", 8),
+                reg.GetInt("Terrain", "CostRoad", 6)
+            };
+
+            int[] NodeTileTypesInCell = new int[]
+            {
+                2, 3, 2, 4, 3, 4, 2, 2, 2, 2, 4, 4, 4, 4, 0, 0,
+                3, 5, 3, 3, 1, 3, 2, 4, 2, 2, 4, 2, 4, 4, 0, 0,
+                2, 3, 2, 4, 3, 4, 2, 4, 2, 2, 4, 2, 4, 4, 0, 0,
+                5, 5, 5, 5, 5, 5, 2, 2, 2, 2, 4, 4, 4, 4, 0, 0
+            };
+
+            int[,] NodeTileTypes = new int[16,2]
+            {
+                {2, 1}, {5, 1}, {4, 1}, {7, 1}, {6, 1}, {5, 6}, {3, 7}, {8, 6},
+                {0, 0}, {0, 0}, {0, 0}, {0, 0}, {10, 1}, {0, 0}, {0, 0}, {0, 0}
+            };
+            // end loading terrain costs
+
             Nodes = new MapNode[Width, Height];
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    Nodes[x, y] = new MapNode();
-                    Nodes[x, y].Tile = (ushort)(mapStructure.Tiles[y * Width + x] & 0x3FF);
-                    Nodes[x, y].Height = mapStructure.Heights[y * Width + x];
-                    Nodes[x, y].Flags = 0;
-                    Nodes[x, y].Light = 255;
+                    MapNode node = Nodes[x, y] = new MapNode();
+                    node.Tile = (ushort)(mapStructure.Tiles[y * Width + x] & 0x3FF);
+                    node.Height = mapStructure.Heights[y * Width + x];
+                    node.Flags = 0;
+                    node.Light = 255;
+
+                    int costTileType = (node.Tile & 0x3C0) >> 6;
+                    int costTileBorder = (node.Tile & 0x3F);
+                    float costTileFactor = (NodeTileTypesInCell[costTileBorder]-1) / 4f; // 1..5 -> 0..4 -> 0..1
+                    int costSubTileType1 = NodeTileTypes[costTileType, 1] - 1;
+                    int costSubTileType2 = NodeTileTypes[costTileType, 0] - 1;
+                    int costSubTile1 = (costSubTileType1 >= 0) ? NodeCosts[costSubTileType1] : 0;
+                    int costSubTile2 = (costSubTileType2 >= 0) ? NodeCosts[costSubTileType2] : 0;
+                    node.BaseWalkCost = (byte)((costSubTile1 * (1f-costTileFactor)) + (costSubTile2 * costTileFactor));
                 }
             }
 

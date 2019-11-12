@@ -102,7 +102,7 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
     {
         if (LogicProjectile.Class != null)
             name = string.Format("Projectile (ID={0}, ClassID={1})", LogicProjectile.ID, LogicProjectile.Class.ID);
-        else name = string.Format("Projectile (ID={0}, ClassID=<INVALID>)", LogicProjectile.ID);
+        else name = string.Format("Projectile (ID={0}, ClassID=<NULL>)", LogicProjectile.ID);
 
         // let's give ourselves a sprite renderer first.
         Renderer = gameObject.AddComponent<MeshRenderer>();
@@ -137,6 +137,14 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
     {
         if (Renderer == null)
             return;
+
+        if (LogicProjectile.Class == null)
+        {
+            oldVisibility = false;
+            Renderer.enabled = false;
+            ShadowRenderer.enabled = false;
+            return;
+        }
 
         if (LogicProjectile.GetVisibility() < 2)
         {

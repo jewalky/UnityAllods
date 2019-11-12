@@ -97,6 +97,8 @@ public class MapProjectileLogicDirectional : IMapProjectileLogic
 
     public bool Update()
     {
+        if (Projectile.Class == null)
+            return false;
         // magic handling: blizzard projectile uses frame 8 for real projectile, and 0-7 for death anim
         if (Projectile.Class.ID == (int)AllodsProjectile.Blizzard)
             Projectile.CurrentFrame = 8;
@@ -165,6 +167,8 @@ public class MapProjectileLogicSimple : IMapProjectileLogic
     {
         if (AnimationSpeed == 0)
             return true;
+        if (Projectile.Class == null)
+            return false;
 
         Projectile.Scale = Scale;
 
@@ -235,6 +239,8 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
 
     public virtual bool Update()
     {
+        if (Projectile.Class == null)
+            return false;
         // calculate target direction!
         // check if target is gone
         if (Target != null && (!Target.IsAlive || !Target.IsLinked))
@@ -341,6 +347,9 @@ public class MapProjectileLogicEOT : IMapProjectileLogic
 
     public bool Update()
     {
+        if (Projectile.Class == null)
+            return false;
+
         if (TimerAtStart == -1)
             TimerAtStart = MapLogic.Instance.LevelTime;
 
@@ -432,7 +441,11 @@ public enum AllodsProjectile
     Steam = 8,
     Teleport = 54,
     ChainLightning = 30,
-    DiamondDust = 40
+    DiamondDust = 40,
+
+    // special projectile types, not real
+    SpecLight = 0x100,
+    SpecDarkness = 0x101
 }
 
 public class MapProjectile : MapObject, IDynlight
@@ -626,6 +639,10 @@ public class MapProjectile : MapObject, IDynlight
         Class = ProjectileClassLoader.GetProjectileClassById(id);
         if (Class == null)
         {
+            // make sure that at least ID is valid
+            if (Enum.IsDefined(typeof(AllodsProjectile), id))
+                return;
+            // otherwise spam log
             Debug.LogFormat("Invalid projectile created (id={0})", id);
             return;
         }
@@ -668,6 +685,8 @@ public class MapProjectile : MapObject, IDynlight
 
     public override void CheckAllocateObject()
     {
+        if (Class == null)
+            return; // no point in allocating visual object for something logical-only
         if (GetVisibility() == 2)
             AllocateObject();
     }

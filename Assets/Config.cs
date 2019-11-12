@@ -62,6 +62,20 @@ public class Config
         }
     }
 
+    public static bool cl_spritesb
+    {
+        get
+        {
+            return MapView.Instance.SpritesBEnabled;
+        }
+
+        set
+        {
+            MapView.Instance.SpritesBEnabled = value;
+            Save();
+        }
+    }
+
     public static void Save()
     {
         // write file with current values

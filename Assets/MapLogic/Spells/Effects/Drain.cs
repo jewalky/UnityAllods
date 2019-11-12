@@ -116,6 +116,7 @@ namespace SpellEffects
 
                 MapProjectile item = new MapProjectile(AllodsProjectile.Drain, Unit, new DrainingProjectileLogic((Unit.Width+Unit.Height)/2f, pX, pY, cZ, Unit));
                 item.SetPosition(pX, pY, 0);
+                item.ZOffset = -64;
                 item.ZAbsolute = true;
                 MapLogic.Instance.Objects.Add(item);
             }

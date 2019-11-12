@@ -118,7 +118,7 @@ namespace SpellEffects
                     Vector3 particlePos = new Vector3(0, 0, 1);
                     Vector3 pos = Quaternion.Euler(0, 0, Timer * 2 + 90 * j) * Quaternion.Euler(0, i * 360 / (Scalar*16), 0) * particlePos;
                     item.SetPosition(pos.x * shieldRadius + initialPos.x, pos.y * shieldRadius + initialPos.y, pos.z * shieldHeight + initialPos.z);
-                    item.ZOffset = (int)(pos.z * 32);
+                    item.ZOffset = -64;
                     if (Unit.IsFlying)
                         item.ZOffset += 128;
                     item.CurrentFrame = 2 + Mathf.RoundToInt((1f - Mathf.Abs(pos.z)) * 2);
@@ -134,7 +134,7 @@ namespace SpellEffects
                     Vector3 particlePos = new Vector3(0, 1, 0);
                     Vector3 pos = Quaternion.Euler(0, 0, i * 360 / (Scalar*16)) * Quaternion.Euler(Timer*2 + 180*j, 0, 0) * particlePos;
                     item.SetPosition(pos.x * shieldRadius + initialPos.x, pos.y * shieldRadius + initialPos.y, pos.z * shieldHeight + initialPos.z);
-                    item.ZOffset = (int)(pos.z * 32);
+                    item.ZOffset = -64;
                     if (Unit.IsFlying)
                         item.ZOffset += 128;
                     item.CurrentFrame = 2 + Mathf.RoundToInt((1f - Mathf.Abs(pos.z)) * 2);

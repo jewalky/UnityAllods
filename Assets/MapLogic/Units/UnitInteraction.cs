@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 public class UnitInteraction
 {
@@ -137,6 +134,124 @@ public class UnitInteraction
         }
 
         return (cPt1 - cPt2).magnitude;
+    }
+
+    // check if next node is dangerous. used in step-by-step pathfinding to detect that we need to recheck with dynamic mode
+    public bool CheckDangerous(int x, int y)
+    {
+        for (int ly = y; ly < y + Unit.Height; ly++)
+        {
+            for (int lx = x; lx < x + Unit.Width; lx++)
+            {
+                MapNode node = MapLogic.Instance.Nodes[lx, ly];
+
+                foreach (MapObject mobj in node.Objects)
+                {
+                    if (!(mobj is MapProjectile))
+                        continue;
+                    MapProjectile proj = (MapProjectile)mobj;
+                    // now some magic ;)
+                    if (proj.Class == null)
+                        continue;
+
+                    switch ((AllodsProjectile)proj.Class.ID)
+                    {
+                        case AllodsProjectile.FireWall:
+                            if (Unit.Stats.ProtectionFire != 100)
+                                return true;
+                            break;
+                        case AllodsProjectile.PoisonCloud:
+                        case AllodsProjectile.Blizzard:
+                            if (Unit.Stats.ProtectionWater != 100)
+                                return true;
+                            break;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // returns cost to walk to a node.
+    // 1.5 = 150% cost, 0.5 = 50% cost. does not always relate to speed (may be related to spell effects being present)
+    public float GetNodeCostFactor(int x, int y, bool staticOnly)
+    {
+        float nodeFactor = 0;
+        int nodeCount = 0;
+
+        for (int ly = y; ly < y + Unit.Height; ly++)
+        {
+            for (int lx = x; lx < x + Unit.Width; lx++)
+            {
+                MapNode node = MapLogic.Instance.Nodes[lx, ly];
+                // for walking units, take base node speed as factor
+                float baseNodeFactor = 1f;
+                if (Unit.IsWalking)
+                    baseNodeFactor = Math.Max((byte)1, node.BaseWalkCost) / 8f; // reverse formula for cost compared to speed
+
+                // it would be strange if long-term path included spells and other temporary effects
+                if (!staticOnly)
+                {
+                    foreach (MapObject mobj in node.Objects)
+                    {
+                        if (!(mobj is MapProjectile))
+                            continue;
+                        MapProjectile proj = (MapProjectile)mobj;
+                        // now some magic ;)
+                        if (proj.Class == null)
+                            continue;
+                        // logic: the more elemental protection unit has, the more likely it is that it will try to walk right through a spell
+                        // we are multiplying it *2 because just "firefac" and "waterfac" don't seem to be powerful enough do make the unit go around with 50 protection
+                        switch ((AllodsProjectile)proj.Class.ID)
+                        {
+                            case AllodsProjectile.FireWall:
+                                float firefac = (100 - Unit.Stats.ProtectionFire) / 100f;
+                                baseNodeFactor *= 1f + firefac*2;
+                                break;
+                            case AllodsProjectile.PoisonCloud:
+                            case AllodsProjectile.Blizzard:
+                                float waterfac = (100 - Unit.Stats.ProtectionWater) / 100f;
+                                baseNodeFactor *= 1f + waterfac*2;
+                                break;
+                            // could check for SpecLight, SpecDarkness here. however ROM2 does not seem to do this
+                            default:
+                                break;
+                        }
+                    }
+                }
+
+                nodeFactor += baseNodeFactor;
+                nodeCount++;
+            }
+        }
+
+        return nodeFactor / nodeCount;
+    }
+
+    // returns speed of the unit
+    // 1.5 = 150% speed, 0.5 = 50% speed
+    // staticOnly is for now unused
+    public float GetNodeSpeedFactor(int x, int y, bool staticOnly)
+    {
+        // flying and hovering units don't care about node speed factor
+        if (!Unit.IsWalking)
+            return 1f;
+
+        float nodeFactor = 0;
+        int nodeCount = 0;
+
+        for (int ly = y; ly < y + Unit.Height; ly++)
+        {
+            for (int lx = x; lx < x + Unit.Width; lx++)
+            {
+                MapNode node = MapLogic.Instance.Nodes[lx, ly];
+                nodeFactor += 8f / Math.Max((byte)1, node.BaseWalkCost);
+                nodeCount++;
+            }
+        }
+
+        return nodeFactor / nodeCount;
     }
 
 }

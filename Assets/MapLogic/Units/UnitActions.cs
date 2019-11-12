@@ -163,6 +163,7 @@ public class MoveAction : IUnitAction
             {
                 Unit.LinkToWorld(TargetX, TargetY); // link to target coordinates. don't unlink from previous yet.
                 FracAdd = (float)Unit.Stats.Speed / 400; // otherwise can be written as speed / 20 / 20.
+                FracAdd *= Unit.Interaction.GetNodeSpeedFactor(TargetX, TargetY, false); // do we need to do this every time?
                 MoveSpeed = (float)Unit.Stats.Speed / 20; // move animation play speed.
             }
 

@@ -89,6 +89,14 @@ public class Registry
         return true;
     }
 
+    public Registry()
+    {
+        Root = new RegistryNode();
+        Root.Type = RegistryNodeType.Directory;
+        Root.Name = "";
+        Root.Children = new RegistryNode[0];
+    }
+
     public Registry(string filename)
     {
         try

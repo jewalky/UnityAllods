@@ -41,21 +41,19 @@ class AstarPathfinder
     {
         List<Vector2i> path = new List<Vector2i>();
         AstarNode parent = node;
-        while (true)
+        while (parent != null)
         {
-            if (parent.Parent == null)
-                break; // don't add first node
             path.Insert(0, new Vector2i(parent.X, parent.Y));
             parent = parent.Parent;
         }
         return path;
     }
 
-    private int GetCost(int cellX, int cellY, int nx, int ny)
+    private int GetCost(MapUnit unit, int cellX, int cellY, int nx, int ny, bool staticOnly)
     {
-        if ((nx != 0) == (ny != 0)) // diagonal
-            return 15;
-        return 10;
+        int nodeCost = ((nx != 0) == (ny != 0)) ? 15 : 10;
+        nodeCost = (int)(unit.Interaction.GetNodeCostFactor(cellX+nx, cellY+ny, staticOnly) * nodeCost);
+        return nodeCost;
     }
 
     private bool CheckCell(MapUnit unit, int x, int y, bool staticOnly)
@@ -152,7 +150,7 @@ class AstarPathfinder
                     }
 
                     // check open list
-                    int gscore = val.GScore + GetCost(val.X, val.Y, nx, ny);
+                    int gscore = val.GScore + GetCost(unit, val.X, val.Y, nx, ny, staticOnly);
                     LinkedListNode<AstarNode> nnode = openNodes.First;
                     AstarNode existing = null;
                     while (nnode != null)

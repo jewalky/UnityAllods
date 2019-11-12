@@ -434,7 +434,7 @@ class MapLogic
                 5, 5, 5, 5, 5, 5, 2, 2, 2, 2, 4, 4, 4, 4, 0, 0
             };
 
-            int[,] NodeTileTypes = new int[,]
+            int[,] NodeTileTypes = new int[16,2]
             {
                 {2, 1}, {5, 1}, {4, 1}, {7, 1}, {6, 1}, {5, 6}, {3, 7}, {8, 6},
                 {0, 0}, {0, 0}, {0, 0}, {0, 0}, {10, 1}, {0, 0}, {0, 0}, {0, 0}
@@ -453,7 +453,8 @@ class MapLogic
                     node.Light = 255;
 
                     int costTileType = (node.Tile & 0x3C0) >> 6;
-                    float costTileFactor = (NodeTileTypesInCell[costTileType]-1) / 4f; // 1..5 -> 0..4 -> 0..1
+                    int costTileBorder = (node.Tile & 0x3F);
+                    float costTileFactor = (NodeTileTypesInCell[costTileBorder]-1) / 4f; // 1..5 -> 0..4 -> 0..1
                     int costSubTileType1 = NodeTileTypes[costTileType, 1] - 1;
                     int costSubTileType2 = NodeTileTypes[costTileType, 0] - 1;
                     int costSubTile1 = (costSubTileType1 >= 0) ? NodeCosts[costSubTileType1] : 0;

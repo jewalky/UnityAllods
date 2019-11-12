@@ -110,7 +110,7 @@ namespace SpellEffects
                 float cZ = -(meanWh / 2f);
 
                 MapProjectile item = new MapProjectile(AllodsProjectile.Healing, Unit, new HealingProjectileLogic((Unit.Width+Unit.Height)/2f, pX, pY, cZ, Unit));
-                item.ZOffset = 128;
+                item.ZOffset = -64;
                 if (Unit.IsFlying)
                     item.ZOffset += 128;
                 item.SetPosition(pX, pY, 0);

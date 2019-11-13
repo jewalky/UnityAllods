@@ -103,8 +103,8 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         if (TBackR == null) TBackR = Images.LoadImage("graphics/interface/textbackr.bmp", Images.ImageType.AllodsBMP);
 
         string extraBase = null;
-        if (Screen.height == 768) extraBase = "graphics/interface/extra1024";
-        else if (Screen.height >= 600 && Screen.height < 768) extraBase = "graphics/interface/extra800";
+        if (MainCamera.Height == 768) extraBase = "graphics/interface/extra1024";
+        else if (MainCamera.Height >= 600 && MainCamera.Height < 768) extraBase = "graphics/interface/extra800";
         if (extraBase != null && ExtraL == null) ExtraL = Images.LoadImage(extraBase + "l.bmp", 0, Images.ImageType.AllodsBMP);
         if (extraBase != null && ExtraR == null) ExtraR = Images.LoadImage(extraBase + "r.bmp", Images.ImageType.AllodsBMP);
 
@@ -116,7 +116,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         if (BBookClosed == null) BBookClosed = Images.LoadImage("graphics/interface/bookclosed.bmp", 0, Images.ImageType.AllodsBMP);
 
         transform.localScale = new Vector3(1, 1, 0.01f);
-        transform.localPosition = new Vector3(Screen.width - 176, 238, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
+        transform.localPosition = new Vector3(MainCamera.Width - 176, 238, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
 
         Utils.MakeTexturedQuad(out HBackLObject, HBackL);
         Utils.MakeTexturedQuad(out HBackRObject, HBackR);
@@ -135,11 +135,11 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         // if we have >=768 height, put textback alongside humanback.
         // otherwise enable switcher button and switch with tab/click.
         float tbackY = 0;
-        if (Screen.height >= 768)
+        if (MainCamera.Height >= 768)
         {
-            if (Screen.height == 768)
+            if (MainCamera.Height == 768)
                 tbackY = HBackR.height + ExtraR.height;
-            else tbackY = Screen.height - transform.localPosition.y - TBackR.height;
+            else tbackY = MainCamera.Height - transform.localPosition.y - TBackR.height;
         }
 
         TBackLObject.transform.parent = transform;
@@ -150,7 +150,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         TBackRObject.transform.localPosition = new Vector3(TBackL.width, tbackY, 0);
 
         // hide textback if we're switching
-        if (Screen.height < 768 && !HumanMode)
+        if (MainCamera.Height < 768 && !HumanMode)
         {
             TBackRObject.SetActive(false);
             TBackLObject.SetActive(false);
@@ -170,7 +170,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
             ExtraRObject.transform.localPosition = new Vector3(TBackL.width, HBackR.height, 0);
         }
 
-        if (Screen.height < 768)
+        if (MainCamera.Height < 768)
         {
             Utils.MakeTexturedQuad(out BTextModeObject, BTextMode);
             Utils.MakeTexturedQuad(out BHumanModeObject, BHumanMode);
@@ -188,9 +188,9 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         }
 
         // display black quad.
-        if (Screen.height <= 768)
+        if (MainCamera.Height <= 768)
         {
-            int quadheight = (int)(Screen.height - transform.localPosition.y);
+            int quadheight = (int)(MainCamera.Height - transform.localPosition.y);
             Utils.MakeQuad(out BlackQuad, TBackR.width, quadheight, new Color(0, 0, 0, 1));
             BlackQuad.transform.parent = transform;
             BlackQuad.transform.localScale = new Vector3(1, 1, 1);
@@ -237,7 +237,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
                 (BlackQuad == null ||
                  !new Rect(BlackQuad.transform.localPosition.x,
                            BlackQuad.transform.localPosition.y,
-                           TBackR.width, Screen.height - transform.localPosition.y).Contains(mPosLocal))) return false;
+                           TBackR.width, MainCamera.Height - transform.localPosition.y).Contains(mPosLocal))) return false;
 
             MouseCursor.SetCursor(MouseCursor.CurDefault);
             // 

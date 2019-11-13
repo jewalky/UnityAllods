@@ -34,7 +34,7 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         {
             if (Object == null || Renderer == null)
             {
-                Renderer = new AllodsTextRenderer(Fonts.Font1, Font.Align.Left, Screen.width - 176 - 12, 0, true);
+                Renderer = new AllodsTextRenderer(Fonts.Font1, Font.Align.Left, MainCamera.Width - 176 - 12, 0, true);
                 Renderer.Text = Text;
                 Renderer.Material.color = MsgColor;
                 Object = Renderer.GetNewGameObject(0.01f, Instance.transform, 100, 1);
@@ -84,7 +84,7 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         }
 
         // check if too many messages
-        int maxMessageCount = Screen.height / 2 / 16;
+        int maxMessageCount = MainCamera.Height / 2 / 16;
         if (maxMessageCount <= 0) maxMessageCount = 1;
         if (Messages.Count >= maxMessageCount)
         {
@@ -113,10 +113,10 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
 
         ChatField = Utils.CreateObjectWithScript<TextField>();
         ChatField.transform.parent = transform;
-        ChatField.transform.localPosition = new Vector3(2, Screen.height - Fonts.Font1.LineHeight - 2, -0.001f);
+        ChatField.transform.localPosition = new Vector3(2, MainCamera.Height - Fonts.Font1.LineHeight - 2, -0.001f);
         ChatField.transform.localScale = new Vector3(1, 1, 0.001f);
         ChatField.Font = Fonts.Font1;
-        ChatField.Width = Screen.width - 176 - 4;
+        ChatField.Width = MainCamera.Width - 176 - 4;
         ChatField.Height = Fonts.Font1.LineHeight;
         ChatField.IsFocused = true;
         ChatField.OnReturn = () =>
@@ -167,7 +167,7 @@ public class MapViewChat : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
             int dst = 0;
             if (MapView.Instance.InventoryVisible)
                 dst += 90;
-            ChatField.transform.localPosition = new Vector3(2, Screen.height - Fonts.Font1.LineHeight - 2 - dst, -0.001f);
+            ChatField.transform.localPosition = new Vector3(2, MainCamera.Height - Fonts.Font1.LineHeight - 2 - dst, -0.001f);
         }
     }
 

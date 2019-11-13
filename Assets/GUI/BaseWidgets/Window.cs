@@ -47,7 +47,7 @@ public class Window : Widget, IUiEventProcessor
         // init base mesh
         // make screenshot of background.
         // this should be done before everything, otherwise the previous window can't be screenshotted
-        BgTexture = new RenderTexture(Screen.width, Screen.height, 24);
+        BgTexture = new RenderTexture(MainCamera.Width, MainCamera.Height, 24);
         Camera mc = MainCamera.Instance.GetComponent<Camera>();
         mc.targetTexture = BgTexture;
         bool cvis = MouseCursor.Instance.Visible;
@@ -57,8 +57,8 @@ public class Window : Widget, IUiEventProcessor
         mc.targetTexture = null;
         BgObject = Utils.CreatePrimitive(PrimitiveType.Quad);
         BgObject.transform.parent = transform;
-        BgObject.transform.localPosition = new Vector3(Screen.width/2, Screen.height/2, 0.025f);
-        BgObject.transform.localScale = new Vector3(Screen.width, -Screen.height, 1);
+        BgObject.transform.localPosition = new Vector3(MainCamera.Width/2, MainCamera.Height/2, 0.025f);
+        BgObject.transform.localScale = new Vector3(MainCamera.Width, -MainCamera.Height, 1);
         MeshRenderer bgRenderer = BgObject.GetComponent<MeshRenderer>();
         bgRenderer.material = new Material(MainCamera.WindowBgShader);
         bgRenderer.material.mainTexture = BgTexture;
@@ -91,8 +91,8 @@ public class Window : Widget, IUiEventProcessor
         int ppt = 0;
         int ppc = 0;
 
-        int oScreenX = Screen.width / 2 - Width * 96 / 2;
-        int oScreenY = Screen.height / 2 - Height * 64 / 2;
+        int oScreenX = MainCamera.Width / 2 - Width * 96 / 2;
+        int oScreenY = MainCamera.Height / 2 - Height * 64 / 2;
 
         WorkingArea = Utils.CreateObject();
         WorkingArea.transform.parent = transform;
@@ -102,8 +102,8 @@ public class Window : Widget, IUiEventProcessor
         int shadowOffs = 8;
 
         // main shadow
-        //Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, 0, 0, Screen.width, Screen.height, wnd_LM.AtlasRects[0], shadowColor);
-        
+        //Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, 0, 0, MainCamera.Width, MainCamera.Height, wnd_LM.AtlasRects[0], shadowColor);
+
 
         // add shadow corners
         Utils.PutQuadInMesh(qv, quv, qc, ref pp, ref ppt, ref ppc, shadowOffs + oScreenX + Width * 96, shadowOffs + oScreenY - 48, 48, 48, wnd_LM.AtlasRects[3], shadowColor);

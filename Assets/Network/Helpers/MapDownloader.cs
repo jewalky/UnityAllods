@@ -53,20 +53,20 @@ public class MapDownloader : MonoBehaviour
         mr.material = new Material(MainCamera.MainShader);
         mr.material.SetColor("_Color", new Color(0, 0, 0, 1));
         Background.transform.parent = transform;
-        Background.transform.localPosition = new Vector3(Screen.width / 2, Screen.height / 2, 0.1f);
-        Background.transform.localScale = new Vector3(Screen.width, Screen.height, 1);
+        Background.transform.localPosition = new Vector3(MainCamera.Width / 2, MainCamera.Height / 2, 0.1f);
+        Background.transform.localScale = new Vector3(MainCamera.Width, MainCamera.Height, 1);
         Background.name = "Background";
 
-        RendererMapName = new AllodsTextRenderer(Fonts.Font1, Font.Align.Center, Screen.width, Fonts.Font1.LineHeight, false);
+        RendererMapName = new AllodsTextRenderer(Fonts.Font1, Font.Align.Center, MainCamera.Width, Fonts.Font1.LineHeight, false);
         RendererMapName.Text = "downloading map " + FileName + "...";
         ObjectMapName = RendererMapName.GetNewGameObject(0.01f, transform, 100);
-        ObjectMapName.transform.localPosition = new Vector3(0, Screen.height / 2 - 16, -1);
+        ObjectMapName.transform.localPosition = new Vector3(0, MainCamera.Height / 2 - 16, -1);
 
-        RendererMapPercent = new AllodsTextRenderer(Fonts.Font1, Font.Align.Center, Screen.width, Fonts.Font1.LineHeight, false);
+        RendererMapPercent = new AllodsTextRenderer(Fonts.Font1, Font.Align.Center, MainCamera.Width, Fonts.Font1.LineHeight, false);
         RendererMapPercent.Text = "0% complete";
         RendererMapPercent.Material.color = new Color(0.6f, 0.6f, 0.6f);
         ObjectMapPercent = RendererMapPercent.GetNewGameObject(0.01f, transform, 100);
-        ObjectMapPercent.transform.localPosition = new Vector3(0, Screen.height / 2, -1);
+        ObjectMapPercent.transform.localPosition = new Vector3(0, MainCamera.Height / 2, -1);
     }
 
     public void Update()

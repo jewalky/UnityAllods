@@ -507,8 +507,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
 
     public void CenterOnCell(int x, int y)
     {
-        int screenWB = (int)((float)Screen.width / 32 - 5); // 5 map cells are the right panels. these are always there.
-        int screenHB = (int)((float)Screen.height / 32);
+        int screenWB = (int)((float)MainCamera.Width / 32 - 5); // 5 map cells are the right panels. these are always there.
+        int screenHB = (int)((float)MainCamera.Height / 32);
         SetScroll(x - screenWB / 2, y - screenHB / 2);
     }
 
@@ -516,8 +516,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
     {
         const int minX = 8;
         const int minY = 8;
-        int screenWB = (int)((float)Screen.width / 32 - 5); // 5 map cells are the right panels. these are always there.
-        int screenHB = (int)((float)Screen.height / 32);
+        int screenWB = (int)((float)MainCamera.Width / 32 - 5); // 5 map cells are the right panels. these are always there.
+        int screenHB = (int)((float)MainCamera.Height / 32);
         int maxX = MapLogic.Instance.Width - screenWB - 8;
         int maxY = MapLogic.Instance.Height - screenHB - 10;
 

@@ -305,10 +305,10 @@ public class UiManager : MonoBehaviour
         float fw = TooltipRendererA.ActualWidth + 12;
         float fh = TooltipRendererA.Height + 12;
 
-        if (topX + fw > Screen.width)
-            topX = Screen.width - fw;
-        if (topY + fh > Screen.height)
-            topY = Screen.height - fh;
+        if (topX + fw > MainCamera.Width)
+            topX = MainCamera.Width - fw;
+        if (topY + fh > MainCamera.Height)
+            topY = MainCamera.Height - fh;
         if (topX < 0)
             topX = 0;
         if (topY < 0)

@@ -39,19 +39,35 @@ public class MainCamera : MonoBehaviour
     private AllodsTextRenderer m_fpsr = null;
     private GameObject m_fpso = null;
 
+    private int _Width;
+    private int _Height;
+
+    public static int Width { get { return Instance._Width; } }
+    public static int Height { get { return Instance._Height; } }
+
     void Start()
     {
+        int ow = Screen.width;
+        int oh = Screen.height;
+        if (ow % 2 != 0)
+            ow--;
+        if (oh % 2 != 0)
+            oh--;
+
+        _Width = ow;
+        _Height = oh;
+
         // set w/h to screen res
         Camera cam = GetComponent<Camera>();
         //camera.transform.position = new Vector3(-0.5f, 0.5f);
-        cam.orthographicSize = Screen.height / 2;
+        cam.orthographicSize = _Height / 2;
         /*camera.transform.Translate((float)Screen.width / 2 / 100, (float)Screen.height / 2 / 100, 0, Space.World);
         camera.projectionMatrix *= Matrix4x4.Scale(new Vector3(100, -100, 1));*/
-        cam.transform.Translate((float)Screen.width / 2, (float)Screen.height / 2, 0, Space.World);
+        cam.transform.Translate((float)_Width / 2, (float)_Height / 2, 0, Space.World);
         cam.projectionMatrix *= Matrix4x4.Scale(new Vector3(1, -1, 1));
-        Debug.LogFormat("{0}x{1}", Screen.width, Screen.height);
+        Debug.LogFormat("{0}x{1}", _Width, _Height);
 
-        m_fpsr = new AllodsTextRenderer(Fonts.Font1, Font.Align.Right, Screen.width - 176);
+        m_fpsr = new AllodsTextRenderer(Fonts.Font1, Font.Align.Right, _Width - 176);
         m_fpso = m_fpsr.GetNewGameObject(0.01f, SceneRoot.Instance.transform, 100);
         m_fpso.transform.position = new Vector3(0, 0, OverlayZ + 0.99f);
     }

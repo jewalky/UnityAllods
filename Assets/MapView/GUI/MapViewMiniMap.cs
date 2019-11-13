@@ -66,7 +66,7 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
         if (CrystalL == null) CrystalL = Images.LoadImage("graphics/interface/crystall.bmp", 0, Images.ImageType.AllodsBMP);
         if (CrystalR == null) CrystalR = Images.LoadImage("graphics/interface/crystalr.bmp", Images.ImageType.AllodsBMP);
         transform.localScale = new Vector3(1, 1, 0.01f);
-        transform.localPosition = new Vector3(Screen.width - 176, 0, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
+        transform.localPosition = new Vector3(MainCamera.Width - 176, 0, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
 
         CrystalLObject = Utils.CreatePrimitive(PrimitiveType.Quad);
         CrystalLRenderer = CrystalLObject.GetComponent<MeshRenderer>();

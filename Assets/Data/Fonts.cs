@@ -303,6 +303,9 @@ public class AllodsTextRenderer
     private Mesh _Mesh;
     private Material _Material;
     private int _OverrideLineHeight;
+    //
+    private bool _ManualUpdate;
+    private bool _NeedUpdate;
 
     public AllodsTextRenderer(Font font, Font.Align align = Font.Align.Left, int width = 0, int height = 0, bool wrapping = false, int overrideLineHeight = -1)
     {
@@ -315,23 +318,35 @@ public class AllodsTextRenderer
         _Height = height;
         _Wrapping = wrapping;
         _OverrideLineHeight = overrideLineHeight;
+        _ManualUpdate = false;
+        _NeedUpdate = true;
     }
     
-    private void UpdateMesh()
+    private void CheckMesh()
     {
+        if (_ManualUpdate)
+            return;
+        UpdateMesh();
+    }
+
+    public void UpdateMesh()
+    {
+        if (!_NeedUpdate)
+            return;
         _Font.RenderToExistingMesh(_Mesh, _Text, _Align, _Width, _Height, _Wrapping, _OverrideLineHeight, out _ActualWidth, out _Height);
+        _NeedUpdate = false;
     }
 
     public string Text
     {
         get { return _Text; }
-        set { if (_Text != value) { _Text = value; UpdateMesh(); } }
+        set { if (_Text != value) { _Text = value; _NeedUpdate = true; CheckMesh(); } }
     }
 
     public int Width
     {
         get { return _Width; }
-        set { if (_Width != value) { _Width = value; if (_Wrapping) UpdateMesh(); } }
+        set { if (_Width != value) { _Width = value; if (_Wrapping) { _NeedUpdate = true; CheckMesh(); } } }
     }
 
     public int ActualWidth
@@ -348,13 +363,25 @@ public class AllodsTextRenderer
     public Font.Align Align
     {
         get { return _Align; }
-        set { if (_Align != value) { _Align = value; UpdateMesh(); } } // tbh this doesn't affect anything, useless value
+        set { if (_Align != value) { _Align = value; _NeedUpdate = true; CheckMesh(); } } // tbh this doesn't affect anything, useless value
     }
 
     public bool Wrapping
     {
         get { return _Wrapping; }
-        set { if (_Wrapping != value) { _Wrapping = value; UpdateMesh(); } }
+        set { if (_Wrapping != value) { _Wrapping = value; _NeedUpdate = true; CheckMesh(); } }
+    }
+
+    public int OverrideLineHeight
+    {
+        get { return _OverrideLineHeight; }
+        set { if (_OverrideLineHeight != value) { _OverrideLineHeight = value; _NeedUpdate = true; CheckMesh(); } }
+    }
+
+    public bool ManualUpdate
+    {
+        get { return _ManualUpdate; }
+        set { if (_ManualUpdate != value) { _ManualUpdate = value; if (value) UpdateMesh(); } }
     }
 
     public Mesh Mesh

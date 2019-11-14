@@ -77,10 +77,8 @@ public class Locale
             FieldInfo[] fields = typeof(Locale).GetFields();
             foreach (FieldInfo fld in fields)
             {
-                UnityEngine.Debug.LogFormat("field = {0}, type = {1}", fld.Name, fld.FieldType);
                 if (fld.IsStatic && fld.FieldType == typeof(List<string>))
                 {
-                    UnityEngine.Debug.LogFormat("field = {0}", fld.Name);
                     ListsByName[fld.Name.ToLowerInvariant()] = (List<string>)fld.GetValue(null);
                 }
             }

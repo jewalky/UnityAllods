@@ -20,7 +20,7 @@ public class AllodsText : MaskableGraphic
     public int ShadowOffset = -1;
     [SerializeField]
     [Range(0.5f, 5f)]
-    public float LineHeight = 1;
+    public float LineHeight = 1; 
 
     private AllodsTextRenderer Renderer;
 
@@ -33,12 +33,17 @@ public class AllodsText : MaskableGraphic
         }
     }
 
-    public override Material materialForRendering
+    public override Material material
     {
         get
         {
             CheckRenderer();
             return Renderer.Material;
+        }
+
+        set
+        {
+            // do nothing
         }
     }
 
@@ -116,4 +121,5 @@ public class AllodsText : MaskableGraphic
             vh.AddTriangle(m.triangles[i] + triOffset, m.triangles[i + 1] + triOffset, m.triangles[i + 2] + triOffset);
 
     }
+
 }

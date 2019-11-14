@@ -33,6 +33,15 @@ public class AllodsText : MaskableGraphic
         }
     }
 
+    public override Material materialForRendering
+    {
+        get
+        {
+            CheckRenderer();
+            return Renderer.Material;
+        }
+    }
+
     public override Texture mainTexture
     {
         get
@@ -42,13 +51,41 @@ public class AllodsText : MaskableGraphic
         }
     }
 
+    private string ResolveText(string input)
+    {
+        string outs = "";
+        int lastTranslate = 0;
+        while (true)
+        {
+            int nextTranslate = input.IndexOf("${", lastTranslate);
+            if (nextTranslate >= 0)
+            {
+                outs += input.Substring(lastTranslate, nextTranslate - lastTranslate);
+                int endTranslate = input.IndexOf('}', nextTranslate + 2);
+                if (endTranslate < 0)
+                    return outs + "<invalid translation>";
+
+                lastTranslate = endTranslate + 1;
+
+                string translateStr = input.Substring(nextTranslate + 2, endTranslate - nextTranslate - 2);
+                outs += Locale.TranslateString(translateStr);
+            }
+            else break;
+        }
+
+        if (lastTranslate != input.Length)
+            outs += input.Substring(lastTranslate);
+
+        return outs;
+    }
+
     protected override void OnPopulateMesh(VertexHelper vh)
     {
         CheckRenderer();
 
         material.color = Color;
 
-        Renderer.Text = Text;
+        Renderer.Text = ResolveText(Text);
         Renderer.Width = (int)rectTransform.rect.width;
         Renderer.Wrapping = Wrap;
         Renderer.Align = Align;

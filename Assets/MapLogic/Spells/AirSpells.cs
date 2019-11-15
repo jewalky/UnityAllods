@@ -172,9 +172,28 @@ namespace Spells
                         }
                     }
 
-                    Server.SpawnProjectileEOT(AllodsProjectile.SpecLight, Spell.User, x + 0.5f, y + 0.5f, 0, (int)(MapLogic.TICRATE * Spell.GetDuration()), MapLogic.TICRATE, 0, 0, 16, proj =>
+                    Server.SpawnProjectileEOT(AllodsProjectile.SpecLight, Spell.User, x + 0.5f, y + 0.5f, 0, (int)(MapLogic.TICRATE * Spell.GetDuration()), MapLogic.TICRATE / 2, 0, 0, 16, proj =>
                     {
-                        proj.LightLevel = 128;
+                        float power = Spell.GetIndirectPower();
+
+                        proj.LightLevel = (int)(64+(power * 32));
+
+                        MapNode pnode = MapLogic.Instance.Nodes[proj.X, proj.Y];
+                        for (int i = 0; i < pnode.Objects.Count; i++)
+                        {
+                            MapObject mo = pnode.Objects[i];
+                            if (!(mo is MapUnit))
+                                continue;
+
+                            MapUnit mov = (MapUnit)mo;
+                            // don't affect AI units
+                            if (mov.Player == null || mov.Player.DoFullAI)
+                                continue;
+
+                            SpellEffects.Effect eff = new SpellEffects.Light(MapLogic.TICRATE / 2, Spell.GetScanRange()); // 1 second
+                            mov.AddSpellEffects(eff);
+                        }
+
                     });
                 }
             }

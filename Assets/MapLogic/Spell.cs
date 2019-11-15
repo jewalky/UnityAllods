@@ -295,6 +295,9 @@ public class Spell
             case Spells.Darkness:
                 sp_rows.Add(string.Format("{0}: -{1}", Locale.Main[21], GetScanRange()));
                 break;
+            case Spells.Light:
+                sp_rows.Add(string.Format("{0}: +{1}", Locale.Main[21], GetScanRange()));
+                break;
         }
 
         return string.Join("\n", sp_rows.ToArray());

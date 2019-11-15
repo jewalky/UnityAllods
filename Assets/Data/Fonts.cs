@@ -5,11 +5,42 @@ using System.Collections.Generic;
 
 public class Font
 {
-    internal int[] Widths = new int[224];
-    internal Images.AllodsSprite CombinedTexture;
-    internal Material CombinedMaterial;
-    internal int Spacing = 2;
+    private int[] Widths = new int[224];
+    private string _Filename;
+    private Images.AllodsSprite _CombinedTexture;
+    private Material _CombinedMaterial;
+    private int Spacing = 2;
     public readonly int LineHeight = 16;
+
+    // Unity occasionally erases this.
+    private void CheckTexture()
+    {
+        if (_CombinedTexture == null || _CombinedTexture.Atlas == null)
+            _CombinedTexture = Images.LoadSprite(_Filename);
+        if (_CombinedMaterial == null)
+        {
+            _CombinedMaterial = new Material(MainCamera.MainShaderPaletted);
+            _CombinedMaterial.mainTexture = _CombinedTexture.Atlas;
+        }
+    }
+
+    public Images.AllodsSprite CombinedTexture
+    {
+        get
+        {
+            CheckTexture();
+            return _CombinedTexture;
+        }
+    }
+
+    public Material CombinedMaterial
+    {
+        get
+        {
+            CheckTexture();
+            return _CombinedMaterial;
+        }
+    }
 
     public Font(string filename, int spacing, int line_height, int space_width)
     {
@@ -39,9 +70,7 @@ public class Font
         br.Close();
         Widths[0] = space_width;
 
-        CombinedTexture = Images.LoadSprite(filename);
-        CombinedMaterial = new Material(MainCamera.MainShaderPaletted);
-        CombinedMaterial.mainTexture = CombinedTexture.Atlas;
+        _Filename = filename;
     }
 
     public enum Align
@@ -311,7 +340,6 @@ public class AllodsTextRenderer
     {
         _Font = font;
         _Mesh = new Mesh();
-        _Material = GameObject.Instantiate(_Font.CombinedMaterial);
         _Align = align;
         _ActualWidth = 0;
         _Width = width;
@@ -396,7 +424,12 @@ public class AllodsTextRenderer
 
     public Material Material
     {
-        get { return _Material; }
+        get
+        {
+            if (_Material == null)
+                _Material = GameObject.Instantiate(Font.CombinedMaterial);
+            return _Material;
+        }
     }
 
     public GameObject GetNewGameObject(float shadowPos = 0, Transform parent_transform = null, float scale = 1f, float shadowZOffs = 0.01f)
@@ -404,7 +437,7 @@ public class AllodsTextRenderer
         GameObject go = Utils.CreateObject();
         go.AddComponent<MeshFilter>().mesh = _Mesh;
         MeshRenderer mr = go.AddComponent<MeshRenderer>();
-        mr.material = _Material;
+        mr.material = Material;
         go.name = "AllodsTextRenderer$GetNewGameObject";
         go.transform.parent = parent_transform;
         go.transform.localPosition = new Vector3(0, 0, 0);

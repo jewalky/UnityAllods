@@ -569,8 +569,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         {
             if (!SpellEffects[i].Process())
             {
-                SpellEffects[i].OnDetach();
+                global::SpellEffects.Effect ef = SpellEffects[i];
                 SpellEffects.RemoveAt(i);
+                ef.OnDetach();
                 i--;
             }
         }

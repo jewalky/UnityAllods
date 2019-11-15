@@ -135,4 +135,117 @@ namespace Spells
             return false;
         }
     }
+
+    [SpellProcId(Spell.Spells.Light)]
+    public class SpellProcLight : SpellProc
+    {
+        public SpellProcLight(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (NetworkManager.IsClient)
+                return false;
+
+            // 11x11, but remove corners
+            for (int y = TargetY - 5; y <= TargetY + 5; y++)
+            {
+                for (int x = TargetX - 5; x <= TargetX + 5; x++)
+                {
+                    // check for corner tiles :)
+                    if (new Vector2(x - TargetX, y - TargetY).magnitude > 5.5f)
+                        continue;
+                    if (x < 0 || y < 0 ||
+                        x >= MapLogic.Instance.Width ||
+                        y >= MapLogic.Instance.Height) continue;
+
+                    // remove darkness effects
+                    MapNode node = MapLogic.Instance.Nodes[x, y];
+                    for (int i = 0; i < node.Objects.Count; i++)
+                    {
+                        MapObject mo = node.Objects[i];
+                        if (mo is MapProjectile &&
+                            ((((MapProjectile)mo).ClassID == AllodsProjectile.SpecDarkness) || (((MapProjectile)mo).ClassID == AllodsProjectile.SpecLight)))
+                        {
+                            mo.Dispose();
+                            i--;
+                            continue;
+                        }
+                    }
+
+                    Server.SpawnProjectileEOT(AllodsProjectile.SpecLight, Spell.User, x + 0.5f, y + 0.5f, 0, (int)(MapLogic.TICRATE * Spell.GetDuration()), MapLogic.TICRATE, 0, 0, 16, proj =>
+                    {
+                        proj.LightLevel = 128;
+                    });
+                }
+            }
+
+            return false;
+        }
+    }
+
+    [SpellProcId(Spell.Spells.Darkness)]
+    public class SpellProcDarkness : SpellProc
+    {
+        public SpellProcDarkness(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (NetworkManager.IsClient)
+                return false;
+
+            // 11x11, but remove corners
+            for (int y = TargetY - 5; y <= TargetY + 5; y++)
+            {
+                for (int x = TargetX - 5; x <= TargetX + 5; x++)
+                {
+                    // check for corner tiles :)
+                    if (new Vector2(x - TargetX, y - TargetY).magnitude > 5.5f)
+                        continue;
+                    if (x < 0 || y < 0 ||
+                        x >= MapLogic.Instance.Width ||
+                        y >= MapLogic.Instance.Height) continue;
+
+                    // remove light effects
+                    MapNode node = MapLogic.Instance.Nodes[x, y];
+                    for (int i = 0; i < node.Objects.Count; i++)
+                    {
+                        MapObject mo = node.Objects[i];
+                        if (mo is MapProjectile &&
+                            ((((MapProjectile)mo).ClassID == AllodsProjectile.SpecDarkness) || (((MapProjectile)mo).ClassID == AllodsProjectile.SpecLight)))
+                        {
+                            mo.Dispose();
+                            i--;
+                            continue;
+                        }
+                    }
+
+                    Server.SpawnProjectileEOT(AllodsProjectile.SpecDarkness, Spell.User, x + 0.5f, y + 0.5f, 0, (int)(MapLogic.TICRATE * Spell.GetDuration()), MapLogic.TICRATE/2, 0, 0, 16, proj =>
+                    {
+                        float power = Spell.GetIndirectPower();
+
+                        proj.LightLevel = (int)(-(power * 32));
+
+                        MapNode pnode = MapLogic.Instance.Nodes[proj.X, proj.Y];
+                        for (int i = 0; i < pnode.Objects.Count; i++)
+                        {
+                            MapObject mo = pnode.Objects[i];
+                            if (!(mo is MapUnit))
+                                continue;
+
+                            MapUnit mov = (MapUnit)mo;
+                            // don't affect AI units
+                            if (mov.Player == null || mov.Player.DoFullAI)
+                                continue;
+
+                            SpellEffects.Effect eff = new SpellEffects.Darkness(MapLogic.TICRATE/2, Spell.GetScanRange()); // 1 second
+                            mov.AddSpellEffects(eff);
+                        }
+
+                    });
+                }
+            }
+
+            return false;
+        }
+    }
 }

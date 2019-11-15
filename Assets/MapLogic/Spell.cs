@@ -191,6 +191,11 @@ public class Spell
         return Math.Max(3, Math.Min(7, pw));
     }
 
+    public int GetScanRange()
+    {
+        return Skill / 25;
+    }
+
     public float GetDuration()
     {
         if (SpellID == Spells.Stone_Curse)
@@ -286,6 +291,9 @@ public class Spell
                 break;
             case Spells.Haste:
                 sp_rows.Add(string.Format("{0}: +{1}", Locale.Main[22], GetSpeed()));
+                break;
+            case Spells.Darkness:
+                sp_rows.Add(string.Format("{0}: -{1}", Locale.Main[21], GetScanRange()));
                 break;
         }
 

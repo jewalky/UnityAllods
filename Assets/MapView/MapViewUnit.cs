@@ -399,10 +399,33 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         }
 
         bool hovered = (MapView.Instance.HoveredObject == LogicUnit);
-        if (Renderer != null) Renderer.material.SetFloat("_Lightness", hovered ? 0.75f : 0.5f);
+        float baseLightness = hovered ? 0.75f : 0.5f;
+        if (Renderer != null && !LogicUnit.DoUpdateView) Renderer.material.SetFloat("_Lightness", baseLightness);
         bool selected = (MapView.Instance.SelectedObject == LogicUnit);
         if (HpMat1 != null) HpMat1.color = new Color(1, 1, 1, selected ? 1f : 0.5f);
         if (HpMat2 != null) HpMat2.color = new Color(1, 1, 1, selected ? 1f : 0.5f);
+
+        // check lights. we have to do it here because hovering is also implemented through lightness
+        // to-do move unit lightness elsewhere
+        float meanDynLight = 0f;
+        int countDynLight = 0;
+        for (int cY = LogicUnit.Y; cY < LogicUnit.Y + LogicUnit.Height; cY++)
+        {
+            for (int cX = LogicUnit.X; cX < LogicUnit.X + LogicUnit.Width; cX++)
+            {
+                countDynLight++;
+                meanDynLight += (float)MapLogic.Instance.Nodes[cX, cY].DynLight / 255;
+            }
+        }
+
+        if (countDynLight > 0)
+            meanDynLight /= countDynLight;
+        else meanDynLight = 0f;
+
+        for (int i = 0; i < Renderer.materials.Length; i++)
+        {
+            Renderer.materials[i].SetFloat("_Lightness", baseLightness + meanDynLight);
+        }
 
         if (LogicUnit.DoUpdateView)
         {
@@ -480,6 +503,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
             for (int i = 0; i < newMaterialCount; i++)
                 Renderer.materials[i].SetTexture("_Palette", GetDeathPalette(dCls.File));
+
             // first (idle) state is 0..8 frames. frames 1 to 7 are flipped. frames 0 and 8 aren't.
             //  135 180 225
             //  90      270

@@ -1393,7 +1393,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Spell topSpell = null;
         foreach (Item item in ItemsPack)
         {
-            if ((item.Class.ItemID & 0xFFC0) != 0x0E00) // special/scrolls
+            if (!item.Class.IsScroll) // special/scrolls
                 continue;
             if (itemId != 0 && item.Class.ItemID != itemId)
                 continue;

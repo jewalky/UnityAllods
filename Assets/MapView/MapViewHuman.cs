@@ -445,7 +445,7 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
     private bool CheckScroll(Item item)
     {
         // check if this item is a scroll. scrolls have special handling on the client, everything else is in IsItemUsable/PutItemToBody
-        if ((item.Class.ItemID & 0xFFC0) == 0x0E00)
+        if (item.Class.IsScroll)
         {
             MapView.Instance.OneTimeCast = item.GetScrollEffect(LogicHuman);
             return true;

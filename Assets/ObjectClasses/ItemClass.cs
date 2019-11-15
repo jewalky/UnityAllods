@@ -55,6 +55,9 @@ public class ItemClass
 
     public int MaterialID { get { return TemplateLoader.Templates.Materials.IndexOf(Material); } }
 
+    public bool IsScroll { get { return ((ItemID & 0xFFC0) == 0x0E00) && ((ItemID & 0x3F) > 5); } }
+    public bool IsBook { get { return ((ItemID & 0xFFC0) == 0x0E00) && ((ItemID & 0x7) <= 5); } }
+
     public ushort ItemID;
 
     public bool UsableFighter;

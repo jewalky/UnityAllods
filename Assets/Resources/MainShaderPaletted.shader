@@ -13,7 +13,7 @@ Shader "Custom/MainShaderPaletted"
 		[MaterialToggle] PixelSnap("Pixel snap", Float) = 0
 
 		// for UI
-		_StencilComp("Stencil Comparison", Float) = 8
+		_StencilComp("Stencil Comparison", Float) = 0
 		_Stencil("Stencil ID", Float) = 0
 		_StencilOp("Stencil Operation", Float) = 0
 		_StencilWriteMask("Stencil Write Mask", Float) = 255

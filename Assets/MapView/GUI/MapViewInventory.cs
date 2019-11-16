@@ -23,7 +23,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
     
     public void Awake()
     {
-        ItemCount = (Screen.width - 176 - 64) / 80; // each arrow is 32 in width
+        ItemCount = (MainCamera.Width - 176 - 64) / 80; // each arrow is 32 in width
         View = Utils.CreateObjectWithScript<ItemView>();
         View.transform.parent = transform;
         View.transform.localScale = new Vector3(1, 1, 1);
@@ -80,7 +80,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
         Filter.mesh = mb.ToMesh(MeshTopology.Quads, MeshTopology.Quads, MeshTopology.Quads);
 
         transform.localScale = new Vector3(1, 1, 0.01f);
-        transform.localPosition = new Vector3((Screen.width - 176) / 2 - (View.InvWidth * 80 * View.InvScale + 64) / 2, Screen.height - 90, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
+        transform.localPosition = new Vector3((MainCamera.Width - 176) / 2 - (View.InvWidth * 80 * View.InvScale + 64) / 2, MainCamera.Height - 90, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
     }
 
     public void OnDestroy()

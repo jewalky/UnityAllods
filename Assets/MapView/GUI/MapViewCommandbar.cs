@@ -45,7 +45,7 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
         UiManager.Instance.Subscribe(this);
 
         transform.localScale = new Vector3(1, 1, 0.01f);
-        transform.localPosition = new Vector3(Screen.width - 176, 158, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
+        transform.localPosition = new Vector3(MainCamera.Width - 176, 158, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
 
         if (CommandBarL == null) CommandBarL = Images.LoadImage("graphics/interface/commandbarl.bmp", 0, Images.ImageType.AllodsBMP);
         if (CommandBarR == null) CommandBarR = Images.LoadImage("graphics/interface/commandbarr.bmp", Images.ImageType.AllodsBMP);

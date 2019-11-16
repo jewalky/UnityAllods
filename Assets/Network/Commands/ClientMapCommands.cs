@@ -371,6 +371,7 @@ namespace ClientCommands
                 // we can't expect ideal sync here.
                 // for this reason we don't just "add" state.
                 // we put it exactly where it was on server's side at the moment.
+                // ..except death which ends everything
                 int pPos = Math.Min(Position, unit.Actions.Count);
                 // reverse iteration
                 AddUnitAction[] States = new AddUnitAction[2] { State1, State2 };
@@ -405,7 +406,8 @@ namespace ClientCommands
                     if (States[i].Death != null)
                     {
                         States[i].Death.Unit = unit;
-                        unit.Actions.Insert(pPos, States[i].Death);
+                        unit.Actions.RemoveRange(1, unit.Actions.Count-1);
+                        unit.Actions.Add(States[i].Death);
                     }
                 }
             }

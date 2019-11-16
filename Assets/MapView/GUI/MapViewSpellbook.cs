@@ -243,7 +243,7 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
         int dOffset = 0;
         if (MapView.Instance.InventoryVisible)
             dOffset -= 90;
-        transform.localPosition = new Vector3((Screen.width - 176) / 2 - 240 + 8, Screen.height - 85 + dOffset, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
+        transform.localPosition = new Vector3((MainCamera.Width - 176) / 2 - 240 + 8, MainCamera.Height - 85 + dOffset, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
         if (Unit != null)
             SetSpells(Unit);
     }

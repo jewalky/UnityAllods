@@ -13,22 +13,17 @@ public partial class Utils
 
     public static void SetMousePosition(float deltaX, float deltaY)
     {
-        _MouseX = Mathf.Clamp(_MouseX + deltaX, 0, Screen.width);
-        _MouseY = Mathf.Clamp(_MouseY + deltaY, 0, Screen.height);
+        _MouseX = Mathf.Clamp(_MouseX + deltaX, 0, MainCamera.Width);
+        _MouseY = Mathf.Clamp(_MouseY + deltaY, 0, MainCamera.Height);
     }
 
     public static Vector3 GetMousePosition()
     {
         //Vector3 mPos = new Vector3(MouseX, MouseY, 0);
         //return mPos;
-        return new Vector3(Input.mousePosition.x, (Screen.height - Input.mousePosition.y), Input.mousePosition.z);
-    }
-
-    public static Vector3 Vec3InvertY(Vector3 _in)
-    {
-       return new Vector3(_in.x / 100, ((float)Screen.height - _in.y) / 100, _in.z / 100);
-       //return new Vector3(_in.x, ((float)Screen.height - _in.y), _in.z);
-       //return _in;
+        float scaleX = (float)MainCamera.Width / Screen.width;
+        float scaleY = (float)MainCamera.Height / Screen.height;
+        return new Vector3(Input.mousePosition.x * scaleX, (Screen.height - Input.mousePosition.y) * scaleY, Input.mousePosition.z);
     }
 
     public static void DestroyObjectAndMesh(GameObject o)

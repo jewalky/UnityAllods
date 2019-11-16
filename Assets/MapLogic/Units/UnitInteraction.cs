@@ -24,7 +24,7 @@ public class UnitInteraction
                     continue; // if we are already on this cell, skip it as passible
                 uint tile = node.Tile;
                 MapNodeFlags flags = node.Flags;
-                if (Unit.IsWalking && (flags & MapNodeFlags.Unblocked) == 0 && (tile >= 0x1C0 && tile <= 0x2FF))
+                if (Unit.IsWalking && !flags.HasFlag(MapNodeFlags.Unblocked) && flags.HasFlag(MapNodeFlags.BlockedTerrain))
                     return false;
                 MapNodeFlags bAir = staticOnly ? MapNodeFlags.BlockedAir : MapNodeFlags.BlockedAir | MapNodeFlags.DynamicAir;
                 MapNodeFlags bGround = staticOnly ? MapNodeFlags.BlockedGround : MapNodeFlags.BlockedGround | MapNodeFlags.DynamicGround;

@@ -14,6 +14,7 @@ public enum MapNodeFlags
     Unblocked = 0x0010, // walkable water / rocks
     DynamicGround = 0x0020, // temporarily blocked ground (unit)
     DynamicAir = 0x0040, // temporarily blocked air (unit)
+    BlockedTerrain = 0x0080, // tile is blocked (rock, water)
 }
 
 public class MapNode
@@ -465,6 +466,19 @@ class MapLogic
                     int costSubTile1 = (costSubTileType1 >= 0) ? NodeCosts[costSubTileType1] : 0;
                     int costSubTile2 = (costSubTileType2 >= 0) ? NodeCosts[costSubTileType2] : 0;
                     node.BaseWalkCost = (byte)((costSubTile1 * (1f-costTileFactor)) + (costSubTile2 * costTileFactor));
+
+                    // 7 = rock
+                    // 8 = water
+                    int walkType = costSubTileType1;
+                    float walkFactor = 1f - costTileFactor;
+                    if (costSubTileType2 == 7 || costSubTileType2 == 8 || costSubTileType1 == -1)
+                    {
+                        walkType = costSubTileType2;
+                        walkFactor = costTileFactor;
+                    }
+
+                    if (walkType < 0 || walkType == 8 || (walkType == 7 && walkFactor > 0.25f))
+                        node.Flags |= MapNodeFlags.BlockedTerrain;
                 }
             }
 

@@ -660,6 +660,22 @@ class MapLogic
         }
     }
 
+    public bool WaitLoaded(long maxTime)
+    {
+        if (IsLoaded)
+            return true;
+
+        System.Diagnostics.Stopwatch w = System.Diagnostics.Stopwatch.StartNew();
+        while (w.ElapsedMilliseconds < maxTime)
+        {
+            if (IsLoaded)
+                return true;
+            Thread.Sleep(100);
+        }
+
+        return false;
+    }
+
     public void InitFromFile(string filename, bool abortPrevious)
     {
         lock (this)

@@ -172,12 +172,11 @@ namespace Spells
                         }
                     }
 
+                    float power = Spell.GetScanRange();
+                    int lightlevel = (int)(64 + (power * 32));
+
                     Server.SpawnProjectileEOT(AllodsProjectile.SpecLight, Spell.User, x + 0.5f, y + 0.5f, 0, (int)(MapLogic.TICRATE * Spell.GetDuration()), MapLogic.TICRATE / 2, 0, 0, 16, proj =>
                     {
-                        float power = Spell.GetIndirectPower();
-
-                        proj.LightLevel = (int)(64+(power * 32));
-
                         MapNode pnode = MapLogic.Instance.Nodes[proj.X, proj.Y];
                         for (int i = 0; i < pnode.Objects.Count; i++)
                         {
@@ -194,7 +193,7 @@ namespace Spells
                             mov.AddSpellEffects(eff);
                         }
 
-                    });
+                    }, lightlevel);
                 }
             }
 
@@ -238,12 +237,11 @@ namespace Spells
                         }
                     }
 
+                    float power = Spell.GetScanRange();
+                    int lightlevel = (int)(-(power * 32));
+
                     Server.SpawnProjectileEOT(AllodsProjectile.SpecDarkness, Spell.User, x + 0.5f, y + 0.5f, 0, (int)(MapLogic.TICRATE * Spell.GetDuration()), MapLogic.TICRATE/2, 0, 0, 16, proj =>
                     {
-                        float power = Spell.GetIndirectPower();
-
-                        proj.LightLevel = (int)(-(power * 32));
-
                         MapNode pnode = MapLogic.Instance.Nodes[proj.X, proj.Y];
                         for (int i = 0; i < pnode.Objects.Count; i++)
                         {
@@ -260,7 +258,7 @@ namespace Spells
                             mov.AddSpellEffects(eff);
                         }
 
-                    });
+                    }, lightlevel);
                 }
             }
 

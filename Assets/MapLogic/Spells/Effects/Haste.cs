@@ -56,6 +56,7 @@ namespace SpellEffects
         public override void ProcessStats(UnitStats stats)
         {
             stats.Speed += (byte)Power;
+            stats.RotationSpeed += (byte)Power;
         }
     }
 }

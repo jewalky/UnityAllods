@@ -594,6 +594,36 @@ namespace ClientCommands
     }
 
     [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.UnitPackedStats)]
+    public struct UnitPackedStats : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public byte[] PackedStats;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
+            if (unit == null)
+            {
+                Debug.LogFormat("Attempted to set packed stats for nonexistent unit {0}", Tag);
+                return true;
+            }
+
+            unit.Stats.MergePackedStats(PackedStats);
+            unit.CalculateVision();
+            unit.DoUpdateView = true;
+            unit.DoUpdateInfo = true;
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
     [NetworkPacketId(ClientIdentifiers.UnitItemPickup)]
     public struct UnitItemPickup : IClientCommand
     {
@@ -612,7 +642,7 @@ namespace ClientCommands
             MapUnit unit = MapLogic.Instance.GetUnitByTag(Tag);
             if (unit == null)
             {
-                Debug.LogFormat("Attempted to set pick up with nonexistent unit {0}", Tag);
+                Debug.LogFormat("Attempted to pick up with nonexistent unit {0}", Tag);
                 return true;
             }
 
@@ -939,6 +969,8 @@ namespace ClientCommands
         public int EndFrames;
         [ProtoMember(10)]
         public int ZOffset;
+        [ProtoMember(11)]
+        public int LightLevel;
 
         public bool Process()
         {
@@ -961,7 +993,7 @@ namespace ClientCommands
                 }
             }
 
-            Server.SpawnProjectileEOT(TypeID, source, X, Y, Z, Duration, Duration, StartFrames, EndFrames, ZOffset);
+            Server.SpawnProjectileEOT(TypeID, source, X, Y, Z, Duration, Duration, StartFrames, EndFrames, ZOffset, null, LightLevel);
             return true;
         }
     }

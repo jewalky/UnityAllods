@@ -188,7 +188,7 @@ public class MapHuman : MapUnit
         return Mathf.Log(v) / Mathf.Log(1.1f);
     }
 
-    public override void UpdateItems()
+    protected override void OnUpdateItems()
     {
         if (IsHero)
         {
@@ -254,7 +254,8 @@ public class MapHuman : MapUnit
         }
 
         // if not client, recalc stats
-        // actually, let client do this too, we send it the required info anyway
+        if (NetworkManager.IsClient)
+            return;
         // max brms
         short maxBody = 100, maxReaction = 100, maxMind = 100, maxSpirit = 100;
         if ((Gender & GenderFlags.MaleFighter) == GenderFlags.MaleFighter)

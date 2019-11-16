@@ -117,7 +117,7 @@ public class MouseCursor : MonoBehaviour {
         CurWait = CreateCursor("graphics/cursors/wait/sprites.16a", 16, 16, 0.05f);
         CurCantPut = CreateCursor("graphics/cursors/cantput/sprites.16a", 40, 40, 0);
         CurPickup = CreateCursor("graphics/cursors/pickup/sprites.16a", 13, 13, 0.08f);
-        CurCast = CreateCursor("graphics/cursors/cast/sprites.16a", 13, 13, 0.08f);
+        CurCast = CreateCursor("graphics/cursors/cast/sprites.16a", 15, 15, 0.08f);
         CurSmallDefault = CreateCursor("graphics/cursors/sdefault/sprites.16a", 2, 2, 0);
         SetCursor(CurDefault);
 

@@ -6,12 +6,12 @@ using UnityEngine;
 
 namespace SpellEffects
 {
-    class Haste : TimedEffect
+    class Darkness : TimedEffect
     {
         bool Attached = false;
-        int Power = 0;
+        float Power = 0;
 
-        public Haste(int duration, int power) : base(duration)
+        public Darkness(int duration, float power) : base(duration)
         {
             Attached = false;
             Power = power;
@@ -19,17 +19,25 @@ namespace SpellEffects
 
         public override bool OnAttach(MapUnit unit)
         {
-            // always replace existing haste effects
-            List<Haste> hastes = unit.GetSpellEffects<Haste>();
+            // remove light effects
+            List<Light> lights = unit.GetSpellEffects<Light>();
+            for (int i = 0; i < lights.Count; i++)
+                unit.RemoveSpellEffect(lights[i]);
 
-            foreach (Haste h in hastes)
+            // replace less powerful effects
+            List<Darkness> darks = unit.GetSpellEffects<Darkness>();
+
+            foreach (Darkness h in darks)
             {
-                if (h.Power > Power)
-                    return false;
-            }
+                if (Power > h.Power)
+                {
+                    h.Power = Power;
+                    unit.UpdateItems();
+                }
 
-            foreach (Haste h in hastes)
-                unit.RemoveSpellEffect(h);
+                h.Timer = 0;
+                return false;
+            }
 
             return true;
         }
@@ -55,8 +63,7 @@ namespace SpellEffects
 
         public override void ProcessStats(UnitStats stats)
         {
-            stats.Speed += (byte)Power;
-            stats.RotationSpeed += (byte)Power;
+            stats.ScanRange -= Power;
         }
     }
 }

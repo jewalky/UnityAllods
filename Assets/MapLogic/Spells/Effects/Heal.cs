@@ -77,8 +77,6 @@ namespace SpellEffects
 
             public bool Update()
             {
-                if (!Unit.IsLinked || !Unit.IsAlive)
-                    return false;
                 float cX = Unit.X + Unit.FracX + Unit.Width / 2f;
                 float cY = Unit.Y + Unit.FracY + Unit.Height / 2f;
                 float zatUnit = MapLogic.Instance.GetHeightAt(Unit.X + Unit.FracX + (float)Unit.Width / 2,

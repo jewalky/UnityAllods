@@ -141,6 +141,7 @@ class MapLogic
             {
                 foreach (MapObject mobj in Nodes[x, y].Objects)
                 {
+                    mobj.DoUpdateView = true;
                     if (mobj is IDynlight)
                     {
                         int lval = ((IDynlight)mobj).GetLightValue();
@@ -349,7 +350,11 @@ class MapLogic
         for (int i = 0; i < Objects.Count; i++)
         {
             MapObject mobj = Objects[i];
+            MapObject nextMobj = (i + 1 < Objects.Count) ? Objects[i + 1] : null;
             mobj.Update();
+            // list changed (current object was removed)
+            if ((i >= Objects.Count) || Objects[i] == nextMobj)
+                i--;
         }
 
         // update local scanrange every few tics (every 5?)
@@ -655,6 +660,22 @@ class MapLogic
         }
     }
 
+    public bool WaitLoaded(long maxTime)
+    {
+        if (IsLoaded)
+            return true;
+
+        System.Diagnostics.Stopwatch w = System.Diagnostics.Stopwatch.StartNew();
+        while (w.ElapsedMilliseconds < maxTime)
+        {
+            if (IsLoaded)
+                return true;
+            Thread.Sleep(100);
+        }
+
+        return false;
+    }
+
     public void InitFromFile(string filename, bool abortPrevious)
     {
         lock (this)
@@ -911,9 +932,9 @@ class MapLogic
         unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Meteoric Crossbow {damagemax=500}"));
         unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Magic Wood Staff {castSpell=Drain_Life:100}"));
         for (int i = 0; i < 50; i++)
-            unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("SuperScroll Teleport"));
-        for (int i = 0; i < 250; i++)
-            unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Scroll Teleport"));
+            unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Scroll Light-"));
+        for (int i = 0; i < 50; i++)
+            unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Scroll Darkness"));
 
 
         return unit;

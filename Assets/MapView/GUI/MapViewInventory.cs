@@ -20,21 +20,22 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
     private static Texture2D InvArrow4 = null;
 
     private int ItemCount;
-    
+
     public void Awake()
     {
-        ItemCount = (MainCamera.Width - 176 - 64) / 80; // each arrow is 32 in width
         View = Utils.CreateObjectWithScript<ItemView>();
         View.transform.parent = transform;
         View.transform.localScale = new Vector3(1, 1, 1);
         View.transform.localPosition = new Vector3(32, 6, -1);
-        View.InvScale = 1;
-        View.InvWidth = (int)(ItemCount / View.InvScale);
-        View.InvHeight = (int)(1 / View.InvScale);
     }
 
     public void Start()
     {
+        ItemCount = (MainCamera.Width - 176 - 64) / 80; // each arrow is 32 in width
+        View.InvScale = 1;
+        View.InvWidth = (int)(ItemCount / View.InvScale);
+        View.InvHeight = (int)(1 / View.InvScale);
+
         UiManager.Instance.Subscribe(this);
 
         if (InvFrame == null) InvFrame = Images.LoadImage("graphics/interface/invframe.bmp", 0, Images.ImageType.AllodsBMP);

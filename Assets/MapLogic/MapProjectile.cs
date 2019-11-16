@@ -347,9 +347,6 @@ public class MapProjectileLogicEOT : IMapProjectileLogic
 
     public bool Update()
     {
-        if (Projectile.Class == null)
-            return false;
-
         if (TimerAtStart == -1)
             TimerAtStart = MapLogic.Instance.LevelTime;
 
@@ -359,6 +356,9 @@ public class MapProjectileLogicEOT : IMapProjectileLogic
 
         if (timeOffset >= Duration) // die
             return false;
+
+        if (Projectile.Class == null)
+            return true;
 
         float ll = 0;
 
@@ -453,6 +453,7 @@ public class MapProjectile : MapObject, IDynlight
     public override MapObjectType GetObjectType() { return MapObjectType.Effect; }
     protected override Type GetGameObjectType() { return typeof(MapViewProjectile); }
 
+    public AllodsProjectile ClassID;
     public ProjectileClass Class;
 
     public float FracX;
@@ -636,15 +637,17 @@ public class MapProjectile : MapObject, IDynlight
 
     private void InitProjectile(int id, IPlayerPawn source, IMapProjectileLogic logic, MapProjectileCallback cb)
     {
+        ClassID = (AllodsProjectile)id;
         Class = ProjectileClassLoader.GetProjectileClassById(id);
         if (Class == null)
         {
             // make sure that at least ID is valid
-            if (Enum.IsDefined(typeof(AllodsProjectile), id))
+            if (!Enum.IsDefined(typeof(AllodsProjectile), id))
+            {
+                // otherwise spam log
+                Debug.LogFormat("Invalid projectile created (id={0})", id);
                 return;
-            // otherwise spam log
-            Debug.LogFormat("Invalid projectile created (id={0})", id);
-            return;
+            }
         }
 
         Source = source;

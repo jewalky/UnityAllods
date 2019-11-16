@@ -201,6 +201,11 @@ public class MapViewObstacle : MapViewObject, IObjectManualUpdate
                 spriteSet = true;
             }
 
+            for (int i = 0; i < newMaterialCount; i++)
+            {
+                Renderer.materials[i].SetFloat("_Lightness", 0.5f + (float)MapLogic.Instance.Nodes[LogicObstacle.X, LogicObstacle.Y].DynLight / 255);
+            }
+
             int actualFrame = LogicObstacle.Class.Frames[LogicObstacle.CurrentFrame].Frame + LogicObstacle.Class.Index;
             Vector2 xP = MapView.Instance.MapToScreenCoords(LogicObject.X + 0.5f, LogicObject.Y + 0.5f, 1, 1);
             transform.localPosition = new Vector3(xP.x - (float)sprites.Frames[actualFrame].Width * LogicObstacle.Class.CenterX,

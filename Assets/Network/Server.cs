@@ -433,9 +433,9 @@ public class Server
         SpawnProjectileSimple((int)id, source, x, y, z, animspeed, scale, start, end);
     }
 
-    public static void SpawnProjectileEOT(AllodsProjectile id, IPlayerPawn source, float x, float y, float z, int duration, int frequency, int startframes = 0, int endframes = 0, int zoffs = -128, MapProjectileCallback cb = null)
+    public static void SpawnProjectileEOT(AllodsProjectile id, IPlayerPawn source, float x, float y, float z, int duration, int frequency, int startframes = 0, int endframes = 0, int zoffs = -128, MapProjectileCallback cb = null, int lightlevel = -1)
     {
-        SpawnProjectileEOT((int)id, source, x, y, z, duration, frequency, startframes, endframes, zoffs, cb);
+        SpawnProjectileEOT((int)id, source, x, y, z, duration, frequency, startframes, endframes, zoffs, cb, lightlevel);
     }
 
     public static void SpawnProjectileHoming(int id, IPlayerPawn source, float x, float y, float z, MapUnit target, float speed, MapProjectileCallback cb = null)
@@ -605,9 +605,11 @@ public class Server
         }
     }
 
-    public static void SpawnProjectileEOT(int id, IPlayerPawn source, float x, float y, float z, int duration, int frequency, int startframes = 0, int endframes = 0, int zoffs = -128, MapProjectileCallback cb = null)
+    public static void SpawnProjectileEOT(int id, IPlayerPawn source, float x, float y, float z, int duration, int frequency, int startframes = 0, int endframes = 0, int zoffs = -128, MapProjectileCallback cb = null, int lightlevel = 0)
     {
         MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicEOT(duration, frequency, startframes, endframes), cb);
+        if (lightlevel != 0)
+            proj.LightLevel = lightlevel;
         proj.ZOffset = zoffs;
         proj.SetPosition(x, y, z);
         MapLogic.Instance.Objects.Add(proj);
@@ -643,6 +645,7 @@ public class Server
                 app.StartFrames = startframes;
                 app.EndFrames = endframes;
                 app.ZOffset = zoffs;
+                app.LightLevel = lightlevel;
 
                 client.SendCommand(app);
             }
@@ -704,6 +707,24 @@ public class Server
                 statsCmd.HealthMax = unit.Stats.HealthMax;
                 statsCmd.Mana = unit.Stats.Mana;
                 statsCmd.ManaMax = unit.Stats.ManaMax;
+                client.SendCommand(statsCmd);
+            }
+        }
+    }
+
+    public static void NotifyUnitPackedStats(MapUnit unit, UnitStats.ModifiedFlags flags)
+    {
+        foreach (ServerClient client in ServerManager.Clients)
+        {
+            if (client.State != ClientState.Playing)
+                continue;
+
+            Player p = MapLogic.Instance.GetNetPlayer(client);
+            if (unit.IsVisibleForNetPlayer(p))
+            {
+                ClientCommands.UnitPackedStats statsCmd;
+                statsCmd.Tag = unit.Tag;
+                statsCmd.PackedStats = unit.Stats.PackStats(flags);
                 client.SendCommand(statsCmd);
             }
         }

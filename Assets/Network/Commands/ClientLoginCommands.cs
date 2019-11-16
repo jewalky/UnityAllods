@@ -47,6 +47,8 @@ namespace ClientCommands
                 reqCmd.Nickname = Config.cl_nickname;
                 ClientManager.SendCommand(reqCmd);
                 MapView.Instance.InitFromFile(actualFilename);
+                // wait
+                MapLogic.Instance.WaitLoaded(30000);
             }
             return true;
         }

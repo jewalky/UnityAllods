@@ -98,7 +98,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             if (_Player != null)
                 _Player.Objects.Remove(this);
             _Player = value;
-            _Player.Objects.Add(this);
+            if (_Player != null)
+                _Player.Objects.Add(this);
         }
     }
 
@@ -372,7 +373,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             }
         }
 
-        UpdateItems();
+        OnUpdateItems();
     }
 
     public override void Dispose()
@@ -384,8 +385,11 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     }
 
     // this is called when on-body items or effects are modified
-    public virtual void UpdateItems()
+    protected virtual void OnUpdateItems()
     {
+        if (NetworkManager.IsClient)
+            return;
+
         // 
         float origHealth = (float)Stats.Health / Stats.HealthMax;
         float origMana = (float)Stats.Mana / Stats.ManaMax;
@@ -402,6 +406,19 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         DoUpdateView = true;
         DoUpdateInfo = true;
+    }
+
+    public void UpdateItems()
+    {
+        UnitStats oldStats = Stats;
+        OnUpdateItems();
+
+        if (NetworkManager.IsServer)
+        {
+            UnitStats.ModifiedFlags statsChanged = oldStats.CompareStats(Stats);
+            if (statsChanged != 0)
+                Server.NotifyUnitPackedStats(this, statsChanged);
+        }
     }
 
     public bool CanDetectUnit(MapUnit other)
@@ -569,8 +586,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         {
             if (!SpellEffects[i].Process())
             {
-                SpellEffects[i].OnDetach();
+                global::SpellEffects.Effect ef = SpellEffects[i];
                 SpellEffects.RemoveAt(i);
+                ef.OnDetach();
                 i--;
             }
         }
@@ -1392,7 +1410,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Spell topSpell = null;
         foreach (Item item in ItemsPack)
         {
-            if ((item.Class.ItemID & 0xFFC0) != 0x0E00) // special/scrolls
+            if (!item.Class.IsScroll) // special/scrolls
                 continue;
             if (itemId != 0 && item.Class.ItemID != itemId)
                 continue;

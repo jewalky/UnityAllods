@@ -11,6 +11,14 @@ Shader "Custom/MainShaderPaletted"
 		[MaterialToggle] DoClip("Clipping enabled", Float) = 0
 		ClipArea("Clipping area", Vector) = (0,0,0,0)
 		[MaterialToggle] PixelSnap("Pixel snap", Float) = 0
+
+		// for UI
+		_StencilComp("Stencil Comparison", Float) = 0
+		_Stencil("Stencil ID", Float) = 0
+		_StencilOp("Stencil Operation", Float) = 0
+		_StencilWriteMask("Stencil Write Mask", Float) = 255
+		_StencilReadMask("Stencil Read Mask", Float) = 255
+		_ColorMask("Color Mask", Float) = 15
 	}
 
 	SubShader
@@ -23,6 +31,17 @@ Shader "Custom/MainShaderPaletted"
 			"PreviewType" = "Plane"
 			"CanUseSpriteAtlas" = "True"
 		}
+
+		Stencil
+		{
+			Ref[_Stencil]
+			Comp[_StencilComp]
+			Pass[_StencilOp]
+			ReadMask[_StencilReadMask]
+			WriteMask[_StencilWriteMask]
+		}
+
+		ColorMask[_ColorMask]
 
 		Cull Off
 		Lighting Off

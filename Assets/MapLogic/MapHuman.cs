@@ -155,7 +155,7 @@ public class MapHuman : MapUnit
         }
 
         CoreStats.HealthMax = -1;
-        UpdateItems();
+        OnUpdateItems();
 
         // fix health and mana
         Stats.TrySetHealth(Stats.HealthMax);

@@ -373,7 +373,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             }
         }
 
-        UpdateItems();
+        OnUpdateItems();
     }
 
     public override void Dispose()

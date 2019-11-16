@@ -16,26 +16,30 @@ public class IdleState : IUnitState
     }
 }
 
-public class MoveState : IUnitState
+class UnitStateWalker
 {
-    private MapUnit Unit;
-    private int WalkX;
-    private int WalkY;
+    private const int SCAN_RATE = MapLogic.TICRATE;
+
     private int LastGoodPath;
     private int LastBadPath;
+    private int RandomOffset;
+    private static System.Random Random = null;
 
-    public MoveState(MapUnit unit, int x, int y)
+    public UnitStateWalker()
     {
-        Unit = unit;
-        WalkX = x;
-        WalkY = y;
         LastBadPath = 0;
         LastGoodPath = MapLogic.Instance.LevelTime;
+        if (Random == null)
+            Random = new System.Random();
+        RandomOffset = SCAN_RATE + (Random.Next(0, SCAN_RATE) - (SCAN_RATE / 2));
     }
 
-    // made static because it's also used by other actions
-    public static bool TryWalkTo(MapUnit unit, int walkX, int walkY, int walkWidth, int walkHeight, float distance = 0)
+    public bool TryWalkTo(MapUnit unit, int walkX, int walkY, int walkWidth, int walkHeight, float distance = 0)
     {
+        // check if we should not search yet
+        if (LastBadPath > LastGoodPath && LastBadPath + RandomOffset > MapLogic.Instance.LevelTime)
+            return false; // don't check for some time after bad path
+
         // check if target is walkable for us (statically)
         if (distance < 0)
             distance = 0;
@@ -44,42 +48,17 @@ public class MoveState : IUnitState
         // more than 0x0 = unit
         // for now just call pathfinding here
 
+        LastBadPath = MapLogic.Instance.LevelTime;
+
         // try to pathfind
         Vector2i point = unit.DecideNextMove(walkX, walkY, walkWidth, walkHeight, distance);
         if (point == null)
-        {
             return false;
-        }
-
-        /*int sbd = 32;
-        if (sbd > path.Count) sbd = path.Count;
-        for (int i = 0; i < sbd; i++)
-        {
-            if (!unit.Interaction.CheckWalkableForUnit(path[i].x, path[i].y, false))
-            {
-                // one of nodes in statically found path (up to 32 nodes ahead) is non-walkable.
-                // here we try to build another path around it instead.
-                // if it's not found, we continue to walk along the old path.
-                List<Vector2i> path2 = null;
-                int pnum = path.Count - 1;
-                while (path2 == null && pnum >= 0)
-                {
-                    path2 = unit.DecideNextMove(path[pnum].x, path[pnum].y, false, distance);
-                    pnum--;
-                }
-
-                if (path2 != null)
-                    path = path2;
-                else if (i == 0)
-                    return false; // next node is not walkable. this means we got right into a wall
-
-                break;
-            }
-        }*/
 
         // if NEXT node is not walkable, we drop into idle state.
         if (unit.Interaction.CheckWalkableForUnit(point.x, point.y, false))
         {
+            LastGoodPath = MapLogic.Instance.LevelTime;
             // next path node found
             // notify clients
             unit.AddActions(new MoveAction(unit, point.x, point.y), new RotateAction(unit, unit.FaceCell(point.x, point.y)));
@@ -87,6 +66,26 @@ public class MoveState : IUnitState
         }
 
         return false;
+    }
+}
+
+public class MoveState : IUnitState
+{
+    private MapUnit Unit;
+    private int WalkX;
+    private int WalkY;
+    private int LastGoodPath;
+    private int LastBadPath;
+    private UnitStateWalker Walker;
+
+    public MoveState(MapUnit unit, int x, int y)
+    {
+        Unit = unit;
+        WalkX = x;
+        WalkY = y;
+        LastBadPath = 0;
+        LastGoodPath = MapLogic.Instance.LevelTime;
+        Walker = new UnitStateWalker();
     }
 
     public bool Process()
@@ -100,7 +99,7 @@ public class MoveState : IUnitState
         if (MapLogic.Instance.LevelTime - LastGoodPath > 5 * MapLogic.TICRATE && LastBadPath > LastGoodPath)
             return false; // if last good path was found more time ago, and last path was bad... break out, but wait for 5 seconds
 
-        if (!TryWalkTo(Unit, WalkX, WalkY, 0, 0))
+        if (!Walker.TryWalkTo(Unit, WalkX, WalkY, 0, 0))
         {
             LastBadPath = MapLogic.Instance.LevelTime;
             return true;
@@ -115,11 +114,13 @@ public class AttackState : IUnitState
 {
     private MapUnit Unit;
     private MapUnit TargetUnit;
+    private UnitStateWalker Walker;
 
     public AttackState(MapUnit unit, MapUnit targetUnit)
     {
         Unit = unit;
         TargetUnit = targetUnit;
+        Walker = new UnitStateWalker();
     }
 
     public bool Process()
@@ -158,7 +159,7 @@ public class AttackState : IUnitState
         {
             //Debug.LogFormat("ID {0} TRY WALK TO", Unit.ID);
             // make one step to the target.
-            MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, TargetUnit.Width, TargetUnit.Height, Unit.Interaction.GetAttackRange());
+            Walker.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, TargetUnit.Width, TargetUnit.Height, Unit.Interaction.GetAttackRange());
         }
 
         return true;
@@ -170,12 +171,14 @@ public class PickupState : IUnitState
     private MapUnit Unit;
     private int TargetX;
     private int TargetY;
+    private UnitStateWalker Walker;
 
     public PickupState(MapUnit unit, int x, int y)
     {
         Unit = unit;
         TargetX = x;
         TargetY = y;
+        Walker = new UnitStateWalker();
     }
 
     public bool Process()
@@ -216,7 +219,7 @@ public class PickupState : IUnitState
         }
         else
         {
-            MoveState.TryWalkTo(Unit, TargetX, TargetY, 0, 0);
+            Walker.TryWalkTo(Unit, TargetX, TargetY, 0, 0);
             return true;
         }
     }
@@ -231,6 +234,7 @@ public class CastState : IUnitState
     private int TargetY;
     private bool Executed;
     private bool IsAttack;
+    private UnitStateWalker Walker;
 
     public CastState(MapUnit unit, Spell spell, MapUnit targetUnit)
     {
@@ -240,6 +244,7 @@ public class CastState : IUnitState
         TargetX = TargetY = -1;
         Executed = false;
         IsAttack = Spell.IsAttackSpell(spell.SpellID);
+        Walker = new UnitStateWalker();
     }
 
     public CastState(MapUnit unit, Spell spell, int targetX, int targetY)
@@ -251,6 +256,7 @@ public class CastState : IUnitState
         TargetY = targetY;
         Executed = false;
         IsAttack = global::Spell.IsAttackSpell(spell.SpellID);
+        Walker = new UnitStateWalker();
     }
 
     public bool Process()
@@ -316,8 +322,8 @@ public class CastState : IUnitState
         {
             // make one step to the target.
             if (TargetUnit != null)
-                MoveState.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, TargetUnit.Width, TargetUnit.Height, Spell.GetDistance());
-            else MoveState.TryWalkTo(Unit, TargetX, TargetY, 0, 0, Spell.GetDistance());
+                Walker.TryWalkTo(Unit, TargetUnit.X, TargetUnit.Y, TargetUnit.Width, TargetUnit.Height, Spell.GetDistance());
+            else Walker.TryWalkTo(Unit, TargetX, TargetY, 0, 0, Spell.GetDistance());
         }
 
         return true;

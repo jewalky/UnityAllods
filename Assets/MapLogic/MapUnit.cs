@@ -518,14 +518,16 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         if (Target != null)
         {
             // check if we are currently doing attack state
-            SetState(new AttackState(this, Target));
+            if (!(States[States.Count-1] is AttackState))
+                SetState(new AttackState(this, Target));
         }
         else
         {
             // check if we are at our respawn point
             if (X != LastSpawnX || Y != LastSpawnY)
             {
-                SetState(new MoveState(this, LastSpawnX, LastSpawnY));
+                if (!(States[States.Count - 1] is MoveState))
+                    SetState(new MoveState(this, LastSpawnX, LastSpawnY));
             }
         }
 

@@ -30,7 +30,7 @@ public class MapNode
 class MapLogic
 {
 
-//* WarBeginner *//
+//* WB_pathfind
 	private MapWizard _Wizard = null;
 	public MapWizard Wizard
 	{
@@ -41,7 +41,7 @@ class MapLogic
 			return _Wizard;
 		}
 	}
-//* end *//
+//* end
 
     private static MapLogic _Instance = null;
     public static MapLogic Instance
@@ -378,9 +378,9 @@ class MapLogic
             MapView.Instance.OnMapUnloaded();
             return false;
         });
-//* WarBeginner *//
+//* WB_pathfind
 	Wizard.Unload();
-//* end *//
+//* end
     }
 
     private void InitGeneric()
@@ -594,8 +594,9 @@ class MapLogic
                 }
             }
 
+//* WB_pathfind
             Wizard.LoadMap(this);
-
+//* end
             // only if loaded
             MapStructure = mapStructure;
             FileName = filename;

@@ -76,15 +76,6 @@ public class MapUnitAggro
 
 public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 {
-// MapWizard updating
-    public int X { get {return base.X;} set {base.X=value; UpdateWizard();} }
-    public int Y { get {return base.Y;} set {base.Y=value; UpdateWizard();} }
-    private int _WizardID = -1;
-    public int WizardID { get {return _WizardID;} }
-    public void UpdateWizard() {
-    	MapLogic.Instance.Wizard.UpdateUnit(this,ref _WizardID);
-    }
-//
     public override MapObjectType GetObjectType() { return MapObjectType.Monster; }
     protected override Type GetGameObjectType() { return typeof(MapViewUnit); }
 
@@ -383,12 +374,10 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         }
 
         OnUpdateItems();
-        MapLogic.Instance.Wizard.UpdateUnit(this,ref _WizardID);
     }
 
     public override void Dispose()
     {
-        MapLogic.Instance.Wizard.UpdateUnit(null,ref _WizardID);
         Flags = 0; // remove all indicators
         if (_Player != null)
             _Player.Objects.Remove(this);
@@ -618,8 +607,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         else if (Stats.Health > 0 && (IsDying || !IsAlive))
         {
             if (!IsAlive)
-                {LinkToWorld();
-                 UpdateWizard();}
+                LinkToWorld();
             IsDying = false;
             IsAlive = true;
         }
@@ -648,7 +636,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 IsDying = false;
                 DoUpdateView = true;
                 UnlinkFromWorld();
-                UpdateWizard();
                 for (int i = 0; i < SpellEffects.Count; i++)
                     SpellEffects[i].OnDetach();
                 SpellEffects.Clear();

@@ -420,6 +420,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             meanDynLight /= countDynLight;
         else meanDynLight = 0f;
 
+        if (meanDynLight > 0.75f)
+            meanDynLight = 0.75f;
+
         for (int i = 0; i < Renderer.materials.Length; i++)
         {
             Renderer.materials[i].SetFloat("_Lightness", baseLightness + meanDynLight);

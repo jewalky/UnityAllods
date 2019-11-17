@@ -746,7 +746,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         switch (MapLogic.Instance.PathfindingType)
         {
             case PathfindingType.Astar:
-                return new AstarPathfinder().FindPath(unit, x, y, toStartX, toStartX, toEndX, toEndY, distance, staticOnly, limit);
+                return new AstarPathfinder().FindPath(unit, x, y, toStartX, toStartY, toEndX, toEndY, distance, staticOnly, limit);
             case PathfindingType.Flood:
                 List<Vector2i> p = MapLogic.Instance.Wizard.GetShortestPath(unit, staticOnly, distance, x, y, toStartX, toStartY, toEndX, toEndY, limit);
                 if (p != null && (p[0].x != x || p[0].y != y))

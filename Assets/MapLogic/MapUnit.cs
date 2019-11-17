@@ -928,7 +928,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             yield return null;
     }
 
-    /* WarBeginner */
     public Vector2i DecideNextMove(int targetX, int targetY, int targetWidth, int targetHeight, float distance = 0)
     {
         if (distance < 0)
@@ -938,14 +937,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         int top = targetY;
         int right = targetX;
         int bottom = targetY;
-
-        if (targetWidth > 0 || targetHeight > 0)
-        {
-            left -= 1;
-            top -= 1;
-            right += targetWidth;
-            bottom += targetHeight;
-        }
 
         // start or restart pathfinding.
         // or continue, if same path is being looked for
@@ -975,7 +966,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             return null;
         }
     }
-    //* end *//
 
 
     public int FaceCell(int x, int y)

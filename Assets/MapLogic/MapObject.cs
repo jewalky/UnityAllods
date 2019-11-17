@@ -148,6 +148,9 @@ public class MapObject : IDisposable
         }
 
         MapNode[,] nodes = MapLogic.Instance.Nodes;
+//* WB_pathfind
+        MapWizard Wizard = MapLogic.Instance.Wizard;
+//* end
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;
         for (int ly = y - 1; ly < y + Height + 1; ly++)
@@ -161,6 +164,9 @@ public class MapObject : IDisposable
                 {
                     node.Objects.Remove(this); // if any, obviously.
                     node.Flags &= ~GetNodeLinkFlags(lx - X, ly - Y);
+//* WB_pathfind
+                    Wizard.UpdateNode(lx, ly, node);
+//* end
                 }
             }
         }
@@ -177,6 +183,9 @@ public class MapObject : IDisposable
         }
 
         MapNode[,] nodes = MapLogic.Instance.Nodes;
+//* WB_pathfind
+        MapWizard Wizard = MapLogic.Instance.Wizard;
+//* end
         int mw = MapLogic.Instance.Width;
         int mh = MapLogic.Instance.Height;
         for (int ly = y; ly < y + Height; ly++)
@@ -189,6 +198,9 @@ public class MapObject : IDisposable
                 if (!node.Objects.Contains(this))
                     node.Objects.Add(this); // if any, obviously.
                 node.Flags |= GetNodeLinkFlags(lx-X, ly-Y);
+//* WB_pathfind
+                Wizard.UpdateNode(lx, ly, node);
+//* end
             }
         }
     }

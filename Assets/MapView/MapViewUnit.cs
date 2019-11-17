@@ -294,8 +294,6 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         {
             float cxB = (float)spriteB.Frames[frame].Width * LogicUnit.Class.CenterX;
             float cyB = (float)spriteB.Frames[frame].Height * LogicUnit.Class.CenterY;
-            cxB += (spriteB.Frames[frame].Width - sprite.Frames[frame].Width) / 2;
-            cyB += (spriteB.Frames[frame].Height - sprite.Frames[frame].Height) / 2;
             for (int i = 4; i < 8; i++)
                 qv[i] -= new Vector3(cxB, cyB, 0);
         }

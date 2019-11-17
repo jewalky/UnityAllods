@@ -232,7 +232,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         }
         else
         {
-            float shadowOffs1 = shadowOffs * 64;
+            float rShadowOffs = shadowOffs;
+            float shadowOffs1 = rShadowOffs * 64;
             float shadowOffs2 = shadowOffs1 + sW;
             shadowOffs = -4;
             qv[pp++] = new Vector3(shadowOffs1, shadowOffs, 0);
@@ -243,7 +244,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             // calculate offset for spriteB, if it's not the same size
             if (spriteB != null)
             {
-                float shadowOffs1B = shadowOffs * 64;
+                float shadowOffs1B = rShadowOffs * 64;
                 float shadowOffs2B = shadowOffs1B + sWB;
                 // additional sprite
                 qv[pp++] = new Vector3(shadowOffs1B, shadowOffs, 0);

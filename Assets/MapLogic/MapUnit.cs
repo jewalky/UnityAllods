@@ -479,7 +479,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 ag.LastSeen = MapLogic.Instance.LevelTime;
             }
             // check if last seen a lot of time ago ( > 5 seconds for now)
-            if (MapLogic.Instance.LevelTime - ag.LastSeen > MapLogic.TICRATE * 2)
+            if (MapLogic.Instance.LevelTime - ag.LastSeen > MapLogic.TICRATE * 5)
             {
                 Aggro.RemoveAt(i);
                 i--;

@@ -45,9 +45,8 @@ class MapWizard
                 // skip cells currently taken
                 if (node.Objects.Contains(Unit))
                     continue; // if we are already on this cell, skip it as passible
-                uint tile = node.Tile;
                 MapNodeFlags flags = node.Flags;
-                if (Unit.IsWalking && (flags & MapNodeFlags.Unblocked) == 0 && (tile >= 0x1C0 && tile <= 0x2FF))
+                if (Unit.IsWalking && (flags & MapNodeFlags.Unblocked) == 0 && (flags & MapNodeFlags.BlockedTerrain) != 0)
                     return false;
                 MapNodeFlags bAir = staticOnly ? MapNodeFlags.BlockedAir : MapNodeFlags.BlockedAir | MapNodeFlags.DynamicAir;
                 MapNodeFlags bGround = staticOnly ? MapNodeFlags.BlockedGround : MapNodeFlags.BlockedGround | MapNodeFlags.DynamicGround;
@@ -91,8 +90,8 @@ class MapWizard
 	};
 
 	public int TileMoveCost(int tile) { // 0 == unwalkable tile
-		if (tile >= 0x1C0 && tile <= 0x2FF)
-			return 0;
+		//if (tile >= 0x1C0 && tile <= 0x2FF)
+		//	return 0;
 		int Mix = (tile >> 6) & 0x3;
 		int Cost1 = _CellCostBase[_CellMoveCostMixValues[Mix,1]];
 		int Cost2 = _CellCostBase[_CellMoveCostMixValues[Mix,0]];
@@ -536,8 +535,8 @@ struct TUnitType {
 
 		if (	(Node.Flags & MapNodeFlags.BlockedGround) != 0
 			|| 
-				Tile >= 0x1C0 && Tile <= 0x2FF
-				&& (Node.Flags & MapNodeFlags.Unblocked) == 0
+					(Node.Flags & MapNodeFlags.Unblocked) == 0
+				&&	(Node.Flags & MapNodeFlags.BlockedTerrain) != 0
 		)
 			result |= _CellPass_WalkingMapOnly | _CellPass_SwimingMapOnly;
 		else
@@ -557,8 +556,6 @@ struct TUnitType {
 	} // CalcNodeCellPass
 
 	public void UpdateNode(int NodeX, int NodeY, MapNode Node) { // NEED Spells value
-	//**//**//**//
-	return;
 		//**//**//**//
 		long _Last1 = _StopWatch.ElapsedTicks;
 

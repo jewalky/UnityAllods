@@ -740,6 +740,23 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         return IsFlying ? MapNodeFlags.DynamicAir : MapNodeFlags.DynamicGround;
     }
 
+    // this abstracts between different pathfinding algorithms
+    private static List<Vector2i> CallPathfindingMethod(MapUnit unit, int x, int y, int toStartX, int toStartY, int toEndX, int toEndY, float distance, bool staticOnly, int limit = -1)
+    {
+        switch (MapLogic.Instance.PathfindingType)
+        {
+            case PathfindingType.Astar:
+                return new AstarPathfinder().FindPath(unit, x, y, toStartX, toStartX, toEndX, toEndY, distance, staticOnly, limit);
+            case PathfindingType.Flood:
+                List<Vector2i> p = MapLogic.Instance.Wizard.GetShortestPath(unit, staticOnly, distance, x, y, toStartX, toStartY, toEndX, toEndY, limit);
+                if (p != null && (p[0].x != x || p[0].y != y))
+                    p.Insert(0, new Vector2i(x, y));
+                return p;
+            default:
+                return null;
+        }
+    }
+
     private int LastMoveTargetX = -1;
     private int LastMoveTargetY = -1;
     private int LastMoveTargetWidth = -1;
@@ -748,7 +765,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     private IEnumerator<Vector2i> LastPath = null;
     private IEnumerator<Vector2i> Pathfind(int left, int top, int right, int bottom, float distance)
     {
-        AstarPathfinder p = new AstarPathfinder();
         // for now generate astar path once
         bool logPathfind = false;
 
@@ -758,7 +774,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         {
             doRestart = false;
             // main check: static only
-            List<Vector2i> nodes = p.FindPath(this, X, Y, left, top, right, bottom, distance, true);
+            List<Vector2i> nodes = CallPathfindingMethod(this, X, Y, left, top, right, bottom, distance, true);
             if (nodes == null)
             {
                 while (true)
@@ -800,9 +816,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                     // find path...
                     // if not found, then we are blocked. try finding again until unblocked
                     List<Vector2i> altNodes = (lastFreeNode == nodes.Count-1) ?
-                        p.FindPath(this, X, Y, left, top, right, bottom, 0, false, 16)
+                        CallPathfindingMethod(this, X, Y, left, top, right, bottom, 0, false, 16)
                         :
-                        p.FindPath(this, X, Y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, 0, false, 16);
+                        CallPathfindingMethod(this, X, Y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, 0, false, 16);
                     bool pathfindSuccess = false;
                     bool altDoRestart;
                     do
@@ -825,17 +841,17 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                                 lastFreeNode = nodes.Count - 1;
 
                             altNodes = (lastFreeNode == nodes.Count-1) ?
-                                p.FindPath(this, X, Y, left, top, right, bottom, 0, false, 16)
+                                CallPathfindingMethod(this, X, Y, left, top, right, bottom, 0, false, 16)
                                 :
-                                p.FindPath(this, X, Y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, 0, false, 16);
+                                CallPathfindingMethod(this, X, Y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, nodes[lastFreeNode].x, nodes[lastFreeNode].y, 0, false, 16);
 
                             if (altNodes == null && nextFreeNode >= 0)
                             {
                                 // try with updated free node
                                 altNodes = (nextFreeNode == nodes.Count-1) ?
-                                    p.FindPath(this, X, Y, left, top, right, bottom, 0, false, 16)
+                                    CallPathfindingMethod(this, X, Y, left, top, right, bottom, 0, false, 16)
                                     :
-                                    p.FindPath(this, X, Y, nodes[nextFreeNode].x, nodes[nextFreeNode].y, nodes[nextFreeNode].x, nodes[nextFreeNode].y, 0, false, 16);
+                                    CallPathfindingMethod(this, X, Y, nodes[nextFreeNode].x, nodes[nextFreeNode].y, nodes[nextFreeNode].x, nodes[nextFreeNode].y, 0, false, 16);
                                 if (altNodes != null)
                                 {
                                     // if found path with nextFreeNode, but not with lastFreeNode, continue path this way...

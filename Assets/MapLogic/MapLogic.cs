@@ -28,10 +28,16 @@ public class MapNode
     public List<MapObject> Objects = new List<MapObject>();
 }
 
+public enum PathfindingType
+{
+    Astar = 0,
+    Flood = 1
+}
+
 class MapLogic
 {
 
-//* WB_pathfind
+    //* WB_pathfind
 	private MapWizard _Wizard = null;
 	public MapWizard Wizard
 	{
@@ -42,7 +48,9 @@ class MapLogic
 			return _Wizard;
 		}
 	}
-//* end
+    //* end
+
+    public PathfindingType PathfindingType { get; private set; }
 
     private static MapLogic _Instance = null;
     public static MapLogic Instance
@@ -379,9 +387,11 @@ class MapLogic
             MapView.Instance.OnMapUnloaded();
             return false;
         });
-//* WB_pathfind
-	Wizard.Unload();
-//* end
+
+        //* WB_pathfind
+        if (PathfindingType == PathfindingType.Flood)
+	        Wizard.Unload();
+        //* end
     }
 
     private void InitGeneric()
@@ -394,6 +404,8 @@ class MapLogic
     {
         try
         {
+            PathfindingType = (PathfindingType)Config.sv_pathfinding;
+
             AllodsMap mapStructure = AllodsMap.LoadFrom(filename);
             if (mapStructure == null)
             {
@@ -608,9 +620,11 @@ class MapLogic
                 }
             }
 
-//* WB_pathfind
-            Wizard.LoadMap(this);
-//* end
+            //* WB_pathfind
+            if (PathfindingType == PathfindingType.Flood)
+                Wizard.LoadMap(this);
+            //* end
+
             // only if loaded
             MapStructure = mapStructure;
             FileName = filename;

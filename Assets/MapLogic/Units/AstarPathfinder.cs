@@ -73,11 +73,6 @@ class AstarPathfinder
 
     public List<Vector2i> FindPath(MapUnit unit, int x, int y, int toStartX, int toStartY, int toEndX, int toEndY, float distance, bool staticOnly, int limit = -1)
     {
-//* WB_pathfind
-        //injection for best pathfind developing
-        //return MapLogic.Instance.Wizard.GetShortestPath(unit, false, distance, x, y, toStartX, toStartY, toEndX, toEndY, limit);
-//* end
-
         int toCenterX = (toEndX + toStartX) / 2;
         int toCenterY = (toEndY + toStartY) / 2;
         float distanceModifier = distance + (float)((toEndX - toStartX) + (toEndY - toStartY)) / 2;

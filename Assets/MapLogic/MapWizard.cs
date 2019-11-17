@@ -1,5 +1,5 @@
 ﻿//WB_pathfind developing
-#define NoMapWizardUsing
+//#define NoMapWizardUsing
 
 //кривоты:
 //разливка
@@ -248,13 +248,13 @@ class MapWizard
 	private byte[][] AllCellsCost; // [range(UnitTypeNum)][word]
 	private byte[][] AllCellsPass; // [range(UnitTypeNum)][word]
 
-	private const byte _CellPass_Walking		= 0b00000001;
-	private const byte _CellPass_Swiming		= 0b00000010;
-	private const byte _CellPass_Flying			= 0b00000100;
-	private const byte _CellPass_WalkingMapOnly	= 0b00100000;
-	private const byte _CellPass_SwimingMapOnly	= 0b01000000;
-	private const byte _CellPass_FlyingMapOnly	= 0b10000000;
-	private const byte _CellPass_No				= 0b11111111;
+	private const byte _CellPass_Walking		= 0x01;
+	private const byte _CellPass_Swiming		= 0x02;
+	private const byte _CellPass_Flying			= 0x04;
+    private const byte _CellPass_WalkingMapOnly = 0x20;
+    private const byte _CellPass_SwimingMapOnly = 0x40;
+    private const byte _CellPass_FlyingMapOnly  = 0x80;
+    private const byte _CellPass_No             = 0xFF;
 //unchecked{
 	private const byte NOT_CellPass_Walking			= unchecked((byte)~_CellPass_Walking);
 	private const byte NOT_CellPass_Swiming			= unchecked((byte)~_CellPass_Swiming);
@@ -411,9 +411,6 @@ struct TUnitType {
 	// Path finding initializing
 
 	public void LoadMap(MapLogic Logic) {
-	//**//**//**//
-	return;
-		//**//**//**//
 		_LastTick = _StopWatch.ElapsedTicks;
 		_CheckMaxLenSort = 0;
 		_CheckMaxWorkSort = 0;

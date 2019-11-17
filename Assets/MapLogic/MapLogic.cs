@@ -594,6 +594,8 @@ class MapLogic
                 }
             }
 
+            Wizard.LoadMap(this);
+
             // only if loaded
             MapStructure = mapStructure;
             FileName = filename;
@@ -638,9 +640,6 @@ class MapLogic
                 Objects.Add(proj);
                 */
             }
-
-            /* WarBeginner */
-            Wizard.LoadMap(this);
 
             GameManager.Instance.CallDelegateOnNextFrame(() =>
             {

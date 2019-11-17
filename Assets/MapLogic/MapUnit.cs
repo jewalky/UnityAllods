@@ -954,6 +954,14 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         int right = targetX;
         int bottom = targetY;
 
+        if (targetWidth > 0 || targetHeight > 0)
+        {
+            left -= 1;
+            top -= 1;
+            right += targetWidth;
+            bottom += targetHeight;
+        }
+
         // start or restart pathfinding.
         // or continue, if same path is being looked for
         if (!(LastPath != null &&

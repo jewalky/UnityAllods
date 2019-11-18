@@ -286,15 +286,15 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             }
         }
 
-        float cx = (float)sprite.Frames[frame].Width * LogicUnit.Class.CenterX;
-        float cy = (float)sprite.Frames[frame].Height * LogicUnit.Class.CenterY;
+        float cx = (int)(sprite.Frames[frame].Width * LogicUnit.Class.CenterX);
+        float cy = (int)(sprite.Frames[frame].Height * LogicUnit.Class.CenterY);
         for (int i = 0; i < 4; i++)
             qv[i] -= new Vector3(cx, cy, 0);
 
         if (spriteB != null)
         {
-            float cxB = (float)spriteB.Frames[frame].Width * LogicUnit.Class.CenterX;
-            float cyB = (float)spriteB.Frames[frame].Height * LogicUnit.Class.CenterY;
+            float cxB = (int)(spriteB.Frames[frame].Width * LogicUnit.Class.CenterX);
+            float cyB = (int)(spriteB.Frames[frame].Height * LogicUnit.Class.CenterY);
             for (int i = 4; i < 8; i++)
                 qv[i] -= new Vector3(cxB, cyB, 0);
         }

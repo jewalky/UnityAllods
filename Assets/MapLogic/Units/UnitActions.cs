@@ -45,7 +45,7 @@ public class IdleAction : IUnitAction
         if (Unit.Class.IdlePhases > 1)
         {
             Unit.IdleTime++;
-            if (Unit.IdleTime >= Unit.Class.IdleFrames[Unit.IdleFrame].Time)
+            if (Unit.IdleTime >= Unit.Class.IdleFrames[Unit.IdleFrame].Time*2)
             {
                 Unit.IdleFrame = ++Unit.IdleFrame % Unit.Class.IdlePhases;
                 Unit.IdleTime = 0;

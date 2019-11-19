@@ -14,8 +14,6 @@ public class AllodsText : MaskableGraphic
     [SerializeField]
     public Font.Align Align = Font.Align.Left;
     [SerializeField]
-    public Color Color = new Color(1, 1, 1, 1);
-    [SerializeField]
     [Range(-1, 16)]
     public int ShadowOffset = -1;
     [SerializeField]
@@ -88,7 +86,7 @@ public class AllodsText : MaskableGraphic
     {
         CheckRenderer();
 
-        material.color = Color;
+        material.color = this.color;
 
         Renderer.Text = ResolveText(Text);
         Renderer.Width = (int)rectTransform.rect.width;

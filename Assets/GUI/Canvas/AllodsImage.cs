@@ -99,10 +99,14 @@ public class AllodsImage : MaskableGraphic
         float halfW = w * rectTransform.pivot.x;
         float halfH = h * rectTransform.pivot.y;
 
-        float minU = InnerRect.xMin / _Texture.width;
-        float maxU = InnerRect.xMax / _Texture.width;
-        float minV = InnerRect.yMin / _Texture.height;
-        float maxV = InnerRect.yMax / _Texture.height;
+        float minU = 0, minV = 0, maxU = 1, maxV = 1;
+        if (_Texture != null)
+        {
+            minU = InnerRect.xMin / _Texture.width;
+            maxU = InnerRect.xMax / _Texture.width;
+            minV = InnerRect.yMin / _Texture.height;
+            maxV = InnerRect.yMax / _Texture.height;
+        }
 
         vh.AddVert(new Vector3(-halfW, -halfH+h, 0), new Color(1, 1, 1, 1), new Vector2(minU, minV));
         vh.AddVert(new Vector3(-halfW+w, -halfH+h, 0), new Color(1, 1, 1, 1), new Vector2(maxU, minV));
@@ -130,5 +134,11 @@ public class AllodsImage : MaskableGraphic
             InnerRect = new Rect(0, 0, _Texture.width, _Texture.height);
             UpdateGeometry();
         }
+    }
+
+    public override Material GetModifiedMaterial(Material baseMaterial)
+    {
+        baseMaterial.color = this.color;
+        return baseMaterial;
     }
 }

@@ -5,11 +5,15 @@ using System;
 [AddComponentMenu("Allods UI/Image")]
 public class AllodsImage : MaskableGraphic
 {
+    // set in the editor
     [SerializeField]
     public string Filename;
     [SerializeField]
     public Color32 Colorkey;
+    [SerializeField]
+    public Rect InnerRect;
 
+    // set ingame
     public Texture2D TextureOverride
     {
         get
@@ -23,12 +27,13 @@ public class AllodsImage : MaskableGraphic
             UpdateMaterial();
         }
     }
-
+    
     private Texture2D _TextureOverride;
     private Color32 _LastColorkey;
     private string _LastFilename;
     private Texture2D _Texture;
     private bool _LastFailed;
+    private Rect _InnerRect;
 
     private void CheckTexture()
     {
@@ -42,6 +47,7 @@ public class AllodsImage : MaskableGraphic
         {
             try
             {
+                bool setRec = (_LastFilename != Filename);
                 if (Colorkey.a > 127)
                 {
                     uint rgbaColorkey = (uint)(Colorkey.r << 16 | Colorkey.g << 8 | Colorkey.b);
@@ -56,11 +62,16 @@ public class AllodsImage : MaskableGraphic
                     else _Texture = Images.LoadImage(Filename, Images.ImageType.Unity);
                 }
                 _LastFailed = false;
+                if (setRec)
+                {
+                    InnerRect = new Rect(0, 0, _Texture.width, _Texture.height);
+                }
             }
             catch (Exception)
             {
                 _LastFailed = true;
                 _Texture = null;
+                InnerRect = new Rect(0, 0, 0, 0);
             }
             _LastFilename = Filename;
             _LastColorkey = Colorkey;
@@ -88,10 +99,15 @@ public class AllodsImage : MaskableGraphic
         float halfW = w * rectTransform.pivot.x;
         float halfH = h * rectTransform.pivot.y;
 
-        vh.AddVert(new Vector3(-halfW, -halfH+h, 0), new Color(1, 1, 1, 1), new Vector2(0, 0));
-        vh.AddVert(new Vector3(-halfW+w, -halfH+h, 0), new Color(1, 1, 1, 1), new Vector2(1, 0));
-        vh.AddVert(new Vector3(-halfW+w, -halfH, 0), new Color(1, 1, 1, 1), new Vector2(1, 1));
-        vh.AddVert(new Vector3(-halfW, -halfH, 0), new Color(1, 1, 1, 1), new Vector2(0, 1));
+        float minU = InnerRect.xMin / _Texture.width;
+        float maxU = InnerRect.xMax / _Texture.width;
+        float minV = InnerRect.yMin / _Texture.height;
+        float maxV = InnerRect.yMax / _Texture.height;
+
+        vh.AddVert(new Vector3(-halfW, -halfH+h, 0), new Color(1, 1, 1, 1), new Vector2(minU, minV));
+        vh.AddVert(new Vector3(-halfW+w, -halfH+h, 0), new Color(1, 1, 1, 1), new Vector2(maxU, minV));
+        vh.AddVert(new Vector3(-halfW+w, -halfH, 0), new Color(1, 1, 1, 1), new Vector2(maxU, maxV));
+        vh.AddVert(new Vector3(-halfW, -halfH, 0), new Color(1, 1, 1, 1), new Vector2(minU, maxV));
         vh.AddTriangle(0, 1, 2);
         vh.AddTriangle(2, 3, 0);
     }
@@ -102,6 +118,17 @@ public class AllodsImage : MaskableGraphic
         if (_Texture != null)
         {
             rectTransform.sizeDelta = new Vector2(_Texture.width, _Texture.height);
+            UpdateGeometry();
+        }
+    }
+
+    [EasyButtons.Button]
+    public void InnerRectToTexture()
+    {
+        if (_Texture != null)
+        {
+            InnerRect = new Rect(0, 0, _Texture.width, _Texture.height);
+            UpdateGeometry();
         }
     }
 }

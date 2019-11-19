@@ -232,7 +232,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         }
         else
         {
-            float shadowOffs1 = shadowOffs * 64;
+            float rShadowOffs = shadowOffs;
+            float shadowOffs1 = rShadowOffs * 64;
             float shadowOffs2 = shadowOffs1 + sW;
             shadowOffs = -4;
             qv[pp++] = new Vector3(shadowOffs1, shadowOffs, 0);
@@ -243,7 +244,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             // calculate offset for spriteB, if it's not the same size
             if (spriteB != null)
             {
-                float shadowOffs1B = shadowOffs * 64;
+                float shadowOffs1B = rShadowOffs * 64;
                 float shadowOffs2B = shadowOffs1B + sWB;
                 // additional sprite
                 qv[pp++] = new Vector3(shadowOffs1B, shadowOffs, 0);
@@ -285,15 +286,15 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             }
         }
 
-        float cx = (float)sprite.Frames[frame].Width * LogicUnit.Class.CenterX;
-        float cy = (float)sprite.Frames[frame].Height * LogicUnit.Class.CenterY;
+        float cx = (int)(sprite.Frames[frame].Width * LogicUnit.Class.CenterX);
+        float cy = (int)(sprite.Frames[frame].Height * LogicUnit.Class.CenterY);
         for (int i = 0; i < 4; i++)
             qv[i] -= new Vector3(cx, cy, 0);
 
         if (spriteB != null)
         {
-            float cxB = (float)spriteB.Frames[frame].Width * LogicUnit.Class.CenterX;
-            float cyB = (float)spriteB.Frames[frame].Height * LogicUnit.Class.CenterY;
+            float cxB = (int)(spriteB.Frames[frame].Width * LogicUnit.Class.CenterX);
+            float cyB = (int)(spriteB.Frames[frame].Height * LogicUnit.Class.CenterY);
             for (int i = 4; i < 8; i++)
                 qv[i] -= new Vector3(cxB, cyB, 0);
         }
@@ -419,6 +420,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         if (countDynLight > 0)
             meanDynLight /= countDynLight;
         else meanDynLight = 0f;
+
+        if (meanDynLight > 0.75f)
+            meanDynLight = 0.75f;
 
         for (int i = 0; i < Renderer.materials.Length; i++)
         {

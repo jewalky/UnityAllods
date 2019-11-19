@@ -203,7 +203,7 @@ public class MapViewObstacle : MapViewObject, IObjectManualUpdate
 
             for (int i = 0; i < newMaterialCount; i++)
             {
-                Renderer.materials[i].SetFloat("_Lightness", 0.5f + (float)MapLogic.Instance.Nodes[LogicObstacle.X, LogicObstacle.Y].DynLight / 255);
+                Renderer.materials[i].SetFloat("_Lightness", 0.5f + Mathf.Min(0.75f, (float)MapLogic.Instance.Nodes[LogicObstacle.X, LogicObstacle.Y].DynLight / 255));
             }
 
             int actualFrame = LogicObstacle.Class.Frames[LogicObstacle.CurrentFrame].Frame + LogicObstacle.Class.Index;

@@ -479,7 +479,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 ag.LastSeen = MapLogic.Instance.LevelTime;
             }
             // check if last seen a lot of time ago ( > 5 seconds for now)
-            if (MapLogic.Instance.LevelTime - ag.LastSeen > MapLogic.TICRATE * 2)
+            if (MapLogic.Instance.LevelTime - ag.LastSeen > MapLogic.TICRATE * 5)
             {
                 Aggro.RemoveAt(i);
                 i--;
@@ -746,7 +746,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         switch (MapLogic.Instance.PathfindingType)
         {
             case PathfindingType.Astar:
-                return new AstarPathfinder().FindPath(unit, x, y, toStartX, toStartX, toEndX, toEndY, distance, staticOnly, limit);
+                return new AstarPathfinder().FindPath(unit, x, y, toStartX, toStartY, toEndX, toEndY, distance, staticOnly, limit);
             case PathfindingType.Flood:
                 List<Vector2i> p = MapLogic.Instance.Wizard.GetShortestPath(unit, staticOnly, distance, x, y, toStartX, toStartY, toEndX, toEndY, limit);
                 if (p != null && (p[0].x != x || p[0].y != y))

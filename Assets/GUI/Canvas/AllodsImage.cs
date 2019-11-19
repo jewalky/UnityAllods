@@ -10,6 +10,21 @@ public class AllodsImage : MaskableGraphic
     [SerializeField]
     public Color32 Colorkey;
 
+    public Texture2D TextureOverride
+    {
+        get
+        {
+            return _TextureOverride;
+        }
+
+        set
+        {
+            _TextureOverride = value;
+            UpdateMaterial();
+        }
+    }
+
+    private Texture2D _TextureOverride;
     private Color32 _LastColorkey;
     private string _LastFilename;
     private Texture2D _Texture;
@@ -17,6 +32,12 @@ public class AllodsImage : MaskableGraphic
 
     private void CheckTexture()
     {
+        if (_TextureOverride != null)
+        {
+            _Texture = _TextureOverride;
+            return;
+        }
+
         if (_LastFilename != Filename || !_LastColorkey.Equals(Colorkey) || (_Texture == null && !_LastFailed))
         {
             try

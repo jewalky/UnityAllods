@@ -25,7 +25,7 @@ namespace Smacker
         Present = 0x40000000,
         Is16Bit = 0x20000000,
         IsStereo = 0x10000000,
-        CompressedV1 = 0x0C000000
+        CompressedBink = 0x0C000000
     }
 
     //
@@ -74,7 +74,9 @@ namespace Smacker
             {
                 if (SubBitPos == 0)
                 {
-                    LastByte = Br.ReadByte();
+                    if (Br.BaseStream.Position < Br.BaseStream.Length)
+                        LastByte = Br.ReadByte();
+                    else LastByte = 0;
                     LastStreamPos = Br.BaseStream.Position;
                 }
 
@@ -87,25 +89,6 @@ namespace Smacker
             }
 
             return output;
-        }
-
-        public ulong PeekBits(int count)
-        {
-            if (LastStreamPos != Br.BaseStream.Position)
-            {
-                SubBitPos = 0;
-                LastStreamPos = Br.BaseStream.Position;
-            }
-
-            int _SubBitPos = SubBitPos;
-            long _LastStreamPos = LastStreamPos;
-
-            ulong outv = ReadBits(count);
-
-            Br.BaseStream.Position = LastStreamPos = _LastStreamPos;
-            SubBitPos = _SubBitPos;
-
-            return outv;
         }
     }
 
@@ -312,10 +295,15 @@ namespace Smacker
     public class SmackerFrame
     {
         private SmackerFile File;
-        private FrameFlags Flags;
-        private FrameTypeFlags TypeFlags;
-        private AudioFlags[] AudioFlags;
         private byte[] Data;
+
+        public FrameFlags Flags { get; private set; }
+        public FrameTypeFlags TypeFlags { get; private set; }
+        public AudioFlags[] AudioFlags { get; private set; }
+        public uint[] AudioSampleRate { get; private set; }
+        // so unlike the context, audio is unpacked right into the frame object
+        public float[][] AudioData { get; private set; }
+        private int[] SkipAudioData;
 
         private static uint[] BlockSizeTable = new uint[]
         {
@@ -341,29 +329,180 @@ namespace Smacker
            0xE3, 0xE7, 0xEB, 0xEF, 0xF3, 0xF7, 0xFB, 0xFF
      };
 
-        public SmackerFrame(SmackerFile file, FrameFlags flags, FrameTypeFlags typeFlags, AudioFlags[] audioFlags, byte[] data)
+        public SmackerFrame(SmackerFile file, FrameFlags flags, FrameTypeFlags typeFlags, AudioFlags[] audioFlags, uint[] audioSampleRate, byte[] data)
         {
             File = file;
             Flags = flags;
             TypeFlags = typeFlags;
             AudioFlags = audioFlags;
+            AudioSampleRate = audioSampleRate;
             Data = data;
+            AudioData = new float[7][];
+            SkipAudioData = new int[7];
         }
 
-        private void UnpackAudio(SmackerDecodeContext ctx, BinaryReader br, int channel)
+        private void UnpackAudio(SmackerDecodeContext ctx, BinaryReader binaryReader, int channel)
         {
             if (!AudioFlags[channel].HasFlag(Smacker.AudioFlags.Present))
+            {
+                //Debug.LogFormat("Skip UnpackAudio channel {0} (not present)", channel);
                 return;
-            uint a_Length = br.ReadUInt32();
+            }
+            if (AudioData[channel] != null)
+            {
+                //Debug.LogFormat("Skip UnpackAudio channel {0} (done)", channel);
+                binaryReader.BaseStream.Position += SkipAudioData[channel];
+                return; // already unpacked audio
+            }
+            //Debug.LogFormat("UnpackAudio channel {0}", channel);
+            uint a_Length = binaryReader.ReadUInt32();
             uint dataLength = a_Length - 4;
             uint a_UnpackedLength = a_Length;
-            if ((AudioFlags[channel] & (Smacker.AudioFlags.Compressed | Smacker.AudioFlags.CompressedV1)) != 0)
+            if ((AudioFlags[channel] & (Smacker.AudioFlags.Compressed | Smacker.AudioFlags.CompressedBink)) != 0)
             {
-                a_UnpackedLength = br.ReadUInt32();
+                a_UnpackedLength = binaryReader.ReadUInt32();
                 dataLength -= 4;
             }
-            byte[] a_Data = br.ReadBytes((int)dataLength);
+            // pad the data with some bytes to prevent underflow errors in the last sample.
+            // apparently huffman compression is not very precise here...
+            byte[] a_Data = new byte[dataLength + 4];
+            binaryReader.BaseStream.Read(a_Data, 0, (int)dataLength);
+            SkipAudioData[channel] = (int)a_Length;
             // don't do anything with this yet
+            
+            using (MemoryStream audioStream = new MemoryStream(a_Data))
+            using (BinaryReader audioReader = new BinaryReader(audioStream))
+            {
+                BitReader br = new BitReader(audioReader);
+                // look at compression flags
+                if ((AudioFlags[channel] & Smacker.AudioFlags.CompressedBink) != 0)
+                {
+                    Debug.LogFormat("Bink audio compression is not supported");
+                    return;
+                }
+                // ROM2 sound is always compressed with DPCM - nothing to test on!
+                if (!AudioFlags[channel].HasFlag(Smacker.AudioFlags.Compressed))
+                {
+                    Debug.LogFormat("Uncompressed PCM audio is not yet supported");
+                    return;
+                }
+
+                AudioData[channel] = new float[0];
+                // not sure what's the point of having these flags both in header and here
+                bool b_DataPresent = br.ReadBits(1) != 0;
+                if (!b_DataPresent)
+                {
+                    Debug.LogFormat("Data not present for channel {0}", channel);
+                    return;
+                }
+
+                int b_IsStereo = (int)br.ReadBits(1);
+                int b_Is16Bits = (int)br.ReadBits(1);
+
+                // validate flags. other decoders to this
+                if ((b_IsStereo == 1) != AudioFlags[channel].HasFlag(Smacker.AudioFlags.IsStereo) ||
+                    (b_Is16Bits == 1) != AudioFlags[channel].HasFlag(Smacker.AudioFlags.Is16Bit))
+                {
+                    Debug.LogFormat("Invalid audio: flags not matching: data is {0}bit and {1}, flags are {2}bit and {3}",
+                        (b_Is16Bits == 1) ? "16" : "8", (b_IsStereo == 1) ? "stereo" : "mono",
+                        AudioFlags[channel].HasFlag(Smacker.AudioFlags.Is16Bit) ? "16" : "8",
+                        AudioFlags[channel].HasFlag(Smacker.AudioFlags.IsStereo) ? "stereo" : "mono");
+                    return;
+                }
+
+                int bytesPerSample = 1 << (b_IsStereo + b_Is16Bits);
+
+                HuffContext[] a_Trees = new HuffContext[bytesPerSample];
+                for (int i = 0; i < bytesPerSample; i++)
+                {
+                    // junk bits
+                    br.ReadBits(1);
+                    a_Trees[i] = HuffContext.FromTree(br, 256);
+                    // junk bits
+                    br.ReadBits(1);
+                }
+
+                sbyte[] a_Bases = new sbyte[bytesPerSample];
+                for (int i = 0; i < bytesPerSample; i++)
+                    a_Bases[bytesPerSample-i-1] = (sbyte)br.ReadBits(8); // reverse order here
+
+                float numSamplesF = (float)a_UnpackedLength / bytesPerSample;
+                int numSamples = (int)numSamplesF;
+                if (numSamplesF != numSamples)
+                {
+                    Debug.LogFormat("Invalid audio: fractional sample count {0}", numSamplesF);
+                    return;
+                }
+
+                // now logic is slightly different for 16 and 8 bits
+                // though bytes we just read through the tree
+                byte[] sampleBytes = new byte[bytesPerSample];
+                float[] sampleFloats = new float[1 * (1 << b_IsStereo)];
+                short[] sampleShorts = new short[sampleFloats.Length];
+                short[] a_ShortBases = new short[sampleFloats.Length];
+
+                // output
+                AudioData[channel] = new float[numSamples * (1 << b_IsStereo)];
+
+                // generate some shorts from bases if we have 16bits
+                if (b_Is16Bits == 1)
+                {
+                    for (int i = 0; i < a_ShortBases.Length; i++)
+                    {
+                        short ubase = (short)(a_Bases[2 * i] | (a_Bases[2 * i + 1] << 8));
+                        a_ShortBases[i] = ubase;
+                    }
+                }
+
+                int lastSample = 0;
+                try
+                {
+                    for (int j = 0; j < numSamples; j++)
+                    {
+                        lastSample = j;
+                        for (int i = 0; i < bytesPerSample; i++)
+                            sampleBytes[i] = (byte)a_Trees[i].GetValue(br);
+
+                        // if we have 16-bit:
+                        // sampleBytes[0] = 00FF left
+                        // sampleBytes[1] = FF00 left
+                        // sampleBytes[2] = 00FF right
+                        // sampleBytes[3] = FF00 right
+                        // if we have 8-bit:
+                        // sampleBytes[0] = left
+                        // sampleBytes[1] = right
+                        if (b_Is16Bits == 1)
+                        {
+                            for (int i = 0; i < sampleShorts.Length; i++)
+                            {
+                                short value = (short)(sampleBytes[2 * i] | (sampleBytes[2 * i + 1] << 8));
+                                short sample = sampleShorts[i] = (short)(a_ShortBases[i] += value);
+                                // convert to float
+                                // to-do reduce debug variables here
+                                AudioData[channel][j * sampleFloats.Length + i] = sampleFloats[i] = sample / 32768f;
+                            }
+                        }
+                        else
+                        {
+                            for (int i = 0; i < sampleBytes.Length; i++)
+                            {
+                                sbyte value = (sbyte)sampleBytes[i];
+                                sbyte sample = (a_Bases[i] += value);
+                                sampleBytes[i] = (byte)sample;
+                                // convert to float
+                                // to-do reduce debug variables here
+                                AudioData[channel][j * sampleBytes.Length + i] = sampleFloats[i] = sample / 128f;
+                            }
+                        }
+
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(e);
+                    Debug.LogFormat("Last Sample Read = {0} of {1}", lastSample, numSamples);
+                }
+            }
         }
 
         private void UnpackVideo(SmackerDecodeContext ctx, BinaryReader binaryReader)
@@ -471,7 +610,8 @@ namespace Smacker
             }
         }
 
-        public void Unpack(SmackerDecodeContext ctx)
+        // we need partial unpacking here to support audio streaming
+        public void Unpack(SmackerDecodeContext ctx, bool unpackVideo)
         {
             File.MMAPTree.ResetLast();
             File.MCLRTree.ResetLast();
@@ -481,7 +621,7 @@ namespace Smacker
             using (MemoryStream ms = new MemoryStream(Data))
             {
                 // if keyframe, reset palette
-                if (Flags.HasFlag(FrameFlags.Keyframe))
+                if (Flags.HasFlag(FrameFlags.Keyframe) && unpackVideo)
                 {
                     ctx.Palette = new Color32[256];
                 }
@@ -490,46 +630,54 @@ namespace Smacker
                 // reading palette does not require binaryreader, plus we can validate data integrity by using an array here
                 if (TypeFlags.HasFlag(FrameTypeFlags.HasPalette))
                 {
-                    int palSize = ms.ReadByte();
-                    byte[] palColors = new byte[palSize * 4 - 1];
-                    ms.Read(palColors, 0, palColors.Length);
+                    int palSize = ms.ReadByte() * 4 - 1;
 
-                    Color32[] nextPalette = new Color32[256];
-                    for (int i = 0; i < 256; i++)
-                        nextPalette[i] = ctx.Palette[i];
-
-                    int offset = 0;
-                    int palOffset = 0;
-                    int prevPalOffset = 0;
-                    while (offset < palColors.Length && palOffset < 256)
+                    if (unpackVideo)
                     {
-                        byte flagByte = palColors[offset++];
-                        if ((flagByte & 0x80) != 0) // copy next (c+1) color entries from current prevPalOffset to palOffset
-                        {
-                            int c = (flagByte & 0x7F) + 1;
-                            palOffset += c;
-                        }
-                        else if ((flagByte & 0xC0) == 0x40) // copy next (c+1) color entries from s to palOffset
-                        {
-                            int c = (flagByte & 0x3F) + 1;
-                            int s = palColors[offset++];
-                            prevPalOffset = s;
-                            for (int i = 0; i < c; i++)
-                                nextPalette[palOffset + i] = ctx.Palette[prevPalOffset + i];
-                            prevPalOffset += c;
-                            palOffset += c;
-                        }
-                        else // rgb color, &0x3F
-                        {
-                            byte r = PaletteMap[flagByte & 0x3F];
-                            byte g = PaletteMap[palColors[offset++] & 0x3F];
-                            byte b = PaletteMap[palColors[offset++] & 0x3F];
-                            nextPalette[palOffset] = new Color32(r, g, b, 255);
-                            palOffset++;
-                        }
-                    }
+                        byte[] palColors = new byte[palSize];
+                        ms.Read(palColors, 0, palColors.Length);
 
-                    ctx.Palette = nextPalette;
+                        Color32[] nextPalette = new Color32[256];
+                        for (int i = 0; i < 256; i++)
+                            nextPalette[i] = ctx.Palette[i];
+
+                        int offset = 0;
+                        int palOffset = 0;
+                        int prevPalOffset = 0;
+                        while (offset < palColors.Length && palOffset < 256)
+                        {
+                            byte flagByte = palColors[offset++];
+                            if ((flagByte & 0x80) != 0) // copy next (c+1) color entries from current prevPalOffset to palOffset
+                            {
+                                int c = (flagByte & 0x7F) + 1;
+                                palOffset += c;
+                            }
+                            else if ((flagByte & 0xC0) == 0x40) // copy next (c+1) color entries from s to palOffset
+                            {
+                                int c = (flagByte & 0x3F) + 1;
+                                int s = palColors[offset++];
+                                prevPalOffset = s;
+                                for (int i = 0; i < c; i++)
+                                    nextPalette[palOffset + i] = ctx.Palette[prevPalOffset + i];
+                                prevPalOffset += c;
+                                palOffset += c;
+                            }
+                            else // rgb color, &0x3F
+                            {
+                                byte r = PaletteMap[flagByte & 0x3F];
+                                byte g = PaletteMap[palColors[offset++] & 0x3F];
+                                byte b = PaletteMap[palColors[offset++] & 0x3F];
+                                nextPalette[palOffset] = new Color32(r, g, b, 255);
+                                palOffset++;
+                            }
+                        }
+
+                        ctx.Palette = nextPalette;
+                    }
+                    else
+                    {
+                        ms.Position += palSize;
+                    }
                 }
 
                 // from now on use binaryreader
@@ -543,8 +691,11 @@ namespace Smacker
                             UnpackAudio(ctx, br, i);
                     }
 
-                    // done with the audio, the rest is a picture
-                    UnpackVideo(ctx, br);
+                    if (unpackVideo)
+                    {
+                        // done with the audio, the rest is a picture
+                        UnpackVideo(ctx, br);
+                    }
                 }
             }
         }
@@ -668,7 +819,7 @@ namespace Smacker
                 for (int i = 0; i < h_Frames; i++)
                 {
                     byte[] data = br.ReadBytes((int)FrameSizes[i]);
-                    Frames[i] = new SmackerFrame(this, FrameFlags[i], FrameTypeFlags[i], h_AudioFlags, data);
+                    Frames[i] = new SmackerFrame(this, FrameFlags[i], FrameTypeFlags[i], h_AudioFlags, h_AudioRate, data);
                 }
 
                 Context = new SmackerDecodeContext();
@@ -693,18 +844,42 @@ public class SmackLoader : MonoBehaviour
 
     private bool FirstDone = false;
 
+    private UnityEngine.UI.Image Image = null;
+    private AudioClip AClip = null;
+    private AudioSource ASource = null;
+
+    // variables for audio streaming
+    private List<float> LeftPCM = new List<float>();
+    int LeftPCMPosition = 0;
+    int LastAudioFrame = 0;
+
+    private float[] NormalizeArraySize(float[] a, int len)
+    {
+        if (a.Length == len)
+            return a;
+        float[] newA = new float[len];
+        for (int i = 0; i < len; i++)
+        {
+            if (i < a.Length)
+                newA[i] = a[i];
+            else break;
+        }
+        return newA;
+    }
+
     private void NextFrame()
     {
         // check last ms
         if (FirstDone)
         {
+            int realFrameInterval = f.FrameInterval;
             LastMs += (int)(Time.unscaledDeltaTime * 1000);
-            if (LastMs > f.FrameInterval)
+            if (LastMs > realFrameInterval)
             {
-                while (LastMs > f.FrameInterval)
+                while (LastMs > realFrameInterval)
                 {
                     LastFrame++;
-                    LastMs -= f.FrameInterval;
+                    LastMs -= realFrameInterval;
                 }
             }
             else return;
@@ -717,9 +892,59 @@ public class SmackLoader : MonoBehaviour
         if (doInit)
             TestFrame = new Texture2D(f.Width, f.Height, TextureFormat.RGBA32, false);
 
+
+        if (Image == null)
+        {
+            UnityEngine.UI.Image img = (UnityEngine.UI.Image)GameObject.FindObjectOfType<Canvas>().GetComponentInChildren<UnityEngine.UI.Image>();
+            Image = img;
+        }
+
+        if (ASource == null)
+        {
+            ASource = Image.gameObject.GetComponent<AudioSource>();
+        }
+
+        // put some audio in it
+        if (AClip == null)
+        {
+            bool isStereo = f.Frames[0].AudioFlags[0].HasFlag(Smacker.AudioFlags.IsStereo);
+            int channels = isStereo ? 2 : 1;
+
+            // stitch entire PCM audio together
+            LeftPCM.Clear();
+            int sampleRatePerFrame = (int)(f.Frames[0].AudioSampleRate[0] / (1000f / f.FrameInterval));
+            for (int i = 0; i < f.Frames.Length; i++)
+            {
+                try
+                {
+                    f.Frames[i].Unpack(f.Context, false);
+                    float[] samples = f.Frames[i].AudioData[0];
+                    if (samples != null)
+                    {
+                        LeftPCM.AddRange(NormalizeArraySize(samples, sampleRatePerFrame * channels));
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(e);
+                }
+                
+            }
+
+            AClip = AudioClip.Create("SMKAUD", LeftPCM.Count / channels, channels, (int)f.Frames[0].AudioSampleRate[0], false);
+            Debug.LogFormat("Audio Sample Count = {0}", LeftPCM.Count / channels);
+            AClip.SetData(LeftPCM.ToArray(), 0);
+
+            ASource.clip = AClip;
+            ASource.Play();
+
+        }
+
+
+
         try
         {
-            f.Frames[LastFrame].Unpack(f.Context);
+            f.Frames[LastFrame].Unpack(f.Context, true);
         }
         catch (Exception e)
         {
@@ -741,16 +966,15 @@ public class SmackLoader : MonoBehaviour
         // find object
         if (doInit)
         {
-            UnityEngine.UI.Image img = (UnityEngine.UI.Image)GameObject.FindObjectOfType<Canvas>().GetComponentInChildren<UnityEngine.UI.Image>();
-            img.material.mainTexture = TestFrame;
-            img.SetNativeSize();
+            Image.material.mainTexture = TestFrame;
+            Image.SetNativeSize();
         }
     }
 
     // Start is called before the first frame update
     void Awake()
     {
-        f = new Smacker.SmackerFile("03.smk");
+        f = new Smacker.SmackerFile("01.smk");
         //NextFrame();
     }
 

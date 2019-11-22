@@ -294,6 +294,11 @@ namespace Smacker
             }
             return val;
         }
+
+        public void ResetLast()
+        {
+            Last[0].Value = Last[1].Value = Last[2].Value = 0;
+        }
     }
 
     // this class contains data that gets reused between keyframes
@@ -468,6 +473,11 @@ namespace Smacker
 
         public void Unpack(SmackerDecodeContext ctx)
         {
+            File.MMAPTree.ResetLast();
+            File.MCLRTree.ResetLast();
+            File.FULLTree.ResetLast();
+            File.TYPETree.ResetLast();
+
             using (MemoryStream ms = new MemoryStream(Data))
             {
                 // if keyframe, reset palette
@@ -485,6 +495,8 @@ namespace Smacker
                     ms.Read(palColors, 0, palColors.Length);
 
                     Color32[] nextPalette = new Color32[256];
+                    for (int i = 0; i < 256; i++)
+                        nextPalette[i] = ctx.Palette[i];
 
                     int offset = 0;
                     int palOffset = 0;
@@ -495,9 +507,6 @@ namespace Smacker
                         if ((flagByte & 0x80) != 0) // copy next (c+1) color entries from current prevPalOffset to palOffset
                         {
                             int c = (flagByte & 0x7F) + 1;
-                            for (int i = 0; i < c; i++)
-                                nextPalette[palOffset + i] = ctx.Palette[prevPalOffset + i];
-                            prevPalOffset += c;
                             palOffset += c;
                         }
                         else if ((flagByte & 0xC0) == 0x40) // copy next (c+1) color entries from s to palOffset
@@ -741,7 +750,7 @@ public class SmackLoader : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
-        f = new Smacker.SmackerFile("01.smk");
+        f = new Smacker.SmackerFile("03.smk");
         //NextFrame();
     }
 

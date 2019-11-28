@@ -153,4 +153,20 @@ namespace Spells
             return (TicsTotal < MapLogic.TICRATE * Spell.GetDuration());
         }
     }
+
+    [SpellProcId(Spell.Spells.Protection_from_Water)]
+    public class SpellProcProtectionWater : SpellProc
+    {
+        public SpellProcProtectionWater(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (TargetUnit == null)
+                return false;
+
+            SpellEffects.Effect eff = new SpellEffects.ProtectionWater((int)(MapLogic.TICRATE * Spell.GetDuration()), Spell.GetProtection());
+            TargetUnit.AddSpellEffects(eff);
+            return false;
+        }
+    }
 }

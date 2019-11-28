@@ -265,4 +265,20 @@ namespace Spells
             return false;
         }
     }
+
+    [SpellProcId(Spell.Spells.Protection_from_Air)]
+    public class SpellProcProtectionAir : SpellProc
+    {
+        public SpellProcProtectionAir(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (TargetUnit == null)
+                return false;
+
+            SpellEffects.Effect eff = new SpellEffects.ProtectionAir((int)(MapLogic.TICRATE * Spell.GetDuration()), Spell.GetProtection());
+            TargetUnit.AddSpellEffects(eff);
+            return false;
+        }
+    }
 }

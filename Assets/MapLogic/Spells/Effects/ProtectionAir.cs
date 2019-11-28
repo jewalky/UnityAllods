@@ -2,12 +2,12 @@
 
 namespace SpellEffects
 {
-    class Darkness : TimedEffect
+    class ProtectionAir : TimedEffect
     {
         bool Attached = false;
-        float Power = 0;
+        int Power = 0;
 
-        public Darkness(int duration, float power) : base(duration)
+        public ProtectionAir(int duration, int power) : base(duration)
         {
             Attached = false;
             Power = power;
@@ -15,25 +15,16 @@ namespace SpellEffects
 
         public override bool OnAttach(MapUnit unit)
         {
-            // remove light effects
-            List<Light> lights = unit.GetSpellEffects<Light>();
-            for (int i = 0; i < lights.Count; i++)
-                unit.RemoveSpellEffect(lights[i]);
+            List<ProtectionAir> ps = unit.GetSpellEffects<ProtectionAir>();
 
-            // replace less powerful effects
-            List<Darkness> darks = unit.GetSpellEffects<Darkness>();
-
-            foreach (Darkness h in darks)
+            foreach (ProtectionAir p in ps)
             {
-                if (Power > h.Power)
-                {
-                    h.Power = Power;
-                    unit.UpdateItems();
-                }
-
-                h.Timer = 0;
-                return false;
+                if (p.Power > Power)
+                    return false;
             }
+
+            foreach (ProtectionAir p in ps)
+                unit.RemoveSpellEffect(p);
 
             return true;
         }
@@ -41,12 +32,15 @@ namespace SpellEffects
         public override void OnDetach()
         {
             Unit.UpdateItems();
+            Unit.Flags &= ~UnitFlags.ProtectionAir;
         }
 
         public override bool Process()
         {
             if (!base.Process())
                 return false;
+
+            Unit.Flags |= UnitFlags.ProtectionAir;
 
             if (!Attached)
             {
@@ -59,7 +53,7 @@ namespace SpellEffects
 
         public override void ProcessStats(UnitStats stats)
         {
-            stats.ScanRange -= Power;
+            stats.ProtectionAir += (byte)Power;
         }
     }
 }

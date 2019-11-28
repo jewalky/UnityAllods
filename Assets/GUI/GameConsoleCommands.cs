@@ -123,6 +123,30 @@ public class GameConsoleCommands
         MapLogic.Instance.Objects.Add(unit);
     }
 
+    public void showgroup(string gid = "-1")
+    {
+        int groupId = -1;
+        int.TryParse(gid, out groupId);
+
+        if (NetworkManager.IsClient)
+            return;
+
+        MapLogic.Instance.DebugShowUnit = -1;
+        MapLogic.Instance.DebugShowGroup = groupId;
+    }
+
+    public void showunit(string uid = "-1")
+    {
+        int unitId = -1;
+        int.TryParse(uid, out unitId);
+
+        if (NetworkManager.IsClient)
+            return;
+
+        MapLogic.Instance.DebugShowGroup = -1;
+        MapLogic.Instance.DebugShowUnit = unitId;
+    }
+
     public void rcon(params string[] args)
     {
         //string toSend = GameConsole.JoinArguments(args);

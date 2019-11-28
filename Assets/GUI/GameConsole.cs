@@ -254,10 +254,20 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
             {
                 try
                 {
-                    List<string> methodArgs = new List<string>();
-                    if (parameters.Length > 0) { 
+                    List<object> methodArgs = new List<object>();
+                    if (parameters.Length > 0)
+                    {
                         for (int j = 0; j < parameters.Length; j++)
                         {
+                            if (j == parameters.Length-1 && parameters[j].ParameterType == typeof(string[]))
+                            {
+                                List<string> varArgs = new List<string>();
+                                for (int k = j; k < consoleArgs.Length; k++)
+                                    varArgs.Add(consoleArgs[k]);
+                                methodArgs.Add(varArgs.ToArray());
+                                break;
+                            }
+
                             string value = parameters[j].DefaultValue.ToString();
                             if (consoleArgs.ElementAtOrDefault(j) != null)
                             {
@@ -279,9 +289,9 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
                     else WriteLine("{0}: too many arguments.", args[0]);
                     cmdFound = true;
                 }
-                catch (ArgumentException) // not a command, commands accept strings
+                catch (ArgumentException e) // not a command, commands accept strings
                 {
-
+                    Debug.LogError(e);
                 }
                 break;
             }

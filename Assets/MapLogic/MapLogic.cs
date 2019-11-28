@@ -82,6 +82,7 @@ class MapLogic
     public const int MaxPlayers = 64;
     public Player ConsolePlayer { get; set; } // the player that we're directly controlling.
     public List<Group> Groups { get; private set; }
+    public int DebugShowGroup = -1;
     public bool IsLoading { get; private set; }
     private Thread LoadingThread;
 
@@ -398,6 +399,7 @@ class MapLogic
     {
         MapLightingNeedsUpdate = true;
         MapFOWNeedsUpdate = true;
+        DebugShowGroup = -1;
     }
 
     private void InitFromFileWorker(string filename)
@@ -814,7 +816,9 @@ class MapLogic
 
         foreach (Player player in Players)
         {
-            if ((player.Diplomacy[ConsolePlayer.ID] & DiplomacyFlags.Vision) != 0)
+            bool playerHasVision = (player.Diplomacy[ConsolePlayer.ID] & DiplomacyFlags.Vision) != 0;
+            if (playerHasVision ||
+                DebugShowGroup >= 0)
             {
                 for (int i = 0; i < player.Objects.Count; i++)
                 {
@@ -824,6 +828,8 @@ class MapLogic
                         mobj.GetObjectType() != MapObjectType.Human) continue;
                     MapUnit unit = (MapUnit)mobj;
                     if (!unit.IsAlive)
+                        continue;
+                    if (!playerHasVision && (unit.Group == null || unit.Group.ID != DebugShowGroup))
                         continue;
                     int xOrigin = unit.X - 20;
                     int yOrigin = unit.Y - 20;

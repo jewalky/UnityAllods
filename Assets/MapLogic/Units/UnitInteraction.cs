@@ -259,7 +259,6 @@ public class UnitInteraction
     // staticOnly is for now unused
     public float GetMoveTime(int x, int y, bool staticOnly)
     {
-        float Time = 1f / Unit.Stats.Speed;
 
         // flying and hovering units don't care about node speed factors
         if (Unit.IsWalking) {
@@ -285,7 +284,7 @@ public class UnitInteraction
 	            }
 	        }
 	
-            Time = Time * SurfaceFactor / Count / 8f; // normal base tile cost
+            float Time = (float)SurfaceFactor / Count / 8f / Unit.Stats.Speed; // normal base tile cost
 
             if (x != Unit.X && y != Unit.Y)
                 Time = Time * 1.4142f;

@@ -309,7 +309,7 @@ public class MapHuman : MapUnit
         CoreStats.ManaRegeneration = 100;
 
         // skills
-        if ((Gender & GenderFlags.Fighter) != 0)
+        if (Gender.HasFlag(GenderFlags.Fighter))
         {
             CoreStats.SkillBlade = (byte)GetSkill(ExperienceSkill.Blade);
             CoreStats.SkillAxe = (byte)GetSkill(ExperienceSkill.Axe);
@@ -317,7 +317,7 @@ public class MapHuman : MapUnit
             CoreStats.SkillPike = (byte)GetSkill(ExperienceSkill.Pike);
             CoreStats.SkillShooting = (byte)GetSkill(ExperienceSkill.Shooting);
         }
-        else if ((Gender & GenderFlags.Mage) != 0)
+        else if (Gender.HasFlag(GenderFlags.Mage))
         {
             CoreStats.SkillFire = (byte)GetSkill(ExperienceSkill.Fire);
             CoreStats.SkillWater = (byte)GetSkill(ExperienceSkill.Water);
@@ -436,6 +436,23 @@ public class MapHuman : MapUnit
         Stats.ProtectionAir = (byte)Math.Min(maxProt, Math.Max(minProt, Stats.ProtectionAir));
         Stats.ProtectionEarth = (byte)Math.Min(maxProt, Math.Max(minProt, Stats.ProtectionEarth));
         Stats.ProtectionAstral = (byte)Math.Min(maxProt, Math.Max(minProt, Stats.ProtectionAstral));
+
+        if (Gender.HasFlag(GenderFlags.Fighter))
+        {
+            Stats.SkillBlade = (byte)(CoreStats.SkillBlade + ItemStats.SkillBlade);
+            Stats.SkillAxe = (byte)(CoreStats.SkillAxe + ItemStats.SkillAxe);
+            Stats.SkillBludgeon = (byte)(CoreStats.SkillBludgeon + ItemStats.SkillBludgeon);
+            Stats.SkillPike = (byte)(CoreStats.SkillPike + ItemStats.SkillPike);
+            Stats.SkillShooting = (byte)(CoreStats.SkillShooting + ItemStats.SkillShooting);
+        }
+        else if (Gender.HasFlag(GenderFlags.Mage))
+        {
+            CoreStats.SkillFire = (byte)(CoreStats.SkillFire + ItemStats.SkillFire);
+            CoreStats.SkillWater = (byte)(CoreStats.SkillWater + ItemStats.SkillWater);
+            CoreStats.SkillAir = (byte)(CoreStats.SkillAir + ItemStats.SkillAir);
+            CoreStats.SkillEarth = (byte)(CoreStats.SkillEarth + ItemStats.SkillEarth);
+            CoreStats.SkillAstral = (byte)(CoreStats.SkillAstral + ItemStats.SkillAstral);
+        }
 
         //Debug.LogFormat("ItemStats = {0}", ItemStats.ToString());
 

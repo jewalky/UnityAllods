@@ -254,49 +254,4 @@ public class UnitInteraction
         return nodeFactor / nodeCount;
     }
 
-    // returns time of move the unit from current point to target (meaning it is adjustment to current)
-    // 400??? = 1 sec
-    // staticOnly is for now unused
-    public float GetMoveTime(int x, int y, bool staticOnly)
-    {
-
-        // flying and hovering units don't care about node speed factors
-        if (Unit.IsWalking) {
-
-	        int SurfaceFactor = 0;
-	        int HeightChange = 0;
-	        int Count = 0;
-	        MapNode node;
-	
-	        for (int ly = Unit.Height; --ly >= 0; )
-	        {
-	            for (int lx = Unit.Width; --lx >= 0; )
-	            {
-	                node = MapLogic.Instance.Nodes[     x+lx,      y+ly];
-	                SurfaceFactor += Math.Max((byte)8, node.BaseWalkCost);
-	                HeightChange += node.Height;
-	
-	                node = MapLogic.Instance.Nodes[Unit.X+lx, Unit.Y+ly];
-	                SurfaceFactor += Math.Max((byte)8, node.BaseWalkCost);
-	                HeightChange -= node.Height;
-	
-	                Count+=2;
-	            }
-	        }
-	
-            float Time = (float)SurfaceFactor / Count / 8f / Unit.Stats.Speed; // normal base tile cost
-
-            if (x != Unit.X && y != Unit.Y)
-                Time = Time * 1.4142f;
-	   	
-	   	    if (HeightChange > 0)
-	   	        Time += HeightChange/128f /8f;
-	   	    else
-	   	        Time += HeightChange/128f /8f /4f;
-
-	   }
-	
-       return Time;
-    }
-
 }

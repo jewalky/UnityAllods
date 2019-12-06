@@ -162,9 +162,10 @@ public class MoveAction : IUnitAction
             if (Frac == 0)
             {
                 Unit.LinkToWorld(TargetX, TargetY); // link to target coordinates. don't unlink from previous yet.
-                float spd = 1 / Unit.Interaction.GetMoveTime(TargetX, TargetY, false); // do we need to do this every time?
-                FracAdd = spd / 400; // otherwise can be written as speed / 20 / 20.
-                MoveSpeed = spd / 20; // move animation play speed.
+                int spd = Unit.Stats.Speed;
+                spd = (int)(Unit.Interaction.GetNodeSpeedFactor(TargetX, TargetY, false) * spd); // do we need to do this every time?
+                FracAdd = (float)spd / 400; // otherwise can be written as speed / 20 / 20.
+                MoveSpeed = (float)spd / 20; // move animation play speed.
             }
 
             Frac = Mathf.Clamp01(Frac);

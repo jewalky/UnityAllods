@@ -1,10 +1,30 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System;
+using UnityEditor;
 
 [AddComponentMenu("Allods UI/Image")]
 public class AllodsImage : MaskableGraphic
 {
+    [MenuItem("GameObject/Allods UI/Image", false, 0)]
+    public static void AddAllodsText()
+    {
+        GameObject go = new GameObject("AllodsImage");
+        go.transform.localScale = new Vector3(1, 1, 1);
+        AllodsImage image = go.AddComponent<AllodsImage>();
+        if (Selection.activeTransform != null)
+        {
+            GameObject pGO = Selection.activeTransform.gameObject;
+            RectTransform pRect = pGO.GetComponent<RectTransform>();
+            RectTransform rect = go.GetComponent<RectTransform>();
+            rect.SetParent(pRect);
+            go.transform.localPosition = new Vector2(0, 0);
+            go.transform.localScale = new Vector3(1, 1, 1);
+            image.UpdateGeometry();
+            Selection.SetActiveObjectWithContext(go, pGO);
+        }
+    }
+
     // set in the editor
     [SerializeField]
     public string Filename;
@@ -108,10 +128,10 @@ public class AllodsImage : MaskableGraphic
             maxV = InnerRect.yMax / _Texture.height;
         }
 
-        vh.AddVert(new Vector3(-halfW, -halfH+h, 0), new Color(1, 1, 1, 1), new Vector2(minU, minV));
-        vh.AddVert(new Vector3(-halfW+w, -halfH+h, 0), new Color(1, 1, 1, 1), new Vector2(maxU, minV));
-        vh.AddVert(new Vector3(-halfW+w, -halfH, 0), new Color(1, 1, 1, 1), new Vector2(maxU, maxV));
-        vh.AddVert(new Vector3(-halfW, -halfH, 0), new Color(1, 1, 1, 1), new Vector2(minU, maxV));
+        vh.AddVert(new Vector3(-halfW, -halfH, 0), new Color(1, 1, 1, 1), new Vector2(minU, minV));
+        vh.AddVert(new Vector3(-halfW+w, -halfH, 0), new Color(1, 1, 1, 1), new Vector2(maxU, minV));
+        vh.AddVert(new Vector3(-halfW+w, -halfH+h, 0), new Color(1, 1, 1, 1), new Vector2(maxU, maxV));
+        vh.AddVert(new Vector3(-halfW, -halfH+h, 0), new Color(1, 1, 1, 1), new Vector2(minU, maxV));
         vh.AddTriangle(0, 1, 2);
         vh.AddTriangle(2, 3, 0);
     }

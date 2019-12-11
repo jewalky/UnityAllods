@@ -2,10 +2,30 @@
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
+using UnityEditor;
 
 [AddComponentMenu("Allods UI/Text")]
 public class AllodsText : MaskableGraphic
 {
+    [MenuItem("GameObject/Allods UI/Text", false, 0)]
+    public static void AddAllodsText()
+    {
+        GameObject go = new GameObject("AllodsText");
+        go.transform.localScale = new Vector3(1, 1, 1);
+        AllodsText text = go.AddComponent<AllodsText>();
+        if (Selection.activeTransform != null)
+        {
+            GameObject pGO = Selection.activeTransform.gameObject;
+            RectTransform pRect = pGO.GetComponent<RectTransform>();
+            RectTransform rect = go.GetComponent<RectTransform>();
+            rect.SetParent(pRect);
+            go.transform.localPosition = new Vector2(0, 0);
+            go.transform.localScale = new Vector3(1, 1, 1);
+            text.UpdateGeometry();
+            Selection.SetActiveObjectWithContext(go, pGO);
+        }
+    }
+
     [SerializeField]
     [TextArea(1, 8)]
     public string Text = "Text Element";
@@ -98,7 +118,7 @@ public class AllodsText : MaskableGraphic
         Mesh m = Renderer.Mesh;
 
         float offsX = rectTransform.rect.width*rectTransform.pivot.x;
-        float offsY = -rectTransform.rect.height * (1f - rectTransform.pivot.y);
+        float offsY = rectTransform.rect.height*rectTransform.pivot.y;
 
         vh.Clear();
 
@@ -108,13 +128,13 @@ public class AllodsText : MaskableGraphic
         {
             triOffset = m.vertices.Length;
             for (int i = 0; i < m.vertices.Length; i++)
-                vh.AddVert(Vector3.Scale(m.vertices[i], new Vector3(100f, -100f, 100f)) - new Vector3(offsX-ShadowOffset, offsY+ShadowOffset, 0), new Color(0, 0, 0, 1), m.uv[i]);
+                vh.AddVert(Vector3.Scale(m.vertices[i], new Vector3(100f, 100f, 100f)) - new Vector3(offsX-ShadowOffset, offsY+ShadowOffset, 0), new Color(0, 0, 0, 1), m.uv[i]);
             for (int i = 0; i < m.triangles.Length; i += 3)
                 vh.AddTriangle(m.triangles[i], m.triangles[i + 1], m.triangles[i + 2]);
         }
 
         for (int i = 0; i < m.vertices.Length; i++)
-            vh.AddVert(Vector3.Scale(m.vertices[i], new Vector3(100f, -100f, 100f)) - new Vector3(offsX, offsY, 0), m.colors[i], m.uv[i]);
+            vh.AddVert(Vector3.Scale(m.vertices[i], new Vector3(100f, 100f, 100f)) - new Vector3(offsX, offsY, 0), m.colors[i], m.uv[i]);
         for (int i = 0; i < m.triangles.Length; i += 3)
             vh.AddTriangle(m.triangles[i] + triOffset, m.triangles[i + 1] + triOffset, m.triangles[i + 2] + triOffset);
 

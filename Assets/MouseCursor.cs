@@ -223,6 +223,8 @@ public class MouseCursor : Graphic {
     {
         vh.Clear();
 
+        if (Application.isEditor)
+            return;
         if (CurrentCursor == null)
             return;
 

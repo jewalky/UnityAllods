@@ -8,7 +8,7 @@ public class Core
 {
     public static void Abort(string format, params object[] args)
     {
-        if (Application.isEditor)
+        if (!Application.isPlaying)
             return;
         //throw new AllodsException(String.Format(format, args));
         string error = string.Format(format, args);

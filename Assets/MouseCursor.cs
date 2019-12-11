@@ -223,7 +223,7 @@ public class MouseCursor : Graphic {
     {
         vh.Clear();
 
-        if (Application.isEditor)
+        if (!Application.isPlaying)
             return;
         if (CurrentCursor == null)
             return;

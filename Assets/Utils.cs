@@ -25,7 +25,7 @@ public partial class Utils
         float scaleY = (float)MainCamera.Height / Screen.height;
         return new Vector3(Input.mousePosition.x * scaleX, (Screen.height - Input.mousePosition.y) * scaleY, Input.mousePosition.z);
     }
-
+    
     public static void DestroyObjectAndMesh(GameObject o)
     {
         var children = new List<GameObject>();

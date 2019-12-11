@@ -1,14 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
-public class MouseCursor : MonoBehaviour {
+public class MouseCursor : Graphic {
 
     public class MapCursorSettings
     {
         internal int Xoffs;
         internal int Yoffs;
         internal Images.AllodsSprite Sprite;
-        internal Sprite[] Sprites;
         internal float Delay;
     }
 
@@ -26,12 +26,47 @@ public class MouseCursor : MonoBehaviour {
     {
         get
         {
-            return Renderer.enabled;
+            return _Visible;
         }
 
         set
         {
-            Renderer.enabled = value;
+            _Visible = value;
+        }
+    }
+
+    public Material _Material = null;
+    public override Material material
+    {
+        get
+        {
+            if (CurrentCursor != null)
+            {
+                if (_Material == null)
+                    _Material = new Material(MainCamera.MainShaderPaletted);
+                _Material.mainTexture = CurrentCursor.Sprite.Atlas;
+                _Material.SetTexture("_Palette", CurrentCursor.Sprite.OwnPalette);
+                return _Material;
+            }
+            else
+            {
+                return null;
+            }
+        }
+    }
+
+    public override Texture mainTexture
+    {
+        get
+        {
+            if (CurrentCursor != null)
+            {
+                return CurrentCursor.Sprite.Atlas;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 
@@ -39,7 +74,9 @@ public class MouseCursor : MonoBehaviour {
     public static Texture2D tex = null;
     private static float LastCursorTime = 0;
     private static int CurrentCursorFrame = 0;
-    
+    private static bool _Visible = false;
+    private static MapCursorSettings NextCursor = null;
+
     public static MapCursorSettings CreateCursor(string filename, int x, int y, float delay)
     {
         MapCursorSettings mcs = new MapCursorSettings();
@@ -47,26 +84,18 @@ public class MouseCursor : MonoBehaviour {
         mcs.Yoffs = y;
         Images.AllodsSprite sprite = Images.LoadSprite(filename);
         mcs.Sprite = sprite;
-        mcs.Sprites = mcs.Sprite.Sprites;
         mcs.Delay = delay;
         return mcs;
     }
 
     public static void SetCursor(MapCursorSettings mcs)
     {
-        if (CurrentCursor == mcs)
-            return;
-        CurrentCursor = mcs;
-        if (CurrentCursor == null)
-            return;
-        LastCursorTime = Time.unscaledTime;
-        CurrentCursorFrame = 0;
+        NextCursor = mcs;
     }
 
     public static void SetCursor(Images.AllodsSprite sprite)
     {
         CurItem.Sprite = sprite;
-        CurItem.Sprites = CurItem.Sprite.Sprites;
         SetCursor(CurItem);
     }
 
@@ -95,8 +124,7 @@ public class MouseCursor : MonoBehaviour {
     // pseudo-cursor for items
     private static MapCursorSettings CurItem = null;
 
-    private static SpriteRenderer Renderer = null;
-    void Start ()
+    override protected void Start ()
     {
         if (GameManager.Instance.IsHeadless) // don't use cursor in graphics-less mode
             return;
@@ -125,11 +153,7 @@ public class MouseCursor : MonoBehaviour {
         CurItem.Xoffs = 40;
         CurItem.Yoffs = 40;
         CurItem.Sprite = null;
-        CurItem.Sprites = null;
         CurItem.Delay = 0;
-
-        transform.localScale = new Vector3(100, 100, 1);
-        Renderer = GetComponent<SpriteRenderer>();
     }
 
     public void Update()
@@ -141,38 +165,83 @@ public class MouseCursor : MonoBehaviour {
         Utils.SetMousePosition(xDelta, yDelta);
     }
 
+    private static void CheckNextCursor()
+    {
+        if (NextCursor != CurrentCursor)
+        {
+            Debug.LogFormat("NextCursor != CurrentCursor");
+            LastCursorTime = Time.unscaledTime;
+            CurrentCursorFrame = 0;
+            CurrentCursor = NextCursor;
+            Instance.UpdateMaterial();
+            Instance.UpdateGeometry();
+        }
+    }
+
     // set / display cursor (called from the camera)
 	public static void OnPreRenderCursor()
     {
         if (GameManager.Instance.IsHeadless)
             return;
 
-        if (CurrentCursor == null)
-        {
-            Renderer.enabled = false;
-            return;
-        }
+        CheckNextCursor();
 
+        if (CurrentCursor == null)
+            return;
+
+        bool markForUpdate = false;
         if (CurrentCursor.Delay > 0)
         {
             LastCursorTime += Time.unscaledDeltaTime;
             if (LastCursorTime >= CurrentCursor.Delay)
             {
+                markForUpdate = true;
                 while (LastCursorTime >= CurrentCursor.Delay)
                 {
-                    CurrentCursorFrame = ++CurrentCursorFrame % CurrentCursor.Sprites.Length;
+                    CurrentCursorFrame = ++CurrentCursorFrame % CurrentCursor.Sprite.AtlasRects.Length;
                     LastCursorTime -= CurrentCursor.Delay;
                 }
             }
         }
         else CurrentCursorFrame = 0;
 
-        Renderer.enabled = true;
         Vector3 mPos = Utils.GetMousePosition();
-        Instance.transform.position = new Vector3(mPos.x - CurrentCursor.Xoffs, mPos.y - CurrentCursor.Yoffs, MainCamera.MouseZ);
-        Renderer.sprite = CurrentCursor.Sprites[CurrentCursorFrame];
-        Renderer.material.shader = MainCamera.MainShaderPaletted;
-        //Renderer.material.shader = MainCamera.BatShader;
-        Renderer.material.SetTexture("_Palette", CurrentCursor.Sprite.OwnPalette);
+        Sprite s = CurrentCursor.Sprite.Sprites[CurrentCursorFrame];
+        float Xoffs = CurrentCursor.Xoffs / s.rect.width;
+        float Yoffs = 1f - (CurrentCursor.Yoffs / s.rect.height);
+        Instance.rectTransform.pivot = new Vector2(Xoffs, Yoffs);
+        Instance.rectTransform.sizeDelta = s.rect.size;
+        Instance.rectTransform.localPosition = new Vector3(mPos.x, mPos.y, MainCamera.MouseZ);
+        if (markForUpdate)
+        {
+            Instance.UpdateMaterial();
+            Instance.UpdateGeometry();
+        }
+    }
+
+    protected override void OnPopulateMesh(VertexHelper vh)
+    {
+        vh.Clear();
+
+        if (CurrentCursor == null)
+            return;
+
+        float x = rectTransform.rect.width * rectTransform.pivot.x;
+        float y = rectTransform.rect.height * rectTransform.pivot.y;
+
+        float w = rectTransform.rect.width;
+        float h = rectTransform.rect.height;
+        float halfW = w * rectTransform.pivot.x;
+        float halfH = h * rectTransform.pivot.y;
+
+        Rect r = CurrentCursor.Sprite.AtlasRects[CurrentCursorFrame];
+        float minU = r.xMin, minV = r.yMin, maxU = r.xMax, maxV = r.yMax;
+
+        vh.AddVert(new Vector3(-halfW, -halfH + h, 0), new Color(1, 1, 1, 1), new Vector2(minU, minV));
+        vh.AddVert(new Vector3(-halfW + w, -halfH + h, 0), new Color(1, 1, 1, 1), new Vector2(maxU, minV));
+        vh.AddVert(new Vector3(-halfW + w, -halfH, 0), new Color(1, 1, 1, 1), new Vector2(maxU, maxV));
+        vh.AddVert(new Vector3(-halfW, -halfH, 0), new Color(1, 1, 1, 1), new Vector2(minU, maxV));
+        vh.AddTriangle(0, 1, 2);
+        vh.AddTriangle(2, 3, 0);
     }
 }

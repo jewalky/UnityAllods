@@ -69,7 +69,7 @@ namespace SpellEffects
         {
             Indicator = new MapProjectile(AllodsProjectile.PoisonSign, Unit);
             Indicator.ZOffset = 64;
-            MapLogic.Instance.Objects.Add(Indicator);
+            MapLogic.Instance.AddObject(Indicator, true);
         }
 
         public override void OnDisable()

@@ -64,6 +64,8 @@ public class MapObject : IDisposable
     public bool DoUpdateInfo = false;
     public bool DoUpdateSpells = false;
     public bool IsLinked { get; private set; }
+    public bool IsPassive = false;
+    public bool IsAdded = false;
 
     public virtual MapObjectType GetObjectType() { return MapObjectType.Object; }
     protected virtual Type GetGameObjectType() { return typeof(MapViewObject); }
@@ -124,7 +126,7 @@ public class MapObject : IDisposable
     {
         UnlinkFromWorld();
         DisposeNoUnlink();
-        MapLogic.Instance.Objects.Remove(this);
+        MapLogic.Instance.RemoveObject(this);
     }
 
     public virtual void Update()

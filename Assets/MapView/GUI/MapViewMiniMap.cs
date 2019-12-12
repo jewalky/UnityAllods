@@ -177,7 +177,7 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
             w *= aspect;
         float cX = 90 - w / 2;
         float cY = 83 - h / 2;
-        Rect vrec = MapView.Instance.UnpaddedVisibleRect;
+        RectInt vrec = MapView.Instance.UnpaddedVisibleRect;
         vrec.x -= mapLeft;
         vrec.y -= mapTop;
         BoundsObject.transform.localPosition = new Vector3(Mathf.Floor(cX + vrec.xMin / sW * w), Mathf.Floor(cY + vrec.yMin / sH * h), -2f);
@@ -309,7 +309,7 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
                 float cY = 83 - h / 2;
                 float cXCur = 90 - 64;
                 float cYCur = 83 - 64;
-                Rect vrec = MapView.Instance.UnpaddedVisibleRect;
+                RectInt vrec = MapView.Instance.UnpaddedVisibleRect;
                 vrec.x -= mapLeft;
                 vrec.y -= mapTop;
 

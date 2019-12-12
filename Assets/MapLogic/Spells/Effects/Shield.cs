@@ -76,13 +76,13 @@ namespace SpellEffects
             for (int i = 0; i < Scalar*16*2; i++)
             {
                 MapProjectile item = new MapProjectile(AllodsProjectile.Shield, Unit);
-                MapLogic.Instance.Objects.Add(item);
+                MapLogic.Instance.AddObject(item, true);
                 Grid.Add(item);
             }
             for (int i = 0; i < Scalar*16*2; i++)
             {
                 MapProjectile item = new MapProjectile(AllodsProjectile.Shield, Unit);
-                MapLogic.Instance.Objects.Add(item);
+                MapLogic.Instance.AddObject(item, true);
                 Circles.Add(item);
             }
         }

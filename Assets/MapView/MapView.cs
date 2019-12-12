@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
+using System.Collections.Generic;
 
 public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
 {
@@ -85,9 +86,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         Chat.transform.parent = UiManager.Instance.transform;
     }
 
-    public Rect UnpaddedVisibleRect { get; private set; }
-    private Rect _VisibleRect = new Rect(0, 0, 0, 0);
-    public Rect VisibleRect
+    public RectInt UnpaddedVisibleRect { get; private set; }
+    private RectInt _VisibleRect = new RectInt(0, 0, 0, 0);
+    public RectInt VisibleRect
     {
         get
         {
@@ -531,8 +532,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
             _ScrollX = x;
             _ScrollY = y;
 
-            _VisibleRect = new Rect(_ScrollX, _ScrollY, screenWB, screenHB);
-            UnpaddedVisibleRect = new Rect(_VisibleRect);
+            _VisibleRect = new RectInt(_ScrollX, _ScrollY, screenWB, screenHB);
+            UnpaddedVisibleRect = new RectInt(_VisibleRect.xMin, _VisibleRect.yMin, _VisibleRect.width, _VisibleRect.height);
             _VisibleRect.xMin -= 4;
             _VisibleRect.yMin -= 4;
             _VisibleRect.xMax += 4;
@@ -571,8 +572,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                 _SpritesBEnabled = value;
                 if (MapLogic.Instance.IsLoaded)
                 {
-                    for (int i = 0; i < MapLogic.Instance.Objects.Count; i++)
-                        MapLogic.Instance.Objects[i].DoUpdateView = true;
+                    List<MapObject> objects = MapLogic.Instance.GetAllObjects();
+                    for (int i = 0; i < objects.Count; i++)
+                        objects[i].DoUpdateView = true;
                 }
             }
         }
@@ -1023,16 +1025,26 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
     float lastLogicUpdateTime = 0;
     float lastLogTime = 0;
     float lastUpTime = 0;
+    void UpdateObjects()
+    {
+        for (int y = VisibleRect.yMin; y < VisibleRect.yMax; y++)
+        {
+            for (int x = VisibleRect.xMin; x < VisibleRect.xMax; x++)
+            {
+                MapNode node = MapLogic.Instance.Nodes[x, y];
+                for (int i = 0; i < node.Objects.Count; i++)
+                {
+                    MapObject mobj = node.Objects[i];
+                    mobj.CheckAllocateObject();
+                    if (mobj.GameScript != null && mobj.GameScript is IObjectManualUpdate)
+                        ((IObjectManualUpdate)mobj.GameScript).OnUpdate();
+                }
+            }
+        }
+    }
+
     void UpdateLogic()
     {
-        for (int i = 0; i < MapLogic.Instance.Objects.Count; i++)
-        {
-            MapObject mobj = MapLogic.Instance.Objects[i];
-            mobj.CheckAllocateObject();
-            if (mobj.GameScript != null && mobj.GameScript is IObjectManualUpdate)
-                ((IObjectManualUpdate)mobj.GameScript).OnUpdate();
-        }
-
         lastLogTime += Time.deltaTime;
         lastLogicUpdateTime += Time.deltaTime;
         if (lastLogicUpdateTime >= 1)
@@ -1051,8 +1063,10 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                 lastLogicUpdateTime -= 1;
             }
         }
-    }
 
+        UpdateObjects();
+    }
+    
     void UpdateTiles(int waf)
     {
         for (int i = 0; i < MeshChunks.Length; i++)

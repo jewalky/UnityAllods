@@ -254,7 +254,7 @@ namespace ClientCommands
             }
 
             if (newUnit)
-                MapLogic.Instance.Objects.Add(unit);
+                MapLogic.Instance.AddObject(unit, true);
             else
             {
                 unit.DoUpdateView = true; // update view if unit already present on map (otherwise its automatically done)

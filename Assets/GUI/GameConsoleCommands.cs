@@ -120,7 +120,7 @@ public class GameConsoleCommands
             return;
         }
 
-        MapLogic.Instance.Objects.Add(unit);
+        MapLogic.Instance.AddObject(unit, true);
     }
 
     public void showgroup(string gid = "-1")

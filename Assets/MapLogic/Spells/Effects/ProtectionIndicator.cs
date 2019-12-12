@@ -29,7 +29,7 @@ namespace SpellEffects
         {
             MapProjectile p = new MapProjectile(proj, Unit);
             p.ZOffset = 64;
-            MapLogic.Instance.Objects.Add(p);
+            MapLogic.Instance.AddObject(p, true);
             Indicators.Add(p);
         }
 

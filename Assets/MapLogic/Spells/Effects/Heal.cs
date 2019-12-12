@@ -113,7 +113,7 @@ namespace SpellEffects
                     item.ZOffset += 128;
                 item.SetPosition(pX, pY, 0);
                 item.ZAbsolute = true;
-                MapLogic.Instance.Objects.Add(item);
+                MapLogic.Instance.AddObject(item, true);
             }
         }
     }

@@ -20,26 +20,6 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         UiManager.Instance.Unsubscribe(this);
     }
 
-    IEnumerator DoUpdateLight()
-    {
-        while (true)
-        {
-            //yield return new WaitUntil(() => (MapLogic.Instance.MapLightingNeedsUpdate));
-            yield return new WaitForEndOfFrame();
-            MapLogic.Instance.GetLightingTexture(); // update lighting texture
-        }
-    }
-
-    IEnumerator DoUpdateFOW()
-    {
-        while (true)
-        {
-            //yield return new WaitUntil(() => (MapLogic.Instance.MapFOWNeedsUpdate));
-            yield return new WaitForEndOfFrame();
-            MapLogic.Instance.GetFOWTexture(); // update fog of war texture
-        }
-    }
-
     private MapViewMiniMap MiniMap;
     private MapViewCommandbar Commandbar;
     private MapViewInfowindow Infowindow;
@@ -57,8 +37,6 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
     void Start ()
     {
         UiManager.Instance.Subscribe(this);
-        StartCoroutine(DoUpdateLight());
-        StartCoroutine(DoUpdateFOW());
         //InitFromFile("scenario/20.alm");
         //InitFromFile("an_heaven_5_8.alm");
         //InitFromFile("kids3.alm");
@@ -659,6 +637,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
             SetScroll(ScrollX + ScrollDeltaX, ScrollY + ScrollDeltaY);
             scrollTimer = 0;
         }
+
+        UpdateLogic();
     }
 
     public bool ProcessEvent(Event e)

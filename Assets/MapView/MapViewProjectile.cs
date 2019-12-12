@@ -120,6 +120,8 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
         ShadowFilter.mesh = new Mesh();
         ShadowObject.transform.localScale = new Vector3(1, 1, 1);
         ShadowObject.transform.localPosition = new Vector3(0, 0, 16);
+
+        OnUpdate();
     }
 
     public bool HasShadow

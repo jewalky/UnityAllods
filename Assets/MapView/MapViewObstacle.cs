@@ -195,16 +195,14 @@ public class MapViewObstacle : MapViewObject, IObjectManualUpdate
                 ShadowRenderer.materials = newMats.ToArray();
 
                 for (int i = 0; i < newMaterialCount; i++)
-                {
-                    Renderer.materials[i].SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
                     ShadowRenderer.materials[i].color = new Color(0, 0, 0, 0.5f);
-                }
 
                 spriteSet = true;
             }
 
             for (int i = 0; i < newMaterialCount; i++)
             {
+                Renderer.materials[i].SetTexture("_Palette", sprites.OwnPalette); // no palette swap for this one
                 Renderer.materials[i].SetFloat("_Lightness", 0.5f + Mathf.Min(0.75f, (float)MapLogic.Instance.Nodes[LogicObstacle.X, LogicObstacle.Y].DynLight / 255));
             }
 

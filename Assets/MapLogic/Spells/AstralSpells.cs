@@ -95,10 +95,9 @@ namespace Spells
             MapNode node = MapLogic.Instance.Nodes[TargetX, TargetY];
 
             // find any corpse at X/Y
-            // we cannot use regular cells for this... because dead unit is unlinked from world
-            for (int i = 0; i < MapLogic.Instance.Objects.Count; i++)
+            for (int i = 0; i < node.Objects.Count; i++)
             {
-                MapObject o = MapLogic.Instance.Objects[i];
+                MapObject o = node.Objects[i];
                 if (!(o is MapUnit))
                     continue;
                 MapUnit u = (MapUnit)o;
@@ -164,7 +163,7 @@ namespace Spells
                     }
                     unit.CoreStats.HealthMax = (int)(u.CoreStats.HealthMax * raiseHpMult);
                     unit.UpdateItems();
-                    MapLogic.Instance.Objects.Add(unit);
+                    MapLogic.Instance.AddObject(unit, true);
 
                     u.BoneFrame = 4; // invisible corpse
                     u.DoUpdateView = true;
@@ -213,7 +212,7 @@ namespace Spells
             unit.SummonTimeMax = 30;
             unit.SummonTime = 0;
 
-            MapLogic.Instance.Objects.Add(unit);
+            MapLogic.Instance.AddObject(unit, true);
             return false;
         }
     }

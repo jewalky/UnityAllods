@@ -65,7 +65,9 @@ class MapLogic
 
     private MapLogic()
     {
-        Objects = new List<MapObject>();
+        _AllObjects = new List<MapObject>();
+        _Objects = new List<MapObject>();
+        _PassiveObjects = new List<MapObject>();
         Players = new List<Player>();
         Groups = new List<Group>();
     }
@@ -76,7 +78,9 @@ class MapLogic
     public int Width { get; private set; }
     public int Height { get; private set; }
     public MapNode[,] Nodes { get; private set; }
-    public List<MapObject> Objects { get; private set; }
+    private List<MapObject> _AllObjects;
+    private List<MapObject> _Objects;
+    private List<MapObject> _PassiveObjects;
     private int _TopObjectID = 0;
     public List<Player> Players { get; private set; }
     public const int MaxPlayers = 64;
@@ -136,7 +140,7 @@ class MapLogic
 
     public void CalculateDynLighting()
     {
-        Rect vRec = MapView.Instance.VisibleRect;
+        RectInt vRec = MapView.Instance.VisibleRect;
 
         for (int y = (int)vRec.yMin; y < vRec.yMax; y++)
         {
@@ -339,6 +343,46 @@ class MapLogic
         }
     }
 
+    public void AddObject(MapObject obj, bool active)
+    {
+        if (!obj.IsAdded)
+        {
+            obj.IsPassive = !active;
+            if (active)
+                _Objects.Add(obj);
+            else _PassiveObjects.Add(obj);
+            _AllObjects.Add(obj);
+            obj.IsAdded = true;
+        }
+    }
+
+    public void RemoveObject(MapObject obj)
+    {
+        if (obj.IsAdded)
+        {
+            if (obj.IsPassive)
+                _PassiveObjects.Remove(obj);
+            else _Objects.Remove(obj);
+            _AllObjects.Remove(obj);
+            obj.IsAdded = false;
+        }
+    }
+
+    public List<MapObject> GetAllObjects()
+    {
+        return new List<MapObject>(_AllObjects);
+    }
+
+    public List<MapObject> GetActiveObjects()
+    {
+        return new List<MapObject>(_Objects);
+    }
+
+    public List<MapObject> GetPassiveObjects()
+    {
+        return new List<MapObject>(_PassiveObjects);
+    }
+
     public void Update()
     {
         // update dynlights if needed
@@ -358,14 +402,31 @@ class MapLogic
         }
 
         // process object AI
-        for (int i = 0; i < Objects.Count; i++)
+        for (int i = 0; i < _Objects.Count; i++)
         {
-            MapObject mobj = Objects[i];
-            MapObject nextMobj = (i + 1 < Objects.Count) ? Objects[i + 1] : null;
+            MapObject mobj = _Objects[i];
+            MapObject nextMobj = (i + 1 < _Objects.Count) ? _Objects[i + 1] : null;
             mobj.Update();
             // list changed (current object was removed)
-            if ((i >= Objects.Count) || Objects[i] == nextMobj)
+            if ((i >= _Objects.Count) || _Objects[i] == nextMobj)
                 i--;
+        }
+
+        // process passive animations
+        RectInt vrec = MapView.Instance.VisibleRect;
+        for (int y = vrec.yMin; y < vrec.yMax; y++)
+        {
+            for (int x = vrec.xMin; x < vrec.xMax; x++)
+            {
+                MapNode node = Nodes[x, y];
+                for (int i = 0; i < node.Objects.Count; i++)
+                {
+                    MapObject mobj = node.Objects[i];
+                    if (!mobj.IsPassive)
+                        continue;
+                    mobj.Update();
+                }
+            }
         }
 
         // update local scanrange every few tics (every 5?)
@@ -375,9 +436,11 @@ class MapLogic
 
     public void Unload()
     {
-        foreach (MapObject mo in Objects)
+        foreach (MapObject mo in _AllObjects)
             mo.DisposeNoUnlink();
-        Objects.Clear();
+        _AllObjects.Clear();
+        _Objects.Clear();
+        _PassiveObjects.Clear();
         Players.Clear();
         Groups.Clear();
         ConsolePlayer = null;
@@ -525,7 +588,7 @@ class MapLogic
                     mob.X = x;
                     mob.Y = y;
                     mob.LinkToWorld();
-                    Objects.Add(mob);
+                    AddObject(mob, false);
                 }
             }
 
@@ -552,7 +615,7 @@ class MapLogic
                     }
 
                     struc.LinkToWorld();
-                    Objects.Add(struc);
+                    AddObject(struc, false);
                 }
             }
 
@@ -598,7 +661,7 @@ class MapLogic
                         human.Group = FindNewGroup(almunit.Group);
 
                         human.LinkToWorld();
-                        Objects.Add(human);
+                        AddObject(human, true);
                     }
                     else
                     {
@@ -618,7 +681,7 @@ class MapLogic
                         unit.Group = FindNewGroup(almunit.Group);
 
                         unit.LinkToWorld();
-                        Objects.Add(unit);
+                        AddObject(unit, true);
                     }
                 }
             }
@@ -914,14 +977,14 @@ class MapLogic
             }
         }
 
-        for (int i = 0; i < Objects.Count; i++)
+        for (int i = 0; i < _AllObjects.Count; i++)
         {
-            MapObject mobj = Objects[i];
+            MapObject mobj = _AllObjects[i];
             if (mobj is IPlayerPawn && ((IPlayerPawn)mobj).GetPlayer() == p)
             {
                 mobj.Dispose(); // delete object and associated GameObject, and also call UnlinkFromWorld
-                Objects.Remove(mobj); // remove from the list
-                i--;
+                i--; // because object list probably changed
+                continue;
             }
 
             // also if this object is NOT an object of this player, we might need to recalc net visibility.
@@ -954,7 +1017,7 @@ class MapLogic
         unit.Player = player;
         unit.Tag = GetFreeUnitTag(); // this is also used as network ID.
         unit.SetPosition(16, 16, false);
-        Objects.Add(unit);
+        AddObject(unit, true);
 
         // add items for testing
         unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Meteoric Amulet {skillfire=100,skillwater=100,skillair=100,skillearth=100,skillastral=100,manamax=16000}")); // for testing mage
@@ -981,7 +1044,7 @@ class MapLogic
     public int GetFreeUnitTag()
     {
         int topTag = 0;
-        foreach (MapObject mobj in Objects)
+        foreach (MapObject mobj in _AllObjects)
         {
             if (mobj.GetObjectType() != MapObjectType.Monster &&
                 mobj.GetObjectType() != MapObjectType.Human) continue;
@@ -994,7 +1057,7 @@ class MapLogic
 
     public MapUnit GetUnitByTag(int tag)
     {
-        foreach (MapObject mobj in Objects)
+        foreach (MapObject mobj in _AllObjects)
         {
             if (mobj.GetObjectType() != MapObjectType.Monster &&
                 mobj.GetObjectType() != MapObjectType.Human) continue;
@@ -1008,7 +1071,7 @@ class MapLogic
 
     public MapStructure GetStructureByTag(int tag)
     {
-        foreach (MapObject mobj in Objects)
+        foreach (MapObject mobj in _AllObjects)
         {
             if (mobj.GetObjectType() != MapObjectType.Structure) continue;
             MapStructure struc = (MapStructure)mobj;
@@ -1022,7 +1085,7 @@ class MapLogic
     // sack related
     public MapSack GetSackByTag(int tag)
     {
-        foreach (MapObject mobj in Objects)
+        foreach (MapObject mobj in _AllObjects)
         {
             if (mobj.GetObjectType() != MapObjectType.Sack) continue;
             MapSack sack = (MapSack)mobj;
@@ -1060,7 +1123,6 @@ class MapLogic
             MapObject mobj = node.Objects[i];
             if (mobj.GetObjectType() != MapObjectType.Sack) continue;
             mobj.Dispose();
-            Objects.Remove(mobj); // remove from the list
             i--;
         }
 
@@ -1086,7 +1148,7 @@ class MapLogic
             existingsack.Y = y;
             existingsack.Tag = TopSackTag++;
             existingsack.LinkToWorld();
-            Objects.Add(existingsack);
+            AddObject(existingsack, false);
             existingsack.UpdateNetVisibility();
         }
         else

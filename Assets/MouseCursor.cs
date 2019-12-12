@@ -169,7 +169,6 @@ public class MouseCursor : Graphic {
     {
         if (NextCursor != CurrentCursor)
         {
-            Debug.LogFormat("NextCursor != CurrentCursor");
             LastCursorTime = Time.unscaledTime;
             CurrentCursorFrame = 0;
             CurrentCursor = NextCursor;

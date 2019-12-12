@@ -442,7 +442,7 @@ public class Server
     {
         MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicHoming(target, speed), cb);
         proj.SetPosition(x, y, z);
-        MapLogic.Instance.Objects.Add(proj);
+        MapLogic.Instance.AddObject(proj, true);
 
         if (NetworkManager.IsServer)
         {
@@ -483,7 +483,7 @@ public class Server
     {
         MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicDirectional(tgx, tgy, tgz, speed), cb);
         proj.SetPosition(x, y, z);
-        MapLogic.Instance.Objects.Add(proj);
+        MapLogic.Instance.AddObject(proj, true);
 
         if (NetworkManager.IsServer)
         {
@@ -526,7 +526,7 @@ public class Server
     {
         MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicSimple(animspeed, scale, start, end), null); // this is usually SFX like stuff. projectile plays animation based on typeid and stops.
         proj.SetPosition(x, y, z);
-        MapLogic.Instance.Objects.Add(proj);
+        MapLogic.Instance.AddObject(proj, true);
 
         if (NetworkManager.IsServer)
         {
@@ -569,7 +569,7 @@ public class Server
     {
         MapProjectile proj = new MapProjectile(AllodsProjectile.Lightning, source, new MapProjectileLogicLightning(target, color), cb);
         proj.SetPosition(x, y, z);
-        MapLogic.Instance.Objects.Add(proj);
+        MapLogic.Instance.AddObject(proj, true);
 
         if (NetworkManager.IsServer)
         {
@@ -612,7 +612,7 @@ public class Server
             proj.LightLevel = lightlevel;
         proj.ZOffset = zoffs;
         proj.SetPosition(x, y, z);
-        MapLogic.Instance.Objects.Add(proj);
+        MapLogic.Instance.AddObject(proj, true);
 
         if (NetworkManager.IsServer)
         {

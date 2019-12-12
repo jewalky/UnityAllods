@@ -124,6 +124,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         }
     }
 
+    public bool IsBlocking { get; private set; }
     public bool IsAlive = true;
     public bool IsDying = false;
     public List<IUnitAction> Actions = new List<IUnitAction>();
@@ -207,8 +208,6 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public readonly bool[,] Vision = new bool[41, 41];
     public readonly ScanrangeCalc VisionCalc = new ScanrangeCalc();
     public readonly UnitInteraction Interaction = null;
-
-    public readonly List<MapProjectile> TargetedBy = new List<MapProjectile>();
 
     public readonly List<Spell> SpellBook = new List<Spell>();
 
@@ -637,7 +636,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 IsAlive = false;
                 IsDying = false;
                 DoUpdateView = true;
-                UnlinkFromWorld();
+                Unblock();
                 for (int i = 0; i < SpellEffects.Count; i++)
                     SpellEffects[i].OnDetach();
                 SpellEffects.Clear();
@@ -737,6 +736,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public override MapNodeFlags GetNodeLinkFlags(int x, int y)
     {
+        if (!IsBlocking)
+            return 0;
         return IsFlying ? MapNodeFlags.DynamicAir : MapNodeFlags.DynamicGround;
     }
 
@@ -1255,10 +1256,31 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         IsAlive = true;
         IsDying = false;
         VState = UnitVisualState.Idle;
-        LinkToWorld();
+        Block();
+        if (!IsLinked) LinkToWorld();
         if (NetworkManager.IsServer)
             Server.NotifyRespawn(this);
         DoUpdateView = true;
+    }
+
+    public void Unblock()
+    {
+        IsBlocking = false;
+        if (IsLinked)
+        {
+            UnlinkFromWorld();
+            LinkToWorld();
+        }
+    }
+
+    public void Block()
+    {
+        IsBlocking = true;
+        if (IsLinked)
+        {
+            UnlinkFromWorld();
+            LinkToWorld();
+        }
     }
 
     public int TakeDamage(DamageFlags flags, MapUnit source, int damagecount)

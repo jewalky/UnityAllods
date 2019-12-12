@@ -28,11 +28,7 @@ public class MapProjectileLogicHoming : IMapProjectileLogic
 
     public void SetProjectile(MapProjectile proj)
     {
-        if (Projectile != null && Target != null)
-            Target.TargetedBy.Remove(Projectile);
         Projectile = proj;
-        if (Target != null)
-            Target.TargetedBy.Add(proj);
     }
 
     public virtual bool Update()
@@ -225,11 +221,7 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
 
     public void SetProjectile(MapProjectile proj)
     {
-        if (Projectile != null && Target != null)
-            Target.TargetedBy.Remove(Projectile);
         Projectile = proj;
-        if (Target != null)
-            Target.TargetedBy.Add(proj);
     }
 
     private float Sin10(float v)
@@ -265,7 +257,7 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
                 visProj.LightLevel = 0;
                 visProj.CurrentFrame = Color==0 ? 0 : (5 * (Color - 1));
                 visProj.SetPosition(Projectile.ProjectileX + TargetDir.x * i, Projectile.ProjectileY + TargetDir.y * i, 0); // for now
-                MapLogic.Instance.Objects.Add(visProj);
+                MapLogic.Instance.AddObject(visProj, true);
                 SubProjectiles.Add(visProj);
             }
 
@@ -667,14 +659,6 @@ public class MapProjectile : MapObject, IDynlight
     public override void Dispose()
     {
         LightLevel = 0;
-        for (int i = 0; i < MapLogic.Instance.Objects.Count; i++)
-        {
-            MapObject mobj = MapLogic.Instance.Objects[i];
-            if (mobj.GetObjectType() != MapObjectType.Monster &&
-                mobj.GetObjectType() != MapObjectType.Human) continue;
-            MapUnit unit = (MapUnit)mobj;
-            unit.TargetedBy.Remove(this);
-        }
         base.Dispose();
     }
 

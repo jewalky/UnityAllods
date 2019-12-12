@@ -6,25 +6,6 @@ using UnityEditor;
 [AddComponentMenu("Allods UI/Image")]
 public class AllodsImage : MaskableGraphic
 {
-    [MenuItem("GameObject/Allods UI/Image", false, 0)]
-    public static void AddAllodsText()
-    {
-        GameObject go = new GameObject("AllodsImage");
-        go.transform.localScale = new Vector3(1, 1, 1);
-        AllodsImage image = go.AddComponent<AllodsImage>();
-        if (Selection.activeTransform != null)
-        {
-            GameObject pGO = Selection.activeTransform.gameObject;
-            RectTransform pRect = pGO.GetComponent<RectTransform>();
-            RectTransform rect = go.GetComponent<RectTransform>();
-            rect.SetParent(pRect);
-            go.transform.localPosition = new Vector2(0, 0);
-            go.transform.localScale = new Vector3(1, 1, 1);
-            image.UpdateGeometry();
-            Selection.SetActiveObjectWithContext(go, pGO);
-        }
-    }
-
     // set in the editor
     [SerializeField]
     public string Filename;

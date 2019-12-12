@@ -7,25 +7,6 @@ using UnityEditor;
 [AddComponentMenu("Allods UI/Text")]
 public class AllodsText : MaskableGraphic
 {
-    [MenuItem("GameObject/Allods UI/Text", false, 0)]
-    public static void AddAllodsText()
-    {
-        GameObject go = new GameObject("AllodsText");
-        go.transform.localScale = new Vector3(1, 1, 1);
-        AllodsText text = go.AddComponent<AllodsText>();
-        if (Selection.activeTransform != null)
-        {
-            GameObject pGO = Selection.activeTransform.gameObject;
-            RectTransform pRect = pGO.GetComponent<RectTransform>();
-            RectTransform rect = go.GetComponent<RectTransform>();
-            rect.SetParent(pRect);
-            go.transform.localPosition = new Vector2(0, 0);
-            go.transform.localScale = new Vector3(1, 1, 1);
-            text.UpdateGeometry();
-            Selection.SetActiveObjectWithContext(go, pGO);
-        }
-    }
-
     [SerializeField]
     [TextArea(1, 8)]
     public string Text = "Text Element";

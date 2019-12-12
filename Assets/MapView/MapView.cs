@@ -54,7 +54,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
     public MapObject HoveredObject { get; private set; }
 
     // Use this for initialization
-    void Start ()
+    IEnumerator Start ()
     {
         UiManager.Instance.Subscribe(this);
         StartCoroutine(DoUpdateLight());
@@ -84,6 +84,12 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
 
         Chat = Utils.CreateObjectWithScript<MapViewChat>();
         Chat.transform.parent = UiManager.Instance.transform;
+
+        while (true)
+        {
+            yield return new WaitForEndOfFrame();
+            UpdateLogic();
+        }
     }
 
     public RectInt UnpaddedVisibleRect { get; private set; }
@@ -643,8 +649,6 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         if (SelectedObject != null && (SelectedObject.GetObjectType() == MapObjectType.Monster ||
                                        SelectedObject.GetObjectType() == MapObjectType.Human) && (!((MapUnit)SelectedObject).IsAlive || !SelectedObject.IsLinked)) SelectedObject = null;
 
-        UpdateLogic();
-
         int waterAnimFrameNew = (MapLogic.Instance.LevelTime % 20) / 5;
         if (WaterAnimFrame != waterAnimFrameNew)
         {
@@ -1045,6 +1049,9 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
 
     void UpdateLogic()
     {
+        if (!MapLogic.Instance.IsLoaded)
+            return;
+
         lastLogTime += Time.deltaTime;
         lastLogicUpdateTime += Time.deltaTime;
         if (lastLogicUpdateTime >= 1)

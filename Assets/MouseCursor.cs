@@ -210,7 +210,9 @@ public class MouseCursor : Graphic {
         float Yoffs = 1f - (CurrentCursor.Yoffs / s.rect.height);
         Instance.rectTransform.pivot = new Vector2(Xoffs, Yoffs);
         Instance.rectTransform.sizeDelta = s.rect.size;
-        Instance.rectTransform.localPosition = new Vector3(mPos.x, mPos.y, MainCamera.MouseZ);
+        // find size of canvas
+        Rect canvasSize = Instance.canvas.GetComponent<RectTransform>().rect;
+        Instance.rectTransform.localPosition = new Vector3(mPos.x - canvasSize.width/2, mPos.y - canvasSize.height/2, MainCamera.MouseZ);
         if (markForUpdate)
         {
             Instance.UpdateMaterial();

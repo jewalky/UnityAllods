@@ -124,7 +124,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         }
     }
 
-    public bool IsBlocking { get; private set; }
+    public bool IsBlocking { get; private set; } = true;
     public bool IsAlive = true;
     public bool IsDying = false;
     public List<IUnitAction> Actions = new List<IUnitAction>();

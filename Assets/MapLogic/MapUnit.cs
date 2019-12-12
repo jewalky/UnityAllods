@@ -1265,22 +1265,28 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public void Unblock()
     {
-        IsBlocking = false;
-        if (IsLinked)
+        if (!IsLinked)
         {
-            UnlinkFromWorld();
-            LinkToWorld();
+            IsBlocking = false;
+            return;
         }
+
+        UnlinkFromWorld();
+        IsBlocking = false;
+        LinkToWorld();
     }
 
     public void Block()
     {
-        IsBlocking = true;
-        if (IsLinked)
+        if (!IsLinked)
         {
-            UnlinkFromWorld();
-            LinkToWorld();
+            IsBlocking = true;
+            return;
         }
+
+        UnlinkFromWorld();
+        IsBlocking = true;
+        LinkToWorld();
     }
 
     public int TakeDamage(DamageFlags flags, MapUnit source, int damagecount)

@@ -357,6 +357,8 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         ShadowFilter.mesh = new Mesh();
         ShadowObject.transform.localScale = new Vector3(1, 1, 1);
         ShadowObject.transform.localPosition = new Vector3(0, 0, 16);
+
+        OnUpdate();
     }
 
     protected virtual Texture2D GetDeathPalette(UnitFile f)

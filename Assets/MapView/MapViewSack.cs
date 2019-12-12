@@ -91,6 +91,8 @@ public class MapViewSack : MapViewObject, IObjectManualUpdate
         ShadowFilter.mesh = new Mesh();
         ShadowObject.transform.localScale = new Vector3(1, 1, 1);
         ShadowObject.transform.localPosition = new Vector3(0, 0, 16);
+
+        OnUpdate();
     }
 
     private static Images.AllodsSprite _SackSprite = null;

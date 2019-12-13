@@ -1196,7 +1196,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             // put excessive items back to pack
             Item newitem = new Item(item, 1);
             item.Count--;
-            ItemsPack.PutItem(ItemsPack.Count, item);
+            if (item.Parent == ItemsPack)
+                ItemsPack.PutItem(item.Index, item);
+            else ItemsPack.PutItem(ItemsPack.Count, item);
             item = newitem;
         }
 

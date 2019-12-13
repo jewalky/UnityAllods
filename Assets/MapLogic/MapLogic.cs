@@ -643,13 +643,18 @@ class MapLogic
             // load units
             if (!NetworkManager.IsClient && mapStructure.Units != null)
             {
-                int c = 0;
                 System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
                 foreach (AllodsMap.AlmUnit almunit in mapStructure.Units)
                 {
                     if ((almunit.Flags & 0x10) != 0)
                     {
                         MapHuman human = new MapHuman(almunit.ServerID);
+                        if (human.Class == null)
+                        {
+                            Debug.LogFormat("Tried to load invalid unit {0}", almunit.ServerID);
+                            continue;
+                        }
+
                         human.X = human.TargetX = human.SpawnX = human.LastSpawnX = (int)almunit.X;
                         human.Y = human.TargetY = human.SpawnY = human.LastSpawnY = (int)almunit.Y;
                         human.Tag = almunit.ID;
@@ -670,6 +675,12 @@ class MapLogic
                     else
                     {
                         MapUnit unit = new MapUnit(almunit.ServerID);
+                        if (unit.Class == null)
+                        {
+                            Debug.LogFormat("Tried to load invalid unit {0}", almunit.ServerID);
+                            continue;
+                        }
+
                         unit.X = unit.TargetX = unit.SpawnX = unit.LastSpawnX = (int)almunit.X;
                         unit.Y = unit.TargetY = unit.SpawnY = unit.LastSpawnY = (int)almunit.Y;
                         unit.Tag = almunit.ID;
@@ -686,6 +697,71 @@ class MapLogic
 
                         unit.LinkToWorld();
                         AddObject(unit, true);
+                    }
+                }
+            }
+
+            // load items into units
+            if (!NetworkManager.IsClient && mapStructure.Sacks != null)
+            {
+                foreach (AllodsMap.AlmSack almsack in mapStructure.Sacks)
+                {
+                    if (almsack.Items.Length <= 0)
+                        continue;
+
+                    MapUnit unit = null;
+                    MapSack sack = null;
+                    if (almsack.UnitID != 0)
+                    {
+                        unit = GetUnitByTag((int)almsack.UnitID);
+                        if (unit == null)
+                        {
+                            Debug.LogFormat("Error: Can't resolve unit ID {0} for sack", almsack.UnitID);
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        sack = PutSackAt((int)almsack.X, (int)almsack.Y, new ItemPack(), false);
+                        sack.Pack.Money += almsack.Gold;
+                    }
+
+                    List<Item> items = new List<Item>();
+                    foreach (AllodsMap.AlmSackItem almitem in almsack.Items)
+                    {
+                        List<ItemEffect> effects = new List<ItemEffect>();
+                        AllodsMap.AlmEffect almBaseEffect = null;
+                        int almBaseEffectId = (int)(almitem.EffectNumber - 1);
+                        if (mapStructure.Effects != null && almBaseEffectId >= 0 && almBaseEffectId < mapStructure.Effects.Length)
+                        {
+                            almBaseEffect = mapStructure.Effects[almBaseEffectId];
+                            foreach (AllodsMap.AlmEffectModifier mod in almBaseEffect.EffectModifiers)
+                            {
+                                ItemEffect effect = new ItemEffect((ItemEffect.Effects)mod.TypeOfMod, (int)mod.Value);
+                                effects.Add(effect);
+                            }
+                        }
+                        else if (almBaseEffectId >= 0)
+                        {
+                            Debug.LogFormat("Warning: Can't resolve effect #{0} for sack item", almBaseEffectId);
+                        }
+
+                        Item item = new Item((ushort)almitem.ItemID, effects);
+                        if (unit != null)
+                        {
+                            if (almitem.Wielded > 0)
+                            {
+                                unit.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
+                            }
+                            else
+                            {
+                                unit.ItemsPack.PutItem(unit.ItemsPack.Count, item);
+                            }
+                        }
+                        else if (sack != null)
+                        {
+                            sack.Pack.PutItem(sack.Pack.Count, item);
+                        }
                     }
                 }
             }

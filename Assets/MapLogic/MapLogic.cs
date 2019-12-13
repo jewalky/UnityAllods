@@ -414,6 +414,7 @@ class MapLogic
 
         // process passive animations
         RectInt vrec = MapView.Instance.VisibleRect;
+        HashSet<MapObject> visObjects = new HashSet<MapObject>();
         for (int y = vrec.yMin; y < vrec.yMax; y++)
         {
             for (int x = vrec.xMin; x < vrec.xMax; x++)
@@ -424,10 +425,13 @@ class MapLogic
                     MapObject mobj = node.Objects[i];
                     if (!mobj.IsPassive)
                         continue;
-                    mobj.Update();
+                    visObjects.Add(mobj);
                 }
             }
         }
+
+        foreach (MapObject mobj in visObjects)
+            mobj.Update();
 
         // update local scanrange every few tics (every 5?)
         if (ConsolePlayer != null && (_LevelTime % 5 == 0))

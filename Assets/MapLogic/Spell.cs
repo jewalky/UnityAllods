@@ -55,21 +55,28 @@ public class Spell
         {
             if (User != null && Item == null && OwnSkill < 0)
             {
+                int baseSkill = 0;
                 switch (Template.Sphere)
                 {
                     case 1:
-                        return User.Stats.SkillFire;
+                        baseSkill = User.Stats.SkillFire;
+                        break;
                     case 2:
-                        return User.Stats.SkillWater;
+                        baseSkill = User.Stats.SkillWater;
+                        break;
                     case 3:
-                        return User.Stats.SkillAir;
+                        baseSkill = User.Stats.SkillAir;
+                        break;
                     case 4:
-                        return User.Stats.SkillEarth;
+                        baseSkill = User.Stats.SkillEarth;
+                        break;
                     case 5:
-                        return User.Stats.SkillAstral;
+                        baseSkill = User.Stats.SkillAstral;
+                        break;
                     default:
-                        return OwnSkill;
+                        break;
                 }
+                return baseSkill + User.Stats.Mind - 30;
             }
             else return Math.Max(0, OwnSkill);
         }
@@ -145,36 +152,28 @@ public class Spell
             return Item.Class.Option.Range;
         }
 
-        // maxRange is base range
+        float range = Template.MaxRange;
         if (SpellID == Spells.Teleport)
-            return 8 + (float)Skill / 4;
-        return Template.MaxRange + (float)Skill / 25;
-    }
-
-    private float GetMindModifier()
-    {
-        float mmod = 1f;
-        if (User != null && Item == null && User is MapHuman)
-        {
-            MapHuman huser = (MapHuman)User;
-            mmod = (float)huser.Stats.Mind * 0.02f;
-        }
-
-        return mmod;
+            range += Skill / 3;
+        else if (range > 0)
+            range += Skill / 30;
+        return range;
     }
 
     public int GetDamageMin()
     {
         if (Template.DamageMin < 0 || Template.DamageMax < 0)
             return 0;
-        return Math.Max(1, (int)(GetMindModifier() * Template.DamageMin * ((float)Skill / 25 + 1f)));
+        float damageMultiplier = (float)Skill / 30 + 1;
+        return (int)(Template.DamageMin * damageMultiplier);
     }
 
     public int GetDamageMax()
     {
         if (Template.DamageMin < 0 || Template.DamageMax < 0)
             return 0;
-        return (int)(GetMindModifier() * Template.DamageMax * ((float)Skill / 25 + 1f));
+        float damageMultiplier = (float)Skill / 30 + 1;
+        return (int)(Template.DamageMax * damageMultiplier);
     }
 
     public int GetDamage()
@@ -193,24 +192,36 @@ public class Spell
 
     public int GetScanRange()
     {
-        return Skill / 25;
+        return Skill / 30 + 1;
+    }
+
+    public int GetBlessPower()
+    {
+        return 4 * Skill / 5 + 20;
     }
 
     public float GetDuration()
     {
-        if (SpellID == Spells.Stone_Curse)
-            return 1f + Skill * 0.15f;
+        // some spells are special
+        switch (SpellID)
+        {
+            case Spells.Stone_Curse:
+                return Skill * 0.15f;
+            default:
+                break;
+        }
+
         if (Template.AreaDuration > 0)
             return Template.AreaDuration + Skill * 0.1f;
         if (Template.Duration > 0)
-            return (Template.Duration + Skill * (float)Template.Duration * 0.1f * GetMindModifier()) * 1.5f;
+            return Mathf.Pow(1.025f, Skill) * Template.Duration;
         return 0;
     }
 
     // protection +X
     public int GetProtection()
     {
-        return 10 + Skill / 2;
+        return Skill / 2;
     }
     
     // bless and curse %
@@ -222,13 +233,13 @@ public class Spell
     // speed +X
     public int GetSpeed()
     {
-        return 2 + Skill / 10;
+        return Skill / 15 + 1;
     }
 
     // absorbtion +X
     public int GetAbsorbtion()
     {
-        return 5 + Skill / 10;
+        return 3 + Skill / 10;
     }
 
     public string ToVisualString()

@@ -76,7 +76,7 @@ public class Spell
                     default:
                         break;
                 }
-                return baseSkill + User.Stats.Mind - 30;
+                return Math.Max(0, baseSkill + User.Stats.Mind - 30);
             }
             else return Math.Max(0, OwnSkill);
         }

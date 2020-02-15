@@ -40,7 +40,8 @@ public enum UnitFlags
     Bless           = 0x0100,
     Curse           = 0x0200,
     Healing         = 0x0400,
-    Draining        = 0x0800
+    Draining        = 0x0800,
+    PhasedOut       = 0x1000
 }
 
 public class MapUnitAggro
@@ -237,6 +238,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             }
         }
     }
+
+    // entering structures
+    public MapStructure CurrentStructure = null;
 
     public MapUnit()
     {
@@ -544,6 +548,13 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         if (Class == null)
             return;
 
+        // phased out unit does literally nothing
+        if (Flags.HasFlag(UnitFlags.PhasedOut))
+        {
+            UpdateNetVisibility();
+            return;
+        }
+
         // check summon timer
         if (SummonTimeMax > 0 && (MapLogic.Instance.LevelTime % MapLogic.TICRATE == 0))
         {
@@ -729,7 +740,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public override int GetVisibility()
     {
-        if (BoneFrame > 3)
+        if (BoneFrame > 3 || Flags.HasFlag(UnitFlags.PhasedOut))
             return 0;
         return base.GetVisibility();
     }
@@ -1008,10 +1019,11 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
     public void SetPosition(int x, int y, bool netupdate)
     {
-        UnlinkFromWorld();
+        bool wasLinked = IsLinked;
+        if (IsLinked) UnlinkFromWorld();
         TargetX = X = x;
         TargetY = Y = y;
-        if (IsAlive) LinkToWorld();
+        if (IsAlive && wasLinked) LinkToWorld();
         CalculateVision();
         DoUpdateView = true;
 
@@ -1518,5 +1530,28 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     public virtual DamageFlags GetDamageType()
     {
         return DamageFlags.Raw;
+    }
+
+    public void PhaseOut()
+    {
+        if (Flags.HasFlag(UnitFlags.PhasedOut))
+            return;
+        Flags |= UnitFlags.PhasedOut;
+        DoUpdateView = true;
+        UnlinkFromWorld();
+        // do one last update... unlinked objects are not updated
+        if (GameScript is IObjectManualUpdate mu)
+            mu.OnUpdate();
+    }
+
+    public void PhaseIn()
+    {
+        if (!Flags.HasFlag(UnitFlags.PhasedOut))
+            return;
+        Flags &= ~UnitFlags.PhasedOut;
+        DoUpdateView = true;
+        if (!Interaction.CheckWalkableForUnit(X, Y, false))
+            RandomizePosition(X, Y, 2, true);
+        LinkToWorld();
     }
 }

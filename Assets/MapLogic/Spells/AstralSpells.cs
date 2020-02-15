@@ -150,6 +150,7 @@ namespace Spells
                     unit.Player = Spell.User.Player;
                     unit.Tag = MapLogic.Instance.GetFreeUnitTag();
                     unit.SetPosition(TargetX, TargetY, false);
+                    unit.LinkToWorld();
                     if (!unit.Interaction.CheckWalkableForUnit(TargetX, TargetY, false))
                     {
                         // invalid position, don't add unit

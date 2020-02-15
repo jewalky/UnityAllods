@@ -329,3 +329,48 @@ public class CastState : IUnitState
         return true;
     }
 }
+
+public class UseStructureState : IUnitState
+{
+    private MapUnit Unit;
+    private MapStructure Structure;
+    private UnitStateWalker Walker;
+
+    public UseStructureState(MapUnit unit, MapStructure s)
+    {
+        Unit = unit;
+        Structure = s;
+        Walker = new UnitStateWalker();
+    }
+
+    public bool Process()
+    {
+        if (Unit.Stats.Health <= 0)
+            return false;
+
+        if (Structure == null || Structure.Class == null || !Structure.Class.Usable)
+            return false;
+
+        // check if close enough
+        int x = Structure.X - 1;
+        int y = Structure.Y - 1;
+        int w = Structure.Width + 2;
+        int h = Structure.Height + 2;
+
+        // done walking
+        if (new Rect(x, y, w, h).Overlaps(new Rect(Unit.X, Unit.Y, Unit.Width, Unit.Height)))
+        {
+            // we are the server.
+            // initiate building view...
+            if (Unit.CurrentStructure != null)
+                Unit.CurrentStructure.HandleUnitLeave(Unit);
+            Structure.HandleUnitEnter(Unit);
+            return false;
+        }
+
+        //Debug.LogFormat("ID {0} TRY WALK TO", Unit.ID);
+        // make one step to the target.
+        Walker.TryWalkTo(Unit, Structure.X, Structure.Y, Structure.Width, Structure.Height);
+        return true;
+    }
+}

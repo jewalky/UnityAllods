@@ -603,6 +603,12 @@ class MapLogic
                 {
                     MapStructure struc;
                     struc = new MapStructure(almstruc.TypeID);
+                    if (struc.Class == null)
+                    {
+                        Debug.LogFormat("Tried to load invalid structure {0}", almstruc.TypeID);
+                        continue;
+                    }
+
                     struc.X = (int)almstruc.X;
                     struc.Y = (int)almstruc.Y;
                     struc.Health = almstruc.Health;
@@ -618,8 +624,47 @@ class MapLogic
                         struc.IsBridge = true;
                     }
 
+                    // find inn/shop data if needed
+                    if (struc.Class != null && struc.Class.Usable)
+                    {
+                        if ((struc.Class.ID >= 105 && struc.Class.ID <= 107) || // druid shop
+                            (struc.Class.ID >= 34 && struc.Class.ID <= 35) || // plagat shop
+                            (struc.Class.ID >= 93 && struc.Class.ID <= 95)) // kaarg shop
+                        {
+                            foreach (AllodsMap.AlmShop shop in mapStructure.Shops)
+                            {
+                                if (shop.ID == struc.Tag)
+                                {
+                                    struc.Logic = new ShopStructure(struc, shop);
+                                    break;
+                                }
+                            }
+                            if (struc.Logic == null)
+                            {
+                                Debug.LogFormat("Warning: Loaded multiplayer shop without data (ID={0})", struc.ID);
+                            }
+                        }
+                        else if ((struc.Class.ID >= 99 && struc.Class.ID <= 101) || // kaarg inn
+                                 (struc.Class.ID >= 111 && struc.Class.ID <= 113) || // druid inn
+                                 (struc.Class.ID >= 67 && struc.Class.ID <= 69)) // plagat inn
+                        {
+                            foreach (AllodsMap.AlmInnInfo info in mapStructure.Inns)
+                            {
+                                if (info.ID == struc.Tag)
+                                {
+                                    struc.Logic = new InnStructure(struc, info);
+                                    break;
+                                }
+                            }
+                            if (struc.Logic == null)
+                            {
+                                Debug.LogFormat("Warning: Loaded multiplayer inn without data (ID={0})", struc.ID);
+                            }
+                        }
+                    }
+
                     struc.LinkToWorld();
-                    AddObject(struc, false);
+                    AddObject(struc, (struc.Logic != null));
                 }
             }
 
@@ -1097,6 +1142,7 @@ class MapLogic
         unit.Player = player;
         unit.Tag = GetFreeUnitTag(); // this is also used as network ID.
         unit.SetPosition(16, 16, false);
+        unit.LinkToWorld();
         AddObject(unit, true);
 
         // add items for testing

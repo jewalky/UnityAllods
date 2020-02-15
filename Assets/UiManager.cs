@@ -102,7 +102,7 @@ public class UiManager : MonoBehaviour
     public void ClearWindows()
     {
         foreach (MonoBehaviour wnd in Windows)
-            Destroy(wnd);
+            Destroy(wnd.gameObject);
         Windows.Clear();
     }
 

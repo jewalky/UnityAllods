@@ -337,7 +337,7 @@ namespace ServerCommands
 
             MapUnit unitFrom = MapLogic.Instance.GetUnitByTag(TagFrom);
             // we can't do anything with units that don't belong to our player.
-            if (unitFrom.Player != player)
+            if (unitFrom == null || unitFrom.Player != player)
                 return true;
 
             Spell cspell = unitFrom.GetSpell((Spell.Spells)SpellID, (ushort)ItemID);
@@ -345,6 +345,60 @@ namespace ServerCommands
                 return true; // spell not found
 
             unitFrom.SetState(new CastState(unitFrom, cspell, TargetX, TargetY));
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.UseStructure)]
+    public struct UseStructure : IServerCommand
+    {
+        [ProtoMember(1)]
+        public int UnitTag;
+        [ProtoMember(2)]
+        public int StructureTag;
+
+        public bool Process(ServerClient client)
+        {
+            if (client.State != ClientState.Playing)
+                return false;
+
+            Player player = MapLogic.Instance.GetNetPlayer(client);
+            if (player == null)
+                return false;
+
+            MapUnit unit = MapLogic.Instance.GetUnitByTag(UnitTag);
+            if (unit == null || unit.Player != player)
+                return true;
+
+            MapStructure structure = MapLogic.Instance.GetStructureByTag(StructureTag);
+            if (structure == null || structure.Class == null || !structure.Class.Usable)
+                return false;
+
+            unit.SetState(new UseStructureState(unit, structure));
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.LeaveStructure)]
+    public struct LeaveStructure : IServerCommand
+    {
+        public bool Process(ServerClient client)
+        {
+            if (client.State != ClientState.Playing)
+                return false;
+
+            Player player = MapLogic.Instance.GetNetPlayer(client);
+            if (player == null)
+                return false;
+
+            // find all units of the player and leave all structures
+            foreach (MapObject mobj in player.Objects)
+                if (mobj is MapUnit unit && unit.CurrentStructure != null)
+                    unit.CurrentStructure.HandleUnitLeave(unit);
+
+            Server.NotifyLeaveStructure(player);
             return true;
         }
     }

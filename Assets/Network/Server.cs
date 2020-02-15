@@ -823,4 +823,63 @@ public class Server
             }
         }
     }
+
+    public static void NotifyEnterShop(MapUnit unit, MapStructure shop)
+    {
+        if (NetworkManager.IsServer)
+        {
+            Player p = unit.Player;
+            if (p != null && p.NetClient != null && p.NetClient.State == ClientState.Playing)
+            {
+                ClientCommands.EnterShop enterShopCmd;
+                enterShopCmd.Tag = shop.Tag;
+                p.NetClient.SendCommand(enterShopCmd);
+            }
+        }
+        else if (!NetworkManager.IsClient)
+        {
+            // process locally
+            ClientCommands.EnterShop enterShopCmd;
+            enterShopCmd.Tag = shop.Tag;
+            enterShopCmd.Process();
+        }
+    }
+
+    public static void NotifyEnterInn(MapUnit unit, MapStructure shop)
+    {
+        if (NetworkManager.IsServer)
+        {
+            Player p = unit.Player;
+            if (p != null && p.NetClient != null && p.NetClient.State == ClientState.Playing)
+            {
+                ClientCommands.EnterInn enterInnCmd;
+                enterInnCmd.Tag = shop.Tag;
+                p.NetClient.SendCommand(enterInnCmd);
+            }
+        }
+        else if (!NetworkManager.IsClient)
+        {
+            // process locally
+            ClientCommands.EnterInn enterInnCmd;
+            enterInnCmd.Tag = shop.Tag;
+            enterInnCmd.Process();
+        }
+    }
+
+    public static void NotifyLeaveStructure(Player p)
+    {
+        if (NetworkManager.IsServer)
+        {
+            if (p.NetClient != null && p.NetClient.State == ClientState.Playing)
+            {
+                ClientCommands.LeaveStructure leaveStructureCmd;
+                p.NetClient.SendCommand(leaveStructureCmd);
+            }
+        }
+        else if (!NetworkManager.IsClient)
+        {
+            ClientCommands.LeaveStructure leaveStructureCmd;
+            leaveStructureCmd.Process();
+        }
+    }
 }

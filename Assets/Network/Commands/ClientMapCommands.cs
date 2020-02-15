@@ -212,6 +212,7 @@ namespace ClientCommands
             unit.IsAlive = IsAlive;
             unit.IsDying = IsDying;
             unit.SetPosition(X, Y, true);
+            unit.LinkToWorld();
             if (IsAvatar)
             {
                 unit.Player.Avatar = unit;
@@ -1211,6 +1212,73 @@ namespace ClientCommands
 
             MapHuman human = (MapHuman)unit;
             human.SetSkillExperience(Skill, ExpAfter, Message);
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.EnterShop)]
+    public struct EnterShop : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapStructure s = MapLogic.Instance.GetStructureByTag(Tag);
+            if (s == null || s.Class == null || !s.Class.Usable)
+            {
+                Debug.LogFormat("Attempted to enter nonexistent building {0}", Tag);
+                return false;
+            }
+
+            ShopScreen screen = Utils.CreateObjectWithScript<ShopScreen>();
+            screen.Shop = s;
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.EnterInn)]
+    public struct EnterInn : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapStructure s = MapLogic.Instance.GetStructureByTag(Tag);
+            if (s == null || s.Class == null || !s.Class.Usable)
+            {
+                Debug.LogFormat("Attempted to enter nonexistent building {0}", Tag);
+                return false;
+            }
+
+            InnScreen screen = Utils.CreateObjectWithScript<InnScreen>();
+            screen.Inn = s;
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.LeaveStructure)]
+    public struct LeaveStructure : IClientCommand
+    {
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            UiManager.Instance.ClearWindows();
 
             return true;
         }

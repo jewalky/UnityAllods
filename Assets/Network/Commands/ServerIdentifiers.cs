@@ -22,5 +22,8 @@ public enum ServerIdentifiers
 
     ItemMove,
 
-    UnitPickup
+    UnitPickup,
+
+    UseStructure,
+    LeaveStructure
 }

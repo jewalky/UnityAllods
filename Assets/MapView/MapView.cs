@@ -637,8 +637,6 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
             SetScroll(ScrollX + ScrollDeltaX, ScrollY + ScrollDeltaY);
             scrollTimer = 0;
         }
-
-        UpdateLogic();
     }
 
     public bool ProcessEvent(Event e)

@@ -351,7 +351,7 @@ public class UseStructureState : IUnitState
         if (Structure == null || Structure.Class == null || !Structure.Class.Usable)
             return false;
 
-        if (!(Unit is MapHuman h || !h.IsHero))
+        if (!(Unit is MapHuman mh) || !mh.IsHero)
             return false;
 
         // check if close enough

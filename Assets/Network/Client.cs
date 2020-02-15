@@ -78,6 +78,11 @@ public class Client
         }
     }
 
+    public static void SendUseStructure(MapUnit unit, MapStructure s)
+    {
+        Debug.LogFormat("Unit {0} uses structure {1}", unit, s);
+    }
+
     public static void SendAttackUnit(MapUnit unit, MapUnit targetUnit)
     {
         if (NetworkManager.IsClient)

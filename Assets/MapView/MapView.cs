@@ -626,10 +626,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         if (fowTex != null)
             UpdateFOW(fowTex);
 
-        if (HoveredObject != null && (HoveredObject.GetObjectType() == MapObjectType.Monster ||
-                                      HoveredObject.GetObjectType() == MapObjectType.Human) && (!((MapUnit)HoveredObject).IsAlive || !HoveredObject.IsLinked)) HoveredObject = null;
-        if (SelectedObject != null && (SelectedObject.GetObjectType() == MapObjectType.Monster ||
-                                       SelectedObject.GetObjectType() == MapObjectType.Human) && (!((MapUnit)SelectedObject).IsAlive || !SelectedObject.IsLinked)) SelectedObject = null;
+        if (HoveredObject != null && HoveredObject is MapUnit hu && (!hu.IsAlive || !hu.IsLinked)) HoveredObject = null;
+        if (SelectedObject != null && SelectedObject is MapUnit su && (!su.IsAlive || !su.IsLinked)) HoveredObject = null;
 
         UpdateLogic();
 
@@ -769,9 +767,11 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         else if (e.rawType == EventType.MouseDown && e.button == 0)
         {
             // select unit if not selected yet
+            // to-do: unfuck this expression later...
             if (HoveredObject != null &&
-                (SelectedObject == null || (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move && GetCastSpell() == Spell.Spells.NoneSpell &&
-                                            !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) || (Commandbar.CurrentCommand == 0)))
+                     (SelectedObject == null || (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move && GetCastSpell() == Spell.Spells.NoneSpell &&
+                                            !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) || (Commandbar.CurrentCommand == 0)) &&
+                     (SelectedObject == null || !(HoveredObject is MapStructure s && s.Class.Usable)))
             {
                 SelectedObject = HoveredObject;
             }
@@ -779,18 +779,19 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
             {
                 // todo: handle commands here
                 // try to walk.
-                if (SelectedObject.GetObjectType() == MapObjectType.Monster ||
-                    SelectedObject.GetObjectType() == MapObjectType.Human)
+                if (SelectedObject is MapUnit unit)
                 {
-                    MapUnit unit = (MapUnit)SelectedObject;
                     Spell.Spells castSpId = GetCastSpell();
-                    if (castSpId != Spell.Spells.NoneSpell && (MapLogic.Instance.Nodes[MouseCellX, MouseCellY].Flags & MapNodeFlags.Visible) != 0)
+                    if (HoveredObject is MapStructure struc && struc.Class.Usable)
+                    {
+                        Client.SendUseStructure(unit, struc);
+                    }
+                    else if (castSpId != Spell.Spells.NoneSpell && (MapLogic.Instance.Nodes[MouseCellX, MouseCellY].Flags & MapNodeFlags.Visible) != 0)
                     {
                         Spell castSp = GetOneTimeCast();
                         if (castSp == null)
                             castSp = unit.GetSpell(castSpId);
-                        if (HoveredObject != null && (HoveredObject.GetObjectType() == MapObjectType.Monster ||
-                                                      HoveredObject.GetObjectType() == MapObjectType.Human))
+                        if (HoveredObject != null && HoveredObject is MapUnit)
                             Client.SendCastToUnit(unit, castSp, (MapUnit)HoveredObject, MouseCellX, MouseCellY);
                         else Client.SendCastToArea(unit, castSp, MouseCellX, MouseCellY);
                         if (castSp == OneTimeCast || Commandbar.CurrentCommandActual == MapViewCommandbar.Commands.Cast)
@@ -807,8 +808,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                     }
                     else if (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Attack && 
                              HoveredObject != null && 
-                             (HoveredObject.GetObjectType() == MapObjectType.Monster ||
-                              HoveredObject.GetObjectType() == MapObjectType.Human))
+                             HoveredObject is MapUnit)
                     {
                         Client.SendAttackUnit(unit, (MapUnit)HoveredObject);
                     }
@@ -887,7 +887,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
 
         if (spl != null &&
             (spl.IsAreaSpell ||
-            (!spl.IsAreaSpell && HoveredObject != null && (HoveredObject.GetObjectType() == MapObjectType.Human || HoveredObject.GetObjectType() == MapObjectType.Monster))))
+            (!spl.IsAreaSpell && HoveredObject != null && HoveredObject is MapUnit)))
         {
             return splId;
         }
@@ -985,8 +985,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         if (!hoveringDarkness && HoveredObject != null && (Commandbar.CurrentCommand == MapViewCommandbar.Commands.Move || Commandbar.CurrentCommand == 0))
         {
             // hovered usable buildings have different cursor picture.
-            if (HoveredObject.GetObjectType() == MapObjectType.Structure &&
-                ((MapStructure)HoveredObject).Class.Usable) MouseCursor.SetCursor(MouseCursor.CurSelectStructure);
+            if (SelectedObject is MapUnit u && u.Player == MapLogic.Instance.ConsolePlayer &&
+                HoveredObject is MapStructure s && s.Class.Usable) MouseCursor.SetCursor(MouseCursor.CurSelectStructure);
             else MouseCursor.SetCursor(MouseCursor.CurSelect);
         }
         else if (SelectedObject != null && SelectedObject is IPlayerPawn)
@@ -1134,7 +1134,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
             SelectedObject != null &&
             SelectedObject is IPlayerPawn &&
             ((IPlayerPawn)SelectedObject).GetPlayer() == MapLogic.Instance.ConsolePlayer &&
-            SelectedObject.GetObjectType() == MapObjectType.Human &&
+            SelectedObject is MapHuman &&
             ((MapHuman)SelectedObject).IsHero;
     }
 

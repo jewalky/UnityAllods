@@ -6,6 +6,9 @@ using UnityEngine;
 
 public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
 {
+    private MapObject HoveredObject = null;
+    private MapObject SelectedObject = null;
+
     private static Texture2D CommandBarL = null;
     private static Texture2D CommandBarR = null;
     private static Texture2D CommandBarPressed = null;
@@ -40,10 +43,13 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
     public Commands CurrentCommandActual { get; private set; }
     public Commands CurrentCommand { get; private set; }
 
-    public void Start()
+    public void Awake()
     {
         UiManager.Instance.Subscribe(this);
+    }
 
+    public void Start()
+    {
         transform.localScale = new Vector3(1, 1, 0.01f);
         transform.localPosition = new Vector3(MainCamera.Width - 176, 158, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
 
@@ -143,6 +149,20 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
         return false;
     }
 
+    public bool ProcessCustomEvent(CustomEvent ce)
+    {
+        if (ce is MapViewSelectionChanged sel)
+        {
+            SelectedObject = sel.NewSelection.Count > 0 ? sel.NewSelection[0] : null;
+            InitDefault(SelectedObject);
+        }
+        else if (ce is MapViewHoverChanged h)
+        {
+            HoveredObject = h.NewHover;
+        }
+        return false;
+    }
+
     public void Update()
     {
         CurrentCommandActual &= EnabledCommands;
@@ -168,17 +188,17 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
             }
             else if (bCtrl && !bAlt)
             {
-                CurrentCommand = (MapView.Instance.HoveredObject != null &&
-                                  (MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Monster ||
-                                   MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Human)) ? Commands.Attack : Commands.MoveAttack;
+                CurrentCommand = (HoveredObject != null &&
+                                  (HoveredObject.GetObjectType() == MapObjectType.Monster ||
+                                   HoveredObject.GetObjectType() == MapObjectType.Human)) ? Commands.Attack : Commands.MoveAttack;
             }
             else
             {
                 // get own player
                 Player ownPlayer = MapLogic.Instance.ConsolePlayer;
-                Player hisPlayer = (MapView.Instance.HoveredObject != null &&
-                                    (MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Monster ||
-                                     MapView.Instance.HoveredObject.GetObjectType() == MapObjectType.Human)) ? ((IPlayerPawn)MapView.Instance.HoveredObject).GetPlayer() : null;
+                Player hisPlayer = (HoveredObject != null &&
+                                    (HoveredObject.GetObjectType() == MapObjectType.Monster ||
+                                     HoveredObject.GetObjectType() == MapObjectType.Human)) ? ((IPlayerPawn)HoveredObject).GetPlayer() : null;
                 if (ownPlayer != null && hisPlayer != null)
                 {
                     if ((ownPlayer.Diplomacy[hisPlayer.ID] & DiplomacyFlags.Enemy) != 0)
@@ -193,10 +213,10 @@ public class MapViewCommandbar : MonoBehaviour, IUiEventProcessor
                 {
                     MapSack sack = MapLogic.Instance.GetSackAt(MapView.Instance.MouseCellX, MapView.Instance.MouseCellY);
                     if (sack != null &&
-                        (MapView.Instance.HoveredObject == MapView.Instance.SelectedObject || MapView.Instance.HoveredObject == null) &&
-                        MapView.Instance.SelectedObject != null &&
-                        MapView.Instance.SelectedObject is IPlayerPawn &&
-                        ((IPlayerPawn)MapView.Instance.SelectedObject).GetPlayer() == ownPlayer)
+                        (HoveredObject == SelectedObject || HoveredObject == null) &&
+                        SelectedObject != null &&
+                        SelectedObject is IPlayerPawn &&
+                        ((IPlayerPawn)SelectedObject).GetPlayer() == ownPlayer)
                     {
                         CurrentCommand = Commands.Pickup;
                     }

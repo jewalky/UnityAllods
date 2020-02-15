@@ -303,6 +303,11 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         return false;
     }
 
+    public bool ProcessCustomEvent(CustomEvent ce)
+    {
+        return false;
+    }
+
     public void Update()
     {
         if (Viewer != null && Viewer.GetObject().DoUpdateInfo)

@@ -118,6 +118,11 @@ public class CheckBox : Widget, IUiEventProcessor, IFocusableWidget
         return false;
     }
 
+    public bool ProcessCustomEvent(CustomEvent ce)
+    {
+        return false;
+    }
+
     private MeshRenderer Renderer;
     private MeshFilter Filter;
     private Utils.MeshBuilder Builder;

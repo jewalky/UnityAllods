@@ -347,6 +347,11 @@ public class TextField : Widget, IUiEventProcessor, IFocusableWidget
         return false;
     }
 
+    public bool ProcessCustomEvent(CustomEvent ce)
+    {
+        return false;
+    }
+
     private void UpdateMesh()
     {
         int s1 = Mathf.Min(Selection1, Selection2);

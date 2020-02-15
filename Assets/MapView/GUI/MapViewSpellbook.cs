@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
 {
+    private MapObject SelectedObject = null;
+
     private MeshRenderer Renderer;
     private MeshFilter Filter;
     private Utils.MeshBuilder Builder;
@@ -90,13 +92,11 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
 
     public void Awake()
     {
-        
+        UiManager.Instance.Subscribe(this);
     }
 
     public void Start()
     {
-        UiManager.Instance.Subscribe(this);
-
         if (SpbFrame == null) SpbFrame = Images.LoadImage("graphics/interface/spellbook.bmp", 0, Images.ImageType.AllodsBMP);
         if (SpbPlaceholder == null) SpbPlaceholder = Images.LoadImage("graphics/interface/spellback.bmp", 0, Images.ImageType.AllodsBMP);
 
@@ -183,7 +183,7 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
 
                 if (e.commandName == "double" && !Spell.IsAttackSpell(ActiveSpell))
                 {
-                    MapObject curObject = MapView.Instance.SelectedObject;
+                    MapObject curObject = SelectedObject;
                     if (curObject is MapUnit)
                         Client.SendCastToUnit((MapUnit)curObject, new global::Spell((int)sp, (MapUnit)curObject), (MapUnit)curObject, curObject.X, curObject.Y);
                 }
@@ -196,7 +196,7 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
                 if (spd >= 0 && spd < Locale.Spells.Count)
                 {
                     string tt = Locale.Spells[spd];
-                    MapObject curObject = MapView.Instance.SelectedObject;
+                    MapObject curObject = SelectedObject;
                     if (curObject is MapUnit)
                     {
                         tt += "\n"+new Spell((int)sp, (MapUnit)curObject).ToVisualString();
@@ -212,10 +212,22 @@ public class MapViewSpellbook : MonoBehaviour, IUiEventProcessor
         return false;
     }
 
+    public bool ProcessCustomEvent(CustomEvent ce)
+    {
+        if (ce is MapViewSelectionChanged sel)
+        {
+            SelectedObject = sel.NewSelection.Count > 0 ? sel.NewSelection[0] : null;
+            if (SelectedObject is MapUnit u)
+                SetSpells(u);
+            else SetSpells(null);
+        }
+        return false;
+    }
+
     public void SetSpells(MapUnit unit)
     {
         uint oldSpellsMask = SpellsMask;
-        if (unit != null)
+        if (unit != null && unit.Player == MapLogic.Instance.ConsolePlayer)
         {
             Unit = unit;
             Spells = unit.SpellBook;

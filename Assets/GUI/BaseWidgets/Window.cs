@@ -180,6 +180,11 @@ public class Window : Widget, IUiEventProcessor
         return true;
     }
 
+    public bool ProcessCustomEvent(CustomEvent ce)
+    {
+        return false;
+    }
+
     public static void AdvanceWidgetFocus(Transform p, bool forward)
     {
         int cFocused = forward ? -1 : p.childCount;

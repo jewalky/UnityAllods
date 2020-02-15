@@ -335,4 +335,9 @@ public class MapViewMiniMap : MonoBehaviour, IUiEventProcessor
         }
         return false;
     }
+
+    public bool ProcessCustomEvent(CustomEvent ce)
+    {
+        return false;
+    }
 }

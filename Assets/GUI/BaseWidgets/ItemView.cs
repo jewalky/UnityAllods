@@ -365,6 +365,11 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         return false;
     }
 
+    public bool ProcessCustomEvent(CustomEvent ce)
+    {
+        return false;
+    }
+
     public bool ProcessStartDrag(float x, float y)
     {
         if (Pack == null)

@@ -145,6 +145,11 @@ public class GameConsole : MonoBehaviour, IUiEventProcessor, IUiEventProcessorBa
         return true;
     }
 
+    public bool ProcessCustomEvent(CustomEvent ce)
+    {
+        return false;
+    }
+
     public void Update()
     {
         if (!ConsoleEnabled)

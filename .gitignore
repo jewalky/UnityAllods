@@ -18,6 +18,7 @@ ExportedObj/
 *.booproj
 *.svd
 *.vs/*
+*.cache
 
 
 # Unity3D generated meta files

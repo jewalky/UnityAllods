@@ -5,6 +5,7 @@ using UnityEngine;
 public interface IUiEventProcessor
 {
     bool ProcessEvent(Event e);
+    bool ProcessCustomEvent(CustomEvent e);
 }
 
 public interface IUiEventProcessorBackground { }
@@ -32,6 +33,16 @@ public interface IUiItemAutoDropper
 }
 
 public delegate void UiDragCallback();
+
+public class CustomEvent
+{
+    // Global: cannot be blocked by lower/higher processors
+    public bool IsGlobal = false;
+    // Forced: always delivered to all processors, even disabled ones
+    public bool IsForced = false;
+
+    protected CustomEvent() { }
+}
 
 public class UiManager : MonoBehaviour
 {
@@ -80,6 +91,14 @@ public class UiManager : MonoBehaviour
         UpdateTopZ();
     }
 
+    public void SendCustomEvent(CustomEvent e)
+    {
+        lock (CustomEvents)
+        {
+            CustomEvents.Enqueue(e);
+        }
+    }
+
     public void ClearWindows()
     {
         foreach (MonoBehaviour wnd in Windows)
@@ -92,10 +111,11 @@ public class UiManager : MonoBehaviour
 
     }
 
+    private Queue<CustomEvent> CustomEvents = new Queue<CustomEvent>();
+
     private bool GotProcessors = false;
     private List<MonoBehaviour> Processors = new List<MonoBehaviour>();
     private List<bool> ProcessorsEnabled = new List<bool>();
-
 
     private float lastMouseX = 0;
     private float lastMouseY = 0;
@@ -111,6 +131,21 @@ public class UiManager : MonoBehaviour
 
         GotProcessors = false;
         EnumerateObjects();
+        // get all custom events.
+        lock (CustomEvents)
+        {
+            while (CustomEvents.Count > 0)
+            {
+                CustomEvent ce = CustomEvents.Dequeue();
+                for (int i = Processors.Count - 1; i >= 0; i--)
+                {
+                    // check if processor's renderer is enabled. implicitly don't give any events to invisible objects.
+                    if (!ce.IsForced && !ProcessorsEnabled[i]) continue;
+                    if (((IUiEventProcessor)Processors[i]).ProcessCustomEvent(ce) && !ce.IsGlobal)
+                        break;
+                }
+            }
+        }
         // get all events.
         Event e = new Event();
         while (Event.PopEvent(e))

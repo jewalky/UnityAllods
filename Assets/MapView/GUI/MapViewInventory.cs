@@ -23,6 +23,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
 
     public void Awake()
     {
+        UiManager.Instance.Subscribe(this);
         View = Utils.CreateObjectWithScript<ItemView>();
         View.transform.parent = transform;
         View.transform.localScale = new Vector3(1, 1, 1);
@@ -35,8 +36,6 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
         View.InvScale = 1;
         View.InvWidth = (int)(ItemCount / View.InvScale);
         View.InvHeight = (int)(1 / View.InvScale);
-
-        UiManager.Instance.Subscribe(this);
 
         if (InvFrame == null) InvFrame = Images.LoadImage("graphics/interface/invframe.bmp", 0, Images.ImageType.AllodsBMP);
         if (InvArrow1 == null) InvArrow1 = Images.LoadImage("graphics/interface/invarrow1.bmp", 0, Images.ImageType.AllodsBMP);
@@ -153,6 +152,18 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
             return true;
         }
 
+        return false;
+    }
+
+    public bool ProcessCustomEvent(CustomEvent ce)
+    {
+        if (ce is MapViewSelectionChanged sel)
+        {
+            MapObject selectedObject = sel.NewSelection.Count > 0 ? sel.NewSelection[0] : null;
+            if (selectedObject is MapHuman h && h.IsHero)
+                SetPack(h);
+            else SetPack(null);
+        }
         return false;
     }
 

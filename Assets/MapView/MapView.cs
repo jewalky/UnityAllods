@@ -30,8 +30,36 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
 
     public Spell OneTimeCast; // this holds a spell casted from scroll
 
-    public MapObject SelectedObject { get; private set; }
-    public MapObject HoveredObject { get; private set; }
+    private MapObject _SelectedObject = null;
+    private MapObject _HoveredObject = null;
+
+    public MapObject SelectedObject
+    {
+        get { return _SelectedObject; }
+        set
+        {
+            if (_SelectedObject == value)
+                return;
+            _SelectedObject = value;
+            List<MapObject> selection = new List<MapObject>();
+            if (_SelectedObject != null)
+                selection.Add(_SelectedObject);
+            UiManager.Instance.SendCustomEvent(new MapViewSelectionChanged(selection));
+        }
+    }
+
+    public MapObject HoveredObject
+    {
+        get { return _HoveredObject; }
+        set
+        {
+            if (_HoveredObject == value)
+                return;
+            _HoveredObject = value;
+            UiManager.Instance.SendCustomEvent(new MapViewHoverChanged(_HoveredObject));
+        }
+    }
+
 
     // Use this for initialization
     void Start ()
@@ -78,10 +106,13 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
     {
         // show UI parts
         Chat.Show();
+        //
+        UiManager.Instance.SendCustomEvent(new MapLoadedEvent());
     }
 
     public void OnMapUnloaded()
     {
+        UiManager.Instance.SendCustomEvent(new MapUnloadedEvent());
         Infowindow.Viewer = null;
         Commandbar.EnabledCommands = 0;
         UnloadMeshes();
@@ -456,32 +487,11 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
     public int ScrollX { get { return _ScrollX; } }
     public int ScrollY { get { return _ScrollY; } }
 
-    public void OnObjectSelected(MapObject mobj)
-    {
-        if (mobj is IPlayerPawn)
-        {
-            Commandbar.InitDefault(SelectedObject);
-            if (mobj.GetObjectType() == MapObjectType.Human &&
-                ((MapHuman)mobj).IsHero)
-            {
-                Inventory.SetPack((MapHuman)mobj);
-                ///
-            }
-            else Inventory.SetPack(null);
-            if (mobj is MapUnit)
-                Spellbook.SetSpells((MapUnit)mobj);
-            else Spellbook.SetSpells(null);
-        }
-    }
-
     public void CenterOnObject(MapObject mobj)
     {
         CenterOnCell(mobj.X+mobj.Width/2, mobj.Y+mobj.Height/2);
         if (mobj is IPlayerPawn)
-        {
             SelectedObject = mobj;
-            OnObjectSelected(mobj);
-        }
     }
 
     public void CenterOnCell(int x, int y)
@@ -764,7 +774,6 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                                             !Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt)) || (Commandbar.CurrentCommand == 0)))
             {
                 SelectedObject = HoveredObject;
-                OnObjectSelected(SelectedObject);
             }
             else if (SelectedObject != null && SelectedObject is IPlayerPawn && ((IPlayerPawn)SelectedObject).GetPlayer() == MapLogic.Instance.ConsolePlayer)
             {
@@ -838,6 +847,11 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
             return true;
         }
 
+        return false;
+    }
+
+    public bool ProcessCustomEvent(CustomEvent ce)
+    {
         return false;
     }
 

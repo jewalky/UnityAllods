@@ -43,6 +43,7 @@ public class ItemPackFile
 
 public class ItemClass
 {
+
     public string ServerName; // itemserv.txt
     public string VisualName; // itemname.txt
 
@@ -76,6 +77,8 @@ public class ItemClass
     public long Price;
 
     public List<ItemEffect> Effects = new List<ItemEffect>();
+    public bool IsMoney = false;
+
 }
 
 public class ItemClassLoader
@@ -377,6 +380,22 @@ public class ItemClassLoader
 
                 Classes.Add(cls);
             }
+
+            // create a fake item with ID=0xFFFF
+            // "gold"
+            ItemClass gcls = new ItemClass();
+            gcls.ServerName = "Gold";
+            gcls.VisualName = "Gold";
+            gcls.Price = 1;
+            gcls.ItemID = 0xFFFF;
+            gcls.IsMagic = false;
+            gcls.MagicID = -1;
+            gcls.IsSpecial = false;
+            gcls.IsMoney = true;
+            gcls.UsableFighter = true;
+            gcls.UsableMage = true;
+            gcls.File_Pack = new ItemPackFile("graphics/interface/money/money.16a");
+            Classes.Add(gcls);
         }
         finally
         {

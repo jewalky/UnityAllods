@@ -309,6 +309,8 @@ public class Item
 
     public bool IsValid { get { return (Class != null); } }
 
+    public bool IsMoney { get { return (Class != null && Class.IsMoney); } }
+
     public ItemClass Class = null;
     public long Price = 2;
     public int Count = 1;
@@ -437,7 +439,7 @@ public class Item
                 NativeEffects.AddRange(ItemEffect.ParseEffectList(magicItem.Effects));
             }
         }
-        else
+        else if (!Class.IsMoney)
         {
             bool hasDamageMinMax = false;
             bool hasToHit = false;
@@ -514,6 +516,9 @@ public class Item
     // calculate price. calculate effects based on native effects + magic effects.
     public void UpdateItem()
     {
+        if (Class == null || Class.IsMoney)
+            return;
+
         // concat native and magic effects
         Effects.Clear();
         Effects.AddRange(NativeEffects);
@@ -530,7 +535,7 @@ public class Item
         }
         */
 
-        int manaUsage = 0;
+            int manaUsage = 0;
         for (int i = 0; i < Effects.Count; i++)
         {
             Templates.TplModifier modifier = TemplateLoader.GetModifierById((int)Effects[i].Type1);
@@ -557,6 +562,9 @@ public class Item
         if (Class == null)
             return "<INVALID>";
 
+        if (Class.IsMoney)
+            return string.Format("{0} Gold", Price);
+
         StringBuilder sb = new StringBuilder();
         sb.Append(Class.ServerName);
         List<ItemEffect> effts = (ownEffects ? Effects : MagicEffects);
@@ -582,6 +590,12 @@ public class Item
 
     public string ToVisualString()
     {
+        if (Class == null)
+            return "<INVALID>";
+
+        if (Class.IsMoney)
+            return Locale.Main[74];
+
         List<string> effects_str = new List<string>();
 
         List<ItemEffect> castEffects = new List<ItemEffect>();

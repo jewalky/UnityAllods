@@ -400,7 +400,7 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
             return false;
         //item = LogicHuman.TakeItemFromBody((MapUnit.BodySlot)item.Class.Option.Slot);
         LogicHuman.DoUpdateInfo = true;
-        UiManager.Instance.StartDrag(item, 1, () =>
+        UiManager.Instance.StartDrag(item, 1, 0, () =>
         {
             // put item back to body if cancelled
             //LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);

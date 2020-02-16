@@ -36,6 +36,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
         View.InvScale = 1;
         View.InvWidth = (int)(ItemCount / View.InvScale);
         View.InvHeight = (int)(1 / View.InvScale);
+        View.ShowMoney = true;
 
         if (InvFrame == null) InvFrame = Images.LoadImage("graphics/interface/invframe.bmp", 0, Images.ImageType.AllodsBMP);
         if (InvArrow1 == null) InvArrow1 = Images.LoadImage("graphics/interface/invarrow1.bmp", 0, Images.ImageType.AllodsBMP);
@@ -140,7 +141,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
                     }
                     else if (ArrowClicked == 2) // right arrow
                     {
-                        if (View.Scroll < View.Pack.Count - View.InvWidth)
+                        if (View.Scroll < View.GetVisualPackCount() - View.InvWidth)
                             View.Scroll++;
                     }
                     ArrowClicked = 0;

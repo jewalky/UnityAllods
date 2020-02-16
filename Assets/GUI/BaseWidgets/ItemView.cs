@@ -115,6 +115,8 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
 
     public float InvScale = 1f;
 
+    public bool ShowMoney = false;
+
     private List<GameObject> TextObjects = new List<GameObject>();
     private List<AllodsTextRenderer> TextRenderers = new List<AllodsTextRenderer>();
 
@@ -188,8 +190,8 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
 
         Builder.Reset();
 
-        int start = Math.Max(Math.Min(Scroll, Pack.Count - InvWidth * InvHeight), 0);
-        int end = Math.Min(start + InvWidth * InvHeight, Pack.Count);
+        int start = Math.Max(Math.Min(Scroll, GetVisualPackCount() - InvWidth * InvHeight), 0);
+        int end = Math.Min(start + InvWidth * InvHeight, GetVisualPackCount());
         int x = 0;
         int y = 0;
         for (int i = start; i < end; i++)
@@ -218,7 +220,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         for (int i = start; i < end; i++)
         {
             // check if item has special effects
-            Item item = Pack[i];
+            Item item = (i == Pack.Count && ShowMoney) ? GetVisualMoneyItem() : Pack[i];
             if (item.MagicEffects.Count > 0)
             {
                 float baseX = x * 80 * InvScale;
@@ -259,14 +261,40 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
                 }
             }
 
-            int dcount = item.Count;
-            if (UiManager.Instance.DragItem == item)
-                dcount -= UiManager.Instance.DragItemCount;
-
-            if (dcount > 1)
+            if (item.IsMoney)
             {
-                TextRenderers[rnd].Text = dcount.ToString();
+                // format money: split by every 3 digits with ,
+                long money = item.Price;
+                if (UiManager.Instance.DragItem == item)
+                    money -= UiManager.Instance.DragMoneyCount;
+                string s = "";
+                string ins = money.ToString();
+                for (int j = 0; j < ins.Length; j++)
+                {
+                    int offpos = ins.Length - j + ((money < 0) ? 1 : 0);
+                    if (offpos % 3 == 0)
+                        s += ",";
+                    s += ins[j];
+                }
+                TextRenderers[rnd].Text = s;
                 TextObjects[rnd].SetActive(true);
+            }
+            else
+            {
+                int dcount = item.Count;
+                if (UiManager.Instance.DragItem == item)
+                    dcount -= UiManager.Instance.DragItemCount;
+
+                if (dcount > 1)
+                {
+                    TextRenderers[rnd].Text = dcount.ToString();
+                    TextObjects[rnd].SetActive(true);
+                }
+                else
+                {
+                    TextRenderers[rnd].Text = "";
+                    TextObjects[rnd].SetActive(false);
+                }
             }
 
             rnd++;
@@ -283,7 +311,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         y = 0;
         for (int i = start; i < end; i++)
         {
-            Item item = Pack[i];
+            Item item = (i == Pack.Count && ShowMoney) ? GetVisualMoneyItem() : Pack[i];
             item.Class.File_Pack.UpdateSprite();
             // check texture.
             // for now, just put generic background
@@ -312,6 +340,24 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         Filter.mesh = Builder.ToMesh(topologies);
     }
 
+    public int GetVisualPackCount()
+    {
+        return Pack.Count + (ShowMoney ? 1 : 0);
+    }
+
+    private Item _MoneyItem = null;
+    public Item GetVisualMoneyItem()
+    {
+        if (_MoneyItem == null)
+        {
+            _MoneyItem = new Item("Gold");
+            _MoneyItem.Parent = Pack;
+        }
+        _MoneyItem.Count = 0;
+        _MoneyItem.Price = Pack.Parent.Player.Money;
+        return _MoneyItem;
+    }
+
     public bool ProcessEvent(Event ev)
     {
         if (Pack == null)
@@ -332,15 +378,14 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
             int itemHoveredX = (int)(mPosLocal.x / 80 / InvScale);
             int itemHoveredY = (int)(mPosLocal.y / 80 / InvScale);
 
-            int start = Math.Max(Math.Min(Scroll, Pack.Count - InvWidth * InvHeight), 0);
-            int end = Math.Min(start + InvWidth * InvHeight, Pack.Count);
+            int start = Math.Max(Math.Min(Scroll, GetVisualPackCount() - InvWidth * InvHeight), 0);
 
             int itemHovered = itemHoveredY * InvWidth + itemHoveredX + start;
-            if (itemHovered < 0 || itemHovered >= Pack.Count)
+            if (itemHovered < 0 || itemHovered >= GetVisualPackCount())
                 return true;
 
             MouseCursor.SetCursor(MouseCursor.CurDefault);
-            Item item = Pack[itemHovered];
+            Item item = (itemHovered == Pack.Count && ShowMoney) ? GetVisualMoneyItem() : Pack[itemHovered];
 
             if (ev.rawType == EventType.MouseMove &&
                 ev.commandName == "tooltip")
@@ -388,15 +433,15 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         int itemHoveredX = (int)(mPosLocal.x / 80 / InvScale);
         int itemHoveredY = (int)(mPosLocal.y / 80 / InvScale);
 
-        int start = Math.Max(Math.Min(Scroll, Pack.Count - InvWidth * InvHeight), 0);
-        int end = Math.Min(start + InvWidth * InvHeight, Pack.Count);
+        int start = Math.Max(Math.Min(Scroll, GetVisualPackCount() - InvWidth * InvHeight), 0);
+        int end = Math.Min(start + InvWidth * InvHeight, GetVisualPackCount());
 
         int itemHovered = itemHoveredY * InvWidth + itemHoveredX + start;
-        if (itemHovered < 0 || itemHovered >= Pack.Count)
+        if (itemHovered < 0 || itemHovered >= GetVisualPackCount())
             return false;
 
         ItemPack cPack = Pack;
-        Item item = Pack[itemHovered];
+        Item item = (itemHovered == Pack.Count && ShowMoney) ? GetVisualMoneyItem() : Pack[itemHovered];
         int count = 1;
 
         // alt = 100
@@ -409,11 +454,22 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) count = item.Count;
 
         if (count > item.Count) count = item.Count;
+
+        long moneyCount = 0;
+        if (item.IsMoney)
+        {
+            moneyCount = 1;
+            if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
+                Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)) moneyCount *= 1000;
+            if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt)) moneyCount *= 100;
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) moneyCount = item.Price;
+            count = 0;
+        }
              
-        UiManager.Instance.StartDrag(item, count, () =>
+        UiManager.Instance.StartDrag(item, count, moneyCount, () =>
         {
             // 
-            //cPack.PutItem(Math.Min(itemHovered, cPack.Count), item);
+            //cPack.PutItem(Math.Min(itemHovered, Pack.Count), item);
         });
 
         return true;
@@ -425,6 +481,9 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
             return false;
 
         if (!new Rect(transform.position.x, transform.position.y, Width, Height).Contains(new Vector2(x, y)))
+            return false;
+
+        if (item.IsMoney)
             return false;
 
         return true;
@@ -507,6 +566,16 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         // check if item still exists in pack in sufficient count (> 0)
         if (Pack == null)
             return null;
+
+        if (UiManager.Instance.DragItem.IsMoney && UiManager.Instance.DragItem.Parent == Pack)
+        {
+            Item newGold = new Item("Gold");
+            newGold.Price = UiManager.Instance.DragMoneyCount;
+            newGold.Count = 0;
+            UiManager.Instance.DragItem.Price = (Pack.Parent.Player.Money -= UiManager.Instance.DragMoneyCount);
+            return newGold;
+        }
+
         return Pack.TakeItem(UiManager.Instance.DragItem, UiManager.Instance.DragItemCount);
     }
 

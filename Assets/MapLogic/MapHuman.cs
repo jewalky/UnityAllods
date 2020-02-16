@@ -168,6 +168,8 @@ public class MapHuman : MapUnit
             return false;
         if (!item.IsValid)
             return false;
+        if (item.IsMoney)
+            return false;
         if ((item.Class.ItemID & 0xFF00) == 0x0E00) // special item
             return true;
         if (((Gender & GenderFlags.Mage) != 0) && !item.Class.UsableMage)

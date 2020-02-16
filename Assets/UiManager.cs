@@ -117,6 +117,29 @@ public class UiManager : MonoBehaviour
     private List<MonoBehaviour> Processors = new List<MonoBehaviour>();
     private List<bool> ProcessorsEnabled = new List<bool>();
 
+    private IUiEventProcessor lastMouseOver = null;
+    private void CheckMouseOver(IUiEventProcessor p)
+    {
+        if (p != lastMouseOver)
+        {
+            if (lastMouseOver != null)
+            {
+                Event ef = new Event();
+                ef.type = EventType.MouseMove;
+                ef.commandName = "mouseout";
+                lastMouseOver.ProcessEvent(ef);
+            }
+            lastMouseOver = p;
+            if (p != null)
+            {
+                Event ef = new Event();
+                ef.type = EventType.MouseMove;
+                ef.commandName = "mouseover";
+                p.ProcessEvent(ef);
+            }
+        }
+    }
+
     private float lastMouseX = 0;
     private float lastMouseY = 0;
     private float lastMouseChange = -1;
@@ -223,6 +246,8 @@ public class UiManager : MonoBehaviour
                 UnsetTooltip();
             }
         }
+
+        CheckMouseOver((IUiEventProcessor)mProcessor);
 
         // process drag-drop for items.
         // first ask every element if they can process the drop.
@@ -440,15 +465,17 @@ public class UiManager : MonoBehaviour
     private IUiItemDragger _DragDragger = null;
     public Item DragItem { get; private set; }
     public int DragItemCount { get; private set; }
+    public long DragMoneyCount { get; private set; }
     private UiDragCallback _DragCallback = null;
 
-    public void StartDrag(Item item, int count, UiDragCallback onCancelDrag)
+    public void StartDrag(Item item, int count, long money, UiDragCallback onCancelDrag)
     {
         if (_CurrentDragDragger == null)
             return; // don't allow drag start if not in callback.
         _DragDragger = _CurrentDragDragger;
         DragItem = item;
         DragItemCount = count;
+        DragMoneyCount = money;
         _DragCallback = onCancelDrag;
     }
 

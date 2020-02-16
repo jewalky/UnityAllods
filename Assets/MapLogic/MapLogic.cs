@@ -1163,6 +1163,8 @@ class MapLogic
         for (int i = 0; i < 50; i++)
             unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Scroll Darkness"));
 
+        // add money for testing
+        unit.Player.Money = 12000000000;
 
         return unit;
     }

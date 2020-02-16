@@ -282,8 +282,16 @@ public class Client
                 y = human.Y;
             }
 
+            // check if we are dropping gold
             ItemPack pack = new ItemPack();
-            pack.PutItem(0, new Item(item, item.Count));
+            if (item.IsMoney)
+            {
+                pack.Money = item.Price;
+            }
+            else
+            {
+                pack.PutItem(0, new Item(item, item.Count));
+            }
             MapLogic.Instance.PutSackAt(x, y, pack, false);
         }
     }

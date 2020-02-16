@@ -520,7 +520,7 @@ namespace ClientCommands
                     unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item(Pack[i]));
             }
 
-            unit.ItemsPack.Money = Money;
+            unit.Player.Money = Money;
             unit.DoUpdateInfo = true;
 
             return true;

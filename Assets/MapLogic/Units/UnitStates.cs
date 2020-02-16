@@ -206,7 +206,7 @@ public class PickupState : IUnitState
 
             if (targetsack.Pack.Money > 0)
             {
-                Unit.ItemsPack.Money += targetsack.Pack.Money;
+                Unit.Player.Money += targetsack.Pack.Money;
                 Server.NotifyItemPickup(Unit, -1, targetsack.Pack.Money);
             }
 

@@ -27,7 +27,7 @@ Shader "Custom/TerrainFOWShader"
 		ZWrite Off
 		Fog{ Mode Off }
 		Blend SrcAlpha OneMinusSrcAlpha
-		ZTest LEqual
+		ZTest Always
 
 		// stencil stuff.
 		// this particular comparison method is used to make sure that the mesh doesn't overlap itself, since it's using alpha blending.

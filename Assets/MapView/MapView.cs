@@ -626,8 +626,8 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         if (fowTex != null)
             UpdateFOW(fowTex);
 
-        if (HoveredObject != null && HoveredObject is MapUnit hu && (!hu.IsAlive || !hu.IsLinked)) HoveredObject = null;
-        if (SelectedObject != null && SelectedObject is MapUnit su && (!su.IsAlive || !su.IsLinked)) HoveredObject = null;
+        if (HoveredObject != null && HoveredObject is MapUnit hu && (!hu.IsAlive || !hu.IsLinked || hu.Flags.HasFlag(UnitFlags.PhasedOut))) HoveredObject = null;
+        if (SelectedObject != null && SelectedObject is MapUnit su && (!su.IsAlive || !su.IsLinked || su.Flags.HasFlag(UnitFlags.PhasedOut))) HoveredObject = null;
 
         UpdateLogic();
 

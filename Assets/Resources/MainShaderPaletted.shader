@@ -48,7 +48,7 @@ Shader "Custom/MainShaderPaletted"
 		ZWrite Off
 		Fog{ Mode Off }
 		Blend SrcAlpha OneMinusSrcAlpha
-		ZTest LEqual
+		ZTest Always
 
 		Pass
 		{

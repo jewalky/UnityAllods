@@ -60,13 +60,14 @@ namespace Smacker
         public BitReader(BinaryReader br)
         {
             Br = br;
+            LastStreamPos = Br.BaseStream.Position;
         }
 
         public uint ReadBits(int count)
         {
             uint output = 0;
             if (LastStreamPos != Br.BaseStream.Position)
-                SubBitPos = 0;
+                throw new Exception("Stream position modified while reading bits: this should not happen");
 
             int wroteBits = 0;
             int leftBits = count;
@@ -98,10 +99,10 @@ namespace Smacker
     {
         public class HuffNode
         {
-            public int BitCount;
-            public int Code;
-            public int Value;
-            public HuffNode[] Branch;
+            public int BitCount = 0;
+            public int Code = 0;
+            public int Value = 0;
+            public HuffNode[] Branch = null;
         }
 
         int Length;
@@ -146,12 +147,32 @@ namespace Smacker
             HuffContext hc = new HuffContext();
             hc.Length = ((size + 3) >> 2) + 4;
             hc.Root = new HuffNode();
-            DecodeBigTree(br, hc, header, hc.Root, 0);
+            int len = DecodeBigTree(br, hc, header, hc.Root, 0);
+            // fill in empty Last values, but only if allowed
+            if (header.Last[0] == null)
+            {
+                header.Last[0] = new HuffNode();
+                len++;
+            }
+            if (header.Last[1] == null)
+            {
+                header.Last[1] = new HuffNode();
+                len++;
+            }
+            if (header.Last[2] == null)
+            {
+                header.Last[2] = new HuffNode();
+                len++;
+            }
+            if (len > hc.Length)
+                throw new Exception("Huffman codes out of range (invalid tree)");
             return hc;
         }
 
-        private static void DecodeBigTree(BitReader br, HuffContext hc, HeaderTree header, HuffNode node, int length)
+        private static int DecodeBigTree(BitReader br, HuffContext hc, HeaderTree header, HuffNode node, int length)
         {
+
+            int returnLength = 0;
 
             length++;
             node.Branch = null;
@@ -161,8 +182,8 @@ namespace Smacker
                 if (length >= hc.Length)
                     throw new Exception(string.Format("Tree size exceeded! (Current={0}, Length={1})", length, hc.Length));
 
-                int i1 = 0;
-                int i2 = 0;
+                int i1;
+                int i2;
                 if (header.LowTree != null)
                     i1 = header.LowTree.GetValue(br);
                 else throw new Exception(string.Format("Invalid tree (LowTree=null)"));
@@ -178,6 +199,7 @@ namespace Smacker
                     {
                         header.Last[j] = node;
                         value = 0;
+                        break;
                     }
                 }
 
@@ -193,9 +215,12 @@ namespace Smacker
                     node.Branch[i].BitCount = node.BitCount + 1;
                     node.Branch[i].Code = (node.Code << 1) | i;
                     node.Branch[i].Value = -1;
-                    DecodeBigTree(br, hc, header, node.Branch[i], length);
+                    returnLength = DecodeBigTree(br, hc, header, node.Branch[i], length);
                 }
             }
+
+            return returnLength;
+
         }
 
         public int GetValue(BitReader br)
@@ -789,24 +814,28 @@ namespace Smacker
 
                 if (bir.ReadBits(1) == 1) // have mmap
                 {
+                    Debug.LogFormat("Reading MMAP tree");
                     MMAPTree = new HeaderTree(bir, h_MMap_Size);
                 }
                 else Debug.LogFormat("Skipping MMAP tree");
 
                 if (bir.ReadBits(1) == 1) // have mclr
                 {
+                    Debug.LogFormat("Reading MCLR tree");
                     MCLRTree = new HeaderTree(bir, h_MClr_Size);
                 }
                 else Debug.LogFormat("Skipping MCLR tree");
 
                 if (bir.ReadBits(1) == 1) // have full
                 {
+                    Debug.LogFormat("Reading FULL tree");
                     FULLTree = new HeaderTree(bir, h_Full_Size);
                 }
                 else Debug.LogFormat("Skipping FULL tree");
 
                 if (bir.ReadBits(1) == 1) // have type
                 {
+                    Debug.LogFormat("Reading TYPE tree");
                     TYPETree = new HeaderTree(bir, h_Type_Size);
                 }
                 else Debug.LogFormat("Skipping TYPE tree");
@@ -974,7 +1003,7 @@ public class SmackLoader : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
-        f = new Smacker.SmackerFile("01.smk");
+        f = new Smacker.SmackerFile("01-mw.smk");
         //NextFrame();
     }
 

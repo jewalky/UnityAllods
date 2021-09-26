@@ -168,4 +168,18 @@ public class ItemPack : IEnumerable<Item>
             return ItemList[index];
         }
     }
+
+    public override string ToString()
+    {
+        string output = "";
+        for (int i = 0; i < ItemList.Count; i++)
+        {
+            if (i > 0)
+                output += "; ";
+            if (ItemList[i] != null)
+                output += string.Format("[{0}] {1}", ItemList[i].Count, ItemList[i].ToStringWithEffects(false));
+            else output += "<null>";
+        }
+        return "ItemPack[" + output + "]";
+    }
 }

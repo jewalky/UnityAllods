@@ -318,6 +318,8 @@ public class Item
     public List<ItemEffect> NativeEffects = new List<ItemEffect>();
     public List<ItemEffect> MagicEffects = new List<ItemEffect>();
 
+    public int ManaUsage { get; private set; }
+
     public Item(NetItem netitem)
     {
         UID = netitem.UID;
@@ -535,16 +537,34 @@ public class Item
         }
         */
 
-            int manaUsage = 0;
-        for (int i = 0; i < Effects.Count; i++)
+        ManaUsage = 0;
+        for (int i = 0; i < MagicEffects.Count; i++)
         {
             Templates.TplModifier modifier = TemplateLoader.GetModifierById((int)Effects[i].Type1);
             if (modifier == null)
                 continue; // wtf was that lol.
-            manaUsage += modifier.ManaCost;
+
+            switch (Effects[i].Type1)
+            {
+                case ItemEffect.Effects.CastSpell:
+                    ManaUsage += modifier.ManaCost * Effects[i].Value2;
+                    break;
+
+                case ItemEffect.Effects.DamageFire:
+                case ItemEffect.Effects.DamageWater:
+                case ItemEffect.Effects.DamageAir:
+                case ItemEffect.Effects.DamageEarth:
+                case ItemEffect.Effects.DamageAstral:
+                    ManaUsage += modifier.ManaCost * (Effects[i].Value1 + Effects[i].Value2);
+                    break;
+
+                default:
+                    ManaUsage += modifier.ManaCost * Effects[i].Value1;
+                    break;
+            }
         }
 
-        Price = Math.Max(Price, (int)(Price * ((float)manaUsage / 10)));
+        Price = Math.Max(Price, (int)(Price * ((float)ManaUsage / 10)));
 
         // search for override price effect
         for (int i = 0; i < Effects.Count; i++)

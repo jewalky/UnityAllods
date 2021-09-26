@@ -23,6 +23,8 @@ public class Templates
 
     public class TplSimpleReader
     {
+        public int Index { get; private set; }
+
         internal class FieldCountController : Attribute
         {
             public long JunkSize { get; private set; }
@@ -117,8 +119,9 @@ public class Templates
 
         }
 
-        public TplSimpleReader(BinaryReader br)
+        public TplSimpleReader(BinaryReader br, int index)
         {
+            Index = index;
             LoadFromStream(br);
         }
     }
@@ -136,14 +139,14 @@ public class Templates
         public float Absorbtion;
         public float MagicVolume;
 
-        public TplClass(BinaryReader br) : base(br) { }
+        public TplClass(BinaryReader br, int index) : base(br, index) { }
 
         public override string ToString() { return string.Format("TplClass[{0}]", Name); }
     }
 
     public class TplMaterial : TplClass
     {
-        public TplMaterial(BinaryReader br) : base(br) { }
+        public TplMaterial(BinaryReader br, int index) : base(br, index) { }
 
         public override string ToString() { return string.Format("TplMaterial[{0}]", Name); }
     }
@@ -156,10 +159,10 @@ public class Templates
         public int AffectMin;
         public int AffectMax;
         public int UsableBy;
-        public int[] SlotsWarrior = new int[12];
+        public int[] SlotsFighter = new int[12];
         public int[] SlotsMage = new int[12];
 
-        public TplModifier(BinaryReader br) : base(br) { }
+        public TplModifier(BinaryReader br, int index) : base(br, index) { }
     }
 
     public class TplArmor : TplSimpleReader
@@ -185,7 +188,7 @@ public class Templates
         public int OtherParam;
         public ushort[] ClassesAllowed = new ushort[8];
 
-        public TplArmor(BinaryReader br) : base(br) { }
+        public TplArmor(BinaryReader br, int index) : base(br, index) { }
 
         public override string ToString() { return string.Format("TplArmor[{0}]", Name); }
 
@@ -212,7 +215,7 @@ public class Templates
         [FieldNullController]
         public string Effects = "";
 
-        public TplMagicItem(BinaryReader br) : base(br) { }
+        public TplMagicItem(BinaryReader br, int index) : base(br, index) { }
     }
 
     public class TplMonster : TplSimpleReader
@@ -290,7 +293,7 @@ public class Templates
         public string EquipItem1;
         public string EquipItem2;
 
-        public TplMonster(BinaryReader br) : base(br) { }
+        public TplMonster(BinaryReader br, int index) : base(br, index) { }
     }
 
     public class TplHuman : TplSimpleReader
@@ -326,7 +329,7 @@ public class Templates
         public uint KnownSpells;
         public string[] EquipItems = new string[10];
 
-        public TplHuman(BinaryReader br) : base(br) { }
+        public TplHuman(BinaryReader br, int index) : base(br, index) { }
     }
 
     public class TplStructure : TplSimpleReader
@@ -340,7 +343,7 @@ public class Templates
         public uint CanPass;
         public uint CanNotPass;
 
-        public TplStructure(BinaryReader br) : base(br) { }
+        public TplStructure(BinaryReader br, int index) : base(br, index) { }
     }
 
     public class TplSpell : TplSimpleReader
@@ -380,7 +383,7 @@ public class Templates
             }
         }
 
-        public TplSpell(BinaryReader br) : base(br) { }
+        public TplSpell(BinaryReader br, int index) : base(br, index) { }
     }
 
     public void LoadFromFile(string filename)
@@ -426,54 +429,54 @@ public class Templates
         headers.LoadFromStream(br);
         int numClasses = br.ReadInt32();
         for (int i = 0; i < numClasses; i++)
-            Classes.Add(new TplClass(br));
+            Classes.Add(new TplClass(br, i));
 
         int numMaterials = br.ReadInt32();
         for (int i = 0; i < numMaterials; i++)
-            Materials.Add(new TplMaterial(br));
+            Materials.Add(new TplMaterial(br, i));
 
         headers.LoadFromStream(br);
         int numModifiers = br.ReadInt32();
         for (int i = 0; i < numModifiers; i++)
-            Modifiers.Add(new TplModifier(br));
+            Modifiers.Add(new TplModifier(br, i));
 
         headers.LoadFromStream(br);
         int numArmor = br.ReadInt32() - 1;
         for (int i = 0; i < numArmor; i++)
-            Armor.Add(new TplArmor(br));
+            Armor.Add(new TplArmor(br, i));
 
         int numShields = br.ReadInt32() - 1;
         for (int i = 0; i < numShields; i++)
-            Shields.Add(new TplArmor(br));
+            Shields.Add(new TplArmor(br, i));
 
         int numWeapons = br.ReadInt32() - 1;
         for (int i = 0; i < numWeapons; i++)
-            Weapons.Add(new TplArmor(br));
+            Weapons.Add(new TplArmor(br, i));
 
         headers.LoadFromStream(br);
         int numMagicItems = br.ReadInt32() - 1;
         for (int i = 0; i < numMagicItems; i++)
-            MagicItems.Add(new TplMagicItem(br));
+            MagicItems.Add(new TplMagicItem(br, i));
 
         headers.LoadFromStream(br);
         int numMonsters = br.ReadInt32() - 1;
         for (int i = 0; i < numMonsters; i++)
-            Monsters.Add(new TplMonster(br));
+            Monsters.Add(new TplMonster(br, i));
 
         headers.LoadFromStream(br);
         int numHumans = br.ReadInt32() - 1;
         for (int i = 0; i < numHumans; i++)
-            Humans.Add(new TplHuman(br));
+            Humans.Add(new TplHuman(br, i));
 
         headers.LoadFromStream(br);
         int numStructures = br.ReadInt32() - 1;
         for (int i = 0; i < numStructures; i++)
-            Structures.Add(new TplStructure(br));
+            Structures.Add(new TplStructure(br, i));
 
         headers.LoadFromStream(br);
         int numSpells = br.ReadInt32() - 2;
         for (int i = 0; i < numSpells; i++)
-            Spells.Add(new TplSpell(br));
+            Spells.Add(new TplSpell(br, i));
     }
 }
 
@@ -583,6 +586,15 @@ public static class TemplateLoader
     public static Templates.TplArmor GetOptionByIdAndSlot(int id, int slot)
     {
         id -= 1;
+        List<Templates.TplArmor> oList = GetArmors(slot);
+
+        if (id < 0 || id >= oList.Count)
+            return null;
+        return oList[id];
+    }
+
+    public static List<Templates.TplArmor> GetArmors(int slot)
+    {
         List<Templates.TplArmor> oList;
 
         switch (slot)
@@ -598,9 +610,7 @@ public static class TemplateLoader
                 break;
         }
 
-        if (id < 0 || id >= oList.Count)
-            return null;
-        return oList[id];
+        return oList;
     }
 
     public static Templates.TplMagicItem GetMagicItemById(int id)

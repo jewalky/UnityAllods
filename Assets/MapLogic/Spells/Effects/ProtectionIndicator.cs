@@ -103,7 +103,7 @@ namespace SpellEffects
                 if (Unit.IsFlying)
                     p.ZOffset += 128;
                 p.CurrentFrame = (p.CurrentFrame + 1) % p.Class.Phases;
-                p.DoUpdateView = true;
+                p.RenderViewVersion++;
             }
         }
     }

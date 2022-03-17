@@ -133,7 +133,7 @@ public class MapStructure : MapObject, IDynlight, IPlayerPawn, IVulnerable, IDis
         Width = Template.Width;
         Height = Template.Height;
         ScanRange = Template.ScanRange; // only default scanrange
-        DoUpdateView = true;
+        RenderViewVersion++;
     }
 
     public override void CheckAllocateObject()
@@ -161,7 +161,7 @@ public class MapStructure : MapObject, IDynlight, IPlayerPawn, IVulnerable, IDis
             {
                 CurrentFrame = ++CurrentFrame % Class.Frames.Length;
                 CurrentTime = 0;
-                DoUpdateView = true;
+                RenderViewVersion++;
             }
 
             if (Class.LightRadius > 0)
@@ -194,8 +194,8 @@ public class MapStructure : MapObject, IDynlight, IPlayerPawn, IVulnerable, IDis
             return 0;
 
         Health -= count;
-        DoUpdateInfo = true;
-        DoUpdateView = true;
+        RenderInfoVersion++;
+        RenderViewVersion++;
 
         return count;
     }

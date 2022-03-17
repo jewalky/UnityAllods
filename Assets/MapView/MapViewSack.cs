@@ -98,6 +98,7 @@ public class MapViewSack : MapViewObject, IObjectManualUpdate
     private static Images.AllodsSprite _SackSprite = null;
     private bool spriteSet = false;
     private bool oldVisibility = false;
+    private int viewVersion = 0;
     public void OnUpdate()
     {
         if (Renderer == null)
@@ -118,7 +119,7 @@ public class MapViewSack : MapViewObject, IObjectManualUpdate
             return;
         }
 
-        if (LogicSack.DoUpdateView)
+        if (viewVersion != LogicSack.RenderViewVersion)
         {
             Renderer.enabled = true;
             ShadowRenderer.enabled = true;
@@ -159,7 +160,7 @@ public class MapViewSack : MapViewObject, IObjectManualUpdate
             SackMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (SackMesh == null));
             ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null)); // 0.3 of sprite height
 
-            LogicSack.DoUpdateView = false;
+            viewVersion = LogicSack.RenderViewVersion;
         }
     }
 

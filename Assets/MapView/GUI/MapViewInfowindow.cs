@@ -321,13 +321,15 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         return false;
     }
 
+    private int ViewVersion = -1;
+
     public void Update()
     {
-        if (Viewer != null && Viewer.GetObject().DoUpdateInfo)
+        if (Viewer != null && Viewer.GetObject().RenderInfoVersion != ViewVersion)
         {
             Viewer.DisplayPic((BHumanModeObject == null || HumanMode), HBackRObject.transform);
             Viewer.DisplayInfo((BHumanModeObject == null || !HumanMode), TBackRObject.transform);
-            Viewer.GetObject().DoUpdateInfo = false;
+            ViewVersion = Viewer.GetObject().RenderInfoVersion;
         }
 
         if (BPackOpenObject != null && BPackClosedObject != null && PackAvailable)
@@ -335,7 +337,8 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
             bool invopen = MapView.Instance.InventoryVisible;
             BPackOpenObject.SetActive(invopen);
             BPackClosedObject.SetActive(!invopen);
-        } else if (!PackAvailable)
+        }
+        else if (!PackAvailable)
         {
             BPackOpenObject.SetActive(false);
             BPackClosedObject.SetActive(false);

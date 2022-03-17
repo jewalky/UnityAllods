@@ -251,7 +251,7 @@ public class MapHuman : MapUnit
             if (newClass != Class)
             {
                 Class = newClass;
-                DoUpdateView = true;
+                RenderViewVersion++;
             }
         }
 
@@ -460,8 +460,8 @@ public class MapHuman : MapUnit
 
         CalculateVision();
 
-        DoUpdateInfo = true;
-        DoUpdateView = true;
+        RenderInfoVersion++;
+        RenderViewVersion++;
     }
 
     public override void Update()

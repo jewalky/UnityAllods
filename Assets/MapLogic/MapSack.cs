@@ -27,7 +27,7 @@ public class MapSack : MapObject
     {
         Width = 1;
         Height = 1;
-        DoUpdateView = true;
+        RenderViewVersion++;
     }
 
     public override void Update()

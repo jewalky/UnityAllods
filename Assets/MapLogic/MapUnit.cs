@@ -121,7 +121,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 _Angle += 360;
             while (_Angle >= 360)
                 _Angle -= 360;
-            DoUpdateView = true;
+            RenderViewVersion++;
         }
     }
 
@@ -176,7 +176,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             if (_Flags != value)
             {
                 _Flags = value;
-                DoUpdateView = true;
+                RenderViewVersion++;
                 CheckIndicators();
                 Server.NotifyUnitFlags(this);
             }
@@ -275,7 +275,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         Actions.Add(new IdleAction(this));
         States.Add(new IdleState(this));
         VState = UnitVisualState.Idle;
-        DoUpdateView = true;
+        RenderViewVersion++;
         ItemsBody = new ItemPack(false, this);
         ItemsPack = new ItemPack(false, this);
     }
@@ -407,8 +407,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         CalculateVision();
 
-        DoUpdateView = true;
-        DoUpdateInfo = true;
+        RenderViewVersion++;
+        RenderInfoVersion++;
     }
 
     public void UpdateItems()
@@ -561,7 +561,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             SummonTime++;
             if (NetworkManager.IsServer)
                 Server.NotifyUnitSummonTime(this);
-            DoUpdateView = true;
+            RenderViewVersion++;
             // todo update summon time to client
             if (SummonTime > SummonTimeMax)
             {
@@ -631,8 +631,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                 if (Stats.TrySetHealth(Stats.Health - 1))
                 {
                     Server.NotifyDamageUnit(this, 1, false);
-                    DoUpdateView = true;
-                    DoUpdateInfo = true;
+                    RenderViewVersion++;
+                    RenderInfoVersion++;
                 }
             }
         }
@@ -646,7 +646,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             {
                 IsAlive = false;
                 IsDying = false;
-                DoUpdateView = true;
+                RenderViewVersion++;
                 Unblock();
                 for (int i = 0; i < SpellEffects.Count; i++)
                     SpellEffects[i].OnDetach();
@@ -670,15 +670,15 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                     {
                         if (Stats.TrySetMana((int)(Stats.Mana + Mathf.Max(1, (float)Stats.ManaMax / 20 * Stats.ManaRegeneration / 100))) &&
                             NetworkManager.IsServer) Server.NotifyUnitStatsShort(this);
-                        DoUpdateView = true;
-                        DoUpdateInfo = true;
+                        RenderViewVersion++;
+                        RenderInfoVersion++;
                     }
                     if (Stats.Health < Stats.HealthMax)
                     {
                         if (Stats.TrySetHealth((int)(Stats.Health + Mathf.Max(1, (float)Stats.HealthMax / 20 * Stats.HealthRegeneration / 100))) &&
                             NetworkManager.IsServer) Server.NotifyUnitStatsShort(this);
-                        DoUpdateView = true;
-                        DoUpdateInfo = true;
+                        RenderViewVersion++;
+                        RenderInfoVersion++;
                     }
                 }
             }
@@ -703,7 +703,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                         // notify clients of bone phase change
                         if (NetworkManager.IsServer)
                             Server.NotifyUnitBoneFrame(this);
-                        DoUpdateView = true;
+                        RenderViewVersion++;
                     }
                 }
                 else if (BoneFrame != 4)
@@ -712,7 +712,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
                     BoneTime = 0;
                     if (NetworkManager.IsServer)
                         Server.NotifyUnitBoneFrame(this);
-                    DoUpdateView = true;
+                    RenderViewVersion++;
                 }
             }
             else
@@ -1025,7 +1025,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         TargetY = Y = y;
         if (IsAlive && wasLinked) LinkToWorld();
         CalculateVision();
-        DoUpdateView = true;
+        RenderViewVersion++;
 
         if (netupdate)
         {
@@ -1182,8 +1182,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
     {
         Item item = ItemsBody.TakeItem(ItemsBody.FindItemBySlot(slot), 1);
         UpdateItems();
-        DoUpdateInfo = true;
-        DoUpdateView = true;
+        RenderInfoVersion++;
+        RenderViewVersion++;
         return item;
     }
 
@@ -1233,7 +1233,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         ItemsBody.PutItem(ItemsBody.Count, item);
         UpdateItems();
-        DoUpdateInfo = true;
+        RenderInfoVersion++;
     }
 
     public void ValidatePosition(bool netupdate)
@@ -1274,7 +1274,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         if (!IsLinked) LinkToWorld();
         if (NetworkManager.IsServer)
             Server.NotifyRespawn(this);
-        DoUpdateView = true;
+        RenderViewVersion++;
     }
 
     public void Unblock()
@@ -1391,8 +1391,8 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
 
         if (Stats.TrySetHealth(Stats.Health - damagecount))
         {
-            DoUpdateInfo = true;
-            DoUpdateView = true;
+            RenderInfoVersion++;
+            RenderViewVersion++;
 
             if (!NetworkManager.IsClient)
             {
@@ -1537,7 +1537,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         if (Flags.HasFlag(UnitFlags.PhasedOut))
             return;
         Flags |= UnitFlags.PhasedOut;
-        DoUpdateView = true;
+        RenderViewVersion++;
         UnlinkFromWorld();
         // do one last update... unlinked objects are not updated
         if (GameScript is IObjectManualUpdate mu)
@@ -1549,7 +1549,7 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         if (!Flags.HasFlag(UnitFlags.PhasedOut))
             return;
         Flags &= ~UnitFlags.PhasedOut;
-        DoUpdateView = true;
+        RenderViewVersion++;
         if (!Interaction.CheckWalkableForUnit(X, Y, false))
             RandomizePosition(X, Y, 2, true);
         LinkToWorld();

@@ -250,6 +250,7 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
 
     private bool spriteSet = false;
     private bool oldVisibility = false;
+    private int viewVersion = 0;
     public void OnUpdate()
     {
         if (Renderer == null)
@@ -263,7 +264,7 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
             if (ShadowRenderer != null) ShadowRenderer.enabled = false;
             return;
         }
-        else if (!oldVisibility && !LogicStructure.DoUpdateView)
+        else if (!oldVisibility && LogicStructure.RenderViewVersion == viewVersion)
         {
             Renderer.enabled = true;
             OverlayRenderer.enabled = true;
@@ -272,7 +273,7 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
             return;
         }
 
-        if (LogicStructure.DoUpdateView)
+        if (LogicStructure.RenderViewVersion != viewVersion)
         {
             Renderer.enabled = true;
             OverlayRenderer.enabled = true;
@@ -344,7 +345,7 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
                 if (ShadowFilter != null) ShadowMesh = UpdateMesh(sprites, spritesB, actualFrame, ShadowFilter.mesh, 0, 0, cls.TileWidth, cls.FullHeight, 0.3f, (ShadowMesh == null), false);
             }
 
-            LogicStructure.DoUpdateView = false;
+            viewVersion = LogicStructure.RenderViewVersion;
         }
     }
 

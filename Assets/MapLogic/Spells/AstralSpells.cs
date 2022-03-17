@@ -156,7 +156,7 @@ namespace Spells
                         // invalid position, don't add unit
                         // (but still delete bone)
                         u.BoneFrame = 4;
-                        u.DoUpdateView = true;
+                        u.RenderViewVersion++;
                         if (NetworkManager.IsServer)
                             Server.NotifyUnitBoneFrame(u);
                         unit.Dispose();
@@ -167,7 +167,7 @@ namespace Spells
                     MapLogic.Instance.AddObject(unit, true);
 
                     u.BoneFrame = 4; // invisible corpse
-                    u.DoUpdateView = true;
+                    u.RenderViewVersion++;
                     if (NetworkManager.IsServer)
                         Server.NotifyUnitBoneFrame(u);
 

@@ -60,9 +60,9 @@ public class MapObject : IDisposable
     public GameObject GameObject = null;
     public MonoBehaviour GameScript = null;
     public readonly int ID = MapLogic.Instance.TopObjectID;
-    public bool DoUpdateView = false;
-    public bool DoUpdateInfo = false;
-    public bool DoUpdateSpells = false;
+    public int RenderViewVersion = 0;
+    public int RenderInfoVersion = 0;
+    public int RenderSpellsVersion = 0;
     public bool IsLinked { get; private set; }
     public bool IsPassive = false;
     public bool IsAdded = false;

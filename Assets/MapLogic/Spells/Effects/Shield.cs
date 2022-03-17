@@ -120,7 +120,7 @@ namespace SpellEffects
                         item.ZOffset += 128;
                     item.CurrentFrame = 2 + Mathf.RoundToInt((1f - Mathf.Abs(pos.z)) * 2);
                     item.ZAbsolute = true;
-                    item.DoUpdateView = true;
+                    item.RenderViewVersion++;
                 }
             }
             for (int j = 0; j < 2; j++)
@@ -136,7 +136,7 @@ namespace SpellEffects
                         item.ZOffset += 128;
                     item.CurrentFrame = 2 + Mathf.RoundToInt((1f - Mathf.Abs(pos.z)) * 2);
                     item.ZAbsolute = true;
-                    item.DoUpdateView = true;
+                    item.RenderViewVersion++;
                 }
             }
         }

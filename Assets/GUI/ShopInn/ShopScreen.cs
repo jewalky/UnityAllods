@@ -65,7 +65,6 @@ class ShopScreen : FullscreenView
 
     public override void OnStart()
     {
-
         // detect visual shop type to display
         ShopType type = ShopType.Plagat;
         if (Shop != null && Shop.Class != null)
@@ -169,7 +168,7 @@ class ShopScreen : FullscreenView
         PositionObject(o_ShopTable, o_ShopBaseOffset, new Vector3(0, 303, 0));
 
         Utils.MakeTexturedQuad(out o_ShopFrame, shop_ShopFrame[TypeInt]);
-        PositionObject(o_ShopFrame, o_ShopBaseOffset, new Vector3(164, 0, 0));
+        PositionObject(o_ShopFrame, o_ShopBaseOffset, new Vector3(164, 0, -1));
 
         Utils.MakeTexturedQuad(out o_ShopButtonsBg, shop_ShopMenu[TypeInt]);
         PositionObject(o_ShopButtonsBg, o_ShopBaseOffset, new Vector3(464, 0, 0));
@@ -196,7 +195,7 @@ class ShopScreen : FullscreenView
         o_ShelfItems.InvWidth = 2;
         o_ShelfItems.InvHeight = 3;
         o_ShelfItems.Pack = ((ShopStructure)Shop.Logic).Shelves[0].Items;
-        PositionObject(o_ShelfItems.gameObject, o_ShopBaseOffset, new Vector3(1, 32, 0));
+        PositionObject(o_ShelfItems.gameObject, o_ShopBaseOffset, new Vector3(1, 32, -1));
 
     }
 

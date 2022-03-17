@@ -176,7 +176,7 @@ public class MapProjectileLogicSimple : IMapProjectileLogic
         int frame = (int)(Start + (End - Start) * progress);
         Projectile.CurrentFrame = frame;
         Projectile.CurrentTics = 0;
-        Projectile.DoUpdateView = true;
+        Projectile.RenderViewVersion++;
 
         // this particular part is a hack
         if (Projectile.Class.ID == (int)AllodsProjectile.Explosion)
@@ -378,7 +378,7 @@ public class MapProjectileLogicEOT : IMapProjectileLogic
 
         Projectile.CurrentFrame = Frame;
         Projectile.CurrentTics = 0;
-        Projectile.DoUpdateView = true;
+        Projectile.RenderViewVersion++;
         if (Projectile.Class.ID != (int)AllodsProjectile.FireWall)
             ll = -1;
         Projectile.LightLevel = (int)(256+ll*256f);
@@ -487,7 +487,7 @@ public class MapProjectile : MapObject, IDynlight
         FracY = y - Y;
         _ProjectileZ = z;
         LinkToWorld();
-        DoUpdateView = true;
+        RenderViewVersion++;
 
         if (bDoCalcLight)
             MapLogic.Instance.MarkDynLightingForUpdate();
@@ -538,7 +538,7 @@ public class MapProjectile : MapObject, IDynlight
                 _Angle += 360;
             while (_Angle >= 360)
                 _Angle -= 360;
-            DoUpdateView = true;
+            RenderViewVersion++;
         }
     }
 
@@ -553,7 +553,7 @@ public class MapProjectile : MapObject, IDynlight
         set
         {
             _Alpha = Mathf.Clamp01(value);
-            DoUpdateView = true;
+            RenderViewVersion++;
         }
     }
 
@@ -568,7 +568,7 @@ public class MapProjectile : MapObject, IDynlight
         set
         {
             _Color = value;
-            DoUpdateView = true;
+            RenderViewVersion++;
         }
     }
 
@@ -583,7 +583,7 @@ public class MapProjectile : MapObject, IDynlight
         set
         {
             _ZOffset = value;
-            DoUpdateView = true;
+            RenderViewVersion++;
         }
     }
 
@@ -598,7 +598,7 @@ public class MapProjectile : MapObject, IDynlight
         set
         {
             _ZAbsolute = true;
-            DoUpdateView = true;
+            RenderViewVersion++;
         }
     }
 
@@ -613,7 +613,7 @@ public class MapProjectile : MapObject, IDynlight
         set
         {
             _Scale = value;
-            DoUpdateView = true;
+            RenderViewVersion++;
         }
     }
 
@@ -653,7 +653,7 @@ public class MapProjectile : MapObject, IDynlight
         Color = new Color(1, 1, 1, 1);
         ZOffset = 128;
         Scale = 1;
-        DoUpdateView = true;
+        RenderViewVersion++;
     }
 
     public override void Dispose()

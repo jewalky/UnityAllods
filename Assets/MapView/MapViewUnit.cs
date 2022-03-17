@@ -373,6 +373,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
     private bool spriteSet = false;
     private bool oldVisibility = false;
+    private int viewVersion = 0;
     public void OnUpdate()
     {
         if (Renderer == null)
@@ -401,7 +402,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
         bool hovered = (MapView.Instance.HoveredObject == LogicUnit);
         float baseLightness = hovered ? 0.75f : 0.5f;
-        if (Renderer != null && !LogicUnit.DoUpdateView) Renderer.material.SetFloat("_Lightness", baseLightness);
+        if (Renderer != null && LogicUnit.RenderViewVersion == viewVersion) Renderer.material.SetFloat("_Lightness", baseLightness);
         bool selected = (MapView.Instance.SelectedObject == LogicUnit);
         if (HpMat1 != null) HpMat1.color = new Color(1, 1, 1, selected ? 1f : 0.5f);
         if (HpMat2 != null) HpMat2.color = new Color(1, 1, 1, selected ? 1f : 0.5f);
@@ -431,7 +432,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             Renderer.materials[i].SetFloat("_Lightness", baseLightness + meanDynLight);
         }
 
-        if (LogicUnit.DoUpdateView)
+        if (LogicUnit.RenderViewVersion != viewVersion)
         {
             Renderer.enabled = true;
             ShadowRenderer.enabled = bAlive;
@@ -599,7 +600,7 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             ShadowMesh = UpdateMesh(sprites, spritesB, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null), doFlip); // 0.3 of sprite height
             UpdateHpMesh();
 
-            LogicUnit.DoUpdateView = false;
+            viewVersion = LogicUnit.RenderViewVersion;
         }
     }
 

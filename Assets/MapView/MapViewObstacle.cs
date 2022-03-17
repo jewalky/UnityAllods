@@ -142,6 +142,7 @@ public class MapViewObstacle : MapViewObject, IObjectManualUpdate
 
     private bool spriteSet = false;
     private bool oldVisibility = false;
+    private int viewVersion = 0;
     public void OnUpdate()
     {
         if (Renderer == null)
@@ -162,7 +163,7 @@ public class MapViewObstacle : MapViewObject, IObjectManualUpdate
             return;
         }
 
-        if (LogicObstacle.DoUpdateView)
+        if (LogicObstacle.RenderViewVersion != viewVersion)
         {
             Renderer.enabled = true;
             ShadowRenderer.enabled = true;
@@ -216,7 +217,7 @@ public class MapViewObstacle : MapViewObject, IObjectManualUpdate
             ObstacleMesh = UpdateMesh(sprites, spritesB, actualFrame, Filter.mesh, 0, (ObstacleMesh == null));
             ShadowMesh = UpdateMesh(sprites, spritesB, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null)); // 0.3 of sprite height
 
-            LogicObstacle.DoUpdateView = false;
+            viewVersion = LogicObstacle.RenderViewVersion;
         }
     }
 

@@ -82,7 +82,7 @@ namespace SpellEffects
             Indicator.Alpha = (Unit.GetVisibility() == 2) ? 0.5f : 0;
             Indicator.SetPosition(Unit.X + Unit.FracX + Unit.Width / 2f, Unit.Y + Unit.FracY + Unit.Height / 2f, 1f + (((Unit.Width + Unit.Height) / 2f) - 1f) / 2f);
             Indicator.CurrentFrame = (Indicator.CurrentFrame + 1) % Indicator.Class.Phases;
-            Indicator.DoUpdateView = true;
+            Indicator.RenderViewVersion++;
         }
     }
 }

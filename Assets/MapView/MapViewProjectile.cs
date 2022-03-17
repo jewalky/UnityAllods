@@ -135,6 +135,7 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
     private Texture2D _BasePalette = null;
     private bool spriteSet = false;
     private bool oldVisibility = false;
+    private int viewVersion = 0;
     public void OnUpdate()
     {
         if (Renderer == null)
@@ -163,7 +164,7 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
             return;
         }
 
-        if (LogicProjectile.DoUpdateView)
+        if (LogicProjectile.RenderViewVersion != viewVersion)
         {
             Renderer.enabled = true;
             ShadowRenderer.enabled = HasShadow;
@@ -270,7 +271,7 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
             ProjectileMesh = UpdateMesh(sprites, actualFrame, Filter.mesh, 0, (ProjectileMesh == null), doFlip);
             ShadowMesh = UpdateMesh(sprites, actualFrame, ShadowFilter.mesh, 0.3f, (ShadowMesh == null), doFlip); // 0.3 of sprite height
 
-            LogicProjectile.DoUpdateView = false;
+            viewVersion = LogicProjectile.RenderViewVersion;
         }
     }
 

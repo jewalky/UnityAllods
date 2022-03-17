@@ -576,7 +576,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
                 {
                     List<MapObject> objects = MapLogic.Instance.GetAllObjects();
                     for (int i = 0; i < objects.Count; i++)
-                        objects[i].DoUpdateView = true;
+                        objects[i].RenderViewVersion++;
                 }
             }
         }

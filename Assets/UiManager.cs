@@ -502,6 +502,7 @@ public class UiManager : MonoBehaviour
 
     public void Unsubscribe(IUiEventProcessor mb)
     {
+        if (lastMouseOver == mb) lastMouseOver = null;
         Processors.Remove((MonoBehaviour)mb);
     }
 

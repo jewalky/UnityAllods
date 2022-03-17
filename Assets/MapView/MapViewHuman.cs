@@ -399,12 +399,12 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         if (item == null)
             return false;
         //item = LogicHuman.TakeItemFromBody((MapUnit.BodySlot)item.Class.Option.Slot);
-        LogicHuman.DoUpdateInfo = true;
+        LogicHuman.RenderInfoVersion++;
         UiManager.Instance.StartDrag(item, 1, 0, () =>
         {
             // put item back to body if cancelled
             //LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
-            LogicHuman.DoUpdateInfo = true;
+            LogicHuman.RenderInfoVersion++;
         });
         return true;
     }
@@ -470,7 +470,7 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
 
     public override void ProcessEndDrag()
     {
-        LogicHuman.DoUpdateInfo = true;
+        LogicHuman.RenderInfoVersion++;
     }
 
     public override void ProcessFailDrag()

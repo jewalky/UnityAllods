@@ -56,7 +56,7 @@ public class ItemPack : IEnumerable<Item>
     private void UpdateParent()
     {
         if (Parent != null)
-            Parent.DoUpdateInfo = true;
+            Parent.RenderInfoVersion++;
     }
 
     public void Clear()

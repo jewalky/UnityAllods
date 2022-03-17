@@ -35,7 +35,7 @@ public class MapObstacle : MapObject, IVulnerable
         // ???
         Width = 1;
         Height = 1;
-        DoUpdateView = true;
+        RenderViewVersion++;
     }
 
     public override void CheckAllocateObject()
@@ -68,7 +68,7 @@ public class MapObstacle : MapObject, IVulnerable
             {
                 CurrentFrame = ++CurrentFrame % Class.Frames.Length;
                 CurrentTime = 0;
-                DoUpdateView = true;
+                RenderViewVersion++;
             }
         }
     }
@@ -96,7 +96,7 @@ public class MapObstacle : MapObject, IVulnerable
         Class = deadClass;
         CurrentFrame = 0;
         CurrentTime = 0;
-        DoUpdateView = true;
+        RenderViewVersion++;
         return true;
     }
 

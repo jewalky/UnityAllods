@@ -156,7 +156,7 @@ class MapLogic
             {
                 foreach (MapObject mobj in Nodes[x, y].Objects)
                 {
-                    mobj.DoUpdateView = true;
+                    mobj.RenderViewVersion++;
                     if (mobj is IDynlight)
                     {
                         int lval = ((IDynlight)mobj).GetLightValue();
@@ -1302,7 +1302,7 @@ class MapLogic
             for (int i = 0; i < pack.Count; i++)
                 existingsack.Pack.PutItem(existingsack.Pack.Count, new Item(pack[i], pack[i].Count));
             existingsack.Pack.Money += pack.Money;
-            existingsack.DoUpdateView = true;
+            existingsack.RenderViewVersion++;
 
             if (NetworkManager.IsServer)
                 Server.NotifySack(x, y, existingsack.Pack.Price);

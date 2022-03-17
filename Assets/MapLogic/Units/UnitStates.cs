@@ -312,8 +312,8 @@ public class CastState : IUnitState
                     Server.NotifyUnitStatsShort(Unit);
                 else if (Spell.Item != null && Spell.ItemDisposable && Unit.ItemsPack.TakeItem(Spell.Item, 1) != null)
                     Server.NotifyUnitPack(Unit);
-                Unit.DoUpdateView = true;
-                Unit.DoUpdateInfo = true;
+                Unit.RenderViewVersion++;
+                Unit.RenderInfoVersion++;
             }
             else return false; // :( no mana
             Executed = true;

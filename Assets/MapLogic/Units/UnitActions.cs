@@ -33,7 +33,7 @@ public class IdleAction : IUnitAction
         if (Unit.VState != UnitVisualState.Idle && (!NetworkManager.IsClient || Unit.AllowIdle))
         {
             Unit.VState = UnitVisualState.Idle; // set state to idle
-            Unit.DoUpdateView = true;
+            Unit.RenderViewVersion++;
 
             if (NetworkManager.IsServer)
                 Server.NotifyIdleUnit(Unit, Unit.X, Unit.Y, Unit.Angle);
@@ -49,7 +49,7 @@ public class IdleAction : IUnitAction
             {
                 Unit.IdleFrame = ++Unit.IdleFrame % Unit.Class.IdlePhases;
                 Unit.IdleTime = 0;
-                Unit.DoUpdateView = true;
+                Unit.RenderViewVersion++;
             }
         }
         else
@@ -102,7 +102,7 @@ public class RotateAction : IUnitAction
                 ToRotate = Math.Min(ToRotate, Unit.Stats.RotationSpeed);
             else ToRotate = Math.Max(ToRotate, -Unit.Stats.RotationSpeed);
             Unit.Angle += ToRotate;
-            Unit.DoUpdateView = true;
+            Unit.RenderViewVersion++;
             Unit.VState = UnitVisualState.Rotating; // set state to rotating
         }
 
@@ -154,7 +154,7 @@ public class MoveAction : IUnitAction
             Unit.SetPosition(TargetX, TargetY, false);
             Unit.FracX = 0;
             Unit.FracY = 0;
-            Unit.DoUpdateView = true;
+            Unit.RenderViewVersion++;
             return false;
         }
         else
@@ -171,7 +171,7 @@ public class MoveAction : IUnitAction
             Unit.FracX = Frac * (TargetX - Unit.X);
             Unit.FracY = Frac * (TargetY - Unit.Y);
             Frac += FracAdd;
-            Unit.DoUpdateView = true;
+            Unit.RenderViewVersion++;
             Unit.VState = UnitVisualState.Moving;
             if (Unit.Class.MovePhases > 1)
             {
@@ -179,7 +179,7 @@ public class MoveAction : IUnitAction
                 {
                     Unit.MoveFrame = ++Unit.MoveFrame % Unit.Class.MovePhases;
                     Unit.MoveTime = 0;
-                    Unit.DoUpdateView = true;
+                    Unit.RenderViewVersion++;
                 }
 
                 Unit.MoveTime++;
@@ -255,7 +255,7 @@ public class AttackAction : IUnitAction
             Unit.VState = UnitVisualState.Attacking;
             Unit.AttackFrame = 0;
             Unit.AttackTime = 0;
-            Unit.DoUpdateView = true;
+            Unit.RenderViewVersion++;
             Speed = 0.5f;
 
             // disable invisibility on attack, but only if target is not self
@@ -276,7 +276,7 @@ public class AttackAction : IUnitAction
                 if (Unit.AttackFrame >= Unit.Class.AttackPhases)
                     Unit.AttackFrame = Unit.Class.AttackPhases - 1;
                 Unit.AttackTime = -1;
-                Unit.DoUpdateView = true;
+                Unit.RenderViewVersion++;
             }
 
             Unit.AttackTime++;
@@ -431,7 +431,7 @@ public class DeathAction : IUnitAction
             Unit.VState = UnitVisualState.Dying;
             Unit.DeathFrame = 0;
             Unit.DeathTime = 0;
-            Unit.DoUpdateView = true;
+            Unit.RenderViewVersion++;
         }
 
         Timer++;
@@ -444,7 +444,7 @@ public class DeathAction : IUnitAction
         {
             Unit.DeathFrame++;
             Unit.DeathTime = 0;
-            Unit.DoUpdateView = true;
+            Unit.RenderViewVersion++;
         }
 
         if (Unit.DeathFrame >= dCls.DyingPhases - 1)

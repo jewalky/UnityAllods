@@ -258,8 +258,8 @@ namespace ClientCommands
                 MapLogic.Instance.AddObject(unit, true);
             else
             {
-                unit.DoUpdateView = true; // update view if unit already present on map (otherwise its automatically done)
-                unit.DoUpdateInfo = true;
+                unit.RenderViewVersion++; // update view if unit already present on map (otherwise its automatically done)
+                unit.RenderInfoVersion++;
             }
 
             // add spells
@@ -466,8 +466,8 @@ namespace ClientCommands
 
             // visible = whether to display flying hp
             unit.Stats.TrySetHealth(unit.Stats.Health - Damage);
-            unit.DoUpdateInfo = true;
-            unit.DoUpdateView = true;
+            unit.RenderInfoVersion++;
+            unit.RenderViewVersion++;
 
             if (Visible)
             {
@@ -521,7 +521,7 @@ namespace ClientCommands
             }
 
             unit.Player.Money = Money;
-            unit.DoUpdateInfo = true;
+            unit.RenderInfoVersion++;
 
             return true;
         }
@@ -549,7 +549,7 @@ namespace ClientCommands
             }
 
             unit.Stats = Stats;
-            unit.DoUpdateView = true;
+            unit.RenderViewVersion++;
 
             return true;
         }
@@ -587,8 +587,8 @@ namespace ClientCommands
             unit.Stats.HealthMax = HealthMax;
             unit.Stats.Mana = Mana;
             unit.Stats.ManaMax = ManaMax;
-            unit.DoUpdateView = true;
-            unit.DoUpdateInfo = true;
+            unit.RenderViewVersion++;
+            unit.RenderInfoVersion++;
 
             return true;
         }
@@ -617,8 +617,8 @@ namespace ClientCommands
 
             unit.Stats.MergePackedStats(PackedStats);
             unit.CalculateVision();
-            unit.DoUpdateView = true;
-            unit.DoUpdateInfo = true;
+            unit.RenderViewVersion++;
+            unit.RenderInfoVersion++;
 
             return true;
         }
@@ -1148,7 +1148,7 @@ namespace ClientCommands
 
             unit.BoneFrame = BoneFrame;
             unit.BoneTime = 0;
-            unit.DoUpdateView = true;
+            unit.RenderViewVersion++;
 
             return true;
         }
@@ -1179,7 +1179,7 @@ namespace ClientCommands
 
             unit.SummonTimeMax = SummonTimeMax;
             unit.SummonTime = SummonTime;
-            unit.DoUpdateView = true;
+            unit.RenderViewVersion++;
 
             return true;
         }

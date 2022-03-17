@@ -67,6 +67,8 @@ public class MainCamera : MonoBehaviour
         cam.projectionMatrix *= Matrix4x4.Scale(new Vector3(1, -1, 1));
         Debug.LogFormat("{0}x{1}", _Width, _Height);
 
+        Application.targetFrameRate = -1;
+
         m_fpsr = new AllodsTextRenderer(Fonts.Font1, Font.Align.Right, _Width - 176);
         m_fpso = m_fpsr.GetNewGameObject(0.01f, SceneRoot.Instance.transform, 100);
         m_fpso.transform.position = new Vector3(0, 0, OverlayZ + 0.99f);

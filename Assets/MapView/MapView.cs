@@ -172,6 +172,17 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         MapLogic.Instance.InitFromFile(filename, false);
     }
 
+    private void UpdateUIPositions()
+    {
+        transform.localScale = new Vector3(1, 1, 0.005f);
+
+        Infowindow.transform.localScale = new Vector3(1, 1, 0.01f);
+        Infowindow.transform.localPosition = new Vector3(MainCamera.Width - 176, 238, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
+
+        Inventory.transform.localScale = new Vector3(1, 1, 0.01f);
+        Inventory.transform.localPosition = new Vector3((MainCamera.Width - 176) / 2 - (Inventory.View.InvWidth * 80 * Inventory.View.InvScale + 64) / 2, MainCamera.Height - 90, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
+    }
+
     public void OnMapLoaded()
     {
         Debug.LogFormat("map = {0} ({1}x{2})", MapLogic.Instance.Title, MapLogic.Instance.Width - 16, MapLogic.Instance.Height - 16);
@@ -183,7 +194,10 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         // run generic load
         Load();
 
-        this.transform.localScale = new Vector3(1, 1, 0.005f);
+        UpdateUIPositions();
+
+        if (MapLogic.Instance.ConsolePlayer.Avatar != null)
+            CenterOnObject(MapLogic.Instance.ConsolePlayer.Avatar);
     }
 
     GameObject[] MeshChunks = new GameObject[0];
@@ -608,6 +622,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         Infowindow.gameObject.SetActive(MapLogic.Instance.IsLoaded);
         Inventory.gameObject.SetActive(InventoryVisible);
         Spellbook.gameObject.SetActive(SpellbookVisible);
+        UpdateUIPositions();
 
         if (!MapLogic.Instance.IsLoaded)
             return;

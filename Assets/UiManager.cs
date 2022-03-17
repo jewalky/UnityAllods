@@ -101,8 +101,10 @@ public class UiManager : MonoBehaviour
 
     public void ClearWindows()
     {
-        foreach (MonoBehaviour wnd in Windows)
-            Destroy(wnd.gameObject);
+        var windows = new List<MonoBehaviour>();
+        windows.AddRange(Windows);
+        foreach (MonoBehaviour wnd in windows)
+            DestroyImmediate(wnd.gameObject);
         Windows.Clear();
     }
 

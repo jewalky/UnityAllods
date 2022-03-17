@@ -861,6 +861,8 @@ class MapLogic
                 */
             }
 
+            IsLoading = false;
+
             GameManager.Instance.CallDelegateOnNextFrame(() =>
             {
                 MapView.Instance.OnMapLoaded();
@@ -869,13 +871,11 @@ class MapLogic
         }
         catch (Exception e)
         {
+            IsLoading = false;
+
             Debug.LogError(e);
             GameConsole.Instance.WriteLine("Failed to load {0}: {1}: {2}", filename, e.GetType().Name, e.Message);
             MapStructure = null;
-        }
-        finally
-        {
-            IsLoading = false;
         }
     }
 
@@ -1141,7 +1141,25 @@ class MapLogic
             return null;
         unit.Player = player;
         unit.Tag = GetFreeUnitTag(); // this is also used as network ID.
-        unit.SetPosition(16, 16, false);
+
+        // find any instance of drop location
+        int dropX = 16;
+        int dropY = 16;
+        List<Vector2i> dropLocations = new List<Vector2i>();
+        foreach (AllodsMap.AlmLogic.AlmLogicItem item in MapStructure.Logic.LogicItems)
+        {
+            if (item.TypeID == 65538)
+                dropLocations.Add(new Vector2i((int)item.Values[0].Value, (int)item.Values[1].Value));
+        }
+
+        if (dropLocations.Count > 0)
+        {
+            int randomLocation = UnityEngine.Random.Range(0, dropLocations.Count - 1);
+            dropX = dropLocations[randomLocation].x;
+            dropY = dropLocations[randomLocation].y;
+        }
+
+        unit.SetPosition(dropX, dropY, false);
         unit.LinkToWorld();
         AddObject(unit, true);
 

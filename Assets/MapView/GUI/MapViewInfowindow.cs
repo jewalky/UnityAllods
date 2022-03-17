@@ -21,7 +21,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
                     _Viewer.DisplayInfo(false, null);
                 }
                 _Viewer = value;
-                if (_Viewer != null)
+                if (_Viewer != null && HBackRObject != null && TBackRObject != null)
                 {
                     _Viewer.DisplayPic((BHumanModeObject == null || HumanMode), HBackRObject.transform);
                     _Viewer.DisplayInfo((BHumanModeObject == null || !HumanMode), TBackRObject.transform);
@@ -36,6 +36,12 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
     private static Texture2D TBackR;
     private static Texture2D ExtraL; // this is either extra1024 or extra800
     private static Texture2D ExtraR; //
+
+    // settings
+    public bool PackAvailable = true;
+    public bool BookAvailable = true;
+    public bool ForceSmall = false;
+    private bool Small = false;
 
     // buttons
     private static Texture2D BTextMode;
@@ -97,6 +103,8 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
     {
         UiManager.Instance.Subscribe(this);
 
+        Small = ForceSmall || MainCamera.Height < 768;
+
         if (HBackL == null) HBackL = Images.LoadImage("graphics/interface/humanbackl.bmp", 0, Images.ImageType.AllodsBMP);
         if (HBackR == null) HBackR = Images.LoadImage("graphics/interface/humanbackr.bmp", Images.ImageType.AllodsBMP);
         if (TBackL == null) TBackL = Images.LoadImage("graphics/interface/textbackl.bmp", 0, Images.ImageType.AllodsBMP);
@@ -115,8 +123,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         if (BBookOpen == null) BBookOpen = Images.LoadImage("graphics/interface/bookopened.bmp", 0, Images.ImageType.AllodsBMP);
         if (BBookClosed == null) BBookClosed = Images.LoadImage("graphics/interface/bookclosed.bmp", 0, Images.ImageType.AllodsBMP);
 
-        transform.localScale = new Vector3(1, 1, 0.01f);
-        transform.localPosition = new Vector3(MainCamera.Width - 176, 238, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
+        transform.localScale = new Vector3(1, 1, 1);
 
         Utils.MakeTexturedQuad(out HBackLObject, HBackL);
         Utils.MakeTexturedQuad(out HBackRObject, HBackR);
@@ -135,7 +142,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         // if we have >=768 height, put textback alongside humanback.
         // otherwise enable switcher button and switch with tab/click.
         float tbackY = 0;
-        if (MainCamera.Height >= 768)
+        if (!Small)
         {
             if (MainCamera.Height == 768)
                 tbackY = HBackR.height + ExtraR.height;
@@ -150,7 +157,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         TBackRObject.transform.localPosition = new Vector3(TBackL.width, tbackY, 0);
 
         // hide textback if we're switching
-        if (MainCamera.Height < 768 && !HumanMode)
+        if (Small && !HumanMode)
         {
             TBackRObject.SetActive(false);
             TBackLObject.SetActive(false);
@@ -170,7 +177,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
             ExtraRObject.transform.localPosition = new Vector3(TBackL.width, HBackR.height, 0);
         }
 
-        if (MainCamera.Height < 768)
+        if (Small)
         {
             Utils.MakeTexturedQuad(out BTextModeObject, BTextMode);
             Utils.MakeTexturedQuad(out BHumanModeObject, BHumanMode);
@@ -214,6 +221,12 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         BBookOpenObject.transform.localPosition = new Vector3(16, 0, -0.002f);
         BBookClosedObject.transform.localPosition = new Vector3(16, 4, -0.002f);
         BBookOpenObject.SetActive(false);
+
+        if (_Viewer != null)
+        {
+            _Viewer.DisplayPic((BHumanModeObject == null || HumanMode), HBackRObject.transform);
+            _Viewer.DisplayInfo((BHumanModeObject == null || !HumanMode), TBackRObject.transform);
+        }
     }
 
     public void OnDestroy()
@@ -317,18 +330,26 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
             Viewer.GetObject().DoUpdateInfo = false;
         }
 
-        if (BPackOpenObject != null && BPackClosedObject != null)
+        if (BPackOpenObject != null && BPackClosedObject != null && PackAvailable)
         {
             bool invopen = MapView.Instance.InventoryVisible;
             BPackOpenObject.SetActive(invopen);
             BPackClosedObject.SetActive(!invopen);
+        } else if (!PackAvailable)
+        {
+            BPackOpenObject.SetActive(false);
+            BPackClosedObject.SetActive(false);
         }
 
-        if (BBookOpenObject != null && BBookClosedObject != null)
+        if (BBookOpenObject != null && BBookClosedObject != null && BookAvailable)
         {
             bool spbopen = MapView.Instance.SpellbookVisible;
             BBookOpenObject.SetActive(spbopen);
             BBookClosedObject.SetActive(!spbopen);
+        } else if (!BookAvailable)
+        {
+            BBookOpenObject.SetActive(false);
+            BBookClosedObject.SetActive(false);
         }
     }
 

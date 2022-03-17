@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class MapViewInventory : MonoBehaviour, IUiEventProcessor
 {
-    private ItemView View;
+    public ItemView View { get; private set; }
     private MeshRenderer Renderer;
     private MeshFilter Filter;
 
@@ -19,7 +19,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
     private static Texture2D InvArrow3 = null;
     private static Texture2D InvArrow4 = null;
 
-    private int ItemCount;
+    public int ItemCount = 0;
 
     public void Awake()
     {
@@ -32,7 +32,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
 
     public void Start()
     {
-        ItemCount = (MainCamera.Width - 176 - 64) / 80; // each arrow is 32 in width
+        if (ItemCount == 0) ItemCount = (MainCamera.Width - 176 - 64) / 80; // each arrow is 32 in width
         View.InvScale = 1;
         View.InvWidth = (int)(ItemCount / View.InvScale);
         View.InvHeight = (int)(1 / View.InvScale);
@@ -55,7 +55,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
         // generate mesh.
         Utils.MeshBuilder mb = new Utils.MeshBuilder();
         // 3 submeshes: left arrow, right arrow, and background. I'm NOT using the full original inventory view.
-        for (int j = 1; j >= 0; j--)
+        for (int j = 0; j >= 0; j--)
         {
             for (int i = 0; i < View.InvWidth; i++)
             {
@@ -79,9 +79,6 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
         mb.AddQuad(2, 32 + View.InvWidth * 80 * View.InvScale, 2, 32, 88);
 
         Filter.mesh = mb.ToMesh(MeshTopology.Quads, MeshTopology.Quads, MeshTopology.Quads);
-
-        transform.localScale = new Vector3(1, 1, 0.01f);
-        transform.localPosition = new Vector3((MainCamera.Width - 176) / 2 - (View.InvWidth * 80 * View.InvScale + 64) / 2, MainCamera.Height - 90, MainCamera.InterfaceZ + 0.99f); // on this layer all map UI is drawn
     }
 
     public void OnDestroy()

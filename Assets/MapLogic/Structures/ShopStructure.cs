@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 public class ShopStructure : StructureLogic
 {
-    private class Shelf
+    public class Shelf
     {
         public ItemPack Items { get; private set; }
 
@@ -474,7 +474,7 @@ public class ShopStructure : StructureLogic
         }
     }
 
-    private Shelf[] Shelves = new Shelf[4];
+    public Shelf[] Shelves = new Shelf[4];
 
     public ShopStructure(MapStructure s, AllodsMap.AlmShop rules) : base(s)
     {

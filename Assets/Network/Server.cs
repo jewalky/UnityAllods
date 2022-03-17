@@ -833,6 +833,7 @@ public class Server
             {
                 ClientCommands.EnterShop enterShopCmd;
                 enterShopCmd.Tag = shop.Tag;
+                enterShopCmd.EnteringTag = unit.Tag;
                 p.NetClient.SendCommand(enterShopCmd);
             }
         }
@@ -841,6 +842,7 @@ public class Server
             // process locally
             ClientCommands.EnterShop enterShopCmd;
             enterShopCmd.Tag = shop.Tag;
+            enterShopCmd.EnteringTag = unit.Tag;
             enterShopCmd.Process();
         }
     }
@@ -854,6 +856,7 @@ public class Server
             {
                 ClientCommands.EnterInn enterInnCmd;
                 enterInnCmd.Tag = shop.Tag;
+                enterInnCmd.EnteringTag = unit.Tag;
                 p.NetClient.SendCommand(enterInnCmd);
             }
         }
@@ -862,6 +865,7 @@ public class Server
             // process locally
             ClientCommands.EnterInn enterInnCmd;
             enterInnCmd.Tag = shop.Tag;
+            enterInnCmd.EnteringTag = unit.Tag;
             enterInnCmd.Process();
         }
     }

@@ -9,6 +9,7 @@ class InnScreen : FullscreenView
 {
 
     public MapStructure Inn;
+    public MapUnit Unit;
 
     public override void OnStart()
     {

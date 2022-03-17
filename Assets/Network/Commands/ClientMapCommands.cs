@@ -1223,6 +1223,8 @@ namespace ClientCommands
     {
         [ProtoMember(1)]
         public int Tag;
+        [ProtoMember(2)]
+        public int EnteringTag;
 
         public bool Process()
         {
@@ -1236,8 +1238,16 @@ namespace ClientCommands
                 return false;
             }
 
+            MapUnit u = MapLogic.Instance.GetUnitByTag(EnteringTag);
+            if (u == null)
+            {
+                Debug.LogFormat("Attempted to enter shop with nonexistent unit {1}", EnteringTag);
+                return false;
+            }
+
             ShopScreen screen = Utils.CreateObjectWithScript<ShopScreen>();
             screen.Shop = s;
+            screen.Unit = u;
 
             return true;
         }
@@ -1249,6 +1259,8 @@ namespace ClientCommands
     {
         [ProtoMember(1)]
         public int Tag;
+        [ProtoMember(2)]
+        public int EnteringTag;
 
         public bool Process()
         {
@@ -1262,8 +1274,16 @@ namespace ClientCommands
                 return false;
             }
 
+            MapUnit u = MapLogic.Instance.GetUnitByTag(EnteringTag);
+            if (u == null)
+            {
+                Debug.LogFormat("Attempted to enter shop with nonexistent unit {1}", EnteringTag);
+                return false;
+            }
+
             InnScreen screen = Utils.CreateObjectWithScript<InnScreen>();
             screen.Inn = s;
+            screen.Unit = u;
 
             return true;
         }

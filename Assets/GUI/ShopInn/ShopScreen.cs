@@ -9,6 +9,7 @@ class ShopScreen : FullscreenView
 {
 
     public MapStructure Shop;
+    public MapUnit Unit;
 
     private enum ShopType
     {
@@ -36,6 +37,17 @@ class ShopScreen : FullscreenView
     // for druid shop
     private static Texture2D[] shop_DruidShelves = null;
     private static Texture2D shop_DruidElven = null;
+
+    // objects
+    private GameObject o_ShopBaseOffset;
+    private GameObject o_ShopMain;
+    private GameObject o_ShopTable;
+    private GameObject o_ShopButtonsBg;
+    private GameObject o_ShopInventory;
+    private GameObject o_ShopFrame;
+    private MapViewInfowindow o_UnitView;
+    private MapViewInventory o_UnitInventory;
+    private ItemView o_ShelfItems;
 
     private string GetGraphicsPrefix(string filename)
     {
@@ -71,7 +83,19 @@ class ShopScreen : FullscreenView
         if (shop_ShopMenu[TypeInt] == null)
             shop_ShopMenu[TypeInt] = Images.LoadImage(GetGraphicsPrefix("shopmenu.bmp"), 0, Images.ImageType.AllodsBMP);
         if (shop_ShopMain[TypeInt] == null)
-            shop_ShopMain[TypeInt] = Images.LoadImage(GetGraphicsPrefix("shopmain.bmp"), 0, Images.ImageType.AllodsBMP);
+        {
+            switch (Type)
+            {
+                default:
+                case ShopType.Plagat:
+                    shop_ShopMain[TypeInt] = Images.LoadImage("graphics/interface/shopanim/shopmain.bmp", 0, Images.ImageType.AllodsBMP);
+                    break;
+                case ShopType.Kaarg:
+                case ShopType.Druid:
+                    shop_ShopMain[TypeInt] = Images.LoadImage(GetGraphicsPrefix("shopmain.bmp"), 0, Images.ImageType.AllodsBMP);
+                    break;
+            }
+        }
         if (shop_ShopTable[TypeInt] == null)
             shop_ShopTable[TypeInt] = Images.LoadImage(GetGraphicsPrefix("shoptable.bmp"), 0, Images.ImageType.AllodsBMP);
         if (shop_ShopInv[TypeInt] == null)
@@ -134,6 +158,53 @@ class ShopScreen : FullscreenView
             shop_DruidElven = Images.LoadImage("graphics/interface/shop_druid/elven.bmp", 0, Images.ImageType.AllodsBMP);
         }
 
+        // generate generic view objects
+        o_ShopBaseOffset = Utils.CreateObject();
+        PositionObject(o_ShopBaseOffset, gameObject, new Vector3(MainCamera.Width / 2 - 320, MainCamera.Height / 2 - 240, 0));
+
+        Utils.MakeTexturedQuad(out o_ShopInventory, shop_ShopInv[TypeInt]);
+        PositionObject(o_ShopInventory, o_ShopBaseOffset, new Vector3(0, 0, 0));
+
+        Utils.MakeTexturedQuad(out o_ShopTable, shop_ShopTable[TypeInt]);
+        PositionObject(o_ShopTable, o_ShopBaseOffset, new Vector3(0, 303, 0));
+
+        Utils.MakeTexturedQuad(out o_ShopFrame, shop_ShopFrame[TypeInt]);
+        PositionObject(o_ShopFrame, o_ShopBaseOffset, new Vector3(164, 0, 0));
+
+        Utils.MakeTexturedQuad(out o_ShopButtonsBg, shop_ShopMenu[TypeInt]);
+        PositionObject(o_ShopButtonsBg, o_ShopBaseOffset, new Vector3(464, 0, 0));
+
+        Utils.MakeTexturedQuad(out o_ShopMain, shop_ShopMain[TypeInt]);
+        PositionObject(o_ShopMain, o_ShopBaseOffset, new Vector3(169, 8, 0));
+
+        // generate Infowindow and Inventory for the unit that entered shop.
+        o_UnitView = Utils.CreateObjectWithScript<MapViewInfowindow>();
+        o_UnitView.ForceSmall = true;
+        o_UnitView.BookAvailable = false;
+        o_UnitView.PackAvailable = false;
+        PositionObject(o_UnitView.gameObject, o_ShopBaseOffset, new Vector3(464, 238, 0));
+        Unit.CheckAllocateObject();
+        o_UnitView.Viewer = (IMapViewSelfie)Unit.GameScript;
+
+        o_UnitInventory = Utils.CreateObjectWithScript<MapViewInventory>();
+        o_UnitInventory.SetPack((MapHuman)Unit);
+        o_UnitInventory.ItemCount = 5;
+        PositionObject(o_UnitInventory.gameObject, o_ShopBaseOffset, new Vector3(0, 390, 0));
+
+        // generate ItemView for items
+        o_ShelfItems = Utils.CreateObjectWithScript<ItemView>();
+        o_ShelfItems.InvWidth = 2;
+        o_ShelfItems.InvHeight = 3;
+        o_ShelfItems.Pack = ((ShopStructure)Shop.Logic).Shelves[0].Items;
+        PositionObject(o_ShelfItems.gameObject, o_ShopBaseOffset, new Vector3(1, 32, 0));
+
+    }
+
+    private void PositionObject(GameObject obj, GameObject parent, Vector3 location)
+    {
+        obj.transform.parent = parent.transform;
+        obj.transform.localScale = new Vector3(1, 1, 1);
+        obj.transform.localPosition = location;
     }
 
     public override bool ProcessEvent(Event e)

@@ -27,7 +27,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
         View = Utils.CreateObjectWithScript<ItemView>();
         View.transform.parent = transform;
         View.transform.localScale = new Vector3(1, 1, 1);
-        View.transform.localPosition = new Vector3(32, 6, -1);
+        View.transform.localPosition = new Vector3(32, 6, -2);
     }
 
     public void Start()

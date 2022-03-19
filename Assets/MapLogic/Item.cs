@@ -276,6 +276,8 @@ public class NetItem
     public List<uint> ParentUIDs = new List<uint>();
     [ProtoMember(5)]
     public int Count;
+    [ProtoMember(6)]
+    public ServerCommands.ItemMoveLocation Parent;
 
     public NetItem()
     {
@@ -296,6 +298,7 @@ public class NetItem
         for (int i = 0; i < item.ParentUIDs.Count; i++)
             ParentUIDs.Add(item.ParentUIDs[i]);
         Count = item.Count;
+        Parent = item.NetParent;
     }
 }
 
@@ -310,6 +313,7 @@ public class Item
     public readonly List<uint> ParentUIDs = new List<uint>();
 
     public ItemPack Parent = null;
+    public ServerCommands.ItemMoveLocation NetParent = ServerCommands.ItemMoveLocation.Undefined;
     public int Index = 0;
 
     public bool IsValid { get { return (Class != null); } }
@@ -338,6 +342,7 @@ public class Item
         }
 
         Count = netitem.Count;
+        NetParent = netitem.Parent;
 
         InitItem();
 
@@ -367,6 +372,7 @@ public class Item
         Count = Math.Min(original.Count, count);
   
         Parent = original.Parent;
+        NetParent = original.NetParent;
         Index = original.Index;
 
         InitItem();

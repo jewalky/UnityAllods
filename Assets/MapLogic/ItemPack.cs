@@ -153,7 +153,11 @@ public class ItemPack : IEnumerable<Item>
         }
 
         if (!Passive)
+        {
             item.Parent = this;
+            if (!NetworkManager.IsClient)
+                item.NetParent = LocationHint;
+        }
 
         if (item.Count <= 0)
             return null; // don't put anything if item count is zero. this can happen if item was removed from pack after drag started.

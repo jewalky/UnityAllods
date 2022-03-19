@@ -277,7 +277,9 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
         VState = UnitVisualState.Idle;
         RenderViewVersion++;
         ItemsBody = new ItemPack(false, this);
+        ItemsBody.LocationHint = ServerCommands.ItemMoveLocation.UnitBody;
         ItemsPack = new ItemPack(false, this);
+        ItemsPack.LocationHint = ServerCommands.ItemMoveLocation.UnitPack;
     }
 
     private void InitUnit()

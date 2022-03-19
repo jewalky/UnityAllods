@@ -379,7 +379,8 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
             {
                 SendItemMoveCommand(item, ServerCommands.ItemMoveLocation.UnitPack, LogicHuman.ItemsPack.Count);
                 item = LogicHuman.TakeItemFromBody((MapUnit.BodySlot)item.Class.Option.Slot);
-                LogicHuman.ItemsPack.PutItem(LogicHuman.ItemsPack.Count, item);
+                if (item != null)
+                    LogicHuman.ItemsPack.PutItem(LogicHuman.ItemsPack.Count, item);
             }
 
             return true;
@@ -397,6 +398,8 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
             return false;
         Item item = GetHumanItemByPoint((int)mousex, (int)mousey);
         if (item == null)
+            return false;
+        if (item.Locked)
             return false;
         //item = LogicHuman.TakeItemFromBody((MapUnit.BodySlot)item.Class.Option.Slot);
         LogicHuman.RenderInfoVersion++;

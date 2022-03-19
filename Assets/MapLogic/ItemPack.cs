@@ -91,6 +91,8 @@ public class ItemPack : IEnumerable<Item>
 
     public Item TakeItem(Item item, int count)
     {
+        if (item.Locked && item.Parent == this)
+            return null;
         for (int i = 0; i < ItemList.Count; i++)
             if (ItemList[i].ExtendedEquals(item)) return TakeItem(i, count);
         return null;
@@ -103,6 +105,12 @@ public class ItemPack : IEnumerable<Item>
             return null;
 
         Item sourceItem = ItemList[position];
+        if (sourceItem == null)
+            return null;
+
+        if (sourceItem.Locked)
+            return null;
+
         if (count >= sourceItem.Count)
         {
             ItemList.RemoveAt(position);

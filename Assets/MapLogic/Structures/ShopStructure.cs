@@ -475,6 +475,17 @@ public class ShopStructure : StructureLogic
     }
 
     public Shelf[] Shelves = new Shelf[4];
+    private Dictionary<Player, ItemPack> Tables = new Dictionary<Player, ItemPack>();
+
+    public ItemPack GetTableFor(Player player)
+    {
+        if (Tables.ContainsKey(player))
+            return Tables[player];
+
+        ItemPack newPack = new ItemPack(true, null);
+        Tables[player] = newPack;
+        return newPack;
+    }
 
     public ShopStructure(MapStructure s, AllodsMap.AlmShop rules) : base(s)
     {
@@ -496,6 +507,10 @@ public class ShopStructure : StructureLogic
     public override void OnLeave(MapUnit unit)
     {
         base.OnLeave(unit);
+        // revert everything on the table (unlock)
+        foreach (Item item in GetTableFor(unit.Player))
+            item.Locked = false;
+        Tables.Remove(unit.Player);
         Server.NotifyLeaveStructure(unit.Player);
     }
 

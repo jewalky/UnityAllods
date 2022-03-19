@@ -402,9 +402,12 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
                 if (AutoDropTarget != null)
                 {
                     Item newItem = Pack.TakeItem(itemHovered, 1);
-                    if (AutoDropTarget.ProcessAutoDrop(newItem) != UiItemDragResult.Dropped)
-                        Pack.PutItem(itemHovered, newItem);
-                    else UiManager.Instance.UnsetTooltip(); // remove tooltip if item was changed
+                    if (newItem != null)
+                    {
+                        if (AutoDropTarget.ProcessAutoDrop(newItem) != UiItemDragResult.Dropped)
+                            Pack.PutItem(itemHovered, newItem);
+                        else UiManager.Instance.UnsetTooltip(); // remove tooltip if item was changed
+                    }
                 }
             }
 
@@ -446,6 +449,13 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
 
         ItemPack cPack = Pack;
         Item item = (itemHovered == Pack.Count && ShowMoney) ? GetVisualMoneyItem() : Pack[itemHovered];
+
+        if (item == null)
+            return false;
+
+        if (item.Locked)
+            return false;
+
         int count = 1;
 
         // alt = 100

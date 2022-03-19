@@ -66,7 +66,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
         {
             SendItemMoveCommand(item, index);
             View.Pack.PutItem(index, item);
-            return UiItemDragResult.Dropped;
+            return true;
         };
     }
 

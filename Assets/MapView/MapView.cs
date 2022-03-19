@@ -1153,7 +1153,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
             ((MapHuman)SelectedObject).IsHero;
     }
 
-    public UiItemDragResult ProcessDrop(Item item, float x, float y)
+    public bool ProcessDrop(Item item, float x, float y)
     {
         //
         //throw new NotImplementedException();
@@ -1162,7 +1162,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         MapHuman human = SelectedObject as MapHuman;
         if (human != null)
             Client.DropItem(human, item, MouseCellX, MouseCellY);
-        return UiItemDragResult.Dropped;
+        return true;
     }
 
     public void ProcessEndDrag()
@@ -1170,7 +1170,12 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         // this is the function that's called after item FROM this has succeeded dragging.
     }
 
-    public void ProcessFailDrag(Item item)
+    public void ProcessFailDrag()
+    {
+        // do nothing
+    }
+
+    public void ProcessRollbackDrag(Item item)
     {
         // same as above except with error.
     }

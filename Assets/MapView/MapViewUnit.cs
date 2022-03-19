@@ -853,9 +853,9 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         return false;
     }
 
-    public virtual UiItemDragResult ProcessDrop(Item item, float mousex, float mousey)
+    public virtual bool ProcessDrop(Item item, float mousex, float mousey)
     {
-        return UiItemDragResult.Failed;
+        return false;
     }
 
     public virtual void ProcessEndDrag()
@@ -863,7 +863,12 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
 
     }
 
-    public virtual void ProcessFailDrag(Item item)
+    public virtual void ProcessFailDrag()
+    {
+
+    }
+
+    public virtual void ProcessRollbackDrag(Item item)
     {
 
     }

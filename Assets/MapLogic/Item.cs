@@ -276,8 +276,6 @@ public class NetItem
     public List<uint> ParentUIDs = new List<uint>();
     [ProtoMember(5)]
     public int Count;
-    [ProtoMember(6)]
-    public bool Locked;
 
     public NetItem()
     {
@@ -293,7 +291,6 @@ public class NetItem
         for (int i = 0; i < item.ParentUIDs.Count; i++)
             ParentUIDs.Add(item.ParentUIDs[i]);
         Count = item.Count;
-        Locked = item.Locked;
     }
 }
 
@@ -309,7 +306,6 @@ public class Item
 
     public ItemPack Parent = null;
     public int Index = 0;
-    public bool Locked = true;
 
     public bool IsValid { get { return (Class != null); } }
 
@@ -337,7 +333,6 @@ public class Item
         }
 
         Count = netitem.Count;
-        Locked = netitem.Locked;
 
         InitItem();
 

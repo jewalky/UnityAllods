@@ -202,6 +202,7 @@ public class ShopStructure : StructureLogic
             }
 
             Items = new ItemPack();
+            Items.AutoCompact = false;
             GenerateItems();
 
         }
@@ -476,6 +477,7 @@ public class ShopStructure : StructureLogic
 
     public Shelf[] Shelves = new Shelf[4];
     private Dictionary<Player, ItemPack> Tables = new Dictionary<Player, ItemPack>();
+    public bool ShopIsEmpty { get { return Tables.Count <= 0; } }
 
     public ItemPack GetTableFor(Player player)
     {
@@ -509,12 +511,21 @@ public class ShopStructure : StructureLogic
         base.OnLeave(unit);
         // revert everything on the table (unlock)
         foreach (Item item in GetTableFor(unit.Player))
-            item.Locked = false;
+        {
+            if (item.Parent.Parent != null && item.Parent.Parent.ItemsBody == item.Parent)
+                item.Parent.Parent.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
+            else item.Parent.PutItem(item.Index, item);
+        }
         Tables.Remove(unit.Player);
+        if (ShopIsEmpty)
+        {
+            for (int i = 0; i < Shelves.Length; i++)
+                Shelves[i].Items.Compact();
+        }
         Server.NotifyLeaveStructure(unit.Player);
     }
 
-    private void GenerateItems()
+        private void GenerateItems()
     {
 
     }

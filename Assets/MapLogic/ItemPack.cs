@@ -39,6 +39,23 @@ public class ItemPack : IEnumerable<Item>
         }
     }
 
+    private bool _AutoCompact = true;
+    public bool AutoCompact
+    {
+        get
+        {
+            return _AutoCompact;
+        }
+        set
+        {
+            if (_AutoCompact != value)
+            {
+                _AutoCompact = value;
+                if (_AutoCompact) Compact();
+            }
+        }
+    }
+
     public long Money = 0;
 
     public long Price
@@ -84,17 +101,15 @@ public class ItemPack : IEnumerable<Item>
     public Item FindItemBySlot(MapUnit.BodySlot slot)
     {
         for (int i = 0; i < ItemList.Count; i++)
-            if (ItemList[i].Class != null && ItemList[i].Class.Option.Slot == (int)slot)
+            if (ItemList[i] != null && ItemList[i].Class != null && ItemList[i].Class.Option.Slot == (int)slot)
                 return ItemList[i];
         return null;
     }
 
     public Item TakeItem(Item item, int count)
     {
-        if (item.Locked && item.Parent == this)
-            return null;
         for (int i = 0; i < ItemList.Count; i++)
-            if (ItemList[i].ExtendedEquals(item)) return TakeItem(i, count);
+            if (ItemList[i] != null && ItemList[i].ExtendedEquals(item)) return TakeItem(i, count);
         return null;
     }
 
@@ -108,12 +123,11 @@ public class ItemPack : IEnumerable<Item>
         if (sourceItem == null)
             return null;
 
-        if (sourceItem.Locked)
-            return null;
-
         if (count >= sourceItem.Count)
         {
-            ItemList.RemoveAt(position);
+            if (_AutoCompact)
+                ItemList.RemoveAt(position);
+            else ItemList[position] = null;
             UpdateParent();
             return sourceItem;
         }
@@ -136,7 +150,7 @@ public class ItemPack : IEnumerable<Item>
         // check for already present count
         for (int i = 0; i < ItemList.Count; i++)
         {
-            if (ItemList[i].ExtendedEquals(item))
+            if (ItemList[i] != null && ItemList[i].ExtendedEquals(item))
             {
                 ItemList[i].Count += item.Count;
                 if (!Passive)
@@ -147,14 +161,29 @@ public class ItemPack : IEnumerable<Item>
         }
 
         position = Math.Min(ItemList.Count, Math.Max(0, position));
-        Item newItem = new Item(item, item.Count);
-        ItemList.Insert(position, newItem);
+        if (position == ItemList.Count && !_AutoCompact)
+        {
+            // find first null item
+            for (int i = 0; i < ItemList.Count; i++)
+            {
+                if (ItemList[i] == null)
+                {
+                    position = i;
+                    break;
+                }
+            }
+        }
+
+        if (position < ItemList.Count && ItemList[position] == null)
+            ItemList.RemoveAt(position);
+
+        ItemList.Insert(position, item);
 
         if (!Passive)
-            newItem.Index = position;
+            item.Index = position;
 
         UpdateParent();
-        return newItem;
+        return item;
     }
 
     public IEnumerator<Item> GetEnumerator()
@@ -189,5 +218,16 @@ public class ItemPack : IEnumerable<Item>
             else output += "<null>";
         }
         return "ItemPack[" + output + "]";
+    }
+
+    // deletes null items (empty spaces). this is for shops
+    public void Compact()
+    {
+        ItemList.RemoveAll(x => x == null);
+        if (!Passive)
+        {
+            for (int i = 0; i < ItemList.Count; i++)
+                ItemList[i].Index = i;
+        }
     }
 }

@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDropper
 {
-    public delegate UiItemDragResult ProcessDropDelegate(Item item, int position);
+    public delegate bool ProcessDropDelegate(Item item, int position);
 
     private ItemPack _Pack = null;
     public ItemPack Pack
@@ -200,10 +200,15 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         int y = 0;
         for (int i = start; i < end; i++)
         {
-            Builder.AddQuad(y * InvWidth + x, (x * 80) * InvScale, (y * 80) * InvScale, 80 * InvScale, 80 * InvScale, new Rect(0, 0, 1, 1));
-            // check texture.
-            // for now, just put generic background
-            Renderer.materials[y * InvWidth + x].mainTexture = img_BackInv;
+            Item item = (i == Pack.Count && ShowMoney) ? GetVisualMoneyItem() : Pack[i];
+
+            if (item != null)
+            {
+                Builder.AddQuad(y * InvWidth + x, (x * 80) * InvScale, (y * 80) * InvScale, 80 * InvScale, 80 * InvScale, new Rect(0, 0, 1, 1));
+                // check texture.
+                // for now, just put generic background
+                Renderer.materials[y * InvWidth + x].mainTexture = img_BackInv;
+            }
 
             x++;
             if (x >= InvWidth)
@@ -225,79 +230,83 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         {
             // check if item has special effects
             Item item = (i == Pack.Count && ShowMoney) ? GetVisualMoneyItem() : Pack[i];
-            if (item.MagicEffects.Count > 0)
-            {
-                float baseX = x * 80 * InvScale;
-                float baseY = y * 80 * InvScale;
-                Builder.CurrentMesh = InvWidth * InvHeight * 2;
 
-                foreach (MGlowPart part in MGlowParts)
+            if (item != null)
+            {
+                if (item.MagicEffects.Count > 0)
                 {
-                    // draw all glow parts
-                    // left
-                    Builder.CurrentPosition = new Vector3(baseX + part.x, baseY + part.y);
-                    Builder.CurrentColor = new Color32(208, 0, 208, 255);
-                    Builder.NextVertex();
-                    Builder.CurrentPosition = new Vector3(baseX + part.x - 2f * part.state, baseY + part.y);
-                    Builder.CurrentColor = new Color32(64, 0, 64, 255);
-                    Builder.NextVertex();
-                    // right
-                    Builder.CurrentPosition = new Vector3(baseX + part.x, baseY + part.y);
-                    Builder.CurrentColor = new Color32(208, 0, 208, 255);
-                    Builder.NextVertex();
-                    Builder.CurrentPosition = new Vector3(baseX + part.x + 2f * part.state, baseY + part.y);
-                    Builder.CurrentColor = new Color32(64, 0, 64, 255);
-                    Builder.NextVertex();
-                    // top
-                    Builder.CurrentPosition = new Vector3(baseX + part.x, baseY + part.y);
-                    Builder.CurrentColor = new Color32(208, 0, 208, 255);
-                    Builder.NextVertex();
-                    Builder.CurrentPosition = new Vector3(baseX + part.x, baseY + part.y - 2f * part.state);
-                    Builder.CurrentColor = new Color32(64, 0, 64, 255);
-                    Builder.NextVertex();
-                    // bottom
-                    Builder.CurrentPosition = new Vector3(baseX + part.x, baseY + part.y);
-                    Builder.CurrentColor = new Color32(208, 0, 208, 255);
-                    Builder.NextVertex();
-                    Builder.CurrentPosition = new Vector3(baseX + part.x, baseY + part.y + 2f * part.state);
-                    Builder.CurrentColor = new Color32(64, 0, 64, 255);
-                    Builder.NextVertex();
+                    float baseX = x * 80 * InvScale;
+                    float baseY = y * 80 * InvScale;
+                    Builder.CurrentMesh = InvWidth * InvHeight * 2;
+
+                    foreach (MGlowPart part in MGlowParts)
+                    {
+                        // draw all glow parts
+                        // left
+                        Builder.CurrentPosition = new Vector3(baseX + part.x, baseY + part.y);
+                        Builder.CurrentColor = new Color32(208, 0, 208, 255);
+                        Builder.NextVertex();
+                        Builder.CurrentPosition = new Vector3(baseX + part.x - 2f * part.state, baseY + part.y);
+                        Builder.CurrentColor = new Color32(64, 0, 64, 255);
+                        Builder.NextVertex();
+                        // right
+                        Builder.CurrentPosition = new Vector3(baseX + part.x, baseY + part.y);
+                        Builder.CurrentColor = new Color32(208, 0, 208, 255);
+                        Builder.NextVertex();
+                        Builder.CurrentPosition = new Vector3(baseX + part.x + 2f * part.state, baseY + part.y);
+                        Builder.CurrentColor = new Color32(64, 0, 64, 255);
+                        Builder.NextVertex();
+                        // top
+                        Builder.CurrentPosition = new Vector3(baseX + part.x, baseY + part.y);
+                        Builder.CurrentColor = new Color32(208, 0, 208, 255);
+                        Builder.NextVertex();
+                        Builder.CurrentPosition = new Vector3(baseX + part.x, baseY + part.y - 2f * part.state);
+                        Builder.CurrentColor = new Color32(64, 0, 64, 255);
+                        Builder.NextVertex();
+                        // bottom
+                        Builder.CurrentPosition = new Vector3(baseX + part.x, baseY + part.y);
+                        Builder.CurrentColor = new Color32(208, 0, 208, 255);
+                        Builder.NextVertex();
+                        Builder.CurrentPosition = new Vector3(baseX + part.x, baseY + part.y + 2f * part.state);
+                        Builder.CurrentColor = new Color32(64, 0, 64, 255);
+                        Builder.NextVertex();
+                    }
                 }
-            }
 
-            if (item.IsMoney)
-            {
-                // format money: split by every 3 digits with ,
-                long money = item.Price;
-                if (UiManager.Instance.DragItem == item)
-                    money -= UiManager.Instance.DragMoneyCount;
-                string s = "";
-                string ins = money.ToString();
-                for (int j = 0; j < ins.Length; j++)
+                if (item.IsMoney)
                 {
-                    int offpos = ins.Length - j + ((money < 0) ? 1 : 0);
-                    if (offpos % 3 == 0)
-                        s += ",";
-                    s += ins[j];
-                }
-                TextRenderers[rnd].Text = s;
-                TextObjects[rnd].SetActive(true);
-            }
-            else
-            {
-                int dcount = item.Count;
-                if (UiManager.Instance.DragItem == item)
-                    dcount -= UiManager.Instance.DragItemCount;
-
-                if (dcount > 1)
-                {
-                    TextRenderers[rnd].Text = dcount.ToString();
+                    // format money: split by every 3 digits with ,
+                    long money = item.Price;
+                    if (UiManager.Instance.DragItem == item)
+                        money -= UiManager.Instance.DragMoneyCount;
+                    string s = "";
+                    string ins = money.ToString();
+                    for (int j = 0; j < ins.Length; j++)
+                    {
+                        int offpos = ins.Length - j + ((money < 0) ? 1 : 0);
+                        if (offpos % 3 == 0)
+                            s += ",";
+                        s += ins[j];
+                    }
+                    TextRenderers[rnd].Text = s;
                     TextObjects[rnd].SetActive(true);
                 }
                 else
                 {
-                    TextRenderers[rnd].Text = "";
-                    TextObjects[rnd].SetActive(false);
+                    int dcount = item.Count;
+                    if (UiManager.Instance.DragItem == item)
+                        dcount -= UiManager.Instance.DragItemCount;
+
+                    if (dcount > 1)
+                    {
+                        TextRenderers[rnd].Text = dcount.ToString();
+                        TextObjects[rnd].SetActive(true);
+                    }
+                    else
+                    {
+                        TextRenderers[rnd].Text = "";
+                        TextObjects[rnd].SetActive(false);
+                    }
                 }
             }
 
@@ -316,13 +325,17 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         for (int i = start; i < end; i++)
         {
             Item item = (i == Pack.Count && ShowMoney) ? GetVisualMoneyItem() : Pack[i];
-            item.Class.File_Pack.UpdateSprite();
-            // check texture.
-            // for now, just put generic background
-            Renderer.materials[InvWidth * InvHeight + y * InvWidth + x].mainTexture = item.Class.File_Pack.File.Atlas;
-            Renderer.materials[InvWidth * InvHeight + y * InvWidth + x].SetTexture("_Palette", item.Class.File_Pack.File.OwnPalette);
-            Color color = new Color(1, 1, 1, (item == UiManager.Instance.DragItem) ? 0.25f : 1); // draw dragged items half transparent
-            Builder.AddQuad(InvWidth * InvHeight + y * InvWidth + x, (x * 80) * InvScale, (y * 80) * InvScale, 80 * InvScale, 80 * InvScale, item.Class.File_Pack.File.AtlasRects[0], color);
+
+            if (item != null)
+            {
+                item.Class.File_Pack.UpdateSprite();
+                // check texture.
+                // for now, just put generic background
+                Renderer.materials[InvWidth * InvHeight + y * InvWidth + x].mainTexture = item.Class.File_Pack.File.Atlas;
+                Renderer.materials[InvWidth * InvHeight + y * InvWidth + x].SetTexture("_Palette", item.Class.File_Pack.File.OwnPalette);
+                Color color = new Color(1, 1, 1, (item == UiManager.Instance.DragItem) ? 0.25f : 1); // draw dragged items half transparent
+                Builder.AddQuad(InvWidth * InvHeight + y * InvWidth + x, (x * 80) * InvScale, (y * 80) * InvScale, 80 * InvScale, 80 * InvScale, item.Class.File_Pack.File.AtlasRects[0], color);
+            }
 
             x++;
             if (x >= InvWidth)
@@ -384,11 +397,12 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
 
             int start = Math.Max(Math.Min(Scroll, GetVisualPackCount() - InvWidth * InvHeight), 0);
 
+            MouseCursor.SetCursor(MouseCursor.CurDefault);
+
             int itemHovered = itemHoveredY * InvWidth + itemHoveredX + start;
             if (itemHovered < 0 || itemHovered >= GetVisualPackCount())
                 return true;
 
-            MouseCursor.SetCursor(MouseCursor.CurDefault);
             Item item = (itemHovered == Pack.Count && ShowMoney) ? GetVisualMoneyItem() : Pack[itemHovered];
 
             if (ev.rawType == EventType.MouseMove &&
@@ -404,7 +418,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
                     Item newItem = Pack.TakeItem(itemHovered, 1);
                     if (newItem != null)
                     {
-                        if (AutoDropTarget.ProcessAutoDrop(newItem) != UiItemDragResult.Dropped)
+                        if (!AutoDropTarget.ProcessAutoDrop(newItem))
                             Pack.PutItem(itemHovered, newItem);
                         else UiManager.Instance.UnsetTooltip(); // remove tooltip if item was changed
                     }
@@ -453,9 +467,6 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         if (item == null)
             return false;
 
-        if (item.Locked)
-            return false;
-
         int count = 1;
 
         // alt = 100
@@ -500,16 +511,19 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         if (item.IsMoney)
             return false;
 
+        if (item.Parent.Parent != Pack.Parent && !Pack.Passive)
+            return false;
+
         return true;
     }
 
-    public UiItemDragResult ProcessDrop(Item item, float x, float y)
+    public bool ProcessDrop(Item item, float x, float y)
     {
         if (Pack == null)
-            return UiItemDragResult.Failed;
+            return false;
 
         if (!new Rect(transform.position.x, transform.position.y, Width, Height).Contains(new Vector2(x, y)))
-            return UiItemDragResult.Failed;
+            return false;
 
         Vector2 mPosLocal = new Vector2(x - transform.position.x,
                                         y - transform.position.y);
@@ -518,8 +532,8 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         int itemHoveredY = (int)(mPosLocal.y / 80 / InvScale);
 
         // "Drop" happens after removing item from source pack. this means, that pack is one item less here...
-        int start = Math.Max(Math.Min(Scroll, Pack.Count - InvWidth * InvHeight + ((item.Parent == Pack) ? 1 : 0)), 0);
-        int end = Math.Min(start + InvWidth * InvHeight, Pack.Count);
+        int start = Math.Max(Math.Min(Scroll, GetVisualPackCount() - InvWidth * InvHeight + ((item.Parent == Pack) ? 1 : 0)), 0);
+        int end = Math.Min(start + InvWidth * InvHeight, GetVisualPackCount());
 
         int itemHovered = itemHoveredY * InvWidth + itemHoveredX + start;
         if (itemHovered < 0)
@@ -530,7 +544,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         if (OnProcessDrop != null)
             return OnProcessDrop(item, itemHovered);
 
-        return UiItemDragResult.Failed;
+        return false;
     }
 
     public void ProcessEndDrag()
@@ -538,7 +552,12 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
 
     }
 
-    public void ProcessFailDrag(Item item)
+    public void ProcessFailDrag()
+    {
+
+    }
+
+    public void ProcessRollbackDrag(Item item)
     {
         Pack.PutItem(item.Index, item);
     }
@@ -561,14 +580,14 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         return Pack.TakeItem(UiManager.Instance.DragItem, UiManager.Instance.DragItemCount);
     }
 
-    public UiItemDragResult ProcessAutoDrop(Item item)
+    public bool ProcessAutoDrop(Item item)
     {
         if (Pack == null)
-            return UiItemDragResult.Failed;
+            return false;
 
         if (OnProcessDrop != null)
             return OnProcessDrop(new Item(item, 1), Pack.Count);
 
-        return UiItemDragResult.Failed;
+        return false;
     }
 }

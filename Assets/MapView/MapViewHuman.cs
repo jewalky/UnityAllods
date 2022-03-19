@@ -399,8 +399,6 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         Item item = GetHumanItemByPoint((int)mousex, (int)mousey);
         if (item == null)
             return false;
-        if (item.Locked)
-            return false;
         //item = LogicHuman.TakeItemFromBody((MapUnit.BodySlot)item.Class.Option.Slot);
         LogicHuman.RenderInfoVersion++;
         UiManager.Instance.StartDrag(item, 1, 0, () =>
@@ -414,6 +412,8 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
 
     public override bool ProcessDrag(Item item, float mousex, float mousey)
     {
+        if (item.Parent.Parent != LogicHuman)
+            return false;
         if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
             return false;
         if (!LogicHuman.IsItemUsable(item))
@@ -457,18 +457,18 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         return false;
     }
 
-    public override UiItemDragResult ProcessDrop(Item item, float mousex, float mousey)
+    public override bool ProcessDrop(Item item, float mousex, float mousey)
     {
         if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
-            return UiItemDragResult.Failed;
+            return false;
         if (CheckScroll(item))
-            return UiItemDragResult.Failed;
+            return false;
         if (!LogicHuman.IsItemUsable(item))
-            return UiItemDragResult.Failed;
+            return false;
         SendItemMoveCommand(item);
         // put item to body
         LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
-        return UiItemDragResult.Dropped;
+        return true;
     }
 
     public override void ProcessEndDrag()
@@ -476,7 +476,7 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         LogicHuman.RenderInfoVersion++;
     }
 
-    public override void ProcessFailDrag(Item item)
+    public override void ProcessRollbackDrag(Item item)
     {
         LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
     }
@@ -487,17 +487,17 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         return LogicHuman.TakeItemFromBody((MapUnit.BodySlot)UiManager.Instance.DragItem.Class.Option.Slot);
     }
 
-    public UiItemDragResult ProcessAutoDrop(Item item)
+    public bool ProcessAutoDrop(Item item)
     {
         if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
-            return UiItemDragResult.Failed;
+            return false;
         if (CheckScroll(item))
-            return UiItemDragResult.Failed;
+            return false;
         if (!LogicHuman.IsItemUsable(item))
-            return UiItemDragResult.Failed;
+            return false;
         SendItemMoveCommand(item);
         // put item to body
         LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, new Item(item, 1));
-        return UiItemDragResult.Dropped;
+        return true;
     }
 }

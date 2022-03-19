@@ -435,9 +435,9 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
         return false;
     }
 
-    public UiItemDragResult ProcessDrop(Item item, float mousex, float mousey)
+    public bool ProcessDrop(Item item, float mousex, float mousey)
     {
-        return UiItemDragResult.Failed;
+        return false;
     }
 
     public void ProcessEndDrag()
@@ -445,7 +445,12 @@ public class MapViewStructure : MapViewObject, IMapViewSelectable, IMapViewSelfi
 
     }
 
-    public void ProcessFailDrag(Item item)
+    public void ProcessFailDrag()
+    {
+
+    }
+
+    public void ProcessRollbackDrag(Item item)
     {
 
     }

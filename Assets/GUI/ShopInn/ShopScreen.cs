@@ -48,6 +48,7 @@ class ShopScreen : FullscreenView
     private MapViewInfowindow o_UnitView;
     private MapViewInventory o_UnitInventory;
     private ItemView o_ShelfItems;
+    private ItemView o_TableItems;
 
     private string GetGraphicsPrefix(string filename)
     {
@@ -196,6 +197,27 @@ class ShopScreen : FullscreenView
         o_ShelfItems.InvHeight = 3;
         o_ShelfItems.Pack = ((ShopStructure)Shop.Logic).Shelves[0].Items;
         PositionObject(o_ShelfItems.gameObject, o_ShopBaseOffset, new Vector3(1, 32, -1));
+
+        o_ShelfItems.OnProcessDrop = (Item item, int index) =>
+        {
+            // just drop
+            o_ShelfItems.Pack.PutItem(index, item);
+            return true;
+        };
+
+        //
+        o_TableItems = Utils.CreateObjectWithScript<ItemView>();
+        o_TableItems.InvWidth = 5;
+        o_TableItems.InvHeight = 1;
+        o_TableItems.Pack = ((ShopStructure)Shop.Logic).GetTableFor(Unit.Player);
+        PositionObject(o_TableItems.gameObject, o_ShopBaseOffset, new Vector3(32, 305, -1));
+
+        o_TableItems.OnProcessDrop = (Item item, int index) =>
+        {
+            // just drop
+            o_TableItems.Pack.PutItem(index, item);
+            return true;
+        };
 
     }
 

@@ -378,15 +378,15 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         return false;
     }
 
-    public bool ProcessDrop(Item item, float x, float y)
+    public UiItemDragResult ProcessDrop(Item item, float x, float y)
     {
         Vector2 mPosLocal = new Vector2(x - transform.position.x, y - transform.position.y);
         if (!new Rect(HBackL.width, 0, HBackR.width, HBackR.height).Contains(mPosLocal))
-            return false;
+            return UiItemDragResult.Failed;
 
         if (Viewer != null)
             return Viewer.ProcessDrop(item, mPosLocal.x - HBackL.width, mPosLocal.y);
-        return false;
+        return UiItemDragResult.Failed;
     }
 
     public void ProcessEndDrag()
@@ -395,12 +395,12 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
             Viewer.ProcessEndDrag();
     }
 
-    public void ProcessFailDrag()
+    public void ProcessFailDrag(Item item)
     {
         if (Viewer != null)
-            Viewer.ProcessFailDrag();
+            Viewer.ProcessFailDrag(item);
     }
-
+    
     public Item ProcessVerifyEndDrag()
     {
         if (Viewer != null)

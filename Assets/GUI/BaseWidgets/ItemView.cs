@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDropper
 {
+    public delegate UiItemDragResult ProcessDropDelegate(Item item, int position);
+
     private ItemPack _Pack = null;
     public ItemPack Pack
     {
@@ -116,6 +118,8 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
     public float InvScale = 1f;
 
     public bool ShowMoney = false;
+
+    public ProcessDropDelegate OnProcessDrop = null;
 
     private List<GameObject> TextObjects = new List<GameObject>();
     private List<AllodsTextRenderer> TextRenderers = new List<AllodsTextRenderer>();
@@ -398,7 +402,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
                 if (AutoDropTarget != null)
                 {
                     Item newItem = Pack.TakeItem(itemHovered, 1);
-                    if (!AutoDropTarget.ProcessAutoDrop(newItem))
+                    if (AutoDropTarget.ProcessAutoDrop(newItem) != UiItemDragResult.Dropped)
                         Pack.PutItem(itemHovered, newItem);
                     else UiManager.Instance.UnsetTooltip(); // remove tooltip if item was changed
                 }
@@ -489,46 +493,13 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         return true;
     }
 
-    private void SendItemMoveCommand(Item item, int index)
-    {
-        // check if this pack is unit's pack.
-        if (Pack.Parent == null ||
-            Pack != Pack.Parent.ItemsPack) return;
-
-        // send command.
-        // first off, determine move source.
-        ServerCommands.ItemMoveLocation from;
-        int fromIndex = -1;
-        ServerCommands.ItemMoveLocation to;
-        int toIndex = -1;
-
-        MapUnit unit = Pack.Parent;
-
-        if (item.Parent == unit.ItemsBody)
-        {
-            from = ServerCommands.ItemMoveLocation.UnitBody;
-            fromIndex = item.Class.Option.Slot;
-        }
-        else if (item.Parent == unit.ItemsPack)
-        {
-            from = ServerCommands.ItemMoveLocation.UnitPack;
-            fromIndex = item.Index;
-        }
-        else from = ServerCommands.ItemMoveLocation.Ground;
-
-        to = ServerCommands.ItemMoveLocation.UnitPack;
-        toIndex = index;
-
-        Client.SendItemMove(from, to, fromIndex, toIndex, item.Count, unit, MapView.Instance.MouseCellX, MapView.Instance.MouseCellY);
-    }
-
-    public bool ProcessDrop(Item item, float x, float y)
+    public UiItemDragResult ProcessDrop(Item item, float x, float y)
     {
         if (Pack == null)
-            return false;
+            return UiItemDragResult.Failed;
 
         if (!new Rect(transform.position.x, transform.position.y, Width, Height).Contains(new Vector2(x, y)))
-            return false;
+            return UiItemDragResult.Failed;
 
         Vector2 mPosLocal = new Vector2(x - transform.position.x,
                                         y - transform.position.y);
@@ -546,9 +517,10 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         else if (itemHovered > Pack.Count)
             itemHovered = Pack.Count;
 
-        SendItemMoveCommand(item, itemHovered);
-        Pack.PutItem(itemHovered, item);
-        return true;
+        if (OnProcessDrop != null)
+            return OnProcessDrop(item, itemHovered);
+
+        return UiItemDragResult.Failed;
     }
 
     public void ProcessEndDrag()
@@ -556,9 +528,9 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
 
     }
 
-    public void ProcessFailDrag()
+    public void ProcessFailDrag(Item item)
     {
-
+        Pack.PutItem(item.Index, item);
     }
 
     public Item ProcessVerifyEndDrag()
@@ -579,13 +551,14 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         return Pack.TakeItem(UiManager.Instance.DragItem, UiManager.Instance.DragItemCount);
     }
 
-    public bool ProcessAutoDrop(Item item)
+    public UiItemDragResult ProcessAutoDrop(Item item)
     {
         if (Pack == null)
-            return false;
+            return UiItemDragResult.Failed;
 
-        SendItemMoveCommand(item, Pack.Count);
-        Pack.PutItem(Pack.Count, new Item(item, 1));
-        return true;
+        if (OnProcessDrop != null)
+            return OnProcessDrop(new Item(item, 1), Pack.Count);
+
+        return UiItemDragResult.Failed;
     }
 }

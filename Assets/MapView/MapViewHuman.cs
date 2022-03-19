@@ -454,18 +454,18 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         return false;
     }
 
-    public override bool ProcessDrop(Item item, float mousex, float mousey)
+    public override UiItemDragResult ProcessDrop(Item item, float mousex, float mousey)
     {
         if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
-            return false;
+            return UiItemDragResult.Failed;
         if (CheckScroll(item))
-            return false;
+            return UiItemDragResult.Failed;
         if (!LogicHuman.IsItemUsable(item))
-            return false;
+            return UiItemDragResult.Failed;
         SendItemMoveCommand(item);
         // put item to body
         LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
-        return true;
+        return UiItemDragResult.Dropped;
     }
 
     public override void ProcessEndDrag()
@@ -473,9 +473,9 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         LogicHuman.RenderInfoVersion++;
     }
 
-    public override void ProcessFailDrag()
+    public override void ProcessFailDrag(Item item)
     {
-        
+        LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
     }
 
     public override Item ProcessVerifyEndDrag()
@@ -484,17 +484,17 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         return LogicHuman.TakeItemFromBody((MapUnit.BodySlot)UiManager.Instance.DragItem.Class.Option.Slot);
     }
 
-    public bool ProcessAutoDrop(Item item)
+    public UiItemDragResult ProcessAutoDrop(Item item)
     {
         if (LogicHuman.Player != MapLogic.Instance.ConsolePlayer)
-            return false;
+            return UiItemDragResult.Failed;
         if (CheckScroll(item))
-            return false;
+            return UiItemDragResult.Failed;
         if (!LogicHuman.IsItemUsable(item))
-            return false;
+            return UiItemDragResult.Failed;
         SendItemMoveCommand(item);
         // put item to body
         LogicHuman.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, new Item(item, 1));
-        return true;
+        return UiItemDragResult.Dropped;
     }
 }

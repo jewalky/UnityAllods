@@ -10,6 +10,13 @@ public interface IUiEventProcessor
 
 public interface IUiEventProcessorBackground { }
 
+public enum UiItemDragResult
+{
+    Failed,
+    Dropped,
+    Locked
+}
+
 public interface IUiItemDragger
 {
     // should call UiManager.Instance.StartDrag and return true, if there was an item under specified global coordinates.
@@ -17,11 +24,11 @@ public interface IUiItemDragger
     // should return true if it's possible to drop an item over these coordinates.
     bool ProcessDrag(Item item, float x, float y);
     // should return true if drop was handled at these coordinates.
-    bool ProcessDrop(Item item, float x, float y);
+    UiItemDragResult ProcessDrop(Item item, float x, float y);
     // this is called when dropping succeeded on target
     void ProcessEndDrag();
-    // this is called when dropping failed on target (or cancelled)
-    void ProcessFailDrag();
+    // this is called when dropping failed on target (or cancelled, or locked)
+    void ProcessFailDrag(Item item);
     // this is called to make sure that source pack still has this item.
     Item ProcessVerifyEndDrag();
 }
@@ -29,7 +36,7 @@ public interface IUiItemDragger
 public interface IUiItemAutoDropper
 {
     //
-    bool ProcessAutoDrop(Item item);
+    UiItemDragResult ProcessAutoDrop(Item item);
 }
 
 public delegate void UiDragCallback();
@@ -288,14 +295,22 @@ public class UiManager : MonoBehaviour
                         goto NoDrag;
                     }
 
-                    if (_CurrentDragDragger.ProcessDrop(newItem, mPos.x, mPos.y))
+                    switch (_CurrentDragDragger.ProcessDrop(newItem, mPos.x, mPos.y))
                     {
-                        _DragDragger.ProcessEndDrag();
-                        DragItem = null;
-                        DragItemCount = 0;
-                        _DragCallback = null;
-                        _DragDragger = null;
+                        case UiItemDragResult.Dropped:
+                            break; // do nothing
+
+                        case UiItemDragResult.Failed:
+                        case UiItemDragResult.Locked:
+                            // return item back to pack
+                            _DragDragger.ProcessFailDrag(newItem);
+                            break;
                     }
+
+                    DragItem = null;
+                    DragItemCount = 0;
+                    _DragCallback = null;
+                    _DragDragger = null;
                 }
             }
 
@@ -487,7 +502,7 @@ public class UiManager : MonoBehaviour
             return;
         if (_DragCallback != null)
             _DragCallback();
-        _DragDragger.ProcessFailDrag();
+        _DragDragger.ProcessFailDrag(DragItem);
         _DragCallback = null;
         DragItem = null;
         DragItemCount = 0;

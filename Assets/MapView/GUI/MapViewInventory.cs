@@ -21,6 +21,39 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
 
     public int ItemCount = 0;
 
+    private void SendItemMoveCommand(Item item, int index)
+    {
+        // check if this pack is unit's pack.
+        if (View.Pack.Parent == null ||
+            View.Pack != View.Pack.Parent.ItemsPack) return;
+
+        // send command.
+        // first off, determine move source.
+        ServerCommands.ItemMoveLocation from;
+        int fromIndex = -1;
+        ServerCommands.ItemMoveLocation to;
+        int toIndex = -1;
+
+        MapUnit unit = View.Pack.Parent;
+
+        if (item.Parent == unit.ItemsBody)
+        {
+            from = ServerCommands.ItemMoveLocation.UnitBody;
+            fromIndex = item.Class.Option.Slot;
+        }
+        else if (item.Parent == unit.ItemsPack)
+        {
+            from = ServerCommands.ItemMoveLocation.UnitPack;
+            fromIndex = item.Index;
+        }
+        else from = ServerCommands.ItemMoveLocation.Ground;
+
+        to = ServerCommands.ItemMoveLocation.UnitPack;
+        toIndex = index;
+
+        Client.SendItemMove(from, to, fromIndex, toIndex, item.Count, unit, MapView.Instance.MouseCellX, MapView.Instance.MouseCellY);
+    }
+
     public void Awake()
     {
         UiManager.Instance.Subscribe(this);
@@ -28,6 +61,13 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
         View.transform.parent = transform;
         View.transform.localScale = new Vector3(1, 1, 1);
         View.transform.localPosition = new Vector3(32, 6, -2);
+
+        View.OnProcessDrop = (Item item, int index) =>
+        {
+            SendItemMoveCommand(item, index);
+            View.Pack.PutItem(index, item);
+            return UiItemDragResult.Dropped;
+        };
     }
 
     public void Start()

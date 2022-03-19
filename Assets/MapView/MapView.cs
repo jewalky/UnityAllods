@@ -196,7 +196,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
 
         UpdateUIPositions();
 
-        if (MapLogic.Instance.ConsolePlayer.Avatar != null)
+        if (MapLogic.Instance.ConsolePlayer != null && MapLogic.Instance.ConsolePlayer.Avatar != null)
             CenterOnObject(MapLogic.Instance.ConsolePlayer.Avatar);
     }
 
@@ -1153,7 +1153,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
             ((MapHuman)SelectedObject).IsHero;
     }
 
-    public bool ProcessDrop(Item item, float x, float y)
+    public UiItemDragResult ProcessDrop(Item item, float x, float y)
     {
         //
         //throw new NotImplementedException();
@@ -1162,7 +1162,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         MapHuman human = SelectedObject as MapHuman;
         if (human != null)
             Client.DropItem(human, item, MouseCellX, MouseCellY);
-        return true;
+        return UiItemDragResult.Dropped;
     }
 
     public void ProcessEndDrag()
@@ -1170,7 +1170,7 @@ public class MapView : MonoBehaviour, IUiEventProcessor, IUiItemDragger
         // this is the function that's called after item FROM this has succeeded dragging.
     }
 
-    public void ProcessFailDrag()
+    public void ProcessFailDrag(Item item)
     {
         // same as above except with error.
     }

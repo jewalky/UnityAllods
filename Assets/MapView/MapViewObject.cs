@@ -10,9 +10,9 @@ public interface IMapViewSelfie
     bool ProcessEventInfo(Event e, float mousex, float mousey);
     bool ProcessStartDrag(float mousex, float mousey);
     bool ProcessDrag(Item item, float mousex, float mousey);
-    bool ProcessDrop(Item item, float mousex, float mousey);
+    UiItemDragResult ProcessDrop(Item item, float mousex, float mousey);
     void ProcessEndDrag();
-    void ProcessFailDrag();
+    void ProcessFailDrag(Item item);
     Item ProcessVerifyEndDrag();
     void DisplayPic(bool on, Transform parent);
     void DisplayInfo(bool on, Transform parent); // object displays it's info text at coordinates

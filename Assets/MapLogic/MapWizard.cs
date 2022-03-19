@@ -412,11 +412,13 @@ class MapWizard
 		for (Y = MinY; Y <= MaxY; Y++) {
 			AddrX = AddrY;
 			for (X = MinX; X <= MaxX; X++) {
-				if (NeedCheckRadius && !IsInTargetRadius(X,Y))
-					;//skip
+				if (NeedCheckRadius && !IsInTargetRadius(X, Y))
+				{
+					//skip
+				}
 				else
 				{
-					Path_AddCell(AddrX,_Cost0,0,1);
+					Path_AddCell(AddrX, _Cost0, 0, 1);
 					if (TargetCost[AddrX] != _CostBad)
 						TargetCost[AddrX] = _Cost0;
 				}

@@ -491,6 +491,7 @@ public class ShopStructure : StructureLogic
             return Tables[player];
 
         ItemPack newPack = new ItemPack(!NetworkManager.IsClient, null);
+        newPack.LocationHint = ServerCommands.ItemMoveLocation.ShopTable;
         Tables[player] = newPack;
         return newPack;
     }

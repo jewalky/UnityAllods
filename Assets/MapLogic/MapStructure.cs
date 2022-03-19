@@ -5,10 +5,11 @@ using UnityEngine;
 public class StructureLogic
 {
     protected MapStructure Structure;
-    protected List<MapUnit> Units = new List<MapUnit>();
+    public List<MapUnit> Units { get; private set; }
 
     protected StructureLogic(MapStructure s)
     {
+        Units = new List<MapUnit>();
         Structure = s;
     }
 

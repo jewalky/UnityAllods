@@ -238,6 +238,7 @@ namespace ClientCommands
             unit.CoreStats.ManaMax = ManaMax;
             unit.SummonTimeMax = SummonTimeMax;
             unit.SummonTime = SummonTime;
+            unit.Flags = Flags;
 
             unit.ItemsBody.Clear();
             if (ItemsBody != null)
@@ -1241,13 +1242,96 @@ namespace ClientCommands
             MapUnit u = MapLogic.Instance.GetUnitByTag(EnteringTag);
             if (u == null)
             {
-                Debug.LogFormat("Attempted to enter shop with nonexistent unit {1}", EnteringTag);
+                Debug.LogFormat("Attempted to enter shop with nonexistent unit {0}", EnteringTag);
                 return false;
             }
 
-            ShopScreen screen = Utils.CreateObjectWithScript<ShopScreen>();
-            screen.Shop = s;
-            screen.Unit = u;
+            s.HandleUnitEnter(u);
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.UpdateShopShelf)]
+    public struct UpdateShopShelf : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public int Shelf;
+        [ProtoMember(3)]
+        public NetItem[] Items;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapUnit u = MapLogic.Instance.GetUnitByTag(Tag);
+            if (u == null)
+            {
+                Debug.LogFormat("Attempted to update shop for nonexistent unit {0}", Tag);
+                return false;
+            }
+
+            if (u.CurrentStructure == null || !(u.CurrentStructure.Logic is ShopStructure))
+            {
+                Debug.LogFormat("Attempted to update shop for a unit {0} that is not in a shop", Tag);
+                return false;
+            }
+
+            ShopStructure shop = (ShopStructure)u.CurrentStructure.Logic;
+            ItemPack pack = shop.Shelves[Shelf].Items;
+            pack.Clear();
+            if (Items != null)
+            {
+                for (int i = 0; i < Items.Length; i++)
+                {
+                    if (Items[i].ClassID == 0) pack.PutItem(i, null);
+                    else pack.PutItem(i, new Item(Items[i]));
+                }
+            }
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.UpdateShopTable)]
+    public struct UpdateShopTable : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int Tag;
+        [ProtoMember(2)]
+        public NetItem[] Items;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+
+            MapUnit u = MapLogic.Instance.GetUnitByTag(Tag);
+            if (u == null)
+            {
+                Debug.LogFormat("Attempted to update shop for nonexistent unit {0}", Tag);
+                return false;
+            }
+
+            if (u.CurrentStructure == null || !(u.CurrentStructure.Logic is ShopStructure))
+            {
+                Debug.LogFormat("Attempted to update shop for a unit {0} that is not in a shop", Tag);
+                return false;
+            }
+
+            ShopStructure shop = (ShopStructure)u.CurrentStructure.Logic;
+            ItemPack pack = shop.GetTableFor(u.Player);
+            pack.Clear();
+            if (Items != null)
+            {
+                for (int i = 0; i < Items.Length; i++)
+                    pack.PutItem(i, new Item(Items[i]));
+            }
 
             return true;
         }
@@ -1277,13 +1361,11 @@ namespace ClientCommands
             MapUnit u = MapLogic.Instance.GetUnitByTag(EnteringTag);
             if (u == null)
             {
-                Debug.LogFormat("Attempted to enter shop with nonexistent unit {1}", EnteringTag);
+                Debug.LogFormat("Attempted to enter shop with nonexistent unit {0}", EnteringTag);
                 return false;
             }
 
-            InnScreen screen = Utils.CreateObjectWithScript<InnScreen>();
-            screen.Inn = s;
-            screen.Unit = u;
+            s.HandleUnitEnter(u);
 
             return true;
         }
@@ -1293,12 +1375,28 @@ namespace ClientCommands
     [NetworkPacketId(ClientIdentifiers.LeaveStructure)]
     public struct LeaveStructure : IClientCommand
     {
+        [ProtoMember(1)]
+        public int Tag;
+
         public bool Process()
         {
             if (!MapLogic.Instance.IsLoaded)
                 return false;
 
-            UiManager.Instance.ClearWindows();
+            MapUnit u = MapLogic.Instance.GetUnitByTag(Tag);
+            if (u == null)
+            {
+                Debug.LogFormat("Attempted to leave structure with nonexistent unit {0}", Tag);
+                return false;
+            }
+
+            if (u.CurrentStructure == null)
+            {
+                Debug.LogFormat("Attempted to leave structure by a unit {0} that is not in a structure", Tag);
+                return false;
+            }
+
+            u.CurrentStructure.HandleUnitLeave(u);
 
             return true;
         }

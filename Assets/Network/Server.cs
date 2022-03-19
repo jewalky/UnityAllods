@@ -336,6 +336,56 @@ public class Server
         }
     }
 
+    public static void NotifyShopShelf(MapUnit propagatedFrom, int shelf)
+    {
+        if (!NetworkManager.IsServer) return;
+
+        if (propagatedFrom.CurrentStructure == null || !(propagatedFrom.CurrentStructure.Logic is ShopStructure)) return;
+        ShopStructure shop = (ShopStructure)propagatedFrom.CurrentStructure.Logic;
+
+        // see how many other units this shop has. notify all
+        foreach (MapUnit unit in shop.Units)
+        {
+            ServerClient client = unit.Player.NetClient;
+            if (client.State != ClientState.Playing) return;
+
+            ClientCommands.UpdateShopShelf shelfCmd;
+            shelfCmd.Tag = unit.Tag;
+            shelfCmd.Shelf = shelf;
+
+            ItemPack shelfPack = shop.Shelves[shelf].Items;
+            shelfCmd.Items = new NetItem[shelfPack.Count];
+            for (int i = 0; i < shelfPack.Count; i++)
+            {
+                if (shelfPack[i] == null) shelfCmd.Items[i] = new NetItem();
+                else shelfCmd.Items[i] = new NetItem(shelfPack[i]);
+            }
+
+            client.SendCommand(shelfCmd);
+        }
+    }
+
+    public static void NotifyShopTable(MapUnit unit)
+    {
+        if (!NetworkManager.IsServer) return;
+
+        if (unit.CurrentStructure == null || !(unit.CurrentStructure.Logic is ShopStructure)) return;
+        ShopStructure shop = (ShopStructure)unit.CurrentStructure.Logic;
+
+        ServerClient client = unit.Player.NetClient;
+        if (client.State != ClientState.Playing) return;
+
+        ClientCommands.UpdateShopTable tableCmd;
+        tableCmd.Tag = unit.Tag;
+
+        ItemPack tablePack = shop.GetTableFor(unit.Player);
+        tableCmd.Items = new NetItem[tablePack.Count];
+        for (int i = 0; i < tablePack.Count; i++)
+            tableCmd.Items[i] = new NetItem(tablePack[i]);
+
+        client.SendCommand(tableCmd);
+    }
+
     public static void NotifyUnitStats(MapUnit unit)
     {
         foreach (ServerClient client in ServerManager.Clients)
@@ -837,14 +887,6 @@ public class Server
                 p.NetClient.SendCommand(enterShopCmd);
             }
         }
-        else if (!NetworkManager.IsClient)
-        {
-            // process locally
-            ClientCommands.EnterShop enterShopCmd;
-            enterShopCmd.Tag = shop.Tag;
-            enterShopCmd.EnteringTag = unit.Tag;
-            enterShopCmd.Process();
-        }
     }
 
     public static void NotifyEnterInn(MapUnit unit, MapStructure shop)
@@ -860,30 +902,18 @@ public class Server
                 p.NetClient.SendCommand(enterInnCmd);
             }
         }
-        else if (!NetworkManager.IsClient)
-        {
-            // process locally
-            ClientCommands.EnterInn enterInnCmd;
-            enterInnCmd.Tag = shop.Tag;
-            enterInnCmd.EnteringTag = unit.Tag;
-            enterInnCmd.Process();
-        }
     }
 
-    public static void NotifyLeaveStructure(Player p)
+    public static void NotifyLeaveStructure(MapUnit u)
     {
         if (NetworkManager.IsServer)
         {
-            if (p.NetClient != null && p.NetClient.State == ClientState.Playing)
+            if (u.Player.NetClient != null && u.Player.NetClient.State == ClientState.Playing)
             {
                 ClientCommands.LeaveStructure leaveStructureCmd;
-                p.NetClient.SendCommand(leaveStructureCmd);
+                leaveStructureCmd.Tag = u.Tag;
+                u.Player.NetClient.SendCommand(leaveStructureCmd);
             }
-        }
-        else if (!NetworkManager.IsClient)
-        {
-            ClientCommands.LeaveStructure leaveStructureCmd;
-            leaveStructureCmd.Process();
         }
     }
 }

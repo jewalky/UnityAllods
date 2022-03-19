@@ -17,6 +17,12 @@ public class InnStructure : StructureLogic
     {
         if (!base.OnEnter(unit))
             return false;
+        if (!NetworkManager.IsServer)
+        {
+            ShopScreen screen = Utils.CreateObjectWithScript<ShopScreen>();
+            screen.Shop = Structure;
+            screen.Unit = unit;
+        }
         Server.NotifyEnterInn(unit, Structure);
         return true;
     }
@@ -24,6 +30,8 @@ public class InnStructure : StructureLogic
     public override void OnLeave(MapUnit unit)
     {
         base.OnLeave(unit);
-        Server.NotifyLeaveStructure(unit.Player);
+        Server.NotifyLeaveStructure(unit);
+        if (!NetworkManager.IsServer)
+            UiManager.Instance.ClearWindows();
     }
 }

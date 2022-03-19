@@ -279,11 +279,16 @@ public class NetItem
 
     public NetItem()
     {
-
+        ClassID = 0;
     }
 
     public NetItem(Item item)
     {
+        if (item == null)
+        {
+            ClassID = 0;
+            return;
+        }
         ClassID = item.Class.ItemID;
         for (int i = 0; i < item.MagicEffects.Count; i++)
             MagicEffects.Add(item.MagicEffects[i]);

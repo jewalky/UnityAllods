@@ -511,7 +511,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         if (item.IsMoney)
             return false;
 
-        if (item.Parent.Parent != Pack.Parent && !Pack.Passive)
+        if (item.Parent.Parent != Pack.Parent && !Pack.Passive && Pack.LocationHint != ServerCommands.ItemMoveLocation.ShopTable)
             return false;
 
         return true;

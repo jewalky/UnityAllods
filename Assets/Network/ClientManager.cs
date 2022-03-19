@@ -183,6 +183,7 @@ public class ClientManager
         catch(Exception e)
         {
             GameConsole.Instance.WriteLine("Error encountered during command processing.\n{0}", e.ToString());
+            Debug.LogFormat("Error encountered during command processing.\n{0}", e.ToString());
             NetworkManager.Instance.Disconnect();
         }
         finally

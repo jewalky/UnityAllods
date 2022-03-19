@@ -44,6 +44,12 @@ public class ShopStructure : StructureLogic
             return false;
         }
 
+        public Shelf()
+        {
+            Items = new ItemPack();
+            Items.AutoCompact = false;
+        }
+
         public Shelf(AllodsMap.AlmShop.AlmShopShelf rules)
         {
 
@@ -484,7 +490,7 @@ public class ShopStructure : StructureLogic
         if (Tables.ContainsKey(player))
             return Tables[player];
 
-        ItemPack newPack = new ItemPack(true, null);
+        ItemPack newPack = new ItemPack(!NetworkManager.IsClient, null);
         Tables[player] = newPack;
         return newPack;
     }
@@ -493,7 +499,8 @@ public class ShopStructure : StructureLogic
     {
         for (int i = 0; i < 4; i++)
         {
-            Shelves[i] = new Shelf(rules.Shelves[i]);
+            Shelves[i] = NetworkManager.IsClient ? new Shelf() : new Shelf(rules.Shelves[i]);
+            Shelves[i].Items.LocationHint = ServerCommands.ItemMove.GetShelfLocation(i);
             Debug.LogFormat("Generated Shelf [{1}] in shop ID={2}:\n{0}", Shelves[i].Items.ToString(), i+1, s.Tag);
         }
     }
@@ -502,7 +509,15 @@ public class ShopStructure : StructureLogic
     {
         if (!base.OnEnter(unit))
             return false;
+        if (!NetworkManager.IsServer)
+        {
+            ShopScreen screen = Utils.CreateObjectWithScript<ShopScreen>();
+            screen.Shop = Structure;
+            screen.Unit = unit;
+        }
         Server.NotifyEnterShop(unit, Structure);
+        Server.NotifyShopShelf(unit, 0);
+        Server.NotifyShopTable(unit);
         return true;
     }
 
@@ -522,7 +537,9 @@ public class ShopStructure : StructureLogic
             for (int i = 0; i < Shelves.Length; i++)
                 Shelves[i].Items.Compact();
         }
-        Server.NotifyLeaveStructure(unit.Player);
+        Server.NotifyLeaveStructure(unit);
+        if (!NetworkManager.IsServer)
+            UiManager.Instance.ClearWindows();
     }
 
         private void GenerateItems()

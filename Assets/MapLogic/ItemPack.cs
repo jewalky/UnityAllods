@@ -9,6 +9,7 @@ public class ItemPack : IEnumerable<Item>
     private List<Item> ItemList = new List<Item>();
     public bool Passive { get; private set; }
     public MapUnit Parent { get; private set; }
+    public ServerCommands.ItemMoveLocation LocationHint = ServerCommands.ItemMoveLocation.Undefined;
 
     public ItemPack()
     {
@@ -141,6 +142,16 @@ public class ItemPack : IEnumerable<Item>
     // insert item into pack.
     public Item PutItem(int position, Item item)
     {
+        if (item == null)
+        {
+            if (!_AutoCompact)
+            {
+                position = Math.Min(ItemList.Count, Math.Max(0, position));
+                ItemList.Insert(position, null);
+            }
+            return null;
+        }
+
         if (!Passive)
             item.Parent = this;
 
@@ -161,18 +172,6 @@ public class ItemPack : IEnumerable<Item>
         }
 
         position = Math.Min(ItemList.Count, Math.Max(0, position));
-        if (position == ItemList.Count && !_AutoCompact)
-        {
-            // find first null item
-            for (int i = 0; i < ItemList.Count; i++)
-            {
-                if (ItemList[i] == null)
-                {
-                    position = i;
-                    break;
-                }
-            }
-        }
 
         if (position < ItemList.Count && ItemList[position] == null)
             ItemList.RemoveAt(position);

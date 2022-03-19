@@ -53,6 +53,7 @@ public enum ClientIdentifiers
     EnterShop,
     EnterInn,
     LeaveStructure,
-    UpdateShop,
+    UpdateShopShelf,
+    UpdateShopTable,
     UpdateInn
 }

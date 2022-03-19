@@ -50,6 +50,9 @@ class ShopScreen : FullscreenView
     private ItemView o_ShelfItems;
     private ItemView o_TableItems;
 
+    //
+    private int CurrentShelf = 0;
+
     private string GetGraphicsPrefix(string filename)
     {
         switch (Type)
@@ -62,6 +65,33 @@ class ShopScreen : FullscreenView
             case ShopType.Druid:
                 return string.Format("graphics/interface/shop_druid/" + filename);
         }
+    }
+
+    private void SendItemMoveCommand(Item item, ServerCommands.ItemMoveLocation to, int toIndex)
+    {
+        // send command.
+        // first off, determine move source.
+        ServerCommands.ItemMoveLocation from;
+        int fromIndex = -1;
+
+        if (item.Parent == Unit.ItemsBody)
+        {
+            from = ServerCommands.ItemMoveLocation.UnitBody;
+            fromIndex = item.Class.Option.Slot;
+        }
+        else if (item.Parent == Unit.ItemsPack)
+        {
+            from = ServerCommands.ItemMoveLocation.UnitPack;
+            fromIndex = item.Index;
+        }
+        else if (item.Parent.LocationHint != ServerCommands.ItemMoveLocation.Undefined)
+        {
+            from = item.Parent.LocationHint;
+            fromIndex = item.Index;
+        }
+        else from = ServerCommands.ItemMoveLocation.Ground;
+
+        Client.SendItemMove(from, to, fromIndex, toIndex, item.Count, Unit, MapView.Instance.MouseCellX, MapView.Instance.MouseCellY);
     }
 
     public override void OnStart()
@@ -195,12 +225,12 @@ class ShopScreen : FullscreenView
         o_ShelfItems = Utils.CreateObjectWithScript<ItemView>();
         o_ShelfItems.InvWidth = 2;
         o_ShelfItems.InvHeight = 3;
-        o_ShelfItems.Pack = ((ShopStructure)Shop.Logic).Shelves[0].Items;
+        o_ShelfItems.Pack = ((ShopStructure)Shop.Logic).Shelves[CurrentShelf].Items;
         PositionObject(o_ShelfItems.gameObject, o_ShopBaseOffset, new Vector3(1, 32, -1));
 
         o_ShelfItems.OnProcessDrop = (Item item, int index) =>
         {
-            // just drop
+            SendItemMoveCommand(item, o_ShelfItems.Pack.LocationHint, index);
             o_ShelfItems.Pack.PutItem(index, item);
             return true;
         };
@@ -214,7 +244,7 @@ class ShopScreen : FullscreenView
 
         o_TableItems.OnProcessDrop = (Item item, int index) =>
         {
-            // just drop
+            SendItemMoveCommand(item, ServerCommands.ItemMoveLocation.ShopTable, index);
             o_TableItems.Pack.PutItem(index, item);
             return true;
         };

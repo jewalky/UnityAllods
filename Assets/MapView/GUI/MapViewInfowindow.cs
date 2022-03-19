@@ -164,7 +164,7 @@ public class MapViewInfowindow : MonoBehaviour, IUiEventProcessor, IUiItemDragge
         }
 
         // show extra
-        if (ExtraL != null && ExtraR != null)
+        if (ExtraL != null && ExtraR != null && !Small)
         {
             Utils.MakeTexturedQuad(out ExtraLObject, ExtraL);
             Utils.MakeTexturedQuad(out ExtraRObject, ExtraR);

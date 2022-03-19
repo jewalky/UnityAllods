@@ -108,10 +108,13 @@ public class Client
             Player player = MapLogic.Instance.ConsolePlayer;
             // find all units of the player and leave all structures
             foreach (MapObject mobj in player.Objects)
+            {
                 if (mobj is MapUnit unit && unit.CurrentStructure != null)
+                {
                     unit.CurrentStructure.HandleUnitLeave(unit);
-
-            Server.NotifyLeaveStructure(player);
+                    Server.NotifyLeaveStructure(unit);
+                }
+            }
         }
     }
 
@@ -241,6 +244,7 @@ public class Client
         {
             /*Debug.LogFormat("from = {0}, to = {1}, fromIndex = {2}, toIndex = {3}, count = {4}",
                 from, to, fromIndex, toIndex, count);*/
+            Debug.LogFormat("send item move from {0}/{1} to {2}/{3}", from, fromIndex, to, toIndex);
             ServerCommands.ItemMove imvCmd;
             imvCmd.Source = from;
             imvCmd.SourceIndex = fromIndex;

@@ -128,9 +128,15 @@ namespace ServerCommands
     // UnitBody/UnitPack <-> ShopShelf1/ShopShelf2/ShopShelf3/ShopShelf4
     public enum ItemMoveLocation
     {
+        Undefined,
         UnitBody,
         UnitPack,
-        Ground
+        Ground,
+        ShopTable,
+        ShopShelf1,
+        ShopShelf2,
+        ShopShelf3,
+        ShopShelf4
     }
 
     [ProtoContract]
@@ -154,6 +160,26 @@ namespace ServerCommands
         [ProtoMember(8)]
         public int Count;
 
+        private static ServerCommands.ItemMoveLocation[] ShelfMapping = new ServerCommands.ItemMoveLocation[] { ServerCommands.ItemMoveLocation.ShopShelf1, ServerCommands.ItemMoveLocation.ShopShelf2, ServerCommands.ItemMoveLocation.ShopShelf3, ServerCommands.ItemMoveLocation.ShopShelf4 };
+        public static int GetShelfIndex(ItemMoveLocation loc)
+        {
+            for (int i = 0; i < ShelfMapping.Length; i++)
+                if (ShelfMapping[i] == loc) return i;
+            return -1;
+        }
+
+        public static ItemMoveLocation GetShelfLocation(int index)
+        {
+            return ShelfMapping[index];
+        }
+
+        private ShopStructure GetShopStructure(MapUnit unit)
+        {
+            if (unit.CurrentStructure != null && unit.CurrentStructure.Logic is ShopStructure)
+                return (ShopStructure)unit.CurrentStructure.Logic;
+            return null;
+        }
+
         private Item GetItem(MapUnit unit)
         {
             Item item = null;
@@ -165,6 +191,29 @@ namespace ServerCommands
                 case ItemMoveLocation.UnitPack:
                     item = unit.ItemsPack[SourceIndex];
                     break;
+                case ItemMoveLocation.ShopTable:
+                    {
+                        ShopStructure shop = GetShopStructure(unit);
+                        if (shop == null)
+                        {
+                            Debug.LogFormat("Invalid shop transaction: tried to move item without being in a shop");
+                            return null;
+                        }
+                        return shop.GetTableFor(unit.Player)[SourceIndex];
+                    }
+                case ItemMoveLocation.ShopShelf1:
+                case ItemMoveLocation.ShopShelf2:
+                case ItemMoveLocation.ShopShelf3:
+                case ItemMoveLocation.ShopShelf4:
+                    {
+                        ShopStructure shop = GetShopStructure(unit);
+                        if (shop == null)
+                        {
+                            Debug.LogFormat("Invalid shop transaction: tried to move item without being in a shop");
+                            return null;
+                        }
+                        return shop.Shelves[GetShelfIndex(Source)].Items[SourceIndex];
+                    }
             }
 
             return item;
@@ -181,6 +230,29 @@ namespace ServerCommands
                 case ItemMoveLocation.UnitPack:
                     item = unit.ItemsPack.TakeItem(SourceIndex, Count);
                     break;
+                case ItemMoveLocation.ShopTable:
+                    {
+                        ShopStructure shop = GetShopStructure(unit);
+                        if (shop == null)
+                        {
+                            Debug.LogFormat("Invalid shop transaction: tried to move item without being in a shop");
+                            return null;
+                        }
+                        return shop.GetTableFor(unit.Player).TakeItem(SourceIndex, Count);
+                    }
+                case ItemMoveLocation.ShopShelf1:
+                case ItemMoveLocation.ShopShelf2:
+                case ItemMoveLocation.ShopShelf3:
+                case ItemMoveLocation.ShopShelf4:
+                    {
+                        ShopStructure shop = GetShopStructure(unit);
+                        if (shop == null)
+                        {
+                            Debug.LogFormat("Invalid shop transaction: tried to move item without being in a shop");
+                            return null;
+                        }
+                        return shop.Shelves[GetShelfIndex(Source)].Items.TakeItem(SourceIndex, Count);
+                    }
             }
 
             return item;
@@ -200,7 +272,6 @@ namespace ServerCommands
             if (unit.Player != player)
                 return true;
 
-            // right now only body<->pack is supported, no shop or ground items
             Item item = null;
 
             switch (Destination)
@@ -208,23 +279,43 @@ namespace ServerCommands
                 case ItemMoveLocation.UnitBody:
                     if (unit == null) return true;
                     item = GetItem(unit);
+                    if (item == null) return true;
+                    // this checks for attempts to move items from shop shelf directly to inventory
+                    if (item.Parent.Parent == null || item.Parent.Parent != unit)
+                    {
+                        Debug.LogFormat("Invalid item move command: tried to move someone else's item");
+                        return false;
+                    }
                     if (!unit.IsItemUsable(item)) return true; // can't use
                     item = TakeItem(unit);
-                    if (item == null) return true;
                     unit.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
                     break;
 
                 case ItemMoveLocation.UnitPack:
                     if (unit == null) return true;
-                    item = TakeItem(unit);
+                    item = GetItem(unit);
                     if (item == null) return true;
+                    // this checks for attempts to move items from shop shelf directly to inventory
+                    if (Source != ItemMoveLocation.Ground && (item.Parent.Parent == null || item.Parent.Parent != unit))
+                    {
+                        Debug.LogFormat("Invalid item move command: tried to move someone else's item");
+                        return false;
+                    }
+                    item = TakeItem(unit);
                     unit.ItemsPack.PutItem(DestinationIndex, item);
                     break;
 
                 case ItemMoveLocation.Ground:
                     if (unit == null) return true;
-                    item = TakeItem(unit);
+                    item = GetItem(unit);
                     if (item == null) return true;
+                    // this checks for attempts to move items from shop shelf directly to ground
+                    if (item.Parent.Parent == null || item.Parent.Parent != unit)
+                    {
+                        Debug.LogFormat("Invalid item move command: tried to move someone else's item");
+                        return false;
+                    }
+                    item = TakeItem(unit);
                     if (Math.Abs(CellX - unit.X) > 2 ||
                         Math.Abs(CellY - unit.Y) > 2)
                     {
@@ -235,9 +326,68 @@ namespace ServerCommands
                     pack.PutItem(0, new Item(item, item.Count));
                     MapLogic.Instance.PutSackAt(CellX, CellY, pack, false);
                     break;
+
+                case ItemMoveLocation.ShopTable:
+                    {
+                        if (unit == null) return true;
+                        item = TakeItem(unit);
+                        if (item == null) return true;
+                        ShopStructure shop = GetShopStructure(unit);
+                        shop.GetTableFor(unit.Player).PutItem(DestinationIndex, item);
+                        break;
+                    }
+
+                case ItemMoveLocation.ShopShelf1:
+                case ItemMoveLocation.ShopShelf2:
+                case ItemMoveLocation.ShopShelf3:
+                case ItemMoveLocation.ShopShelf4:
+                    {
+                        if (unit == null) return true;
+                        // we can only move things that belong to a shelf into the shop shelf.
+                        if (item == null) return true;
+                        if (item.Parent.LocationHint != Destination)
+                        {
+                            Debug.LogFormat("Invalid shop transaction: tried to move unauthorized item into shop shelf");
+                            return false;
+                        }
+                        item = TakeItem(unit);
+                        ShopStructure shop = GetShopStructure(unit);
+                        shop.Shelves[GetShelfIndex(Destination)].Items.PutItem(DestinationIndex, item);
+                        break;
+                    }
             }
 
             Server.NotifyUnitPack(unit);
+
+            // if any of these involved shop shelves or shop table, update also the shop.
+            List<int> haveShelves = new List<int>();
+            switch (Source)
+            {
+                case ItemMoveLocation.ShopShelf1:
+                case ItemMoveLocation.ShopShelf2:
+                case ItemMoveLocation.ShopShelf3:
+                case ItemMoveLocation.ShopShelf4:
+                    haveShelves.Add(GetShelfIndex(Source));
+                    break;
+                default:
+                    break;
+            }
+            switch (Destination)
+            {
+                case ItemMoveLocation.ShopShelf1:
+                case ItemMoveLocation.ShopShelf2:
+                case ItemMoveLocation.ShopShelf3:
+                case ItemMoveLocation.ShopShelf4:
+                    haveShelves.Add(GetShelfIndex(Destination));
+                    break;
+                default:
+                    break;
+            }
+
+            bool haveTable = (Source == ItemMoveLocation.ShopTable || Destination == ItemMoveLocation.ShopTable);
+
+            foreach (int shelf in haveShelves) Server.NotifyShopShelf(unit, shelf);
+            if (haveTable) Server.NotifyShopTable(unit);
 
             return true;
         }
@@ -395,10 +545,11 @@ namespace ServerCommands
 
             // find all units of the player and leave all structures
             foreach (MapObject mobj in player.Objects)
+            {
                 if (mobj is MapUnit unit && unit.CurrentStructure != null)
                     unit.CurrentStructure.HandleUnitLeave(unit);
+            }
 
-            Server.NotifyLeaveStructure(player);
             return true;
         }
     }

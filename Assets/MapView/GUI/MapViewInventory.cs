@@ -46,6 +46,11 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
             from = ServerCommands.ItemMoveLocation.UnitPack;
             fromIndex = item.Index;
         }
+        else if (item.Parent.LocationHint != ServerCommands.ItemMoveLocation.Undefined)
+        {
+            from = item.Parent.LocationHint;
+            fromIndex = item.Index;
+        }
         else from = ServerCommands.ItemMoveLocation.Ground;
 
         to = ServerCommands.ItemMoveLocation.UnitPack;

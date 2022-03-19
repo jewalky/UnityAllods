@@ -27,10 +27,13 @@ public interface IUiItemDragger
     UiItemDragResult ProcessDrop(Item item, float x, float y);
     // this is called when dropping succeeded on target
     void ProcessEndDrag();
-    // this is called when dropping failed on target (or cancelled, or locked)
-    void ProcessFailDrag(Item item);
     // this is called to make sure that source pack still has this item.
     Item ProcessVerifyEndDrag();
+    // this is called when dropping failed on target (or cancelled, or locked), but after ProcessVerifyEndDrag already happened.
+    // i.e. dragging already took the item from this pack, but the other pack did not accept it.
+    // in most implementations this returns the item back to it's original index
+    void ProcessFailDrag(Item item);
+
 }
 
 public interface IUiItemAutoDropper

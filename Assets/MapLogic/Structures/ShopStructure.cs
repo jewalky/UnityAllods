@@ -25,6 +25,9 @@ public class ShopStructure : StructureLogic
         private uint MaxItems;
         private uint MaxSameType;
 
+        public bool Empty {  get { return (!AllowCommon && !AllowSpecial && !AllowMagic) || MaxItems <= 0 || MaxSameType <= 0 || PriceMax <= 0 || PriceMin > PriceMax; } }
+
+
         private bool CheckArmorShapeAllowed(Templates.TplArmor armor, AllodsMap.AlmShop.AlmShopShelf rules)
         {
             for (int i = 0; i < 7; i++)
@@ -376,6 +379,8 @@ public class ShopStructure : StructureLogic
             Random rnd = new Random();
             Items.Clear();
 
+            if (Empty) return;
+
             // generate special items if any
             if (AllowSpecial)
             {
@@ -479,6 +484,11 @@ public class ShopStructure : StructureLogic
                 }
             }
         }
+
+        public bool IsItemAllowed(Item item)
+        {
+            return false;
+        }
     }
 
     public Shelf[] Shelves = new Shelf[4];
@@ -526,12 +536,8 @@ public class ShopStructure : StructureLogic
     {
         base.OnLeave(unit);
         // revert everything on the table (unlock)
-        foreach (Item item in GetTableFor(unit.Player))
-        {
-            if (item.Parent.Parent != null && item.Parent.Parent.ItemsBody == item.Parent)
-                item.Parent.Parent.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
-            else item.Parent.PutItem(item.Index, item);
-        }
+        if (!NetworkManager.IsClient)
+            CancelTransaction(unit);
         Tables.Remove(unit.Player);
         if (ShopIsEmpty)
         {
@@ -545,6 +551,115 @@ public class ShopStructure : StructureLogic
 
         private void GenerateItems()
     {
+        for (int i = 0; i < Shelves.Length; i++)
+            Shelves[i].GenerateItems();
+    }
 
+    public void CancelTransaction(MapUnit unit)
+    {
+        if (NetworkManager.IsClient)
+        {
+            //
+        }
+        else
+        {
+            ItemPack table = GetTableFor(unit.Player);
+            foreach (Item item in table)
+            {
+                if (item.Parent.Parent != null && item.Parent.Parent.ItemsBody == item.Parent)
+                    item.Parent.Parent.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
+                else item.Parent.PutItem(item.Index, item);
+            }
+            table.Clear();
+        }
+    }
+
+    public void ApplyBuy(MapUnit unit)
+    {
+        if (NetworkManager.IsClient)
+        {
+            //
+        }
+        else
+        {
+            // verify if we have enough money
+            long totalPrice = 0;
+            ItemPack table = GetTableFor(unit.Player);
+            List<Item> items = new List<Item>();
+            items.AddRange(table);
+            foreach (Item item in items)
+                totalPrice += item.Price * item.Count;
+            if (totalPrice > unit.Player.Money)
+                return; // do nothing
+            foreach (Item item in items)
+            {
+                // take item from table.
+                table.TakeItem(item, item.Count);
+                // take money from player.
+                unit.Player.Money -= item.Price * item.Count;
+                // add item to player
+                unit.ItemsPack.PutItem(unit.ItemsPack.Count, item);
+            }
+            Server.NotifyUnitPack(unit);
+            Server.NotifyShopTable(unit);
+        }
+    }
+
+    public void ApplySell(MapUnit unit)
+    {
+        if (NetworkManager.IsClient)
+        {
+            //
+        }
+        else
+        {
+            ItemPack table = GetTableFor(unit.Player);
+            List<Item> items = new List<Item>();
+            items.AddRange(table);
+            List<int> shelvesUpdated = new List<int>();
+            foreach (Item item in items)
+            {
+                // take item from table.
+                table.TakeItem(item, item.Count);
+                // ROM2 sells each item into a shelf depending on item type.
+                // find matching shelf
+                int matchingShelf = -1;
+                for (int i = 0; i < Shelves.Length; i++)
+                {
+                    if (Shelves[i].IsItemAllowed(item))
+                    {
+                        matchingShelf = i;
+                        break;
+                    }
+                }
+                if (matchingShelf < 0)
+                {
+                    for (int i = 0; i < Shelves.Length; i++)
+                    {
+                        if (!Shelves[i].Empty)
+                        {
+                            matchingShelf = i;
+                            break;
+                        }
+                    }
+                }
+                // if shelf was still not found, item is destroyed. otherwise we add it to matched shelf
+                if (matchingShelf >= 0)
+                {
+                    Shelves[matchingShelf].Items.PutItem(Shelves[matchingShelf].Items.Count, item);
+                    if (!shelvesUpdated.Contains(matchingShelf))
+                        shelvesUpdated.Add(matchingShelf);
+                }
+                // give half price of item to whoever sold it
+                long price = item.Price / 2;
+                if (price < 1) price = 1;
+                price *= item.Count;
+                unit.Player.Money += price;
+            }
+            Server.NotifyPlayerMoney(unit.Player);
+            foreach (int shelf in shelvesUpdated)
+                Server.NotifyShopShelf(unit, shelf);
+            Server.NotifyShopTable(unit);
+        }
     }
 }

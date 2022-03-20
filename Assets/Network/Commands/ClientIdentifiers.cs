@@ -14,6 +14,7 @@ public enum ClientIdentifiers
     // map
     AddPlayer,
     DelPlayer,
+    PlayerMoney,
     ChatMessage,
     SpeedChanged,
 

@@ -181,14 +181,14 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         Renderer.materials = materials.ToArray();
     }
 
-    private static string FormatMoney(long money)
+    public static string FormatMoney(long money)
     {
         string s = "";
         string ins = money.ToString();
         for (int j = 0; j < ins.Length; j++)
         {
-            int offpos = ins.Length - j + ((money < 0) ? 1 : 0);
-            if (offpos % 3 == 0 && j > 0)
+            int offpos = ins.Length - j;
+            if (offpos % 3 == 0 && j > 0 && (money >= 0 || j > 1))
                 s += ",";
             s += ins[j];
         }

@@ -76,6 +76,27 @@ namespace ClientCommands
     }
 
     [ProtoContract]
+    [NetworkPacketId(ClientIdentifiers.PlayerMoney)]
+    public struct PlayerMoney : IClientCommand
+    {
+        [ProtoMember(1)]
+        public int ID;
+        [ProtoMember(2)]
+        public long Money;
+
+        public bool Process()
+        {
+            if (!MapLogic.Instance.IsLoaded)
+                return false;
+            Player player = MapLogic.Instance.GetPlayerByID(ID);
+            if (player == null)
+                return true;
+            player.Money = Money;
+            return true;
+        }
+    }
+
+    [ProtoContract]
     [NetworkPacketId(ClientIdentifiers.ChatMessage)]
     public struct ChatMessage : IClientCommand
     {

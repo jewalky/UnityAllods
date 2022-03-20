@@ -79,6 +79,17 @@ public class Server
         }
     }
 
+    public static void NotifyPlayerMoney(Player player)
+    {
+        ServerClient client = player.NetClient;
+        if (client == null || client.State != ClientState.Playing) return;
+
+        ClientCommands.PlayerMoney moneyCmd;
+        moneyCmd.ID = player.ID;
+        moneyCmd.Money = player.Money;
+        client.SendCommand(moneyCmd);
+    }
+
     public static void NotifyChatMessage(Player player, string message)
     {
         foreach (ServerClient client in ServerManager.Clients)

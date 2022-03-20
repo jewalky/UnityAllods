@@ -49,6 +49,38 @@ class ShopScreen : FullscreenView
     private MapViewInventory o_UnitInventory;
     private ItemView o_ShelfItems;
     private ItemView o_TableItems;
+    private AllodsTextRenderer[] o_ButtonTextRenderers = new AllodsTextRenderer[4];
+    private GameObject[] o_ButtonTextObjects = new GameObject[4];
+    private GameObject[] o_ButtonObjects = new GameObject[4];
+
+    private static Rect[] ButtonPositions =
+        new Rect[]
+        {
+            new Rect(502, 20, 105, 42),
+            new Rect(488, 68, 128, 41),
+            new Rect(488, 118, 128, 41),
+            new Rect(502, 166, 105, 42)
+        };
+    private static Vector2[] ButtonTextPositions =
+        new Vector2[]
+        {
+            new Vector2(488, 27),
+            new Vector2(488, 75),
+            new Vector2(488, 124),
+            new Vector2(488, 172)
+        };
+    private static Vector2[] ButtonPressedPositions =
+        new Vector2[]
+        {
+            new Vector2(494, 15),
+            new Vector2(483, 67),
+            new Vector2(483, 114),
+            new Vector2(494, 160)
+        };
+
+    //
+    private int HoveredButton = -1;
+    private int ClickedButton = -1;
 
     //
     private int CurrentShelf = 0;
@@ -255,12 +287,30 @@ class ShopScreen : FullscreenView
             return true;
         };
 
+        // generate button texts
+        for (int i = 0; i < 4; i++)
+        {
+            o_ButtonTextRenderers[i] = new AllodsTextRenderer(Fonts.Font4, Font.Align.Center, 128, Fonts.Font4.LineHeight * 2, false);
+            o_ButtonTextRenderers[i].Material.color = new Color32(0xBD, 0x9E, 0x4A, 0xFF);
+            o_ButtonTextObjects[i] = o_ButtonTextRenderers[i].GetNewGameObject();
+            
+            PositionObject(o_ButtonTextObjects[i], o_ShopBaseOffset, new Vector3(ButtonTextPositions[i].x, ButtonTextPositions[i].y, -2), 100);
+        }
+
+        // generate button images (pressed)
+        for (int i = 0; i < 4; i++)
+        {
+            Utils.MakeTexturedQuad(out o_ButtonObjects[i], shop_ShopButton[TypeInt][i]);
+            PositionObject(o_ButtonObjects[i], o_ShopBaseOffset, new Vector3(ButtonPressedPositions[i].x, ButtonPressedPositions[i].y, -1));
+            o_ButtonObjects[i].SetActive(false);
+        }
+
     }
 
-    private void PositionObject(GameObject obj, GameObject parent, Vector3 location)
+    private void PositionObject(GameObject obj, GameObject parent, Vector3 location, float scale = 1)
     {
         obj.transform.parent = parent.transform;
-        obj.transform.localScale = new Vector3(1, 1, 1);
+        obj.transform.localScale = new Vector3(scale, scale, scale);
         obj.transform.localPosition = location;
     }
 
@@ -271,13 +321,66 @@ class ShopScreen : FullscreenView
             switch (e.keyCode)
             {
                 case KeyCode.Escape:
-                    Client.SendLeaveStructure();
+                    ProcessQuit();
                     break;
             }
         }
         else if (e.rawType == EventType.MouseMove)
         {
             MouseCursor.SetCursor(MouseCursor.CurDefault);
+
+            // check if its inside this widget
+            Vector2 mPos = Utils.GetMousePosition();
+            if (!new Rect(o_ShopBaseOffset.transform.position.x, o_ShopBaseOffset.transform.position.y, 640, 480).Contains(mPos))
+                return true;
+
+            Vector2 mPosLocal = new Vector2(mPos.x - o_ShopBaseOffset.transform.position.x,
+                                            mPos.y - o_ShopBaseOffset.transform.position.y);
+
+            // check if inside buttons
+            for (int i = 0; i < ButtonPositions.Length; i++)
+            {
+                Material mat = o_ButtonTextRenderers[i].Material;
+                if (ButtonPositions[i].Contains(mPosLocal))
+                {
+                    HoveredButton = i;
+                    mat.color = new Color32(0xFF, 0xFF, 0x73, 0xFF);
+                    break;
+                }
+                else
+                {
+                    mat.color = new Color32(0xBD, 0x9E, 0x4A, 0xFF);
+                }
+            }
+
+            return true;
+        }
+        else if (e.rawType == EventType.MouseDown && e.button == 0)
+        {
+            ClickedButton = HoveredButton;
+            return true;
+        }
+        else if (e.rawType == EventType.MouseUp && e.button == 0)
+        {
+            if (ClickedButton == HoveredButton && ClickedButton >= 0)
+            {
+                switch (ClickedButton)
+                {
+                    case 0:
+                        ProcessCancel();
+                        break;
+                    case 1:
+                        ProcessBuy();
+                        break;
+                    case 2:
+                        ProcessSell();
+                        break;
+                    case 3:
+                        ProcessQuit();
+                        break;
+                }
+            }
+            ClickedButton = -1;
             return true;
         }
 
@@ -291,7 +394,61 @@ class ShopScreen : FullscreenView
 
     public void Update()
     {
-        
+        long buyDelta = 0, sellDelta = 0;
+        foreach (Item item in ((ShopStructure)Shop.Logic).GetTableFor(Unit.Player))
+        {
+            switch (item.NetParent)
+            {
+                case ServerCommands.ItemMoveLocation.UnitBody:
+                case ServerCommands.ItemMoveLocation.UnitPack:
+                    long price = item.Price / 2;
+                    if (price < 1) price = 1;
+                    price *= item.Count;
+                    sellDelta += price;
+                    break;
+
+                default:
+                    buyDelta -= item.Price * item.Count;
+                    break;
+            }
+        }
+        o_ButtonTextRenderers[0].Text = string.Format("{0}\n{1}", Locale.Main[72], ItemView.FormatMoney(Unit.Player.Money));
+        o_ButtonTextRenderers[1].Text = string.Format("{0}\n{1}", Locale.Main[70], ItemView.FormatMoney(buyDelta));
+        o_ButtonTextRenderers[2].Text = string.Format("{0}\n{1}", Locale.Main[71], ItemView.FormatMoney(sellDelta));
+        o_ButtonTextRenderers[3].Text = string.Format("{0}\n{1}", Locale.Main[73], ItemView.FormatMoney(Unit.Player.Money + buyDelta + sellDelta));
+        for (int i = 0; i < 4; i++)
+        {
+            if (ClickedButton == i)
+            {
+                PositionObject(o_ButtonTextObjects[i], o_ShopBaseOffset, new Vector3(ButtonTextPositions[i].x, ButtonTextPositions[i].y + 2, -2), 100);
+                o_ButtonObjects[i].SetActive(true);
+            }
+            else
+            {
+                PositionObject(o_ButtonTextObjects[i], o_ShopBaseOffset, new Vector3(ButtonTextPositions[i].x, ButtonTextPositions[i].y, -2), 100);
+                o_ButtonObjects[i].SetActive(false);
+            }
+        }
+    }
+
+    private void ProcessCancel()
+    {
+        ((ShopStructure)Shop.Logic).CancelTransaction(Unit);
+    }
+
+    private void ProcessBuy()
+    {
+        ((ShopStructure)Shop.Logic).ApplyBuy(Unit);
+    }
+
+    private void ProcessSell()
+    {
+        ((ShopStructure)Shop.Logic).ApplySell(Unit);
+    }
+
+    private void ProcessQuit()
+    {
+        Client.SendLeaveStructure();
     }
 
 }

@@ -95,6 +95,10 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
     private static Texture2D img_BackInvG; // no item
     private static Texture2D img_BackInvS; // can't buy
 
+    // shop price images
+    private static Texture2D[] img_Prices;
+    private static int[] img_PriceSizes;
+
     private MeshRenderer Renderer;
     private MeshFilter Filter;
 
@@ -118,11 +122,23 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
     public float InvScale = 1f;
 
     public bool ShowMoney = false;
+    private bool _ShopMode = false;
+    public int ShopLockedMoney = 0;
+    public MapUnit ShopViewer = null;
+
+    public bool ShopMode
+    {
+        get { return _ShopMode && ShopViewer != null; }
+        set { _ShopMode = value; }
+    }
 
     public ProcessDropDelegate OnProcessDrop = null;
 
     private List<GameObject> TextObjects = new List<GameObject>();
     private List<AllodsTextRenderer> TextRenderers = new List<AllodsTextRenderer>();
+
+    private List<GameObject> ShopTextObjects = new List<GameObject>();
+    private List<AllodsTextRenderer> ShopTextRenderers = new List<AllodsTextRenderer>();
 
     public void OnDestroy()
     {
@@ -145,6 +161,14 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         if (img_BackInvG == null) img_BackInvG = Images.LoadImage("graphics/interface/backinvg.bmp", Images.ImageType.AllodsBMP);
         if (img_BackInvS == null) img_BackInvS = Images.LoadImage("graphics/interface/backinvs.bmp", Images.ImageType.AllodsBMP);
 
+        if (img_Prices == null)
+        {
+            img_Prices = new Texture2D[7];
+            for (int i = 0; i < 7; i++)
+                img_Prices[i] = Images.LoadImage(string.Format("graphics/interface/costs{0}.bmp", i+1), 0, Images.ImageType.AllodsBMP);
+            img_PriceSizes = new int[] { 15, 21, 27, 36, 42, 48, 57 };
+        }
+
         // create InvWidth*InvHeight*2+1 materials
         List<Material> materials = new List<Material>();
         for (int i = 0; i < InvWidth * InvHeight; i++)
@@ -152,7 +176,23 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         for (int i = 0; i < InvWidth * InvHeight; i++)
             materials.Add(new Material(MainCamera.MainShaderPaletted));
         materials.Add(new Material(MainCamera.MainShader));
+        for (int i = 0; i < InvWidth * InvHeight; i++)
+            materials.Add(new Material(MainCamera.MainShader));
         Renderer.materials = materials.ToArray();
+    }
+
+    private static string FormatMoney(long money)
+    {
+        string s = "";
+        string ins = money.ToString();
+        for (int j = 0; j < ins.Length; j++)
+        {
+            int offpos = ins.Length - j + ((money < 0) ? 1 : 0);
+            if (offpos % 3 == 0 && j > 0)
+                s += ",";
+            s += ins[j];
+        }
+        return s;
     }
 
     public void Update()
@@ -182,9 +222,36 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
             }
         }
 
+        // update text
+        if (ShopTextObjects.Count != InvWidth * InvHeight ||
+            ShopTextRenderers.Count != InvWidth * InvHeight)
+        {
+            for (int i = 0; i < ShopTextRenderers.Count; i++)
+                ShopTextRenderers[i].DestroyImmediate();
+            ShopTextObjects.Clear();
+            ShopTextRenderers.Clear();
+
+            for (int ly = 0; ly < InvHeight; ly++)
+            {
+                for (int lx = 0; lx < InvWidth; lx++)
+                {
+                    AllodsTextRenderer atr = new AllodsTextRenderer(Fonts.Font2);
+                    atr.Text = "";
+                    atr.Material.color = new Color32(0xBD, 0x9E, 0x4A, 0xFF);
+                    atr.Align = Font.Align.Right;
+                    GameObject go = atr.GetNewGameObject(0.01f, transform, 100, 0.01f);
+                    ShopTextObjects.Add(go);
+                    ShopTextRenderers.Add(atr);
+
+                    go.transform.localPosition = new Vector3((lx * 80 + 80 - 6) * InvScale, (ly * 80) * InvScale, -0.2f);
+                }
+            }
+        }
+
         // first submesh = quads, item background
-        // second submesh = lines, item magic glow
-        // third submesh = quads, item pictures
+        // second submesh = quads, item pictures
+        // third submesh = lines, item magic glow
+        // fourth submesh = quads, price backgrounds. only if in shop mode
 
         if (Pack == null)
         {
@@ -202,13 +269,33 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         {
             Item item = (i == Pack.Count && ShowMoney) ? GetVisualMoneyItem() : Pack[i];
 
+            Builder.AddQuad(y * InvWidth + x, (x * 80) * InvScale, (y * 80) * InvScale, 80 * InvScale, 80 * InvScale, new Rect(0, 0, 1, 1));
+            Texture2D bg;
             if (item != null)
             {
-                Builder.AddQuad(y * InvWidth + x, (x * 80) * InvScale, (y * 80) * InvScale, 80 * InvScale, 80 * InvScale, new Rect(0, 0, 1, 1));
-                // check texture.
-                // for now, just put generic background
-                Renderer.materials[y * InvWidth + x].mainTexture = img_BackInv;
+                if (ShopMode)
+                {
+                    switch (item.NetParent)
+                    {
+                        case ServerCommands.ItemMoveLocation.UnitBody:
+                        case ServerCommands.ItemMoveLocation.UnitPack:
+                            if (!ShopViewer.IsItemUsable(item))
+                                bg = img_BackInvG;
+                            else bg = img_BackInv;
+                            break;
+
+                        default:
+                            if (!ShopViewer.IsItemUsable(item) || item.Price > ShopViewer.Player.Money - ShopLockedMoney)
+                                bg = img_BackInvG;
+                            else bg = img_BackInvS;
+                            break;
+                    }
+                }
+                else bg = img_BackInv;
             }
+            else bg = img_BackInvG;
+
+            Renderer.materials[y * InvWidth + x].mainTexture = bg;
 
             x++;
             if (x >= InvWidth)
@@ -219,9 +306,13 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
         }
 
         for (int i = 0; i < TextObjects.Count; i++)
+        {
             TextObjects[i].SetActive(false);
+            ShopTextObjects[i].SetActive(false);
+        }
 
         // now add magic glow where it should be
+        Builder.CurrentZ = -0.1f;
         x = 0;
         y = 0;
         UpdateMGlow(); // per-widget unique animation is used.
@@ -279,16 +370,7 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
                     long money = item.Price;
                     if (UiManager.Instance.DragItem == item)
                         money -= UiManager.Instance.DragMoneyCount;
-                    string s = "";
-                    string ins = money.ToString();
-                    for (int j = 0; j < ins.Length; j++)
-                    {
-                        int offpos = ins.Length - j + ((money < 0) ? 1 : 0);
-                        if (offpos % 3 == 0)
-                            s += ",";
-                        s += ins[j];
-                    }
-                    TextRenderers[rnd].Text = s;
+                    TextRenderers[rnd].Text = FormatMoney(money);
                     TextObjects[rnd].SetActive(true);
                 }
                 else
@@ -308,6 +390,24 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
                         TextObjects[rnd].SetActive(false);
                     }
                 }
+
+                if (ShopMode && !item.IsMoney)
+                {
+                    long price = item.Price;
+                    switch (item.NetParent)
+                    {
+                        case ServerCommands.ItemMoveLocation.UnitBody:
+                        case ServerCommands.ItemMoveLocation.UnitPack:
+                            price /= 2;
+                            break;
+
+                        default:
+                            break;
+                    }
+                    if (price < 1) price = 1;
+                    ShopTextRenderers[rnd].Text = FormatMoney(price);
+                    ShopTextObjects[rnd].SetActive(true);
+                }
             }
 
             rnd++;
@@ -318,6 +418,8 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
                 y++;
             }
         }
+
+        Builder.CurrentZ = -0.2f;
 
         // add item pictures
         x = 0;
@@ -345,11 +447,73 @@ public class ItemView : Widget, IUiEventProcessor, IUiItemDragger, IUiItemAutoDr
             }
         }
 
-        MeshTopology[] topologies = new MeshTopology[InvWidth * InvHeight * 2 + 1];
+        if (ShopMode)
+        {
+            // add price backgrounds
+            Builder.CurrentZ = -0.3f;
+            x = 0;
+            y = 0;
+            rnd = 0;
+            for (int i = start; i < end; i++)
+            {
+                if (ShopTextObjects[rnd].activeSelf)
+                {
+                    // look at text renderer of this item
+                    AllodsTextRenderer atr = ShopTextRenderers[rnd];
+                    // get width of price field.
+                    // if price fits, use one of the existing images. we require text width + 12
+                    int requiredSize = atr.ActualWidth + 9;
+                    Texture2D image = null;
+                    int imageSize = -1;
+
+                    for (int j = 0; j < 7; j++)
+                    {
+                        if (img_PriceSizes[j] >= requiredSize)
+                        {
+                            image = img_Prices[j];
+                            imageSize = img_PriceSizes[j];
+                            break;
+                        }
+                    }
+
+                    if (image == null)
+                        image = img_Prices[img_Prices.Length - 1];
+
+                    int submesh = InvWidth * InvHeight * 2 + 1 + y * InvWidth + x;
+                    Renderer.materials[submesh].mainTexture = image;
+                    if (imageSize != -1)
+                    {
+                        Builder.AddQuad(submesh, ((x + 1) * 80) * InvScale - image.width, (y * 80) * InvScale, image.width, image.height);
+                    }
+                    else
+                    {
+                        // we could not find a pre-made image that fits our required size.
+                        // this means we need to take largest existing image, and just crop it by parts to produce arbitrary sized background
+                        imageSize = atr.ActualWidth + 9;
+                        float texX = ((x + 1) * 80) * InvScale - imageSize;
+                        float texY = (y * 80) * InvScale;
+                        Builder.AddQuad(submesh, texX, texY, 5, image.height, new Rect(3f / image.width, 0, 5f / image.width, 1), new Color(1, 1, 1, 1));
+                        Builder.AddQuad(submesh, texX + 5, texY, imageSize - (5 + 7), image.height, new Rect(8f / image.width, 0, 45f / image.width, 1), new Color(1, 1, 1, 1));
+                        Builder.AddQuad(submesh, texX + imageSize - 7, texY, 7, image.height, new Rect(53f / image.width, 0, 7f / image.width, 1), new Color(1, 1, 1, 1));
+                    }
+                }
+
+                rnd++;
+                x++;
+                if (x >= InvWidth)
+                {
+                    x = 0;
+                    y++;
+                }
+            }
+        }
+
+        MeshTopology[] topologies = new MeshTopology[InvWidth * InvHeight * 3 + 1];
         for (int i = 0; i < InvWidth * InvHeight; i++)
         {
             topologies[i] = MeshTopology.Quads;
             topologies[InvWidth * InvHeight + i] = MeshTopology.Quads;
+            topologies[InvWidth * InvHeight * 2 + 1 + i] = MeshTopology.Quads;
         }
         topologies[InvWidth * InvHeight * 2] = MeshTopology.Lines;
 

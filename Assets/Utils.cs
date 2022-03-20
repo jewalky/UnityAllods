@@ -189,6 +189,7 @@ public partial class Utils
         private List<Vector2> UV4 = new List<Vector2>();
         private List<Color> Colors = new List<Color>();
         private List<int> Meshes = new List<int>();
+        private List<float> Z = new List<float>();
         private int VertexNum;
         private int TopMesh;
 
@@ -208,6 +209,9 @@ public partial class Utils
             if (Meshes.Count > 0)
                 Meshes.Add(Meshes[Meshes.Count - 1]);
             else Meshes.Add(TopMesh - 1);
+            if (Z.Count > 0)
+                Z.Add(Z[Z.Count - 1]);
+            else Z.Add(0);
         }
 
         public void Reset()
@@ -219,6 +223,7 @@ public partial class Utils
             UV4.Clear();
             Colors.Clear();
             Meshes.Clear();
+            Z.Clear();
             VertexNum = 0;
             TopMesh = 1;
             AllocVertex();
@@ -233,7 +238,7 @@ public partial class Utils
         public Vector3 CurrentPosition
         {
             get { return Vertices[VertexNum]; }
-            set { Vertices[VertexNum] = value; }
+            set { Vertices[VertexNum] = new Vector3(value.x, value.y, CurrentZ); }
         }
 
         public Vector2 CurrentUV1
@@ -270,6 +275,12 @@ public partial class Utils
         {
             get { return Meshes[VertexNum]; }
             set { Meshes[VertexNum] = value; if (value + 1 > TopMesh) TopMesh = value + 1; }
+        }
+
+        public float CurrentZ
+        {
+            get { return Z[VertexNum]; }
+            set { Z[VertexNum] = value; }
         }
 
         private Mesh ToMesh(Mesh mesh, params MeshTopology[] submeshes)

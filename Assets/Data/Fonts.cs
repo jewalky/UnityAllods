@@ -278,8 +278,8 @@ public class Font
                     }
                 }
 
-                if (x > realwidth)
-                    realwidth = (int)x;
+                if (line_wd > realwidth)
+                    realwidth = line_wd;
             }
 
             y += overrideLineHeight;

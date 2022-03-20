@@ -219,12 +219,16 @@ class ShopScreen : FullscreenView
         o_UnitInventory = Utils.CreateObjectWithScript<MapViewInventory>();
         o_UnitInventory.SetPack((MapHuman)Unit);
         o_UnitInventory.ItemCount = 5;
+        o_UnitInventory.View.ShopMode = true;
+        o_UnitInventory.View.ShopViewer = Unit;
         PositionObject(o_UnitInventory.gameObject, o_ShopBaseOffset, new Vector3(0, 390, 0));
 
         // generate ItemView for items
         o_ShelfItems = Utils.CreateObjectWithScript<ItemView>();
         o_ShelfItems.InvWidth = 2;
         o_ShelfItems.InvHeight = 3;
+        o_ShelfItems.ShopMode = true;
+        o_ShelfItems.ShopViewer = Unit;
         o_ShelfItems.Pack = ((ShopStructure)Shop.Logic).Shelves[CurrentShelf].Items;
         PositionObject(o_ShelfItems.gameObject, o_ShopBaseOffset, new Vector3(1, 32, -1));
 
@@ -239,6 +243,8 @@ class ShopScreen : FullscreenView
         o_TableItems = Utils.CreateObjectWithScript<ItemView>();
         o_TableItems.InvWidth = 5;
         o_TableItems.InvHeight = 1;
+        o_TableItems.ShopMode = true;
+        o_TableItems.ShopViewer = Unit;
         o_TableItems.Pack = ((ShopStructure)Shop.Logic).GetTableFor(Unit.Player);
         PositionObject(o_TableItems.gameObject, o_ShopBaseOffset, new Vector3(32, 305, -1));
 

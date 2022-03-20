@@ -1166,6 +1166,7 @@ class MapLogic
         // add items for testing
         unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Meteoric Amulet {skillfire=100,skillwater=100,skillair=100,skillearth=100,skillastral=100,manamax=16000}")); // for testing mage
         unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Crystal Ring {body=3,scanrange=1,spirit=1}"));
+        unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Crystal Ring {body=3}"));
         unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Crystal Amulet {body=3,scanrange=1,spirit=1}"));
         unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Dragon Leather Large Shield {body=3,protectionearth=20,damagebonus=20}"));
         unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Very Rare Crystal Plate Helm {body=3,scanrange=2}"));

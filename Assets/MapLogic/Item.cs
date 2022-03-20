@@ -575,7 +575,7 @@ public class Item
             }
         }
 
-        Price = Math.Max(Price, (int)(Price * ((float)ManaUsage / 10)));
+        Price += ManaUsage * 10000;
 
         // search for override price effect
         for (int i = 0; i < Effects.Count; i++)

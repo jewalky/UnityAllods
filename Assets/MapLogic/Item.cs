@@ -558,7 +558,12 @@ public class Item
             switch (Effects[i].Type1)
             {
                 case ItemEffect.Effects.CastSpell:
-                    ManaUsage += modifier.ManaCost * Effects[i].Value2;
+                    // get factor for spell price. use bookcost for this
+                    Templates.TplSpell spell = TemplateLoader.GetSpellById(Effects[i].Value1);
+                    int spellCost = 1;
+                    if (spell != null)
+                        spellCost = Math.Max(1, spell.ManaCost / 4);
+                    ManaUsage += (int)(modifier.ManaCost * Effects[i].Value2 * spellCost);
                     break;
 
                 case ItemEffect.Effects.DamageFire:

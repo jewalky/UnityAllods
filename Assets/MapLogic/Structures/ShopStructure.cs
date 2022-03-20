@@ -559,7 +559,7 @@ public class ShopStructure : StructureLogic
     {
         if (NetworkManager.IsClient)
         {
-            //
+            Client.SendShopCancel();
         }
         else
         {
@@ -578,7 +578,7 @@ public class ShopStructure : StructureLogic
     {
         if (NetworkManager.IsClient)
         {
-            //
+            Client.SendShopBuy();
         }
         else
         {
@@ -600,6 +600,7 @@ public class ShopStructure : StructureLogic
                 // add item to player
                 unit.ItemsPack.PutItem(unit.ItemsPack.Count, item);
             }
+            Server.NotifyPlayerMoney(unit.Player);
             Server.NotifyUnitPack(unit);
             Server.NotifyShopTable(unit);
         }
@@ -609,7 +610,7 @@ public class ShopStructure : StructureLogic
     {
         if (NetworkManager.IsClient)
         {
-            //
+            Client.SendShopSell();
         }
         else
         {
@@ -617,6 +618,7 @@ public class ShopStructure : StructureLogic
             List<Item> items = new List<Item>();
             items.AddRange(table);
             List<int> shelvesUpdated = new List<int>();
+            Debug.LogFormat("money before sell = {0}", unit.Player.Money);
             foreach (Item item in items)
             {
                 // take item from table.
@@ -656,6 +658,7 @@ public class ShopStructure : StructureLogic
                 price *= item.Count;
                 unit.Player.Money += price;
             }
+            Debug.LogFormat("money after sell = {0}", unit.Player.Money);
             Server.NotifyPlayerMoney(unit.Player);
             foreach (int shelf in shelvesUpdated)
                 Server.NotifyShopShelf(unit, shelf);

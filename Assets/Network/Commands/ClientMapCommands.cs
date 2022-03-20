@@ -90,7 +90,7 @@ namespace ClientCommands
                 return false;
             Player player = MapLogic.Instance.GetPlayerByID(ID);
             if (player == null)
-                return true;
+                return false;
             player.Money = Money;
             return true;
         }

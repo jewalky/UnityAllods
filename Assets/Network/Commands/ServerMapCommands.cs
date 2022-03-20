@@ -553,4 +553,88 @@ namespace ServerCommands
             return true;
         }
     }
+
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.ShopCancel)]
+    public struct ShopCancel : IServerCommand
+    {
+        public bool Process(ServerClient client)
+        {
+            if (client.State != ClientState.Playing)
+                return false;
+
+            Player player = MapLogic.Instance.GetNetPlayer(client);
+            if (player == null)
+                return false;
+
+            // find all units of the player and send action to each
+            foreach (MapObject mobj in player.Objects)
+            {
+                if (mobj is MapUnit unit && unit.CurrentStructure != null &&
+                    unit.CurrentStructure.Logic is ShopStructure)
+                {
+                    ShopStructure shop = (ShopStructure)unit.CurrentStructure.Logic;
+                    shop.CancelTransaction(unit);
+                }
+            }
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.ShopBuy)]
+    public struct ShopBuy : IServerCommand
+    {
+        public bool Process(ServerClient client)
+        {
+            if (client.State != ClientState.Playing)
+                return false;
+
+            Player player = MapLogic.Instance.GetNetPlayer(client);
+            if (player == null)
+                return false;
+
+            // find all units of the player and send action to each
+            foreach (MapObject mobj in player.Objects)
+            {
+                if (mobj is MapUnit unit && unit.CurrentStructure != null &&
+                    unit.CurrentStructure.Logic is ShopStructure)
+                {
+                    ShopStructure shop = (ShopStructure)unit.CurrentStructure.Logic;
+                    shop.ApplyBuy(unit);
+                }
+            }
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.ShopSell)]
+    public struct ShopSell : IServerCommand
+    {
+        public bool Process(ServerClient client)
+        {
+            if (client.State != ClientState.Playing)
+                return false;
+
+            Player player = MapLogic.Instance.GetNetPlayer(client);
+            if (player == null)
+                return false;
+
+            // find all units of the player and send action to each
+            foreach (MapObject mobj in player.Objects)
+            {
+                if (mobj is MapUnit unit && unit.CurrentStructure != null &&
+                    unit.CurrentStructure.Logic is ShopStructure)
+                {
+                    ShopStructure shop = (ShopStructure)unit.CurrentStructure.Logic;
+                    shop.ApplySell(unit);
+                }
+            }
+
+            return true;
+        }
+    }
 }

@@ -118,6 +118,27 @@ public class Client
         }
     }
 
+    public static void SendShopCancel()
+    {
+        if (!NetworkManager.IsClient) return;
+        ServerCommands.ShopCancel shopCmd;
+        ClientManager.SendCommand(shopCmd);
+    }
+
+    public static void SendShopBuy()
+    {
+        if (!NetworkManager.IsClient) return;
+        ServerCommands.ShopBuy shopCmd;
+        ClientManager.SendCommand(shopCmd);
+    }
+
+    public static void SendShopSell()
+    {
+        if (!NetworkManager.IsClient) return;
+        ServerCommands.ShopSell shopCmd;
+        ClientManager.SendCommand(shopCmd);
+    }
+
     public static void SendAttackUnit(MapUnit unit, MapUnit targetUnit)
     {
         if (NetworkManager.IsClient)

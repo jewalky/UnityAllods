@@ -340,7 +340,7 @@ public class Server
                     packCmd.Pack = new NetItem[unit.ItemsPack.Count];
                     for (int i = 0; i < unit.ItemsPack.Count; i++)
                         packCmd.Pack[i] = new NetItem(unit.ItemsPack[i]);
-                    packCmd.Money = unit.ItemsPack.Money;
+                    packCmd.Money = unit.Player.Money;
                 }
                 client.SendCommand(packCmd);
             }

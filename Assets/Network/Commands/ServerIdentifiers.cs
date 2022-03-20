@@ -25,5 +25,9 @@ public enum ServerIdentifiers
     UnitPickup,
 
     UseStructure,
-    LeaveStructure
+    LeaveStructure,
+
+    ShopCancel,
+    ShopBuy,
+    ShopSell
 }

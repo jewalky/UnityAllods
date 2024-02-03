@@ -669,8 +669,9 @@ public class Server
     public static void SpawnProjectileEOT(int id, IPlayerPawn source, float x, float y, float z, int duration, int frequency, int startframes = 0, int endframes = 0, int zoffs = -128, MapProjectileCallback cb = null, int lightlevel = 0)
     {
         MapProjectile proj = new MapProjectile(id, source, new MapProjectileLogicEOT(duration, frequency, startframes, endframes), cb);
-        if (lightlevel != 0)
-            proj.LightLevel = lightlevel;
+        if (!proj.CanOccupyLocation(x, y))
+            return;
+        proj.LightLevel = lightlevel;
         proj.ZOffset = zoffs;
         proj.SetPosition(x, y, z);
         MapLogic.Instance.AddObject(proj, true);

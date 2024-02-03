@@ -94,6 +94,11 @@ namespace SpellEffects
                     return false;
                 return true;
             }
+
+            public (MapNodeFlags, MapNodeFlags) GetNodeLinkFlags()
+            {
+                return (0, 0);
+            }
         }
 
         public override void Process()

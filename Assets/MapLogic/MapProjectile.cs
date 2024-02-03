@@ -9,6 +9,8 @@ public interface IMapProjectileLogic
 {
     void SetProjectile(MapProjectile proj);
     bool Update();
+    // First flags = checked before adding, Second flags = set when adding to map
+    (MapNodeFlags, MapNodeFlags) GetNodeLinkFlags();
 }
 
 // MapProjectileLogicHoming = a projectile that is homing on it's target
@@ -67,6 +69,11 @@ public class MapProjectileLogicHoming : IMapProjectileLogic
         }
 
         return false;
+    }
+
+    public (MapNodeFlags, MapNodeFlags) GetNodeLinkFlags()
+    {
+        return (0, 0);
     }
 }
 
@@ -132,6 +139,11 @@ public class MapProjectileLogicDirectional : IMapProjectileLogic
             return false;
         }
     }
+
+    public (MapNodeFlags, MapNodeFlags) GetNodeLinkFlags()
+    {
+        return (0, 0);
+    }
 }
 
 // MapProjectileLogicSimple = a projectile that is used for sfx, not as actual projectile. this plays an animation.
@@ -189,6 +201,11 @@ public class MapProjectileLogicSimple : IMapProjectileLogic
 
         Timer++;
         return true;
+    }
+
+    public (MapNodeFlags, MapNodeFlags) GetNodeLinkFlags()
+    {
+        return (0, 0);
     }
 }
 
@@ -306,6 +323,11 @@ public class MapProjectileLogicLightning : IMapProjectileLogic
 
         return true;
     }
+
+    public (MapNodeFlags, MapNodeFlags) GetNodeLinkFlags()
+    {
+        return (0, 0);
+    }
 }
 
 // MapProjectileEOT = regular projectile, but animates for specified amount of time and calls callback every N ticks
@@ -314,7 +336,6 @@ public class MapProjectileLogicEOT : IMapProjectileLogic
     MapProjectile Projectile = null;
     int StartFrames;
     int EndFrames;
-    int Timer = 0;
     int Frame = 0;
 
     int Duration;
@@ -352,17 +373,17 @@ public class MapProjectileLogicEOT : IMapProjectileLogic
         if (Projectile.Class == null)
             return true;
 
-        float ll = 0;
+        float ll;
 
         // first, check start and end
         // roughly use 2 ticks per frame
-        if (timeOffset > Duration-EndFrames*2)
+        if (timeOffset > Duration-EndFrames*2 && EndFrames > 0)
         {
             int endframe = (timeOffset - (Duration - EndFrames * 2)) / 2;
             Frame = Projectile.Class.Phases - EndFrames + endframe;
             ll = 1f - (float)endframe / EndFrames;
         }
-        else if (timeOffset < StartFrames*2)
+        else if (timeOffset < StartFrames*2 && StartFrames > 0)
         {
             Frame = timeOffset / 2;
             ll = (float)Frame / StartFrames;
@@ -393,9 +414,14 @@ public class MapProjectileLogicEOT : IMapProjectileLogic
                 Projectile.Alpha = 0.5f - ((float)timeOffset - (Duration - 16)) / 16 * 0.5f;
             Projectile.Alpha = Projectile.Alpha * (0.5f + ((Mathf.Sin((float)timeOffset / 16 + Projectile.X*Projectile.Y + RSeed) + 0.5f) / 4));
         }
-
-        Timer++;
         return true;
+    }
+
+    public (MapNodeFlags, MapNodeFlags) GetNodeLinkFlags()
+    {
+        if (Projectile.Class.ID == (int)AllodsProjectile.EarthWall)
+            return (MapNodeFlags.DynamicGround|MapNodeFlags.BlockedGround, MapNodeFlags.DynamicGround);
+        return (0, 0);
     }
 }
 
@@ -689,5 +715,38 @@ public class MapProjectile : MapObject, IDynlight
                 return;
             }
         }
+    }
+
+    public override MapNodeFlags GetNodeLinkFlags(int x, int y)
+    {
+        return Logic.GetNodeLinkFlags().Item2;
+    }
+
+    public bool CanOccupyLocation(float fx, float fy)
+    {
+        MapNodeFlags ownFlags = Logic.GetNodeLinkFlags().Item1;
+        int x = (int)fx;
+        int y = (int)fy;
+
+        if (ownFlags == 0)
+            return true;
+
+        if (x < 8 || x > MapLogic.Instance.Width - 8 ||
+            y < 8 || y > MapLogic.Instance.Height - 8) return false;
+        for (int ly = y; ly < y + 1; ly++)
+        {
+            for (int lx = x; lx < x + 1; lx++)
+            {
+                MapNode node = MapLogic.Instance.Nodes[lx, ly];
+                // skip cells currently taken
+                if (node.Objects.Contains(this))
+                    continue; // if we are already on this cell, skip it as passible
+                MapNodeFlags flags = node.Flags;
+                if ((flags & ownFlags) != 0)
+                    return false;
+            }
+        }
+
+        return true;
     }
 }

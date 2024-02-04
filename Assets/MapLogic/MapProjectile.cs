@@ -51,13 +51,13 @@ public class MapProjectileLogicHoming : IMapProjectileLogic
             //dir /= 5;
             dir *= Speed / 20;
             Vector2 newPos = new Vector2(Projectile.ProjectileX + dir.x, Projectile.ProjectileY + dir.y);
-            if (Projectile.ProjectileX != targetCenter.x ||
-                Projectile.ProjectileY != targetCenter.y)
+            if (Math.Sign(targetCenter.x - newPos.x) != Math.Sign(targetCenter.x - Projectile.ProjectileX))
+                newPos.x = targetCenter.x;
+            if (Math.Sign(targetCenter.y - newPos.y) != Math.Sign(targetCenter.y - Projectile.ProjectileY))
+                newPos.y = targetCenter.y;
+            if (Mathf.Abs(newPos.x - targetCenter.x) >= Mathf.Epsilon ||
+                Mathf.Abs(newPos.y - targetCenter.y) >= Mathf.Epsilon)
             {
-                if (Math.Sign(targetCenter.x - newPos.x) != Math.Sign(targetCenter.x - Projectile.ProjectileX))
-                    newPos.x = targetCenter.x;
-                if (Math.Sign(targetCenter.y - newPos.y) != Math.Sign(targetCenter.y - Projectile.ProjectileY))
-                    newPos.y = targetCenter.y;
                 Projectile.SetPosition(newPos.x, newPos.y, Projectile.ProjectileZ);
                 return true;
             }
@@ -719,11 +719,16 @@ public class MapProjectile : MapObject, IDynlight
 
     public override MapNodeFlags GetNodeLinkFlags(int x, int y)
     {
+        if (Logic == null)
+            return 0;
         return Logic.GetNodeLinkFlags().Item2;
     }
 
     public bool CanOccupyLocation(float fx, float fy)
     {
+        if (Logic == null)
+            return true;
+
         MapNodeFlags ownFlags = Logic.GetNodeLinkFlags().Item1;
         int x = (int)fx;
         int y = (int)fy;

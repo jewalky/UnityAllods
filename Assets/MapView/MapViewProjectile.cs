@@ -260,9 +260,12 @@ public class MapViewProjectile : MapViewObject, IObjectManualUpdate
                 xP = MapView.Instance.MapToScreenCoords(LogicProjectile.ProjectileX, LogicProjectile.ProjectileY - LogicProjectile.ProjectileZ, 1, 1);
             }
 
+            int projectileWidth = LogicProjectile.Class.Width == 0 ? (int)(sprites.AtlasRects[actualFrame].width * sprites.Atlas.width) : LogicProjectile.Class.Width;
+            int projectileHeight = LogicProjectile.Class.Height == 0 ? (int)(sprites.AtlasRects[actualFrame].height * sprites.Atlas.height) : LogicProjectile.Class.Height;
+
             // always centered
-            transform.localPosition = new Vector3(xP.x - LogicProjectile.Class.Width * 0.5f * LogicProjectile.Scale,
-                                                    xP.y - LogicProjectile.Class.Height * 0.5f * LogicProjectile.Scale,
+            transform.localPosition = new Vector3(xP.x - projectileWidth * 0.5f * LogicProjectile.Scale,
+                                                    xP.y - projectileHeight * 0.5f * LogicProjectile.Scale,
                                                     MakeZFromY(xP.y) - LogicProjectile.ZOffset - LogicProjectile.ProjectileZ * 32); // order sprites by y coordinate basically
 
             transform.localScale = new Vector3(LogicProjectile.Scale, LogicProjectile.Scale, LogicProjectile.Scale);

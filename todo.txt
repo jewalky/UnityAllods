@@ -33,7 +33,7 @@
 - add: sounds
 
 - add: more monster AI (spellcasting)
-- fix: pathfinding to impossible location (should pathfind to nearest possible)
++ fix: pathfinding to impossible location (should pathfind to nearest possible)
 
 - add: character generation UI
 - add: master server (hat)

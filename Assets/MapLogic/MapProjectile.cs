@@ -419,7 +419,7 @@ public class MapProjectileLogicEOT : IMapProjectileLogic
 
     public (MapNodeFlags, MapNodeFlags) GetNodeLinkFlags()
     {
-        if (Projectile.Class.ID == (int)AllodsProjectile.EarthWall)
+        if (Projectile.Class != null && Projectile.Class.ID == (int)AllodsProjectile.EarthWall)
             return (MapNodeFlags.DynamicGround|MapNodeFlags.BlockedGround, MapNodeFlags.DynamicGround);
         return (0, 0);
     }

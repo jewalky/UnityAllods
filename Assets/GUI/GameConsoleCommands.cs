@@ -109,6 +109,8 @@ public class GameConsoleCommands
             return;
         }
 
+        if (!unit.IsLinked) unit.LinkToWorld();
+
         unit.Player = MapLogic.Instance.ConsolePlayer;
         unit.Tag = MapLogic.Instance.GetFreeUnitTag();
 

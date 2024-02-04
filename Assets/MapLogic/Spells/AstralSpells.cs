@@ -210,6 +210,8 @@ namespace Spells
                 return false;
             }
 
+            if (!unit.IsLinked) unit.LinkToWorld();
+
             unit.SummonTimeMax = 30;
             unit.SummonTime = 0;
 

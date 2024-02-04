@@ -60,16 +60,26 @@ namespace Spells
 
             if (is45deg)
             {
-                for (int x = -3; x <= 3; x++)
+                for (int y = 0; y < 2; y++)
                 {
-                    for (int y = 0; y < 2; y++)
+                    int xStart = 0;
+                    int xEnd = 0;
+                    bool isYNeg = Mathf.Cos(angle) < 0;
+                    bool isXNeg = Mathf.Sin(angle) < 0;
+                    if (y == 1)
+                    {
+                        if (isYNeg != isXNeg)
+                            xStart = 1;
+                        else xEnd = 1;
+                    }
+                    for (int x = -3 + xStart; x <= 3 - xEnd; x++)
                     {
                         // rotate x and y
                         float fx = x;
                         float fy = y;
                         float rx = Mathf.Cos(angle) * x;
                         float ry = Mathf.Sin(angle) * x;
-                        float yOffset = (Mathf.Cos(angle) * y) < 0 ? -y : y;
+                        float yOffset = isYNeg ? -y : y;
                         Server.SpawnProjectileEOT(AllodsProjectile.EarthWall, Spell.User, Mathf.Round(TargetX + rx) + 0.5f, Mathf.Round(TargetY + ry + yOffset) + 0.5f, 0, (int)(MapLogic.TICRATE * Spell.GetDuration()), -1, 0, 0, 16);
                     }
                 }

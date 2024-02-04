@@ -388,10 +388,10 @@ public class Templates
 
     public void LoadFromFile(string filename)
     {
-        MemoryStream ms = ResourceManager.OpenRead("world/data/data.bin");
+        MemoryStream ms = ResourceManager.OpenRead(filename);
         if (ms == null)
         {
-            Core.Abort("Couldn't load \"world/data/data.bin\"!");
+            Core.Abort("Couldn't load \"{0}\"!", filename);
             return;
         }
 

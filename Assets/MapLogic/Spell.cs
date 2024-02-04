@@ -206,7 +206,7 @@ public class Spell
         switch (SpellID)
         {
             case Spells.Stone_Curse:
-                return Skill * 0.15f;
+                return UnityEngine.Random.Range(0.1f, Skill * 0.15f);
             default:
                 break;
         }

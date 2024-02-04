@@ -361,6 +361,11 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
         OnUpdate();
     }
 
+    protected virtual float GetSaturation()
+    {
+        return LogicUnit.Flags.HasFlag(UnitFlags.StoneCurse) ? 0f : 1f;
+    }
+
     protected virtual Texture2D GetDeathPalette(UnitFile f)
     {
         return f.UpdatePalette(LogicUnit.Face);
@@ -507,7 +512,10 @@ public class MapViewUnit : MapViewObject, IMapViewSelectable, IMapViewSelfie, IO
             }
 
             for (int i = 0; i < newMaterialCount; i++)
+            {
                 Renderer.materials[i].SetTexture("_Palette", GetDeathPalette(dCls.File));
+                Renderer.materials[i].SetFloat("_Saturation", GetSaturation());
+            }
 
             // first (idle) state is 0..8 frames. frames 1 to 7 are flipped. frames 0 and 8 aren't.
             //  135 180 225

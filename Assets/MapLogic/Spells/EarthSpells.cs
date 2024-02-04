@@ -103,4 +103,24 @@ namespace Spells
             return false;
         }
     }
+
+    [SpellProcId(Spell.Spells.Stone_Curse)]
+    public class SpellProcStoneCurse : SpellProc
+    {
+        public SpellProcStoneCurse(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (TargetUnit == null)
+                return false;
+
+            float calculatedDuration = Spell.GetDuration();
+            calculatedDuration = Mathf.Max(0f, (1f - TargetUnit.Stats.ProtectionEarth / 100f) * calculatedDuration);
+            
+            TargetUnit.TakeDamage(DamageFlags.Earth, Spell.User, 0);
+            SpellEffects.Effect eff = new SpellEffects.StoneCurse((int)(MapLogic.TICRATE * calculatedDuration));
+            TargetUnit.AddSpellEffects(eff);
+            return false;
+        }
+    }
 }

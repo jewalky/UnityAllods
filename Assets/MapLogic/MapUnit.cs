@@ -41,7 +41,8 @@ public enum UnitFlags
     Curse           = 0x0200,
     Healing         = 0x0400,
     Draining        = 0x0800,
-    PhasedOut       = 0x1000
+    PhasedOut       = 0x1000,
+    StoneCurse      = 0x2000,
 }
 
 public class MapUnitAggro
@@ -584,16 +585,19 @@ public class MapUnit : MapObject, IPlayerPawn, IVulnerable, IDisposable
             }
         }
 
-        if (!NetworkManager.IsClient && Player.DoFullAI)
+        if (!Flags.HasFlag(UnitFlags.StoneCurse) && !NetworkManager.IsClient && Player.DoFullAI)
         {
             // process aggro list, pick new target if needed
             UpdateAggro();
             UpdateAI();
         }
 
-        // process actions
-        while (!Actions.Last().Process())
-            Actions.RemoveAt(Actions.Count - 1);
+        if (!IsAlive || IsDying || !Flags.HasFlag(UnitFlags.StoneCurse))
+        {
+            // process actions
+            while (!Actions.Last().Process())
+                Actions.RemoveAt(Actions.Count - 1);
+        }
 
         // process spell effects
         for (int i = 0; i < SpellEffects.Count; i++)

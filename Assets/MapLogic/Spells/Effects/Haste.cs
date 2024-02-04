@@ -15,7 +15,6 @@ namespace SpellEffects
 
         public override bool OnAttach(MapUnit unit)
         {
-            // always replace existing haste effects
             List<Haste> hastes = unit.GetSpellEffects<Haste>();
 
             foreach (Haste h in hastes)

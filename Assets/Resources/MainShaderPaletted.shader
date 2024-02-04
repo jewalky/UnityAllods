@@ -8,6 +8,7 @@ Shader "Custom/MainShaderPaletted"
 		_Palette("Sprite Palette", 2D) = "white" {}
 		_Color("Tint", Color) = (1,1,1,1)
 		_Lightness("Lightness", Float) = 0.5
+        _Saturation("Saturation", Float) = 1
 		[MaterialToggle] DoClip("Clipping enabled", Float) = 0
 		ClipArea("Clipping area", Vector) = (0,0,0,0)
 		[MaterialToggle] PixelSnap("Pixel snap", Float) = 0
@@ -92,6 +93,7 @@ Shader "Custom/MainShaderPaletted"
 			sampler2D _MainTex;
 			sampler2D _Palette;
 			float _Lightness;
+			float _Saturation;
 			float DoClip;
 			float4 ClipArea;
 
@@ -121,6 +123,8 @@ Shader "Custom/MainShaderPaletted"
 				// Apply the tint to the final color
 				outColor *= IN.color;
 				outColor *= float4(_Lightness * 2, _Lightness * 2, _Lightness * 2, 1);
+				float genDesaturated = outColor.r * 0.3 + outColor.g * 0.5 + outColor.b * 0.2;
+				outColor = lerp(float4(genDesaturated, genDesaturated, genDesaturated, outColor.a), outColor, _Saturation);
 				return outColor;
 			}
 			ENDCG

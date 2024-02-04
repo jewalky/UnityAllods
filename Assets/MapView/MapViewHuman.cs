@@ -14,6 +14,11 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
         }
     }
 
+    protected virtual float GetSaturation()
+    {
+        return 1f;
+    }
+
     protected override Texture2D GetPalette()
     {
         return UpdateHumanPalette();
@@ -54,6 +59,9 @@ public class MapViewHuman : MapViewUnit, IUiItemAutoDropper
                 _HumanPalettes[i, 16].Apply();
             }
         }
+
+        if (LogicHuman.Flags.HasFlag(UnitFlags.StoneCurse))
+            return _HumanPalettes[type, 16];
 
         return _HumanPalettes[type, LogicHuman.Player.Color];
     }

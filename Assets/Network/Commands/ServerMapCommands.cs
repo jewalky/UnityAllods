@@ -118,7 +118,7 @@ namespace ServerCommands
             if (player.Avatar.IsAlive)
                 return true;
 
-            player.Avatar.Respawn(16, 16);
+            player.Respawn();
             return true;
         }
     }

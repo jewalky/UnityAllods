@@ -141,4 +141,16 @@ public class Player
             Avatar = MapLogic.Instance.CreateAvatar(this);
         else Avatar = null;
     }
+
+    public void Respawn()
+    {
+        if (Avatar == null)
+            return;
+
+        Vector2i dropLocation = MapLogic.Instance.FindDropLocation();
+        Avatar.Respawn(dropLocation.x, dropLocation.y);
+
+        if (!NetworkManager.IsServer && this == MapLogic.Instance.ConsolePlayer)
+            MapView.Instance.CenterOnObject(Avatar);
+    }
 }

@@ -251,7 +251,7 @@ public class Client
                 MapLogic.Instance.ConsolePlayer.Avatar != null &&
                 !MapLogic.Instance.ConsolePlayer.Avatar.IsAlive)
             {
-                MapLogic.Instance.ConsolePlayer.Avatar.Respawn(16, 16);
+                MapLogic.Instance.ConsolePlayer.Respawn();
             }
         }
     }

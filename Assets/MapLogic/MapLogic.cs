@@ -1131,17 +1131,8 @@ class MapLogic
         return count;
     }
 
-    // create main unit for player.
-    public MapUnit CreateAvatar(Player player)
+    public Vector2i FindDropLocation()
     {
-        MapUnit unit = new MapUnit(Config.sv_avatar);
-        if (unit.Class == null)
-            unit = new MapHuman(Config.sv_avatar, true);
-        if (unit.Class == null)
-            return null;
-        unit.Player = player;
-        unit.Tag = GetFreeUnitTag(); // this is also used as network ID.
-
         // find any instance of drop location
         int dropX = 16;
         int dropY = 16;
@@ -1159,7 +1150,23 @@ class MapLogic
             dropY = dropLocations[randomLocation].y;
         }
 
-        unit.SetPosition(dropX, dropY, false);
+        return new Vector2i(dropX, dropY);
+    }
+
+    // create main unit for player.
+    public MapUnit CreateAvatar(Player player)
+    {
+        MapUnit unit = new MapUnit(Config.sv_avatar);
+        if (unit.Class == null)
+            unit = new MapHuman(Config.sv_avatar, true);
+        if (unit.Class == null)
+            return null;
+        unit.Player = player;
+        unit.Tag = GetFreeUnitTag(); // this is also used as network ID.
+
+        // find any instance of drop location
+        Vector2i dropLocation = FindDropLocation();
+        unit.SetPosition(dropLocation.x, dropLocation.y, false);
         unit.LinkToWorld();
         AddObject(unit, true);
 

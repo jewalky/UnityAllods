@@ -55,6 +55,8 @@ class ShopScreen : FullscreenView
     private GameObject[] o_ButtonObjects = new GameObject[4];
     private GameObject[] o_ArrowObjects = new GameObject[2];
     private MeshRenderer[] o_ArrowRenderers = new MeshRenderer[2];
+    private GameObject[] o_ShelfObjects = new GameObject[4];
+    private MeshRenderer[] o_ShelfRenderers = new MeshRenderer[4];
 
     private static Rect[] ButtonPositions =
         new Rect[]
@@ -80,6 +82,56 @@ class ShopScreen : FullscreenView
             new Vector2(483, 114),
             new Vector2(494, 160)
         };
+    private static Vector2[][] ShelfPositions =
+        new Vector2[][]
+        {
+            new Vector2[]
+            {
+                new Vector2(348, 100),
+                new Vector2(192, 100),
+                new Vector2(308, 12),
+                new Vector2(196, 12)
+            },
+            new Vector2[]
+            {
+                new Vector2(164, 0),
+                new Vector2(208, 64),
+                new Vector2(208, 0),
+                new Vector2(312, 0)
+            },
+            new Vector2[]
+            {
+                new Vector2(164, 104),
+                new Vector2(164, 44),
+                new Vector2(280, 28),
+                new Vector2(252, 164)
+            },
+        };
+    private static Rect[][] ShelfCollisionBoxes =
+        new Rect[][]
+        {
+            new Rect[]
+            {
+                new Rect(357, 110, 100, 186),
+                new Rect(169, 107, 106, 186),
+                new Rect(315, 8, 142, 98),
+                new Rect(172, 8, 142, 98)
+            },
+            new Rect[]
+            {
+                new Rect(169, 29, 59, 184),
+                new Rect(228, 80, 53, 126),
+                new Rect(224, 8, 131, 72),
+                new Rect(356, 8, 101, 257)
+            },
+            new Rect[]
+            {
+                new Rect(178, 120, 63, 92),
+                new Rect(177, 52, 85, 63),
+                new Rect(286, 54, 76, 89),
+                new Rect(246, 168, 103, 61)
+            }
+        };
 
     //
     private int HoveredButton = -1;
@@ -91,7 +143,9 @@ class ShopScreen : FullscreenView
     private Stopwatch LastScroll = null;
 
     //
+    private int HoveredShelf = -1;
     private int CurrentShelf = 0;
+    private Stopwatch ShelfAnimTime;
 
     private string GetGraphicsPrefix(string filename)
     {
@@ -137,6 +191,8 @@ class ShopScreen : FullscreenView
     public override void OnStart()
     {
         LastScroll = new Stopwatch();
+        ShelfAnimTime = new Stopwatch();
+        ShelfAnimTime.Start();
 
         // detect visual shop type to display
         ShopType type = ShopType.Plagat;
@@ -194,7 +250,7 @@ class ShopScreen : FullscreenView
                 shop_PlagatShelves = new Texture2D[4, 11];
                 for (int i = 0; i < 4; i++)
                     for (int j = 0; j < 11; j++)
-                        shop_PlagatShelves[i, j] = Images.LoadImage(string.Format("graphics/interface/shopanim/{0:D2}/{1}.bmp", i+1, j+1), 0, Images.ImageType.AllodsBMP);
+                        shop_PlagatShelves[(3-i), j] = Images.LoadImage(string.Format("graphics/interface/shopanim/{0:D2}/{1}.bmp", i+1, j+1), 0, Images.ImageType.AllodsBMP);
             }
         }
         else if (Type == ShopType.Kaarg)
@@ -315,12 +371,27 @@ class ShopScreen : FullscreenView
             o_ButtonObjects[i].SetActive(false);
         }
 
+        // generate arrow images
         for (int i = 0; i < 2; i++)
         {
             Utils.MakeTexturedQuad(out o_ArrowObjects[i], shop_ShopArrow[TypeInt][i]);
             PositionObject(o_ArrowObjects[i], o_ShopBaseOffset, i == 0 ? new Vector3(46, 0, -1) : new Vector3(46, 271, -1));
             o_ArrowObjects[i].SetActive(false);
             o_ArrowRenderers[i] = o_ArrowObjects[i].GetComponent<MeshRenderer>();
+        }
+
+        // generate shelf images
+        for (int i = 0; i < 4; i++)
+        {
+            if (Type == ShopType.Plagat)
+                Utils.MakeTexturedQuad(out o_ShelfObjects[i], shop_PlagatShelves[i, 0]);
+            else if (Type == ShopType.Kaarg)
+                Utils.MakeTexturedQuad(out o_ShelfObjects[i], shop_KaargShelves[i]);
+            else if (Type == ShopType.Druid)
+                Utils.MakeTexturedQuad(out o_ShelfObjects[i], shop_DruidShelves[i]);
+            PositionObject(o_ShelfObjects[i], o_ShopBaseOffset, new Vector3(ShelfPositions[TypeInt][i].x + 5, ShelfPositions[TypeInt][i].y + 8, -2));
+            o_ShelfObjects[i].SetActive(false);
+            o_ShelfRenderers[i] = o_ShelfObjects[i].GetComponent<MeshRenderer>();
         }
     }
 
@@ -329,6 +400,12 @@ class ShopScreen : FullscreenView
         obj.transform.parent = parent.transform;
         obj.transform.localScale = new Vector3(scale, scale, scale);
         obj.transform.localPosition = location;
+    }
+
+    private bool IsElvenActive()
+    {
+        return Shop != null && 
+            (Type != ShopType.Druid || ((ShopStructure)Shop.Logic).Shelves[3].Items.Count > 0);
     }
 
     public override bool ProcessEvent(Event e)
@@ -377,12 +454,41 @@ class ShopScreen : FullscreenView
             if (new Rect(o_ShopBaseOffset.transform.position.x, o_ShopBaseOffset.transform.position.y + 272, 164, 31).Contains(mPos))
                 HoveredArrow = 1;
 
+            // check if inside shelves
+            HoveredShelf = -1;
+            for (int i = 0; i < 4; i++)
+            {
+                if (ShelfCollisionBoxes[TypeInt][i].Contains(mPosLocal))
+                    HoveredShelf = i;
+            }
+            // special case: do not allow hovering elven items shelf for druid shop if not enabled
+            if (!IsElvenActive() && HoveredShelf == 3)
+                HoveredShelf = -1;
+
+            if (e.commandName == "tooltip" && HoveredShelf != -1)
+            {
+                int shelfOffset = 62;
+                if (Type == ShopType.Kaarg)
+                    shelfOffset = 278;
+                else if (Type == ShopType.Druid)
+                    shelfOffset = 274;
+                UiManager.Instance.SetTooltip(Locale.Main[shelfOffset+HoveredShelf]);
+            }
+
             return true;
         }
         else if (e.rawType == EventType.MouseDown && e.button == 0)
         {
             ClickedButton = HoveredButton;
             ClickedArrow = HoveredArrow;
+
+            if (HoveredShelf != -1)
+            {
+                CurrentShelf = HoveredShelf;
+                o_ShelfItems.Scroll = 0;
+                o_ShelfItems.Pack = ((ShopStructure)Shop.Logic).Shelves[CurrentShelf].Items;
+            }
+
             return true;
         }
         else if (e.rawType == EventType.MouseUp && e.button == 0)
@@ -461,6 +567,26 @@ class ShopScreen : FullscreenView
             o_ArrowRenderers[i].material.mainTexture = ClickedArrow == i ? shop_ShopArrow[TypeInt][2+i] : shop_ShopArrow[TypeInt][i];
         }
 
+        // process shelf animations or active states
+        for (int i = 0; i < 4; i++)
+            o_ShelfObjects[i].SetActive(i == CurrentShelf);
+
+        if (Type == ShopType.Plagat)
+        {
+            // if shop type is Plagat, we have to animate the active shelf image.
+            // images 3.bmp to 9.bmp are actually used. the rest are stop / start selection. to implement later.
+            int shelfFrame = 2 + (int)((ShelfAnimTime.ElapsedMilliseconds / 120) % 6);
+            o_ShelfRenderers[CurrentShelf].material.mainTexture = shop_PlagatShelves[CurrentShelf, shelfFrame];
+        }
+        else if (Type == ShopType.Druid)
+        {
+            // Druid shop has special logic where elven shelf is displayed conditionally, and uses separate graphic.
+            // it's drawn in the same position and size as the shelf highlight.
+            o_ShelfObjects[3].SetActive(IsElvenActive());
+            o_ShelfRenderers[3].material.mainTexture = CurrentShelf == 3 ? shop_DruidShelves[3] : shop_DruidElven;
+        }
+
+        // process shelf content scrolling
         if (ClickedArrow != -1)
         {
             if (!LastScroll.IsRunning || LastScroll.ElapsedMilliseconds > 100)
@@ -472,8 +598,9 @@ class ShopScreen : FullscreenView
                 }
                 else if (ClickedArrow == 1) // down arrow
                 {
-                    if (o_ShelfItems.Scroll < o_ShelfItems.GetVisualPackCount() - o_ShelfItems.InvWidth * o_ShelfItems.InvHeight)
-                        o_ShelfItems.Scroll = Math.Min(o_ShelfItems.Scroll + 2, o_ShelfItems.GetVisualPackCount() - o_ShelfItems.InvWidth * o_ShelfItems.InvHeight);
+                    int maxScroll = Mathf.CeilToInt((float)(o_ShelfItems.GetVisualPackCount() - o_ShelfItems.InvWidth * o_ShelfItems.InvHeight) / 2) * 2;
+                    if (o_ShelfItems.Scroll < maxScroll)
+                        o_ShelfItems.Scroll = Math.Min(o_ShelfItems.Scroll + 2, maxScroll);
                 }
                 LastScroll.Restart();
             }

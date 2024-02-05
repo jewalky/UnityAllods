@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -52,6 +53,8 @@ class ShopScreen : FullscreenView
     private AllodsTextRenderer[] o_ButtonTextRenderers = new AllodsTextRenderer[4];
     private GameObject[] o_ButtonTextObjects = new GameObject[4];
     private GameObject[] o_ButtonObjects = new GameObject[4];
+    private GameObject[] o_ArrowObjects = new GameObject[2];
+    private MeshRenderer[] o_ArrowRenderers = new MeshRenderer[2];
 
     private static Rect[] ButtonPositions =
         new Rect[]
@@ -81,6 +84,11 @@ class ShopScreen : FullscreenView
     //
     private int HoveredButton = -1;
     private int ClickedButton = -1;
+
+    //
+    private int HoveredArrow = -1;
+    private int ClickedArrow = -1;
+    private Stopwatch LastScroll = null;
 
     //
     private int CurrentShelf = 0;
@@ -128,6 +136,8 @@ class ShopScreen : FullscreenView
 
     public override void OnStart()
     {
+        LastScroll = new Stopwatch();
+
         // detect visual shop type to display
         ShopType type = ShopType.Plagat;
         if (Shop != null && Shop.Class != null)
@@ -305,6 +315,13 @@ class ShopScreen : FullscreenView
             o_ButtonObjects[i].SetActive(false);
         }
 
+        for (int i = 0; i < 2; i++)
+        {
+            Utils.MakeTexturedQuad(out o_ArrowObjects[i], shop_ShopArrow[TypeInt][i]);
+            PositionObject(o_ArrowObjects[i], o_ShopBaseOffset, i == 0 ? new Vector3(46, 0, -1) : new Vector3(46, 271, -1));
+            o_ArrowObjects[i].SetActive(false);
+            o_ArrowRenderers[i] = o_ArrowObjects[i].GetComponent<MeshRenderer>();
+        }
     }
 
     private void PositionObject(GameObject obj, GameObject parent, Vector3 location, float scale = 1)
@@ -353,11 +370,19 @@ class ShopScreen : FullscreenView
                 }
             }
 
+            // check if inside arrows
+            HoveredArrow = -1;
+            if (new Rect(o_ShopBaseOffset.transform.position.x, o_ShopBaseOffset.transform.position.y, 164, 31).Contains(mPos))
+                HoveredArrow = 0;
+            if (new Rect(o_ShopBaseOffset.transform.position.x, o_ShopBaseOffset.transform.position.y + 272, 164, 31).Contains(mPos))
+                HoveredArrow = 1;
+
             return true;
         }
         else if (e.rawType == EventType.MouseDown && e.button == 0)
         {
             ClickedButton = HoveredButton;
+            ClickedArrow = HoveredArrow;
             return true;
         }
         else if (e.rawType == EventType.MouseUp && e.button == 0)
@@ -381,6 +406,7 @@ class ShopScreen : FullscreenView
                 }
             }
             ClickedButton = -1;
+            ClickedArrow = -1;
             return true;
         }
 
@@ -427,6 +453,29 @@ class ShopScreen : FullscreenView
             {
                 PositionObject(o_ButtonTextObjects[i], o_ShopBaseOffset, new Vector3(ButtonTextPositions[i].x, ButtonTextPositions[i].y, -2), 100);
                 o_ButtonObjects[i].SetActive(false);
+            }
+        }
+        for (int i = 0; i < 2; i++)
+        {
+            o_ArrowObjects[i].SetActive(HoveredArrow == i);
+            o_ArrowRenderers[i].material.mainTexture = ClickedArrow == i ? shop_ShopArrow[TypeInt][2+i] : shop_ShopArrow[TypeInt][i];
+        }
+
+        if (ClickedArrow != -1)
+        {
+            if (!LastScroll.IsRunning || LastScroll.ElapsedMilliseconds > 100)
+            {
+                if (ClickedArrow == 0) // up arrow
+                {
+                    if (o_ShelfItems.Scroll > 0)
+                        o_ShelfItems.Scroll = Math.Max(0, o_ShelfItems.Scroll - 2);
+                }
+                else if (ClickedArrow == 1) // down arrow
+                {
+                    if (o_ShelfItems.Scroll < o_ShelfItems.GetVisualPackCount() - o_ShelfItems.InvWidth * o_ShelfItems.InvHeight)
+                        o_ShelfItems.Scroll = Math.Min(o_ShelfItems.Scroll + 2, o_ShelfItems.GetVisualPackCount() - o_ShelfItems.InvWidth * o_ShelfItems.InvHeight);
+                }
+                LastScroll.Restart();
             }
         }
     }

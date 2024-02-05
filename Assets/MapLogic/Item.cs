@@ -580,7 +580,7 @@ public class Item
             }
         }
 
-        Price += ManaUsage * 10000;
+        Price += ManaUsage * 100;
 
         // search for override price effect
         for (int i = 0; i < Effects.Count; i++)

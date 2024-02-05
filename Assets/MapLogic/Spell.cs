@@ -89,7 +89,7 @@ public class Spell
 
     public bool ItemDisposable = false;
 
-    private static List<Spells> AttackSpells = new List<Spells>(new Spells[]
+    private static HashSet<Spells> AttackSpells = new HashSet<Spells>(new Spells[]
     {
         Spells.Fire_Arrow,
         Spells.Fire_Ball,
@@ -108,9 +108,42 @@ public class Spell
         Spells.Drain_Life
     });
 
+    private static HashSet<Spells> SpellbookSpells = new HashSet<Spells>(new Spells[]
+    {
+        Spells.Fire_Arrow,
+        Spells.Fire_Ball,
+        Spells.Wall_of_Fire,
+        Spells.Protection_from_Fire,
+        Spells.Ice_Missile,
+        Spells.Poison_Cloud,
+        Spells.Blizzard,
+        Spells.Protection_from_Water,
+        Spells.Diamond_Dust,
+        Spells.Wall_of_Earth,
+        Spells.Stone_Curse,
+        Spells.Protection_from_Earth,
+        Spells.Lightning,
+        Spells.Prismatic_Spray,
+        Spells.Invisibility,
+        Spells.Protection_from_Air,
+        Spells.Bless,
+        Spells.Haste,
+        Spells.Heal,
+        Spells.Shield,
+        Spells.Summon,
+        Spells.Control_Spirit,
+        Spells.Drain_Life,
+        Spells.Teleport
+    });
+
     public static bool IsAttackSpell(Spells id)
     {
         return AttackSpells.Contains(id);
+    }
+
+    public static bool IsSpellbookSpell(Spells id)
+    {
+        return SpellbookSpells.Contains(id);
     }
 
     public Spell(int id, MapUnit unit = null)

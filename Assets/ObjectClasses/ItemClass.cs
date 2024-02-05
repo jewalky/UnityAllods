@@ -336,7 +336,7 @@ public class ItemClassLoader
                 // done reading. init auxiliary fields.
                 int materialId = (cls.ItemID & 0xF000) >> 12;
                 int slotId = (cls.ItemID & 0x0F00) >> 8;
-                int classId = (cls.ItemID & 0x0070) >> 5;
+                int classId = (cls.ItemID & 0x00E0) >> 5;
                 int optionId = (cls.ItemID & 0x001F);
 
                 if (materialId == 0 && slotId == 14) // 0x0E##

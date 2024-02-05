@@ -82,7 +82,7 @@ public class ShopStructure : StructureLogic
             for (int i = 0; i < 15; i++)
             {
                 uint flag = 1u << i;
-                uint value = (uint) rules.ItemMaterials;
+                uint value = (uint)rules.ItemMaterials;
                 if ((flag & value) != 0)
                     Materials.Add(TemplateLoader.GetMaterialById(i));
             }
@@ -91,7 +91,7 @@ public class ShopStructure : StructureLogic
             for (int i = 0; i < 7; i++)
             {
                 uint flag = 1u << i;
-                uint value = ((uint) rules.ItemClasses) >> 15;
+                uint value = ((uint)rules.ItemClasses) >> 15;
                 if ((flag & value) != 0)
                     Classes.Add(TemplateLoader.GetClassById(i));
             }
@@ -191,15 +191,17 @@ public class ShopStructure : StructureLogic
             foreach (Templates.TplArmor armor in Types)
             {
                 // class id
-                for (int i = 0; i < 7; i++)
+                for (int i = 0; i < Classes.Count; i++)
                 {
                     // material id
-                    for (int j = 0; j < 15; j++)
+                    for (int j = 0; j < Materials.Count; j++)
                     {
                         // check if allowed
-                        if ((armor.ClassesAllowed[i] & (1 << j)) == 0)
+                        int classIndex = Classes[i].Index;
+                        int materialIndex = Materials[j].Index;
+                        if ((armor.ClassesAllowed[classIndex] & (1 << materialIndex)) == 0)
                             continue;
-                        ushort itemId = (ushort)((i << 5) | (j << 12) | (armor.Slot << 8) | (armor.Index));
+                        ushort itemId = (ushort)((classIndex << 5) | (materialIndex << 12) | (armor.Slot << 8) | (armor.Index));
                         ItemClass cls = ItemClassLoader.GetItemClassById(itemId);
                         if (cls == null)
                             continue;
@@ -223,99 +225,112 @@ public class ShopStructure : StructureLogic
             float manaMax = item.Class.Material.MagicVolume * item.Class.Class.MagicVolume - item.ManaUsage;
             // note: this will not work correctly if SlotsWarrior or SlotsMage values for a slot are not sorted by ascending order.
             //       parameters that appear first will "override" parameters with the same weight appearing later.
-            int lastValue;
-            Templates.TplModifier lastModifier = TemplateLoader.Templates.Modifiers[TemplateLoader.Templates.Modifiers.Count - 1];
-            if ((item.Class.Option.SuitableFor & 1) != 0)
-                lastValue = lastModifier.SlotsFighter[item.Class.Option.Slot - 1];
-            else lastValue = lastModifier.SlotsMage[item.Class.Option.Slot - 1];
-            int randomValue = rnd.Next(0, lastValue) + 1;
-            Templates.TplModifier matchingModifier = null;
-            if (item.Class.Option.SuitableFor == 2 && item.Class.Option.Slot == 1)
+            var allowedModifiers = new Dictionary<int, float>();
+            var allowedSpells = new Dictionary<Spell.Spells, float>();
+            float maxPower;
+
+            for (int i = 1; i < TemplateLoader.Templates.Modifiers.Count; i++)
             {
-                matchingModifier = TemplateLoader.Templates.Modifiers[(int) ItemEffect.Effects.CastSpell];
-            }
-            else
-            {
-                for (int i = 1; i < TemplateLoader.Templates.Modifiers.Count; i++)
+                Templates.TplModifier modifier = TemplateLoader.Templates.Modifiers[i];
+
+                float absoluteMax = manaMax / modifier.ManaCost;
+
+                if (modifier.Index == (int)ItemEffect.Effects.CastSpell)
                 {
-                    Templates.TplModifier prevModifier = TemplateLoader.Templates.Modifiers[i - 1];
-                    Templates.TplModifier modifier = TemplateLoader.Templates.Modifiers[i];
-                    int prevValue;
-                    int value;
+                    // select spell to cast.
+                    // if for fighter, choose between fighter-specific spells.
+                    // if for mage, choose between mage-specific spells.
+                    Spell.Spells[] spells;
                     if ((item.Class.Option.SuitableFor & 1) != 0)
+                        spells = new Spell.Spells[] { Spell.Spells.Stone_Curse, Spell.Spells.Drain_Life };
+                    else spells = new Spell.Spells[] { Spell.Spells.Fire_Arrow, Spell.Spells.Lightning, Spell.Spells.Prismatic_Spray, Spell.Spells.Stone_Curse, Spell.Spells.Drain_Life, Spell.Spells.Ice_Missile, Spell.Spells.Diamond_Dust };
+                    for (int j = 0; j < spells.Length; j++)
                     {
-                        prevValue = prevModifier.SlotsFighter[item.Class.Option.Slot - 1];
-                        value = modifier.SlotsFighter[item.Class.Option.Slot - 1];
+                        // choose random spell
+                        Spell.Spells spell = spells[j];
+                        // calculate max power
+                        Templates.TplSpell spellTemplate = TemplateLoader.Templates.Spells[(int)spell];
+                        maxPower = Mathf.Log(itemPriceMax / (spellTemplate.ScrollCost * 10f)) / Mathf.Log(2);
+                        if (!float.IsNaN(maxPower) && maxPower > 0)
+                            maxPower = (Mathf.Pow(1.2f, maxPower) - 1) * 30;
+                        else continue;
+                        maxPower = Mathf.Min(maxPower, absoluteMax);
+                        maxPower = Mathf.Min(maxPower, 100);
+                        if (maxPower >= 1f)
+                            allowedSpells.Add(spell, maxPower);
                     }
-                    else
-                    {
-                        prevValue = prevModifier.SlotsMage[item.Class.Option.Slot - 1];
-                        value = modifier.SlotsMage[item.Class.Option.Slot - 1];
-                    }
-                    if (prevValue < randomValue && randomValue <= value)
-                    {
-                        matchingModifier = modifier;
-                        break;
-                    }
+
+                    if (allowedSpells.Count > 0)
+                        allowedModifiers.Add(modifier.Index, 1);
+                }
+                else
+                {
+                    maxPower = Mathf.Log(itemPriceMax / (manaMax * 50) - 1) / Mathf.Log(1.5f) * 70f / modifier.ManaCost;
+                    if (float.IsNaN(maxPower)) continue;
+                    maxPower = Mathf.Min(maxPower, absoluteMax);
+                    maxPower = Mathf.Min(maxPower, modifier.AffectMax);
+                    if (maxPower < modifier.AffectMin) continue;
+                    if (maxPower >= 1f)
+                        allowedModifiers.Add(modifier.Index, maxPower);
                 }
             }
-            if (matchingModifier == null)
-            {
-                // parameter not found. weird, but happens.
+
+            if (allowedModifiers.Count == 0)
                 return null;
-            }
-            if ((matchingModifier.UsableBy & item.Class.Option.SuitableFor) == 0)
+
+            int maxRandomValue = 0;
+            var modifiers = new List<Templates.TplModifier>();
+            foreach (var kv in allowedModifiers)
             {
-                // parameter for class not found in the item.
-                return null;
-            }
-            // parameter found. calculate max possible power
-            ItemEffect effect = new ItemEffect();
-            effect.Type1 = (ItemEffect.Effects) matchingModifier.Index;
-            float maxPower;
-            float absoluteMax = manaMax / matchingModifier.ManaCost;
-            if (matchingModifier.Index == (int) ItemEffect.Effects.CastSpell)
-            {
-                // select spell to cast.
-                // if for fighter, choose between fighter-specific spells.
-                // if for mage, choose between mage-specific spells.
-                Spell.Spells[] spells;
+                Templates.TplModifier modifier = TemplateLoader.Templates.Modifiers[kv.Key];
+                modifiers.Add(modifier);
+
+                int value;
                 if ((item.Class.Option.SuitableFor & 1) != 0)
-                    spells = new Spell.Spells[] { Spell.Spells.Stone_Curse, Spell.Spells.Drain_Life };
-                else spells = new Spell.Spells[] { Spell.Spells.Fire_Arrow, Spell.Spells.Lightning, Spell.Spells.Prismatic_Spray, Spell.Spells.Stone_Curse, Spell.Spells.Drain_Life, Spell.Spells.Ice_Missile, Spell.Spells.Diamond_Dust };
-                // choose random spell
-                Spell.Spells spell = spells[rnd.Next(0, spells.Length)];
-                effect.Value1 = (int) spell;
-                // calculate max power
-                Templates.TplSpell spellTemplate = TemplateLoader.Templates.Spells[effect.Value1];
-                maxPower = Mathf.Log(itemPriceMax / (spellTemplate.ScrollCost * 10f)) / Mathf.Log(2);
-                if (!float.IsNaN(maxPower) && maxPower > 0)
-                    maxPower = (Mathf.Pow(1.2f, maxPower) - 1) * 30;
-                else return null;
-                maxPower = Mathf.Min(maxPower, absoluteMax);
-                maxPower = Mathf.Min(maxPower, 100);
-            }
-            else
-            {
-                maxPower = Mathf.Log(itemPriceMax / (manaMax * 50) - 1) / Mathf.Log(1.5f) * 70f / matchingModifier.ManaCost;
-                if (float.IsNaN(maxPower)) return null;
-                maxPower = Mathf.Min(maxPower, absoluteMax);
-                maxPower = Mathf.Min(maxPower, matchingModifier.AffectMax);
-                if (maxPower < matchingModifier.AffectMin) return null;
+                    value = modifier.SlotsFighter[item.Class.Option.Slot - 1];
+                else value = modifier.SlotsMage[item.Class.Option.Slot - 1];
+
+                if (value == 0)
+                    continue;
+
+                maxRandomValue += value;
             }
 
-            if (maxPower <= 1)
+            Templates.TplModifier chosenModifier = null;
+            int randomValue = rnd.Next(0, maxRandomValue);
+            int randomValueAccum = 0;
+            for (int i = 0; i < modifiers.Count; i++)
             {
-                // either some limit hit, or something else
-                return null;
+                int value;
+                if ((item.Class.Option.SuitableFor & 1) != 0)
+                    value = modifiers[i].SlotsFighter[item.Class.Option.Slot - 1];
+                else value = modifiers[i].SlotsMage[item.Class.Option.Slot - 1];
+                if (randomValue >= randomValueAccum && randomValue < randomValueAccum + value)
+                {
+                    chosenModifier = modifiers[i];
+                    break;
+                }
+                randomValueAccum += value;
             }
+
+            if (chosenModifier == null)
+                return null;
+
+            ItemEffect effect = new ItemEffect();
+            effect.Type1 = (ItemEffect.Effects)chosenModifier.Index;
+            maxPower = allowedModifiers[chosenModifier.Index];
 
             // max parameter power found. randomize values
             switch (effect.Type1)
             {
                 case ItemEffect.Effects.CastSpell:
-                    effect.Value2 = rnd.Next(1, (int)maxPower + 1);
-                    break;
+                    {
+                        var spells = new List<Spell.Spells>(allowedSpells.Keys);
+                        effect.Value1 = (int)spells[rnd.Next(0, spells.Count)];
+                        maxPower = allowedSpells[(Spell.Spells)effect.Value1];
+                        effect.Value2 = rnd.Next(1, (int)maxPower + 1);
+                        break;
+                    }
 
                 case ItemEffect.Effects.DamageFire:
                 case ItemEffect.Effects.DamageWater:
@@ -327,10 +342,10 @@ public class ShopStructure : StructureLogic
                     break;
 
                 default:
-                    effect.Value1 = (int) Mathf.Max(matchingModifier.AffectMin, rnd.Next(1, (int)maxPower + 1));
+                    effect.Value1 = (int)Mathf.Max(chosenModifier.AffectMin, rnd.Next(1, (int)maxPower + 1));
                     break;
             }
-           
+
             return effect;
         }
 
@@ -384,45 +399,6 @@ public class ShopStructure : StructureLogic
             // generate special items if any
             if (AllowSpecial)
             {
-                foreach (ItemClass specialItem in SpecialItemClasses)
-                {
-                    // if it's a book, it can be either added or not added (cannot have count).
-                    // this is so in classic game, let's have it like this here for now as well.
-                    if (specialItem.IsScroll)
-                    {
-                        // scroll
-                        // 75% chance
-                        if (rnd.Next(0, 101) < 50)
-                        {
-                            int count = rnd.Next(0, (int)MaxSameType + 1);
-                            if (count > 0)
-                            {
-                                Item item = new Item(specialItem.ItemID);
-                                item.Count = count;
-                                Items.PutItem(Items.Count, item);
-                            }
-                        }
-                    }
-                }
-
-                // randomly generate spell books in the price range
-                // note: ROM2 uses different logic (supposedly hardcoded list of "allowed" spells). to research / fix
-                foreach (var spellTemplate in TemplateLoader.Templates.Spells)
-                {
-                    if (spellTemplate.Name == "")
-                        continue;
-                    if (spellTemplate.BookCost >= PriceMin && spellTemplate.BookCost <= PriceMax && rnd.Next(0, 101) < 50)
-                    {
-                        List<ItemEffect> effects = new List<ItemEffect>();
-                        ItemEffect teachSpell = new ItemEffect();
-                        teachSpell.Type1 = ItemEffect.Effects.TeachSpell;
-                        teachSpell.Value1 = (int)spellTemplate.Index;
-                        effects.Add(teachSpell);
-                        Item item = new Item((ushort)(0x0E00 | spellTemplate.Sphere), effects);
-                        item.Count = 1;
-                        Items.PutItem(Items.Count, item);
-                    }
-                }
                 // generate random amounts of potions
                 Item potion;
                 potion = new Item("Potion Health Regeneration");
@@ -443,6 +419,57 @@ public class ShopStructure : StructureLogic
                 potion = new Item("Potion Big Mana");
                 potion.Count = rnd.Next(0, 51) + 50;
                 Items.PutItem(Items.Count, potion);
+                
+                // generate scrolls
+                foreach (ItemClass specialItem in SpecialItemClasses)
+                {
+                    // if it's a book, it can be either added or not added (cannot have count).
+                    // this is so in classic game, let's have it like this here for now as well.
+                    if (specialItem.IsScroll)
+                    {
+                        // scroll
+                        // 75% chance
+                        if (rnd.Next(0, 101) < 50)
+                        {
+                            int count = rnd.Next(0, (int)(MaxSameType * MaxItems) + 1);
+                            if (count > 0)
+                            {
+                                Item item = new Item(specialItem.ItemID);
+                                item.Count = count;
+                                Items.PutItem(Items.Count, item);
+                            }
+                        }
+                    }
+                }
+
+                // randomly generate spell books in the price range
+                // note: ROM2 uses different logic (supposedly hardcoded list of "allowed" spells). to research / fix
+                foreach (var spellTemplate in TemplateLoader.Templates.Spells)
+                {
+                    if (!Spell.IsSpellbookSpell((Spell.Spells)spellTemplate.Index))
+                        continue;
+                    if (spellTemplate.BookCost >= PriceMin && spellTemplate.BookCost <= PriceMax && rnd.Next(0, 101) < 50)
+                    {
+                        int bookMapping;
+                        switch (spellTemplate.Sphere)
+                        {
+                            case 1: bookMapping = 3; break;
+                            case 2: bookMapping = 2; break;
+                            case 3: bookMapping = 1; break;
+                            case 4: bookMapping = 4; break;
+                            default:  case 5: bookMapping = 5; break;
+                        }
+                        List<ItemEffect> effects = new List<ItemEffect>();
+                        ItemEffect teachSpell = new ItemEffect();
+                        teachSpell.Type1 = ItemEffect.Effects.TeachSpell;
+                        teachSpell.Value1 = spellTemplate.Index;
+                        effects.Add(teachSpell);
+                        Item item = new Item((ushort)(0x0E00 | bookMapping), effects);
+                        item.Count = 1;
+                        item.Price = spellTemplate.BookCost;
+                        Items.PutItem(Items.Count, item);
+                    }
+                }
             }
 
             if (ItemClasses.Count > 0)
@@ -470,6 +497,11 @@ public class ShopStructure : StructureLogic
                     if (rnd.Next(0, 101) < magicalChance)
                     {
                         GenerateEffects(item);
+                        if (item.MagicEffects.Count == 0 && magicalChance == 100)
+                        {
+                            discardedItems++;
+                            continue;
+                        }
                     }
                     else
                     {

@@ -78,6 +78,40 @@ namespace Spells
         }
     }
 
+    [SpellProcId(Spell.Spells.Bless)]
+    public class SpellProcBless: SpellProc
+    {
+        public SpellProcBless(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (TargetUnit == null)
+                return false;
+
+            SpellEffects.Effect eff = new SpellEffects.Bless((int)(MapLogic.TICRATE * Spell.GetDuration()), Spell.GetBlessing());
+            TargetUnit.AddSpellEffects(eff);
+            return false;
+        }
+    }
+
+    [SpellProcId(Spell.Spells.Curse)]
+    public class SpellProcCurse: SpellProc
+    {
+        public SpellProcCurse(Spell spell, int tgX, int tgY, MapUnit tgUnit) : base(spell, tgX, tgY, tgUnit) { }
+
+        public override bool Process()
+        {
+            if (TargetUnit == null)
+                return false;
+
+            // 0 damage causes war status but does not do damage
+            TargetUnit.TakeDamage(DamageFlags.Astral, Spell.User, 0);
+            SpellEffects.Effect eff = new SpellEffects.Curse((int)(MapLogic.TICRATE * Spell.GetDuration()), Spell.GetBlessing());
+            TargetUnit.AddSpellEffects(eff);
+            return false;
+        }
+    }
+
     [SpellProcId(Spell.Spells.Control_Spirit)]
     public class SpellProcControlSpirit : SpellProc
     {

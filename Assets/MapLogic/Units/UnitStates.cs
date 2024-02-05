@@ -150,7 +150,17 @@ public class AttackState : IUnitState
 
             //
             //Debug.LogFormat("ID {0} ATTACKING", Unit.ID);
-            int damage = Random.Range(Unit.Stats.DamageMin, Unit.Stats.DamageMax);
+            int damage;
+            // apply bless and curse.
+            // bless mechanic: 0-100 chance to always get max damage
+            // curse mechanic: 0-100 chance to always get min damage
+            bool isBlessed = Random.Range(0, 101) < Unit.Stats.Bless;
+            bool isCursed = Random.Range(0, 101) < Unit.Stats.Curse;
+
+            if (isBlessed) damage = Unit.Stats.DamageMax;
+            else if (isCursed) damage = Unit.Stats.DamageMin;
+            else damage = Random.Range(Unit.Stats.DamageMin, Unit.Stats.DamageMax + 1);
+
             DamageFlags df = Unit.GetDamageType();
             // we need to compare Option to set damage flags properly here
             Unit.AddActions(new AttackAction(Unit, TargetUnit, df, damage));

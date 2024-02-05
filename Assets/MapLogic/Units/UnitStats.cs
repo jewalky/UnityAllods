@@ -24,7 +24,8 @@ public class UnitStats
         MageSkill           = 0x0020, // fire/water/air/earth/astral
         FighterSkill        = 0x0040, // blade/axe/bludgeon/pike/shooting
         ProtPhysical        = 0x0080,
-        ProtElemental       = 0x0100
+        ProtElemental       = 0x0100,
+        Bless               = 0x0200,
     }
 
     private class ModFlags : Attribute
@@ -109,6 +110,8 @@ public class UnitStats
     [ModFlags(ModifiedFlags.ProtPhysical)][ProtoMember(53)] public byte ProtectionBludgeon;
     [ModFlags(ModifiedFlags.ProtPhysical)][ProtoMember(54)] public byte ProtectionPike;
     [ModFlags(ModifiedFlags.ProtPhysical)][ProtoMember(55)] public byte ProtectionShooting;
+    [ModFlags(ModifiedFlags.Bless)] [ProtoMember(56)] public byte Bless;
+    [ModFlags(ModifiedFlags.Bless)] [ProtoMember(57)] public byte Curse;
 
     public UnitStats()
     {

@@ -1188,6 +1188,8 @@ class MapLogic
             unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Scroll Light-"));
         for (int i = 0; i < 50; i++)
             unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Scroll Darkness"));
+        for (int i = 0; i < 50; i++)
+            unit.ItemsPack.PutItem(unit.ItemsPack.Count, new Item("Scroll Curse"));
 
         // add money for testing
         unit.Player.Money = 12000000000;

@@ -526,8 +526,11 @@ public class ShopStructure : StructureLogic
                     if (suitableForGroupA < suitableForGroupB) return -1;
                     if (suitableForGroupA > suitableForGroupB) return 1;
                     //
-                    if (a.Class.Option.AttackType < b.Class.Option.AttackType) return -1;
-                    if (a.Class.Option.AttackType > b.Class.Option.AttackType) return 1;
+                    if (suitableForGroupA == suitableForGroupB && suitableForGroupA == 1)
+                    {
+                        if (a.Class.Option.AttackType < b.Class.Option.AttackType) return -1;
+                        if (a.Class.Option.AttackType > b.Class.Option.AttackType) return 1;
+                    }
                     //
                     if (a.Class.Option.Slot < b.Class.Option.Slot) return -1;
                     if (a.Class.Option.Slot > b.Class.Option.Slot) return 1;

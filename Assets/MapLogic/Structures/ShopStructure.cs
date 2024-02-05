@@ -27,26 +27,6 @@ public class ShopStructure : StructureLogic
 
         public bool Empty {  get { return (!AllowCommon && !AllowSpecial && !AllowMagic) || MaxItems <= 0 || MaxSameType <= 0 || PriceMax <= 0 || PriceMin > PriceMax; } }
 
-
-        private bool CheckArmorShapeAllowed(Templates.TplArmor armor, AllodsMap.AlmShop.AlmShopShelf rules)
-        {
-            for (int i = 0; i < 7; i++)
-            {
-                uint classFlag = 1u << (i + 15);
-                for (int j = 0; j < 15; j++)
-                {
-                    uint materialFlag = 1u << j;
-                    // armor itself is not allowed
-                    if ((armor.ClassesAllowed[i] & materialFlag) == 0)
-                        continue;
-                    // not allowed in shop
-                    if (((uint)rules.ItemMaterials & materialFlag) == materialFlag &&
-                        ((uint)rules.ItemClasses & classFlag) == classFlag) return true;
-                }
-            }
-            return false;
-        }
-
         public Shelf()
         {
             Items = new ItemPack();
@@ -62,11 +42,6 @@ public class ShopStructure : StructureLogic
             MaxItems = rules.MaxItems;
             MaxSameType = rules.MaxSameItems;
 
-            // get list of classes supported for the item.
-            var Materials = new List<Templates.TplMaterial>();
-            var Classes = new List<Templates.TplClass>();
-            var Types = new List<Templates.TplArmor>();
-
             //
             ItemClasses = new List<ItemClass>();
             SpecialItemClasses = new List<ItemClass>();
@@ -77,145 +52,147 @@ public class ShopStructure : StructureLogic
 
             AllowSpecial = rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.Other);
 
-            // this currently abuses the fact that there is a hardcoded list of materials.
-            // will need to be changed if we extend it.
-            for (int i = 0; i < 15; i++)
+            if (MaxItems > 0 && MaxSameType > 0)
             {
-                uint flag = 1u << i;
-                uint value = (uint)rules.ItemMaterials;
-                if ((flag & value) != 0)
-                    Materials.Add(TemplateLoader.GetMaterialById(i));
-            }
+                // get list of classes supported for the item.
+                var Materials = new List<Templates.TplMaterial>();
+                var Classes = new List<Templates.TplClass>();
+                var Types = new List<Templates.TplArmor>();
 
-            // same goes for classes.
-            for (int i = 0; i < 7; i++)
-            {
-                uint flag = 1u << i;
-                uint value = ((uint)rules.ItemClasses) >> 15;
-                if ((flag & value) != 0)
-                    Classes.Add(TemplateLoader.GetClassById(i));
-            }
-
-            // types are a bit more complicated, because there is no direct mapping for this.
-            // we use "slot"
-            // note that there is also separation between mage and warrior armor here.
-
-            // add weapons
-            if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.Weapon))
-            {
-                foreach (Templates.TplArmor weapon in TemplateLoader.Templates.Weapons)
+                // this currently abuses the fact that there is a hardcoded list of materials.
+                // will need to be changed if we extend it.
+                for (int i = 0; i < 15; i++)
                 {
-                    if (!CheckArmorShapeAllowed(weapon, rules))
-                        continue;
-                    if (weapon.SuitableFor == 1)
-                        Types.Add(weapon);
-                }
-            }
-            
-            if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.Wands))
-            {
-                foreach (Templates.TplArmor weapon in TemplateLoader.Templates.Weapons)
-                {
-                    if (!CheckArmorShapeAllowed(weapon, rules))
-                        continue;
-                    if (weapon.SuitableFor == 2)
-                        Types.Add(weapon);
-                }
-            }
-
-            // add armor
-            if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.Armor))
-            {
-                foreach (Templates.TplArmor armor in TemplateLoader.Templates.Armor)
-                {
-                    if (!CheckArmorShapeAllowed(armor, rules))
-                        continue;
-                    if (armor.SuitableFor == 1)
-                        Types.Add(armor);
-                }
-            }
-
-            if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.ArmorMage))
-            {
-                foreach (Templates.TplArmor armor in TemplateLoader.Templates.Armor)
-                {
-                    if (!CheckArmorShapeAllowed(armor, rules))
-                        continue;
-                    if (armor.SuitableFor == 2)
-                        Types.Add(armor);
-                }
-            }
-
-            // add armor suitable for everyone (e.g. rings)
-            if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.Armor) || rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.ArmorMage))
-            {
-                foreach (Templates.TplArmor armor in TemplateLoader.Templates.Armor)
-                {
-                    if (!CheckArmorShapeAllowed(armor, rules))
-                        continue;
-                    if (armor.SuitableFor == 3)
-                        Types.Add(armor);
-                }
-            }
-
-            // add shields
-            if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.Shield))
-            {
-                foreach (Templates.TplArmor shield in TemplateLoader.Templates.Shields)
-                {
-                    if (!CheckArmorShapeAllowed(shield, rules))
-                        continue;
-                    Types.Add(shield);
-                }
-            }
-
-            // add special (other)
-            // copy the list (we may want to skip some items later)
-            if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.Other))
-            {
-                // generate id for scroll.
-                for (ushort i = 6; i <= 0x3F; i++)
-                {
-                    ushort itemId = (ushort) (0x0E00 | i);
-                    ItemClass cls = ItemClassLoader.GetItemClassById(itemId);
-                    if (cls == null)
-                        continue;
-                    if (cls.Price < PriceMin || cls.Price > PriceMax)
-                        continue;
-                    SpecialItemClasses.Add(cls);
-                }
-            }
-
-            // now that we have all the allowed combinations, let's populate items!
-            // note that not all possible IDs are valid -- we need to check this
-            foreach (Templates.TplArmor armor in Types)
-            {
-                // class id
-                for (int i = 0; i < Classes.Count; i++)
-                {
-                    // material id
-                    for (int j = 0; j < Materials.Count; j++)
+                    uint flag = 1u << i;
+                    uint value = (uint)rules.ItemMaterials;
+                    if ((flag & value) != 0)
                     {
-                        // check if allowed
-                        int classIndex = Classes[i].Index;
-                        int materialIndex = Materials[j].Index;
-                        if ((armor.ClassesAllowed[classIndex] & (1 << materialIndex)) == 0)
-                            continue;
-                        ushort itemId = (ushort)((classIndex << 5) | (materialIndex << 12) | (armor.Slot << 8) | (armor.Index));
+                        int materialId = i;
+                        if (i >= 13) materialId++;
+                        Materials.Add(TemplateLoader.GetMaterialById(materialId));
+                    }
+                }
+
+                // same goes for classes.
+                for (int i = 0; i < 7; i++)
+                {
+                    uint flag = 1u << i;
+                    uint value = ((uint)rules.ItemClasses) >> 15;
+                    if ((flag & value) != 0)
+                        Classes.Add(TemplateLoader.GetClassById(i));
+                }
+
+                // types are a bit more complicated, because there is no direct mapping for this.
+                // we use "slot"
+                // note that there is also separation between mage and warrior armor here.
+
+                // add weapons
+                if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.Weapon))
+                {
+                    foreach (Templates.TplArmor weapon in TemplateLoader.Templates.Weapons)
+                    {
+                        if (weapon.SuitableFor == 1)
+                            Types.Add(weapon);
+                    }
+                }
+
+                if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.Wands))
+                {
+                    foreach (Templates.TplArmor weapon in TemplateLoader.Templates.Weapons)
+                    {
+                        if (weapon.SuitableFor == 2)
+                            Types.Add(weapon);
+                    }
+                }
+
+                // add armor
+                if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.Armor))
+                {
+                    foreach (Templates.TplArmor armor in TemplateLoader.Templates.Armor)
+                    {
+                        if (armor.SuitableFor == 1)
+                            Types.Add(armor);
+                    }
+                }
+
+                if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.ArmorMage))
+                {
+                    foreach (Templates.TplArmor armor in TemplateLoader.Templates.Armor)
+                    {
+                        if (armor.SuitableFor == 2)
+                            Types.Add(armor);
+                    }
+                }
+
+                // add armor suitable for everyone (e.g. rings)
+                if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.Armor) || rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.ArmorMage))
+                {
+                    foreach (Templates.TplArmor armor in TemplateLoader.Templates.Armor)
+                    {
+                        if (armor.SuitableFor == 3)
+                            Types.Add(armor);
+                    }
+                }
+
+                // add shields
+                if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.Shield))
+                {
+                    foreach (Templates.TplArmor shield in TemplateLoader.Templates.Shields)
+                        Types.Add(shield);
+                }
+
+                // add special (other)
+                // copy the list (we may want to skip some items later)
+                if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.Other))
+                {
+                    // generate id for scroll.
+                    for (ushort i = 6; i <= 0x3F; i++)
+                    {
+                        ushort itemId = (ushort)(0x0E00 | i);
                         ItemClass cls = ItemClassLoader.GetItemClassById(itemId);
                         if (cls == null)
                             continue;
-                        if (cls.Price > PriceMax || (!AllowMagic && cls.Price < PriceMin))
+                        if (cls.Price < PriceMin || cls.Price > PriceMax)
                             continue;
-                        ItemClasses.Add(cls);
+                        SpecialItemClasses.Add(cls);
+                    }
+                }
+
+                // now that we have all the allowed combinations, let's populate items!
+                // note that not all possible IDs are valid -- we need to check this
+                foreach (Templates.TplArmor armor in Types)
+                {
+                    // class id
+                    for (int i = 0; i < Classes.Count; i++)
+                    {
+                        // material id
+                        for (int j = 0; j < Materials.Count; j++)
+                        {
+                            // check if allowed
+                            int classIndex = Classes[i].Index;
+                            int materialIndex = Materials[j].Index;
+                            if ((armor.ClassesAllowed[classIndex] & (1 << materialIndex)) == 0)
+                                continue;
+                            ushort itemId = (ushort)((classIndex << 5) | (materialIndex << 12) | (armor.Slot << 8) | (armor.Index));
+                            ItemClass cls = ItemClassLoader.GetItemClassById(itemId);
+                            if (cls == null)
+                                continue;
+                            if (cls.Price > PriceMax || (!AllowMagic && cls.Price < PriceMin))
+                                continue;
+                            ItemClasses.Add(cls);
+                        }
                     }
                 }
             }
 
             Items = new ItemPack();
             Items.AutoCompact = false;
-            GenerateItems();
 
+            if (MaxItems > 0 && MaxSameType > 0)
+            {
+                GenerateItems();
+                CompactAndSortItems();
+            }
         }
 
         private ItemEffect GenerateEffect(Item item)
@@ -521,6 +498,46 @@ public class ShopStructure : StructureLogic
         {
             return false;
         }
+
+        public void CompactAndSortItems()
+        {
+            Items.Compact();
+            Items.Sort((Item a, Item b) =>
+            {
+                //
+                if (a.Class.IsPotion && !b.Class.IsPotion) return -1;
+                if (!a.Class.IsPotion && b.Class.IsPotion) return 1;
+                //
+                if (a.Class.IsScroll && !b.Class.IsScroll) return -1;
+                if (!a.Class.IsScroll && b.Class.IsScroll) return 1;
+                //
+                if (a.Class.IsBook && !b.Class.IsBook) return -1;
+                if (!a.Class.IsBook && b.Class.IsBook) return 1;
+                //
+                if (a.Class.Option != null && b.Class.Option != null)
+                {
+                    //
+                    int suitableForGroupA = a.Class.Option.SuitableFor;
+                    if (suitableForGroupA > 1) // 1, 2, 3 -> 1, 3, 2
+                        suitableForGroupA = 5 - suitableForGroupA;
+                    int suitableForGroupB = b.Class.Option.SuitableFor;
+                    if (suitableForGroupB > 1)
+                        suitableForGroupB = 5 - suitableForGroupB;
+                    if (suitableForGroupA < suitableForGroupB) return -1;
+                    if (suitableForGroupA > suitableForGroupB) return 1;
+                    //
+                    if (a.Class.Option.AttackType < b.Class.Option.AttackType) return -1;
+                    if (a.Class.Option.AttackType > b.Class.Option.AttackType) return 1;
+                    //
+                    if (a.Class.Option.Slot < b.Class.Option.Slot) return -1;
+                    if (a.Class.Option.Slot > b.Class.Option.Slot) return 1;
+                }
+                //
+                if (a.Price < b.Price) return -1;
+                if (a.Price > b.Price) return 1;
+                return 0;
+            });
+        }
     }
 
     public Shelf[] Shelves = new Shelf[4];
@@ -574,7 +591,7 @@ public class ShopStructure : StructureLogic
         if (ShopIsEmpty)
         {
             for (int i = 0; i < Shelves.Length; i++)
-                Shelves[i].Items.Compact();
+                Shelves[i].CompactAndSortItems();
         }
         Server.NotifyLeaveStructure(unit);
         if (!NetworkManager.IsServer)

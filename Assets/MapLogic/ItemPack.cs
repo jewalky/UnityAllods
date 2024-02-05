@@ -233,4 +233,9 @@ public class ItemPack : IEnumerable<Item>
                 ItemList[i].Index = i;
         }
     }
+
+    public void Sort(Comparison<Item> comparer)
+    {
+        ItemList.Sort(comparer);
+    }
 }

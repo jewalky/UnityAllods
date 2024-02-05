@@ -259,21 +259,21 @@ public class AllodsMap
         [Flags]
         public enum AlmShopItemMaterial
         {
-            Iron = 0x00000001,
-            Bronze = 0x00000002,
-            Steel = 0x00000004,
-            Silver = 0x00000008,
-            Gold = 0x00000010,
-            Mithrill = 0x00000020,
-            Adamantium = 0x00000040,
-            Meteoric = 0x00000080,
-            Wood = 0x00000100,
-            MagicWood = 0x00000200,
-            Leather = 0x00000400,
+            Iron        = 0x00000001,
+            Bronze      = 0x00000002,
+            Steel       = 0x00000004,
+            Silver      = 0x00000008,
+            Gold        = 0x00000010,
+            Mithrill    = 0x00000020,
+            Adamantium  = 0x00000040,
+            Meteoric    = 0x00000080,
+            Wood        = 0x00000100,
+            MagicWood   = 0x00000200,
+            Leather     = 0x00000400,
             HardLeather = 0x00000800,
             DragonLeather = 0x00001000,
-            Crystal = 0x00002000,
-            None	 = 0x00004000
+            Crystal     = 0x00002000,
+            None	    = 0x00004000
         }
 
         [Flags]
@@ -297,13 +297,13 @@ public class AllodsMap
         [Flags]
         public enum AlmShopItemClass
         {
-            Common = 0x00008000,
-            Uncommon = 0x00010000,
-            Rare = 0x00020000,
-            VeryRare = 0x00040000,
-            Elven = 0x00080000,
-            Bad = 0x00100000,
-            Good = 0x00200000,
+            Common      = 0x00008000,
+            Uncommon    = 0x00010000,
+            Rare        = 0x00020000,
+            VeryRare    = 0x00040000,
+            Elven       = 0x00080000,
+            Bad         = 0x00100000,
+            Good        = 0x00200000,
         }
 
         public class AlmShopShelf

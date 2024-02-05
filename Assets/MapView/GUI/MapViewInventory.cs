@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 using UnityEngine;
 
 public class MapViewInventory : MonoBehaviour, IUiEventProcessor
@@ -19,6 +20,7 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
     private static Texture2D InvArrow3 = null;
     private static Texture2D InvArrow4 = null;
 
+    private Stopwatch LastScroll = null;
     public int ItemCount = 0;
 
     private void SendItemMoveCommand(Item item, int index)
@@ -61,6 +63,8 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
 
     public void Awake()
     {
+        LastScroll = new Stopwatch();
+
         UiManager.Instance.Subscribe(this);
         View = Utils.CreateObjectWithScript<ItemView>();
         View.transform.parent = transform;
@@ -176,16 +180,6 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
             {
                 if (ArrowClicked != 0)
                 {
-                    if (ArrowClicked == 1) // left arrow
-                    {
-                        if (View.Scroll > 0)
-                            View.Scroll--;
-                    }
-                    else if (ArrowClicked == 2) // right arrow
-                    {
-                        if (View.Scroll < View.GetVisualPackCount() - View.InvWidth)
-                            View.Scroll++;
-                    }
                     ArrowClicked = 0;
                     UpdateMaterials();
                 }
@@ -233,6 +227,24 @@ public class MapViewInventory : MonoBehaviour, IUiEventProcessor
             View.Pack.Parent != null && View.Pack.Parent.Player == MapLogic.Instance.ConsolePlayer)
         {
             View.AutoDropTarget = (IUiItemAutoDropper)View.Pack.Parent.GameScript;
+        }
+
+        if (ArrowClicked != 0)
+        {
+            if (!LastScroll.IsRunning || LastScroll.ElapsedMilliseconds > 100)
+            {
+                if (ArrowClicked == 1) // left arrow
+                {
+                    if (View.Scroll > 0)
+                        View.Scroll--;
+                }
+                else if (ArrowClicked == 2) // right arrow
+                {
+                    if (View.Scroll < View.GetVisualPackCount() - View.InvWidth)
+                        View.Scroll++;
+                }
+                LastScroll.Restart();
+            }
         }
     }
 

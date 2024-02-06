@@ -682,14 +682,11 @@ public class Item
             }
             if (NativeEffects[i].Type1 == ItemEffect.Effects.DamageMax)
             {
-                if (cachedNative == null)
-                {
-                    cachedNative = NativeEffects[i].Copy();
-                    cachedNative.Value1 = 0;
-                }
+                int minDmg = cachedNative.Value1;
                 int maxDmg = cachedNative.Value1 + NativeEffects[i].Value1;
-                effects_str.Add(cachedNative.ToVisualString(Parent != null ? Parent.Parent : null, this) + '-' + maxDmg.ToString());
-            } else
+                effects_str.Add(string.Format("{0} {1}-{2}", Locale.Stats[(int)ItemEffect.Effects.Damage], minDmg, maxDmg));
+            }
+            else
             {
                 effects_str.Add(NativeEffects[i].ToVisualString(Parent != null ? Parent.Parent : null, this));
             }
@@ -707,11 +704,6 @@ public class Item
                 if (MagicEffects[i].Type1 == ItemEffect.Effects.Price ||
                     MagicEffects[i].Type1 == ItemEffect.Effects.CastSpell ||
                     MagicEffects[i].Type1 == ItemEffect.Effects.TeachSpell) continue;
-                if (MagicEffects[i].Type1 == ItemEffect.Effects.DamageMin)
-                {
-                    cachedMagic = MagicEffects[i];
-                    continue;
-                }
 
                 if (!bmagic)
                 {
@@ -719,20 +711,8 @@ public class Item
                     effects_str.Add(Locale.Main[189]); // Magic:
                     bmagic = true;
                 }
-                if (MagicEffects[i].Type1 == ItemEffect.Effects.DamageMax)
-                {
-                    if (cachedNative == null)
-                    {
-                        cachedMagic = MagicEffects[i].Copy();
-                        cachedMagic.Value1 = 0;
-                    }
-                    int maxDmg = cachedMagic.Value1 + MagicEffects[i].Value1;
-                    effects_str.Add((cachedMagic).ToVisualString(Parent != null ? Parent.Parent : null, this) + '-' + maxDmg.ToString());
-                }
-                else
-                {
-                    effects_str.Add(MagicEffects[i].ToVisualString(Parent != null ? Parent.Parent : null, this));
-                }
+
+                effects_str.Add(MagicEffects[i].ToVisualString(Parent != null ? Parent.Parent : null, this));
                 cachedMagic = null;
             }
         }

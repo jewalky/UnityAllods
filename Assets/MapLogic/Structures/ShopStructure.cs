@@ -10,6 +10,9 @@ public class ShopStructure : StructureLogic
     {
         public ItemPack Items { get; private set; }
 
+        //
+        Random Rand = new Random();
+
         // this contains settings for allowed items and amounts
         private List<ItemClass> ItemClasses;
         private List<ItemClass> SpecialItemClasses;
@@ -197,12 +200,11 @@ public class ShopStructure : StructureLogic
 
         private ItemEffect GenerateEffect(Item item)
         {
-            Random rnd = new Random();
             float itemPriceMax = 2 * PriceMax - item.Class.Price;
             float manaMax = item.Class.Material.MagicVolume * item.Class.Class.MagicVolume - item.ManaUsage;
             // note: this will not work correctly if SlotsWarrior or SlotsMage values for a slot are not sorted by ascending order.
             //       parameters that appear first will "override" parameters with the same weight appearing later.
-            var allowedModifiers = new Dictionary<int, float>();
+            var allowedModifiers = new Dictionary<int, (int, float)>();
             var allowedSpells = new Dictionary<Spell.Spells, float>();
             float maxPower;
 
@@ -210,11 +212,30 @@ public class ShopStructure : StructureLogic
             {
                 Templates.TplModifier modifier = TemplateLoader.Templates.Modifiers[i];
 
+                int value;
+                int prevValue;
+                if ((item.Class.Option.SuitableFor & 1) != 0)
+                {
+                    value = modifier.SlotsFighter[item.Class.Option.Slot - 1];
+                    prevValue = TemplateLoader.Templates.Modifiers[i-1].SlotsFighter[item.Class.Option.Slot - 1];
+                }
+                else
+                {
+                    value = modifier.SlotsMage[item.Class.Option.Slot - 1];
+                    prevValue = TemplateLoader.Templates.Modifiers[i - 1].SlotsMage[item.Class.Option.Slot - 1];
+                }
+                // the game stores random chance as difference from previous item (i.e.: if body has 20, and mind has 30, this means mind has chance of '10')
+                // we convert this to a plain value because it's needed in subsequent calculations.
+                // but not sub-zero (this may happen if some value is blocked from appearing on purpose)
+                int valueDifference = Math.Max(0, value - prevValue);
+
                 float absoluteMax = manaMax / modifier.ManaCost;
 
                 if (modifier.Index == (int)ItemEffect.Effects.CastSpell)
                 {
                     if (item.Class.Option.Slot != 1)
+                        continue;
+                    if (item.MagicEffects.Count > 0 && item.MagicEffects[0].Type1 == ItemEffect.Effects.CastSpell)
                         continue;
                     // select spell to cast.
                     // if for fighter, choose between fighter-specific spells.
@@ -240,7 +261,7 @@ public class ShopStructure : StructureLogic
                     }
 
                     if (allowedSpells.Count > 0)
-                        allowedModifiers.Add(modifier.Index, 1);
+                        allowedModifiers.Add(modifier.Index, (valueDifference, 1));
                 }
                 else
                 {
@@ -252,7 +273,7 @@ public class ShopStructure : StructureLogic
                     maxPower = Mathf.Min(maxPower, modifier.AffectMax);
                     if (maxPower < modifier.AffectMin) continue;
                     if (maxPower >= 1f)
-                        allowedModifiers.Add(modifier.Index, maxPower);
+                        allowedModifiers.Add(modifier.Index, (valueDifference, maxPower));
                 }
             }
 
@@ -266,10 +287,7 @@ public class ShopStructure : StructureLogic
                 Templates.TplModifier modifier = TemplateLoader.Templates.Modifiers[kv.Key];
                 modifiers.Add(modifier);
 
-                int value;
-                if ((item.Class.Option.SuitableFor & 1) != 0)
-                    value = modifier.SlotsFighter[item.Class.Option.Slot - 1];
-                else value = modifier.SlotsMage[item.Class.Option.Slot - 1];
+                int value = kv.Value.Item1;
 
                 if (value == 0)
                     continue;
@@ -278,14 +296,11 @@ public class ShopStructure : StructureLogic
             }
 
             Templates.TplModifier chosenModifier = null;
-            int randomValue = rnd.Next(0, maxRandomValue);
+            int randomValue = Rand.Next(0, maxRandomValue);
             int randomValueAccum = 0;
             for (int i = 0; i < modifiers.Count; i++)
             {
-                int value;
-                if ((item.Class.Option.SuitableFor & 1) != 0)
-                    value = modifiers[i].SlotsFighter[item.Class.Option.Slot - 1];
-                else value = modifiers[i].SlotsMage[item.Class.Option.Slot - 1];
+                int value = allowedModifiers[modifiers[i].Index].Item1;
                 if (randomValue >= randomValueAccum && randomValue < randomValueAccum + value)
                 {
                     chosenModifier = modifiers[i];
@@ -299,7 +314,7 @@ public class ShopStructure : StructureLogic
 
             ItemEffect effect = new ItemEffect();
             effect.Type1 = (ItemEffect.Effects)chosenModifier.Index;
-            maxPower = allowedModifiers[chosenModifier.Index];
+            maxPower = allowedModifiers[chosenModifier.Index].Item2;
 
             // max parameter power found. randomize values
             switch (effect.Type1)
@@ -307,9 +322,9 @@ public class ShopStructure : StructureLogic
                 case ItemEffect.Effects.CastSpell:
                     {
                         var spells = new List<Spell.Spells>(allowedSpells.Keys);
-                        effect.Value1 = (int)spells[rnd.Next(0, spells.Count)];
+                        effect.Value1 = (int)spells[Rand.Next(0, spells.Count)];
                         maxPower = allowedSpells[(Spell.Spells)effect.Value1];
-                        effect.Value2 = rnd.Next(1, (int)maxPower + 1);
+                        effect.Value2 = Rand.Next(1, (int)maxPower + 1);
                         break;
                     }
 
@@ -318,12 +333,12 @@ public class ShopStructure : StructureLogic
                 case ItemEffect.Effects.DamageAir:
                 case ItemEffect.Effects.DamageEarth:
                 case ItemEffect.Effects.DamageAstral:
-                    effect.Value1 = rnd.Next(1, (int)maxPower + 1);
-                    effect.Value2 = rnd.Next(1, (int)(maxPower / 2) + 1);
+                    effect.Value1 = Rand.Next(1, (int)maxPower + 1);
+                    effect.Value2 = Rand.Next(1, (int)(maxPower / 2) + 1);
                     break;
 
                 default:
-                    effect.Value1 = (int)Mathf.Max(chosenModifier.AffectMin, rnd.Next(1, (int)maxPower + 1));
+                    effect.Value1 = (int)Mathf.Max(chosenModifier.AffectMin, Rand.Next(1, (int)maxPower + 1));
                     break;
             }
 
@@ -339,8 +354,6 @@ public class ShopStructure : StructureLogic
             {
                 item.MagicEffects.Add(effect);
                 item.UpdateItem();
-                if (effect.Type1 == ItemEffect.Effects.CastSpell)
-                    return;
             }
             if (rnd.Next(0, 101) >= 50)
             {
@@ -350,8 +363,6 @@ public class ShopStructure : StructureLogic
             effect = GenerateEffect(item);
             if (effect != null)
             {
-                if (effect.Type1 == ItemEffect.Effects.CastSpell)
-                    return;
                 item.MagicEffects.Add(effect);
                 item.UpdateItem();
             }
@@ -363,8 +374,6 @@ public class ShopStructure : StructureLogic
             effect = GenerateEffect(item);
             if (effect != null)
             {
-                if (effect.Type1 == ItemEffect.Effects.CastSpell)
-                    return;
                 item.MagicEffects.Add(effect);
                 item.UpdateItem();
             }
@@ -478,17 +487,12 @@ public class ShopStructure : StructureLogic
                     if (rnd.Next(0, 101) < magicalChance)
                     {
                         GenerateEffects(item);
-                        if (item.MagicEffects.Count == 0 && magicalChance == 100)
-                        {
-                            discardedItems++;
-                            continue;
-                        }
                     }
                     else
                     {
                         item.Count += rnd.Next(0, (int)MaxSameType + 1);
                     }
-                    if (item.Price < PriceMin || item.Price > PriceMax)
+                    if (item.Price < PriceMin || item.Price > PriceMax || (item.MagicEffects.Count == 0 && magicalChance == 100))
                     {
                         discardedItems++;
                         continue;

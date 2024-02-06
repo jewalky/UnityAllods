@@ -118,7 +118,8 @@ public class ShopStructure : StructureLogic
                     }
                 }
 
-                if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.ArmorMage))
+                // mage armor is a compatibility hack. according to the user docs, mage armor flag is unused by the original game.
+                if (rules.ItemTypes.HasFlag(AllodsMap.AlmShop.AlmShopItemType.ArmorMage | AllodsMap.AlmShop.AlmShopItemType.Armor))
                 {
                     foreach (Templates.TplArmor armor in TemplateLoader.Templates.Armor)
                     {

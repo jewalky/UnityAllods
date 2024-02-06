@@ -214,6 +214,8 @@ public class ShopStructure : StructureLogic
 
                 if (modifier.Index == (int)ItemEffect.Effects.CastSpell)
                 {
+                    if (item.Class.Option.Slot != 1)
+                        continue;
                     // select spell to cast.
                     // if for fighter, choose between fighter-specific spells.
                     // if for mage, choose between mage-specific spells.
@@ -242,6 +244,8 @@ public class ShopStructure : StructureLogic
                 }
                 else
                 {
+                    if ((item.Class.Option.Name == "Staff" || item.Class.Option.Name == "Shaman Staff") && item.MagicEffects.Count == 0)
+                        continue;
                     maxPower = Mathf.Log(itemPriceMax / (manaMax * 50) - 1) / Mathf.Log(1.5f) * 70f / modifier.ManaCost;
                     if (float.IsNaN(maxPower)) continue;
                     maxPower = Mathf.Min(maxPower, absoluteMax);

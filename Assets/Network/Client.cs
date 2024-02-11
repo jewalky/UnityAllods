@@ -139,6 +139,14 @@ public class Client
         ClientManager.SendCommand(shopCmd);
     }
 
+    public static void SendShopSelectShelf(int shelf)
+    {
+        if (!NetworkManager.IsClient) return;
+        ServerCommands.ShopSelectShelf shopCmd;
+        shopCmd.Shelf = shelf;
+        ClientManager.SendCommand(shopCmd);
+    }
+
     public static void SendAttackUnit(MapUnit unit, MapUnit targetUnit)
     {
         if (NetworkManager.IsClient)

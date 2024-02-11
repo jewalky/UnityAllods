@@ -595,10 +595,10 @@ public class ShopStructure : StructureLogic
 
     public override void OnLeave(MapUnit unit)
     {
-        base.OnLeave(unit);
         // revert everything on the table (unlock)
         if (!NetworkManager.IsClient)
             CancelTransaction(unit);
+        base.OnLeave(unit);
         Tables.Remove(unit.Player);
         if (ShopIsEmpty)
         {
@@ -610,10 +610,13 @@ public class ShopStructure : StructureLogic
             UiManager.Instance.ClearWindows();
     }
 
-        private void GenerateItems()
+    private void GenerateItems()
     {
         for (int i = 0; i < Shelves.Length; i++)
+        {
             Shelves[i].GenerateItems();
+            Shelves[i].CompactAndSortItems();
+        }
     }
 
     public void CancelTransaction(MapUnit unit)
@@ -625,13 +628,32 @@ public class ShopStructure : StructureLogic
         else
         {
             ItemPack table = GetTableFor(unit.Player);
+            HashSet<int> affectedShelves = new HashSet<int>();
             foreach (Item item in table)
             {
+                // list affected shelves for net update
+                int shelf = -1;
+                for (int i = 0; i < Shelves.Length; i++)
+                {
+                    if (Shelves[i].Items == item.Parent)
+                    {
+                        affectedShelves.Add(i);
+                        shelf = i;
+                        break;
+                    }
+                }
+                Debug.LogFormat("clearing item from {0}", shelf);
+                // put item back to where it was
                 if (item.Parent.Parent != null && item.Parent.Parent.ItemsBody == item.Parent)
                     item.Parent.Parent.PutItemToBody((MapUnit.BodySlot)item.Class.Option.Slot, item);
                 else item.Parent.PutItem(item.Index, item);
             }
             table.Clear();
+            Server.NotifyShopTable(unit);
+            Debug.LogFormat("affected shelves = [{0}]", string.Join(", ", affectedShelves));
+            // send shelf update(s) to other units
+            foreach (int affectedShelf in affectedShelves)
+                Server.NotifyShopShelf(unit, affectedShelf);
         }
     }
 
@@ -647,6 +669,7 @@ public class ShopStructure : StructureLogic
             long totalPrice = 0;
             ItemPack table = GetTableFor(unit.Player);
             List<Item> items = new List<Item>();
+            HashSet<int> affectedShelves = new HashSet<int>();
             items.AddRange(table);
             foreach (Item item in items)
                 totalPrice += item.Price * item.Count;
@@ -654,6 +677,15 @@ public class ShopStructure : StructureLogic
                 return; // do nothing
             foreach (Item item in items)
             {
+                // list affected shelves for net update
+                for (int i = 0; i < Shelves.Length; i++)
+                {
+                    if (Shelves[i].Items == item.Parent)
+                    {
+                        affectedShelves.Add(i);
+                        break;
+                    }
+                }
                 // take item from table.
                 table.TakeItem(item, item.Count);
                 // take money from player.
@@ -664,6 +696,8 @@ public class ShopStructure : StructureLogic
             Server.NotifyPlayerMoney(unit.Player);
             Server.NotifyUnitPack(unit);
             Server.NotifyShopTable(unit);
+            foreach (int affectedShelf in affectedShelves)
+                Server.NotifyShopShelf(unit, affectedShelf);
         }
     }
 

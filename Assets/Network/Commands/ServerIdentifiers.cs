@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-public enum ServerIdentifiers
+﻿public enum ServerIdentifiers
 {
     // login
     ClientAuth,
@@ -29,5 +24,6 @@ public enum ServerIdentifiers
 
     ShopCancel,
     ShopBuy,
-    ShopSell
+    ShopSell,
+    ShopSelectShelf,
 }

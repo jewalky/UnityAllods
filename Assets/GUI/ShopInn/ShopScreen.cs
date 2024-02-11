@@ -487,6 +487,9 @@ class ShopScreen : FullscreenView
                 CurrentShelf = HoveredShelf;
                 o_ShelfItems.Scroll = 0;
                 o_ShelfItems.Pack = ((ShopStructure)Shop.Logic).Shelves[CurrentShelf].Items;
+
+                if (NetworkManager.IsClient)
+                    Client.SendShopSelectShelf(CurrentShelf);
             }
 
             return true;

@@ -251,6 +251,7 @@ namespace ServerCommands
                             Debug.LogFormat("Invalid shop transaction: tried to move item without being in a shop");
                             return null;
                         }
+                        Debug.LogFormat("attempted to move item {0} [shelf={3}], count {1}, item = {2}", SourceIndex, Count, shop.Shelves[GetShelfIndex(Source)].Items.TakeItem(SourceIndex, Count), GetShelfIndex(Source));
                         return shop.Shelves[GetShelfIndex(Source)].Items.TakeItem(SourceIndex, Count);
                     }
             }
@@ -329,8 +330,10 @@ namespace ServerCommands
 
                 case ItemMoveLocation.ShopTable:
                     {
+                        Debug.LogFormat("item move unit = {0}", unit);
                         if (unit == null) return true;
                         item = TakeItem(unit);
+                        Debug.LogFormat("item move item = {0}", item);
                         if (item == null) return true;
                         ShopStructure shop = GetShopStructure(unit);
                         shop.GetTableFor(unit.Player).PutItem(DestinationIndex, item);
@@ -360,7 +363,7 @@ namespace ServerCommands
             Server.NotifyUnitPack(unit);
 
             // if any of these involved shop shelves or shop table, update also the shop.
-            List<int> haveShelves = new List<int>();
+            HashSet<int> haveShelves = new HashSet<int>();
             switch (Source)
             {
                 case ItemMoveLocation.ShopShelf1:
@@ -385,6 +388,8 @@ namespace ServerCommands
             }
 
             bool haveTable = (Source == ItemMoveLocation.ShopTable || Destination == ItemMoveLocation.ShopTable);
+
+            Debug.LogFormat("notifying shop shelves caused by item move = [{0}]", string.Join(", ", haveShelves));
 
             foreach (int shelf in haveShelves) Server.NotifyShopShelf(unit, shelf);
             if (haveTable) Server.NotifyShopTable(unit);
@@ -631,6 +636,39 @@ namespace ServerCommands
                 {
                     ShopStructure shop = (ShopStructure)unit.CurrentStructure.Logic;
                     shop.ApplySell(unit);
+                }
+            }
+
+            return true;
+        }
+    }
+
+    [ProtoContract]
+    [NetworkPacketId(ServerIdentifiers.ShopSelectShelf)]
+    public struct ShopSelectShelf : IServerCommand
+    {
+        [ProtoMember(1)]
+        public int Shelf;
+
+        public bool Process(ServerClient client)
+        {
+            if (Shelf < 0 || Shelf > 3)
+                return false;
+
+            if (client.State != ClientState.Playing)
+                return false;
+
+            Player player = MapLogic.Instance.GetNetPlayer(client);
+            if (player == null)
+                return false;
+
+            // find all units of the player and send action to each
+            foreach (MapObject mobj in player.Objects)
+            {
+                if (mobj is MapUnit unit && unit.CurrentStructure != null &&
+                    unit.CurrentStructure.Logic is ShopStructure)
+                {
+                    Server.NotifyShopShelf(unit, Shelf);
                 }
             }
 
